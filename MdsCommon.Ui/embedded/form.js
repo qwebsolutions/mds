@@ -1,0 +1,1 @@
+﻿export const Submit = (form) => form.submit()

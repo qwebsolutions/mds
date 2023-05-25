@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<isPackable>false</isPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Content Remove="localargs.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="localargs.json">
+	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Metapsi.Hyperapp\Metapsi.Hyperapp.csproj" />
+    <ProjectReference Include="..\..\Metapsi.Mds\Metapsi.Mds.csproj" />
+    <ProjectReference Include="..\..\Metapsi.Redis\Metapsi.Redis.csproj" />
+    <ProjectReference Include="..\..\Metapsi.Runtime\Metapsi.Runtime.csproj" />
+    <ProjectReference Include="..\..\Metapsi.SQLite\Metapsi.Sqlite.csproj" />
+    <ProjectReference Include="..\..\Metapsi.Web\Metapsi.Web.csproj" />
+    <ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.csproj" />
+    <ProjectReference Include="..\MdsCommon.Db\MdsCommon.Db.csproj" />
+    <ProjectReference Include="..\MdsCommon.Ui\MdsCommon.Ui.csproj" />
+  </ItemGroup>
+  
+</Project>

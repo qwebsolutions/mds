@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Metapsi.Runtime\Metapsi.Runtime.csproj" />
+		<ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.csproj" />
+	</ItemGroup>
+
+</Project>

@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Metapsi.Mds\Metapsi.Mds.Direct.csproj" />
+		<ProjectReference Include="..\MdsCommon.Ui\MdsCommon.Ui.Direct.csproj" />
+		<ProjectReference Include="..\MdsInfrastructure.DataModel\MdsInfrastructure.DataModel.Direct.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="embedded\nowork.png" LogicalName="nowork.png" />
+		<EmbeddedResource Include="embedded\server-icon.png" LogicalName="server-icon.png" />
+	</ItemGroup>
+
+</Project>
