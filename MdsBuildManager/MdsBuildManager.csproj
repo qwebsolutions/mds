@@ -7,19 +7,20 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.0.35" />
     <PackageReference Include="Google.Protobuf" Version="3.6.0" />
+    <PackageReference Include="Metapsi.Redis" Version="1.6.0" />
+    <PackageReference Include="Metapsi.Runtime" Version="1.6.0" />
     <PackageReference Include="Microsoft.AspNet.WebHooks.Receivers.VSTS" Version="1.2.2" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="5.0.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="5.0.1" />
     <PackageReference Include="Microsoft.TeamFoundationServer.Client" Version="16.193.0-preview" />
     <PackageReference Include="Microsoft.VisualStudio.Services.ServiceHooks.WebApi" Version="16.193.0-preview" />
     <PackageReference Include="Serilog" Version="2.7.1" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.113.7" />
   </ItemGroup>
 
   <ItemGroup>
-    <!--<ProjectReference Include="..\..\Metapsi.Redis\Metapsi.Redis.csproj" />-->
-    <ProjectReference Include="..\..\metapsi\Metapsi.Runtime\Metapsi.Runtime.csproj" />
-    <!--<ProjectReference Include="..\..\Metapsi.SQLite\Metapsi.Sqlite.csproj" />-->
     <ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.csproj" />
   </ItemGroup>
 

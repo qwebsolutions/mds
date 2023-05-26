@@ -1,21 +1,24 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Library</OutputType>
-    <TargetFramework>net7.0</TargetFramework>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Library</OutputType>
+		<TargetFramework>net7.0</TargetFramework>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="embedded\form.js" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="embedded\form.js" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="embedded\form.js" LogicalName="form.js"/>
-  </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="embedded\form.js" LogicalName="form.js" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Metapsi.Hyperapp\Metapsi.Hyperapp.csproj" />
-    <ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="Metapsi.Hyperapp" Version="1.6.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.csproj" />
+	</ItemGroup>
 
 </Project>

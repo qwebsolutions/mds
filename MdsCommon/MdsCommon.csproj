@@ -1,12 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>netstandard2.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Metapsi.Mds\Metapsi.Mds.csproj" />
-		<ProjectReference Include="..\..\Metapsi.Redis\Metapsi.Redis.csproj" />
+	  <PackageReference Include="Metapsi.Runtime" Version="1.6.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.csproj" />
+	  <ProjectReference Include="..\MdsCommon.Db\MdsCommon.Db.csproj" />
+	  <ProjectReference Include="..\MdsCommon.Ui\MdsCommon.Ui.csproj" />
 	</ItemGroup>
 </Project>
