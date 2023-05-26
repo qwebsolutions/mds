@@ -5,9 +5,11 @@
     <TargetFramework>net7.0</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Metapsi.SQLite" Version="1.6.0" />
+  </ItemGroup>
+
 	<ItemGroup>
-		<ProjectReference Include="..\..\Metapsi.Runtime\Metapsi.Runtime.csproj" />
-		<ProjectReference Include="..\..\Metapsi.SQLite\Metapsi.Sqlite.csproj" />
 		<ProjectReference Include="..\MdsCommon.Db\MdsCommon.Db.csproj" />
 		<ProjectReference Include="..\MdsInfrastructure.DataModel\MdsInfrastructure.DataModel.csproj" />
 	</ItemGroup>

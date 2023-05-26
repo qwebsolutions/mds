@@ -7,30 +7,27 @@
 
 
 	<ItemGroup>
-	  <Content Remove="infraargs.json" />
+		<Content Remove="infraargs.json" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="infraargs.json">
-	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-	  </None>
+		<None Include="infraargs.json">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="7.0.0" />
+		<PackageReference Include="Metapsi.Redis" Version="1.6.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="7.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Metapsi.HttpServer\Metapsi.HttpServer.csproj" />
-		<ProjectReference Include="..\..\Metapsi.Hyperapp\Metapsi.Hyperapp.csproj" />
-	  <ProjectReference Include="..\..\Metapsi.Mds\Metapsi.Mds.csproj" />
-	  <ProjectReference Include="..\..\Metapsi.Redis\Metapsi.Redis.csproj" />
-	  <ProjectReference Include="..\..\Metapsi.Runtime\Metapsi.Runtime.csproj" />
-	  <ProjectReference Include="..\..\Metapsi.Web\Metapsi.Web.csproj" />
-	  <ProjectReference Include="..\MdsCommon.Ui\MdsCommon.Ui.csproj" />
-	  <ProjectReference Include="..\MdsInfrastructure.DataModel\MdsInfrastructure.DataModel.csproj" />
-	  <ProjectReference Include="..\MdsInfrastructure.Db\MdsInfrastructure.Db.csproj" />
-	  <ProjectReference Include="..\MdsInfrastructure.Ui\MdsInfrastructure.Ui.csproj" />
+		<ProjectReference Include="..\Metapsi.HttpServer\Metapsi.HttpServer.csproj" />
+		<ProjectReference Include="..\MdsCommon.Ui\MdsCommon.Ui.csproj" />
+		<ProjectReference Include="..\MdsInfrastructure.DataModel\MdsInfrastructure.DataModel.csproj" />
+		<ProjectReference Include="..\MdsInfrastructure.Db\MdsInfrastructure.Db.csproj" />
+		<ProjectReference Include="..\MdsInfrastructure.Ui\MdsInfrastructure.Ui.csproj" />
+		<ProjectReference Include="..\Metapsi.Mds\Metapsi.Mds.csproj" />
 	</ItemGroup>
 
 </Project>
