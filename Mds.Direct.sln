@@ -37,6 +37,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.HttpServer", "Metap
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsBuildManager.Direct", "MdsBuildManager\MdsBuildManager.Direct.csproj", "{BE1E4321-8D9C-437E-8520-28FE2E42007E}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Module", "..\metapsi\Metapsi.Module\Metapsi.Module.csproj", "{96207CF1-5709-4786-B4A3-7DE46BC8FEAF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +113,10 @@ Global
 		{BE1E4321-8D9C-437E-8520-28FE2E42007E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BE1E4321-8D9C-437E-8520-28FE2E42007E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BE1E4321-8D9C-437E-8520-28FE2E42007E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96207CF1-5709-4786-B4A3-7DE46BC8FEAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96207CF1-5709-4786-B4A3-7DE46BC8FEAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96207CF1-5709-4786-B4A3-7DE46BC8FEAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96207CF1-5709-4786-B4A3-7DE46BC8FEAF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
