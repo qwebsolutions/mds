@@ -27,9 +27,6 @@ namespace MdsInfrastructure
     {
         static async Task Main(string[] args)
         {
-            //var plm = new DynModule().view(new ListConfigurationsPage());
-
-
             DateTime start = DateTime.UtcNow;
 
             if (args.Length < 1)

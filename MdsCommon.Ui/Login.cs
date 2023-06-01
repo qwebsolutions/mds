@@ -74,7 +74,9 @@ namespace MdsCommon
             Var<PageModel> clientModel,
             Var<string> returnUrl)
         {
-            b.AddStylesheet("/static/tw.css");
+            b.AddStylesheet("/static/tw_infra.css");
+            b.AddStylesheet("tw_framework.css");
+
             var page = b.Div("flex flex-col justify-center items-center w-full h-screen bg-gray-100");
             var center = b.Add(page, b.Div("flex flex-row justify-center items-center"));
             var container = b.Add(center, b.Div("flex flex-col items-center gap-4 shadow p-8 rounded bg-white"));

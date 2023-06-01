@@ -14,7 +14,8 @@ namespace MdsCommon
             Var<HyperNode> header,
             Var<HyperNode> page)
         {
-            b.AddStylesheet("/static/tw.css");
+            b.AddStylesheet("/static/tw_infra.css");
+            b.AddStylesheet("tw_framework.css");
 
             var rootNode = b.Node("div", "flex flex-row w-full h-screen");
             //b.AddLoadingPanel(rootNode);
