@@ -25,7 +25,6 @@ namespace MdsInfrastructure
         public List<ParameterType> ParameterTypes { get; set; }
         public List<NoteType> NoteTypes { get; set; }
         public string LastDeployed { get; set; }
-
         public bool IsActiveConfiguration
         {
             get
@@ -47,6 +46,9 @@ namespace MdsInfrastructure
         public string FirstLevelSelectedTab { get; set; } = string.Empty;
         public string SecondLevelSelectedTab { get; set; } = string.Empty;
         public string ValidationMessage { get; set; } = string.Empty;
+        public string FilterValue { get; set; } = string.Empty;
+
+        public List<InfrastructureService> FilteredServices { get; set; } = new();
     }
 
     public static partial class MdsInfrastructureFunctions
@@ -89,6 +91,18 @@ namespace MdsInfrastructure
             editConfigurationPage.ParameterTypes = await commandContext.Do(Api.GetAllParameterTypes);
             editConfigurationPage.NoteTypes = await commandContext.Do(Api.GetAllNoteTypes);
             editConfigurationPage.LastDeployed = editConfigurationPage.LastDeploymentLabel();
+            editConfigurationPage.FilteredServices = editConfigurationPage.Configuration.InfrastructureServices;
+            //foreach (var element in editConfigurationPage.Configuration.InfrastructureServices) 
+            //{
+            //    InfrastructureServiceFilter infrastructureServiceFilter = new InfrastructureServiceFilter();
+            //    infrastructureServiceFilter.ApplicationId = element.ApplicationId.ToString();
+            //    infrastructureServiceFilter.Id = element.Id.ToString();
+            //    infrastructureServiceFilter.InfrastructureNodeId= element.InfrastructureNodeId.ToString();
+            //    infrastructureServiceFilter.ProjectId = element.ProjectId.ToString();
+            //    infrastructureServiceFilter.Enabled= element.Enabled;
+
+            //    editConfigurationPage.FilteredServices.Add(infrastructureServiceFilter);
+            //}
 
             Console.WriteLine($"=== InitializeEditConfiguration : {sw.ElapsedMilliseconds} ms ===");
             return editConfigurationPage;
