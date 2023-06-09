@@ -74,7 +74,7 @@ namespace MdsInfrastructure
             b.SetOnClick(clearButton, b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> page) =>
             {
                 b.Set(page, filterProperty, b.Const(string.Empty));
-                b.Call(ApplyServicesFilter, page);
+                b.Call(applyFilter, page);
 
                 return b.Clone(page);
             }));

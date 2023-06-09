@@ -43,9 +43,7 @@ namespace MdsInfrastructure
             });
 
             var rows = b.Get(clientModel, x => x.FilteredApplications.OrderBy(x => x.Name).ToList());
-            b.Log("rows");
-            b.Log(rows);
-
+          
             var rc = b.Def((BlockBuilder b, Var<Application> app, Var<DataTable.Column> col) =>
             {
                 var name = b.Get(app, x => x.Name, "(not set)");
