@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using MdsCommon;
 using System.Linq.Expressions;
+using System.Security.Cryptography.X509Certificates;
 
 namespace MdsInfrastructure
 {
@@ -13,7 +14,6 @@ namespace MdsInfrastructure
     {
         public static Var<List<TItem>> ContainingText<TItem>(this BlockBuilder b, Var<List<TItem>> items, Var<string> filterText)
         {
-           
             return b.Get(
                 items,
                 b.Def<TItem, string>(Native.ConcatObjectValues),
@@ -22,16 +22,15 @@ namespace MdsInfrastructure
                 filterText,
                 (items, getValues, includes, lower, filterText) => items.Where(x => includes(lower(getValues(x)), lower(filterText))).ToList());
         }
-        public static void ApplyFilter(this BlockBuilder b, Var<EditConfigurationPage> clientModel)
+        public static void ApplyServicesFilter(this BlockBuilder b, Var<EditConfigurationPage> clientModel)
         {
             b.Set(
                  clientModel,
-                 x => x.FilteredServices,
+                 x => x.SimplifiedFilteredServices,
                  b.ContainingText(
-                     b.Get(
-                         clientModel,
-                         x => x.Configuration.InfrastructureServices),
-                     b.Get(clientModel, x => x.FilterValue)));
+                     b.Get(clientModel, x => x.SimplifiedFilteredServicesAsCopy),
+                     b.Get(clientModel, x => x.ServicesFilterValue))
+                 );
 
         }
         public static Var<HyperNode> Filter<TPage>(this BlockBuilder b,
@@ -75,7 +74,7 @@ namespace MdsInfrastructure
             b.SetOnClick(clearButton, b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> page) =>
             {
                 b.Set(page, filterProperty, b.Const(string.Empty));
-                b.Call(ApplyFilter, page);
+                b.Call(ApplyServicesFilter, page);
 
                 return b.Clone(page);
             }));
@@ -92,7 +91,7 @@ namespace MdsInfrastructure
            Var<EditConfigurationPage> clientModel)
         {
             //var rows = b.Get(clientModel, x => x.Configuration.InfrastructureServices.OrderBy(x => x.ServiceName).ToList());
-            var rows = b.Get(clientModel, x => x.FilteredServices.OrderBy(x => x.ServiceName).ToList());
+            var rows = b.Get(clientModel, x => x.SimplifiedFilteredServices.OrderBy(x => x.ServiceName).ToList());
 
             var onAddService = b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> clientModel) =>
             {
@@ -109,24 +108,34 @@ namespace MdsInfrastructure
                 b.Comment("onAddService");
                 b.Push(b.Get(clientModel, x => x.Configuration.InfrastructureServices), newService);
 
+                var newServiceFilter = b.NewObj<SimplifiedInfrastructureService>(b =>
+                {
+                    b.Set(x => x.Id, newId);
+                    b.Set(x => x.ConfigurationHeaderId, configHeaderId.As<String>());
+                    b.Set(x => x.Enabled, true);
+                });
+                b.Push(b.Get(clientModel, x => x.SimplifiedFilteredServicesAsCopy), newServiceFilter);
+
                 return b.GoTo(clientModel, EditService, newService);
             });
 
-            var rc = b.RenderCell((BlockBuilder b, Var<InfrastructureService> row, Var<DataTable.Column> col) =>
+            var rc = b.RenderCell((BlockBuilder b, Var<SimplifiedInfrastructureService> row, Var<DataTable.Column> col) =>
             {
                 var columnName = b.Get(col, x => x.Name);
-                Var<InfrastructureService> service = row.As<InfrastructureService>();
-                Var<Guid> applicationId = b.Get(service, x => x.ApplicationId);
-                Var<Guid> nodeId = b.Get(service, x => x.InfrastructureNodeId);
+                Var<SimplifiedInfrastructureService> service = row.As<SimplifiedInfrastructureService>();
+                Var<string> applicationId = b.Get(service, x => x.ApplicationId);
+                Var<string> nodeId = b.Get(service, x => x.InfrastructureNodeId);
                 Var<string> serviceName = b.Get(service, x => x.ServiceName);
+                Var<string> projectName = b.Get(service, x => x.ProjectId);
+                Var<string> projectNameAndVersion = b.Concat(projectName, b.Const(" "), b.Get(service, x => x.ProjectVersionId));
                 Var<bool> serviceDisabled = b.Get(service, service => !service.Enabled);
-                
+
                 var goToEditService = (BlockBuilder b, Var<EditConfigurationPage> clientModel) => b.GoTo(clientModel, EditService, service);
 
                 var serviceNameCellBuilder = (BlockBuilder b) =>
                 {
                     var container = b.Span();
-                 
+
                     b.Add(container, b.Link<EditConfigurationPage>(b.WithDefault(serviceName), b.MakeAction<EditConfigurationPage>(goToEditService)));
                     b.If(serviceDisabled, (BlockBuilder b) =>
                     {
@@ -138,15 +147,15 @@ namespace MdsInfrastructure
 
                 return b.VPadded4(b.Switch(columnName,
                     x => b.Text("not supported"),
-                    (nameof(InfrastructureService.ServiceName), serviceNameCellBuilder),
-                    (nameof(InfrastructureService.ProjectId), b => b.Text(b.Call(GetProjectLabel, clientModel, service))),
-                    (nameof(InfrastructureService.ApplicationId), b => b.Text(b.Get(clientModel, applicationId, (x, applicationId) => x.Configuration.Applications.SingleOrDefault(y => y.Id == applicationId, new Application() { Name = "(not set)" }).Name))),
-                    (nameof(InfrastructureService.InfrastructureNodeId), b => b.Text(b.Get(clientModel, nodeId, (x, nodeId) => x.InfrastructureNodes.SingleOrDefault(y => y.Id == nodeId, new InfrastructureNode() { NodeName = "(not set)" }).NodeName)))
+                    (nameof(SimplifiedInfrastructureService.ServiceName), serviceNameCellBuilder),
+                    (nameof(SimplifiedInfrastructureService.ProjectId), b => b.Text(projectNameAndVersion)),
+                    (nameof(SimplifiedInfrastructureService.ApplicationId), b => b.Text(applicationId)),
+                    (nameof(SimplifiedInfrastructureService.InfrastructureNodeId), b => b.Text(nodeId))
                     ));
             });
-                       
 
-            return b.DataGrid<InfrastructureService>(
+
+            return b.DataGrid<SimplifiedInfrastructureService>(
                 new()
                 {
                     b=>b.CommandButton<EditConfigurationPage>(b=>
@@ -156,16 +165,16 @@ namespace MdsInfrastructure
                     }),
                       b => b.Filter<EditConfigurationPage>(
                                 clientModel,
-                                x => x.FilterValue,
-                                ApplyFilter,
+                                x => x.ServicesFilterValue,
+                                ApplyServicesFilter,
                                 "")
                 },
                 b =>
                 {
-                    b.AddColumn(nameof(InfrastructureService.ServiceName), "Name");
-                    b.AddColumn(nameof(InfrastructureService.ProjectId), "Project");
-                    b.AddColumn(nameof(InfrastructureService.ApplicationId), "Application");
-                    b.AddColumn(nameof(InfrastructureService.InfrastructureNodeId), "Node");
+                    b.AddColumn(nameof(SimplifiedInfrastructureService.ServiceName), "Name");
+                    b.AddColumn(nameof(SimplifiedInfrastructureService.ProjectId), "Project");
+                    b.AddColumn(nameof(SimplifiedInfrastructureService.ApplicationId), "Application");
+                    b.AddColumn(nameof(SimplifiedInfrastructureService.InfrastructureNodeId), "Node");
                     b.SetRows(rows);
                     b.SetRenderCell(rc);
                 },
@@ -173,12 +182,15 @@ namespace MdsInfrastructure
                 {
                     var removeIcon = Icon.Remove;
 
-                    var onRemove = b.Def((BlockBuilder b, Var<InfrastructureService> item) =>
+                    var onRemove = b.Def((BlockBuilder b, Var<SimplifiedInfrastructureService> item) =>
                         {
                             var serviceId = b.Get(item, x => x.Id);
                             var serviceRemoved = b.Get(clientModel, serviceId, (x, serviceId) => x.Configuration.InfrastructureServices.Where(x => x.Id != serviceId).ToList());
-                            b.Log(serviceRemoved);
+
+                            var serviceRemovedFromSimplified = b.Get(clientModel, serviceId, (x, serviceId) => x.SimplifiedFilteredServices.Where(x => x.Id != serviceId).ToList());
+
                             b.Set(b.Get(clientModel, x => x.Configuration), x => x.InfrastructureServices, serviceRemoved);
+                            b.Set(clientModel, x => x.SimplifiedFilteredServices, serviceRemovedFromSimplified);
                         });
 
                     b.Modify(actions, b => b.Commands, b =>
@@ -189,10 +201,9 @@ namespace MdsInfrastructure
                             b.Set(x => x.OnCommand, onRemove);
                         });
                     });
-                }) ;
+                });
         }
-
-        public static Var<string> GetProjectLabel(BlockBuilder b, Var<EditConfigurationPage> clientModel, Var<InfrastructureService> service)
+        public static Var<string> GetProjectLabel(BlockBuilder b, Var<EditConfigurationPage> clientModel, Var<SimplifiedInfrastructureService> service)
         {
             var projectName = b.WithDefault(b.Const(string.Empty));
             var versionTag = b.WithDefault(b.Const(string.Empty));
@@ -201,8 +212,8 @@ namespace MdsInfrastructure
 
             var projectId = b.Get(service, x => x.ProjectId);
             var versionId = b.Get(service, x => x.ProjectVersionId);
-            var project = b.Get(clientModel, projectId, (x, projectId) => x.AllProjects.SingleOrDefault(x => x.Id == projectId));
-            var version = b.Get(clientModel, versionId, (x, versionId) => x.AllProjects.SelectMany(x => x.Versions).SingleOrDefault(x => x.Id == versionId));
+            var project = b.Get(clientModel, projectId, (x, projectId) => x.AllProjects.SingleOrDefault(x => x.Id.ToString() == projectId));
+            var version = b.Get(clientModel, versionId, (x, versionId) => x.AllProjects.SelectMany(x => x.Versions).SingleOrDefault(x => x.Id.ToString() == versionId));
 
             b.If(b.HasObject(project), b =>
             {

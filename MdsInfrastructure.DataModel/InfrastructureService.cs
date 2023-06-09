@@ -58,9 +58,9 @@ namespace MdsInfrastructure
         public string Note { get; set; } = string.Empty;
     }
 
-    public class InfrastructureServiceFilter 
+    public class SimplifiedInfrastructureService : IRecord
     {
-        public System.String Id { get; set; } = System.String.Empty;
+        public System.Guid Id { get; set; } = System.Guid.NewGuid();
         public System.String ServiceName { get; set; } = System.String.Empty;
         public System.String ProjectId { get; set; }
         public System.String InfrastructureNodeId { get; set; }

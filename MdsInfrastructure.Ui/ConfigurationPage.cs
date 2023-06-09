@@ -46,9 +46,16 @@ namespace MdsInfrastructure
         public string FirstLevelSelectedTab { get; set; } = string.Empty;
         public string SecondLevelSelectedTab { get; set; } = string.Empty;
         public string ValidationMessage { get; set; } = string.Empty;
-        public string FilterValue { get; set; } = string.Empty;
 
-        public List<InfrastructureService> FilteredServices { get; set; } = new();
+        public string ServicesFilterValue { get; set; } = string.Empty;
+        public List<SimplifiedInfrastructureService> SimplifiedFilteredServices { get; set; } = new();
+        public List<SimplifiedInfrastructureService> SimplifiedFilteredServicesAsCopy { get; set; } = new();
+
+        public string ApplicationsFilterValue { get; set; } = string.Empty;
+        public List<Application> FilteredApplications { get; set; } = new();
+
+        public string VariablesFilterValue { get; set; } = string.Empty;
+        public List<InfrastructureVariable> FilteredVariables { get; set; } = new();
     }
 
     public static partial class MdsInfrastructureFunctions
@@ -91,18 +98,26 @@ namespace MdsInfrastructure
             editConfigurationPage.ParameterTypes = await commandContext.Do(Api.GetAllParameterTypes);
             editConfigurationPage.NoteTypes = await commandContext.Do(Api.GetAllNoteTypes);
             editConfigurationPage.LastDeployed = editConfigurationPage.LastDeploymentLabel();
-            editConfigurationPage.FilteredServices = editConfigurationPage.Configuration.InfrastructureServices;
-            //foreach (var element in editConfigurationPage.Configuration.InfrastructureServices) 
-            //{
-            //    InfrastructureServiceFilter infrastructureServiceFilter = new InfrastructureServiceFilter();
-            //    infrastructureServiceFilter.ApplicationId = element.ApplicationId.ToString();
-            //    infrastructureServiceFilter.Id = element.Id.ToString();
-            //    infrastructureServiceFilter.InfrastructureNodeId= element.InfrastructureNodeId.ToString();
-            //    infrastructureServiceFilter.ProjectId = element.ProjectId.ToString();
-            //    infrastructureServiceFilter.Enabled= element.Enabled;
+            //editConfigurationPage.FilteredServices = editConfigurationPage.Configuration.InfrastructureServices;
 
-            //    editConfigurationPage.FilteredServices.Add(infrastructureServiceFilter);
-            //}
+            foreach (var element in editConfigurationPage.Configuration.InfrastructureServices)
+            {
+                SimplifiedInfrastructureService infrastructureServiceFilter = new SimplifiedInfrastructureService();
+                infrastructureServiceFilter.ApplicationId = editConfigurationPage.Configuration.Applications.Where(x => x.Id == element.ApplicationId).FirstOrDefault(new Application() { Name = "(not set)" }).Name;
+                infrastructureServiceFilter.Id = element.Id;
+                infrastructureServiceFilter.InfrastructureNodeId = editConfigurationPage.InfrastructureNodes.SingleOrDefault(x => x.Id == element.InfrastructureNodeId, new InfrastructureNode() { NodeName = "(not set)" }).NodeName;
+                infrastructureServiceFilter.ProjectId = editConfigurationPage.AllProjects.Where(x => x.Id == element.ProjectId).FirstOrDefault().Name;
+                infrastructureServiceFilter.Enabled = element.Enabled;
+                infrastructureServiceFilter.ConfigurationHeaderId = element.ConfigurationHeaderId.ToString();
+                infrastructureServiceFilter.ProjectVersionId = editConfigurationPage.AllProjects.SelectMany(x => x.Versions).SingleOrDefault(x => x.Id == element.ProjectVersionId).VersionTag.ToString();
+                infrastructureServiceFilter.ServiceName = element.ServiceName;
+           
+                editConfigurationPage.SimplifiedFilteredServices.Add(infrastructureServiceFilter);
+                editConfigurationPage.SimplifiedFilteredServicesAsCopy.Add(infrastructureServiceFilter);
+            }
+
+            editConfigurationPage.FilteredApplications = editConfigurationPage.Configuration.Applications;
+            editConfigurationPage.FilteredVariables = editConfigurationPage.Configuration.InfrastructureVariables;
 
             Console.WriteLine($"=== InitializeEditConfiguration : {sw.ElapsedMilliseconds} ms ===");
             return editConfigurationPage;
