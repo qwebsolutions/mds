@@ -6,22 +6,9 @@ using System.Web;
 
 namespace MdsCommon
 {
-    public static partial class Header
+    public static partial class HeaderRenderer
     {
-        public class Title
-        {
-            public string Operation { get; set; }
-            public string Entity { get; set; }
-        }
-
-        public class Props
-        {
-            public Title Main { get; set; }
-            public List<Title> Secondary { get; set; } = new List<Title>();
-            public WebServer.User User { get; set; }
-        }
-
-        public static Var<HyperNode> Render(this BlockBuilder b, Var<Props> props)
+        public static Var<HyperNode> Render(this BlockBuilder b, Var<MdsCommon.Header.Props> props)
         {
             var container = b.Div("flex flex-row justify-between items-center");
             var mainOperation =  b.Get(props, x => x.Main.Operation);
@@ -45,7 +32,7 @@ namespace MdsCommon
                 var name = b.Add(rightDiv, b.Text(userName));
                 b.AddClass(name, "font-semibold text-sm text-gray-800");
 
-                b.If(b.Get(props, x => x.User.AuthType == WebServer.AuthType.Oidc), b =>
+                b.If(b.Get(props, x => x.User.AuthType == Metapsi.Ui.AuthType.Oidc), b =>
                 {
                     var signout = b.Add(rightDiv, b.Link(b.Const("Sign out"), b.Concat(b.RootPath(), b.Const("/signout"))));
                     b.AddClass(signout, "font-thin text-xs");

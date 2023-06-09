@@ -12,7 +12,7 @@ namespace MdsInfrastructure
 {
     public static partial class Configuration
     {
-        public static async Task<IResponse> List(CommandContext commandContext, HttpContext requestData)
+        public static async Task<IResult> List(CommandContext commandContext, HttpContext requestData)
         {
             var configurationsList = await MdsInfrastructureFunctions.Configurations(commandContext);
 

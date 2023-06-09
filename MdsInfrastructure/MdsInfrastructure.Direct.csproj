@@ -30,7 +30,6 @@
 		<ProjectReference Include="..\MdsCommon.Ui\MdsCommon.Ui.Direct.csproj" />
 		<ProjectReference Include="..\MdsInfrastructure.DataModel\MdsInfrastructure.DataModel.Direct.csproj" />
 		<ProjectReference Include="..\MdsInfrastructure.Db\MdsInfrastructure.Db.Direct.csproj" />
-		<ProjectReference Include="..\MdsInfrastructure.Ui\MdsInfrastructure.Ui.Direct.csproj" />
 	</ItemGroup>
 
 </Project>

@@ -87,16 +87,19 @@ namespace MdsLocal
                     });
             }
 
-            var h = webServer.AddHyperapp(Overview.ListProcesses);
-            h.RegisterModule(typeof(SyncHistory));
-            h.RegisterModule(typeof(EventsLog));
+            webServer.WebApplication.RegisterRouteHandler<ListProcessesHandler>();
+            webServer.RegisterPageBuilder<OverviewPage>(MdsLocal.ListProcesses.RenderListProcessesBuilder);
+
+            //var h = webServer.AddHyperapp(Overview.ListProcesses);
+            //h.RegisterModule(typeof(SyncHistory));
+            //h.RegisterModule(typeof(EventsLog));
 
             var application = localReferences.ApplicationSetup.Revive();
-            h.State.WebApplication.Lifetime.ApplicationStopped.Register(async () =>
-            {
-                Console.WriteLine("Stop triggered from web app");
-                await application.Suspend();
-            });
+            //h.State.WebApplication.Lifetime.ApplicationStopped.Register(async () =>
+            //{
+            //    Console.WriteLine("Stop triggered from web app");
+            //    await application.Suspend();
+            //});
             await application.SuspendComplete;
         }
     }

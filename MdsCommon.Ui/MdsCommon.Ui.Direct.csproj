@@ -10,12 +10,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="embedded\form.js" LogicalName="form.js"/>
+    <EmbeddedResource Include="embedded\form.js" LogicalName="form.js" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\metapsi\Metapsi.Hyperapp\Metapsi.Hyperapp.csproj" />
+    <ProjectReference Include="..\..\metapsi\Metapsi.Web\Metapsi.Web.csproj" />
     <ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.Direct.csproj" />
+    <ProjectReference Include="..\MdsCommon.Render\MdsCommon.Render.Direct.csproj" />
   </ItemGroup>
 
 </Project>

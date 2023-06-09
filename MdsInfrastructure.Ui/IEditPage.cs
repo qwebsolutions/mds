@@ -7,7 +7,7 @@ namespace MdsInfrastructure
     public interface IEditPage<TState>
     {
         public Guid EntityId { get; set; }
-        public Page.Stack<TState> EditStack { get; set; }
+        public PageStack.Stack<TState> EditStack { get; set; }
     }
 
     //public static class EditPageExtensions

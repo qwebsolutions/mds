@@ -7,16 +7,8 @@ using System.Threading.Tasks;
 
 namespace MdsCommon
 {
-    public class ListInfrastructureEventsPage : IHasSidePanel
-    {
-        public List<InfrastructureEvent> InfrastructureEvents { get; set; } = new();
-        public InfrastructureEvent SelectedEvent { get; set; }
-        public bool ShowSidePanel { get; set; }
 
-        public static InfrastructureEvent NoEvent = new InfrastructureEvent() { Id = System.Guid.Empty };
-    }
-
-    public static partial class EventsLog
+    public static partial class Render
     {
         public static Var<HyperNode> RenderListInfrastructureEventsPage(this BlockBuilder b, Var<ListInfrastructureEventsPage> clientModel)
         {

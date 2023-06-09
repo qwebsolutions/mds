@@ -10,56 +10,16 @@ using System.Threading.Tasks;
 
 namespace MdsLocal
 {
-    public static class SyncHistory
+    public class SyncHistoryHandler : RouteHandler<SyncHistory.List>
     {
-        public class DataModel
+        public override async Task<IResult> Get(CommandContext commandContext, HttpContext requestData)
         {
-            public List<SyncResult> SyncHistory { get; set; } = new List<SyncResult>();
-        }
-
-        public static async Task<IResponse> List(CommandContext commandContext, HttpContext requestData)
-        {
-            var dataModel = new DataModel()
+            var dataModel = new SyncHistory.DataModel()
             {
-                SyncHistory = (await commandContext.Do(MdsLocalApplication.GetSyncHistory)).ToList()
+                SyncHistory = (await commandContext.Do(MdsLocalApplication.GetSyncHistory)).OrderByDescending(x => x.Timestamp).ToList()
             };
-            return Page.Response(dataModel, (b, clientModel) => b.Layout(b.LocalMenu(nameof(SyncHistory)), b.Render(b.Const(new Header.Props()
-            {
-                Main = new Header.Title() { Operation = "Sync history" },
-                User = requestData.User(),
-            })), b.Render(dataModel)));
-        }
 
-        public static Var<HyperNode> Render(this BlockBuilder b, DataModel dataModel)
-        {
-            var view = b.Div("flex flex-col");
-
-            var clientRows = b.Const(dataModel.SyncHistory.OrderByDescending(x => x.Timestamp).ToList());
-
-            var renderCell = b.Def((BlockBuilder b, Var<SyncResult> serviceSnapshot, Var<DataTable.Column> col) =>
-            {
-                Var<string> columnName = b.Get(col, x => x.Name);
-
-                var cell = b.Switch<HyperNode, string>(columnName,
-                    b => b.Text(b.GetProperty<string>(serviceSnapshot, columnName)),
-                    (nameof(SyncResult.Timestamp), b => b.Text(b.ItalianFormat(b.Get(serviceSnapshot, x => x.Timestamp)))));
-
-                return b.VPadded4(cell);
-            });
-
-            var props = b.NewObj<DataTable.Props<SyncResult>>(b =>
-            {
-                b.AddColumn(nameof(SyncResult.Timestamp));
-                b.AddColumn(nameof(SyncResult.Trigger), "Sync trigger");
-                b.AddColumn(nameof(SyncResult.ResultCode), "Result");
-                b.SetRows(clientRows);
-                b.SetRenderCell(renderCell);
-            });
-
-            b.Add(view, b.DataTable(props));
-
-            return view;
+            return Page.Result(dataModel);
         }
     }
 }
-

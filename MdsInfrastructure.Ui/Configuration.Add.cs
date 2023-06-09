@@ -7,7 +7,7 @@ namespace MdsInfrastructure
 {
     public static partial class Configuration
     {
-        public static async Task<IResponse> Add(CommandContext commandContext, HttpContext requestData)
+        public static async Task<IResult> Add(CommandContext commandContext, HttpContext requestData)
         {
             var newConfig = new InfrastructureConfiguration();
             var serverModel = await MdsInfrastructureFunctions.InitializeEditConfiguration(commandContext, newConfig);
