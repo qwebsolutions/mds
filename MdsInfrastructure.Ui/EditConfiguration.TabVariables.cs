@@ -33,6 +33,7 @@ namespace MdsInfrastructure
                     b.Set(x => x.Id, newId);
                 });
                 b.Push(b.Get(clientModel, x => x.Configuration.InfrastructureVariables), newVar);
+                b.Call(ApplyVariablesFilter, clientModel);
                 b.GoTo(clientModel, EditVariable, newVar);
 
                 return b.Clone(clientModel);

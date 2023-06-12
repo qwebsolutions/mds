@@ -30,7 +30,7 @@ namespace MdsInfrastructure
             var matchingEnvironmentIds = b.Get(mathingEnvironment, x => x.Select(x => x.Id));
             var matchingNodes = b.Get(clientModel, matchingEnvironmentIds, (m, envIds) => m.InfrastructureNodes.Where(x => envIds.Contains(x.EnvironmentTypeId)).ToList());
             var serviceEnabled = b.Get(service, x => x.Enabled);
-
+                        
             var container = b.Div("grid grid-cols-2 place-items-center w-full gap-4");
             var serviceNamelabel = b.Add(container, b.Text("Service name"));
             b.AddClass(serviceNamelabel, "w-full");

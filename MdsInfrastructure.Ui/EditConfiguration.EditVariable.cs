@@ -15,6 +15,8 @@ namespace MdsInfrastructure
             b.AddClass(form, "rounded bg-white drop-shadow");
             b.FormField(form, "Name", b.BoundInput(clientModel, varId, (x, varId) => x.Configuration.InfrastructureVariables.Single(x => x.Id == varId), x => x.VariableName, b.Const(string.Empty)));
             b.FormField(form, "Value", b.BoundInput(clientModel, varId, (x, varId) => x.Configuration.InfrastructureVariables.Single(x => x.Id == varId), x => x.VariableValue, b.Const(string.Empty)));
+            b.Call(ApplyVariablesFilter, clientModel);
+            
             return form;
         }
     }

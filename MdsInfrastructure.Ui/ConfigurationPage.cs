@@ -48,9 +48,7 @@ namespace MdsInfrastructure
         public string ValidationMessage { get; set; } = string.Empty;
 
         public string ServicesFilterValue { get; set; } = string.Empty;
-        public List<SimplifiedInfrastructureService> SimplifiedFilteredServices { get; set; } = new();
-        public List<SimplifiedInfrastructureService> SimplifiedFilteredServicesAsCopy { get; set; } = new();
-
+        public List<SearchableInfrastructureService> SearchableFilteredServices { get; set; } = new();
         public string ApplicationsFilterValue { get; set; } = string.Empty;
         public List<Application> FilteredApplications { get; set; } = new();
 
@@ -98,22 +96,20 @@ namespace MdsInfrastructure
             editConfigurationPage.ParameterTypes = await commandContext.Do(Api.GetAllParameterTypes);
             editConfigurationPage.NoteTypes = await commandContext.Do(Api.GetAllNoteTypes);
             editConfigurationPage.LastDeployed = editConfigurationPage.LastDeploymentLabel();
-            //editConfigurationPage.FilteredServices = editConfigurationPage.Configuration.InfrastructureServices;
 
             foreach (var element in editConfigurationPage.Configuration.InfrastructureServices)
             {
-                SimplifiedInfrastructureService infrastructureServiceFilter = new SimplifiedInfrastructureService();
+                SearchableInfrastructureService infrastructureServiceFilter = new SearchableInfrastructureService();
                 infrastructureServiceFilter.ApplicationId = editConfigurationPage.Configuration.Applications.Where(x => x.Id == element.ApplicationId).FirstOrDefault(new Application() { Name = "(not set)" }).Name;
                 infrastructureServiceFilter.Id = element.Id;
                 infrastructureServiceFilter.InfrastructureNodeId = editConfigurationPage.InfrastructureNodes.SingleOrDefault(x => x.Id == element.InfrastructureNodeId, new InfrastructureNode() { NodeName = "(not set)" }).NodeName;
-                infrastructureServiceFilter.ProjectId = editConfigurationPage.AllProjects.Where(x => x.Id == element.ProjectId).FirstOrDefault().Name;
+                infrastructureServiceFilter.ProjectId = editConfigurationPage.AllProjects.Where(x => x.Id == element.ProjectId).FirstOrDefault()?.Name;
                 infrastructureServiceFilter.Enabled = element.Enabled;
                 infrastructureServiceFilter.ConfigurationHeaderId = element.ConfigurationHeaderId.ToString();
-                infrastructureServiceFilter.ProjectVersionId = editConfigurationPage.AllProjects.SelectMany(x => x.Versions).SingleOrDefault(x => x.Id == element.ProjectVersionId).VersionTag.ToString();
+                infrastructureServiceFilter.ProjectVersionId = editConfigurationPage.AllProjects.SelectMany(x => x.Versions).SingleOrDefault(x => x.Id == element.ProjectVersionId)?.VersionTag.ToString();
                 infrastructureServiceFilter.ServiceName = element.ServiceName;
            
-                editConfigurationPage.SimplifiedFilteredServices.Add(infrastructureServiceFilter);
-                editConfigurationPage.SimplifiedFilteredServicesAsCopy.Add(infrastructureServiceFilter);
+                editConfigurationPage.SearchableFilteredServices.Add(infrastructureServiceFilter);
             }
 
             editConfigurationPage.FilteredApplications = editConfigurationPage.Configuration.Applications;

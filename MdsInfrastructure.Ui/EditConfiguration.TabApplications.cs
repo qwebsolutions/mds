@@ -10,6 +10,7 @@ namespace MdsInfrastructure
     {
         public static void ApplyApplicationsFilter(this BlockBuilder b, Var<EditConfigurationPage> clientModel)
         {
+            b.Log("am apelat filtrul din app");
             b.Set(
                  clientModel,
                  x => x.FilteredApplications,
@@ -37,7 +38,7 @@ namespace MdsInfrastructure
                     b.Set(x => x.Name, string.Empty);
                 });
                 b.Push(b.Get(clientModel, x => x.Configuration.Applications), newApp);
-                b.Push(b.Get(clientModel, x => x.FilteredApplications), newApp);
+                b.Call(ApplyApplicationsFilter, state);
 
                 return b.GoTo(state, EditApplication, newId);
             });
@@ -78,6 +79,8 @@ namespace MdsInfrastructure
                     {
                         var removed = b.Get(clientModel, application, (x, application) => x.Configuration.Applications.Where(x => x != application).ToList());
                         b.Set(b.Get(clientModel, x => x.Configuration), x => x.Applications, removed);
+
+                        b.Call(ApplyApplicationsFilter, clientModel);
                     });
 
                     var removeIcon = Icon.Remove;

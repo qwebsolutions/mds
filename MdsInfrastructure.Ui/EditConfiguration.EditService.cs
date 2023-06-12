@@ -38,6 +38,8 @@ namespace MdsInfrastructure
                     TabPageCode = "Notes"
                 });
 
+            b.Call(ApplyServicesFilter, clientModel);
+            
             return tabs;
         }
     }
