@@ -115,7 +115,7 @@ namespace MdsInfrastructure
 
                       b =>
                       {
-                          b.Set(x => x.CssClass, "hyper-input w-96 border py-2 pl-10 pr-2 rounded-lg text-gray-600");
+                          b.Set(x => x.CssClass, "w-96 border py-2 pl-10 pr-2 rounded-lg text-gray-600");//hyper-input 
                       }
                    );
             var clearButton = b.Node(
@@ -131,11 +131,16 @@ namespace MdsInfrastructure
                 return b.Clone(page);
             }));
 
+            //return b.Div(
+            //    "flex flex-row items-center",
+            //    b => b.Svg(Icon.MagnifyingGlass, "w-8 h-8 text-gray-400"),
+            //    b => filterInput,
+            //    b => b.Optional(b.HasValue(b.Get(page, filterProperty)), b => b.Div("right-2", b => clearButton)));
             return b.Div(
-                "flex flex-row items-center",
-                b => b.Svg(Icon.MagnifyingGlass, "w-8 h-8 text-gray-400"),
-                b => filterInput,
-                b => b.Optional(b.HasValue(b.Get(page, filterProperty)), b => b.Div("right-2", b => clearButton)));
+               "flex flex-row items-center relative",
+               b => b.Svg(Icon.MagnifyingGlass, "absolute left-2 w-6 h-6 text-blue-600 z-10"),
+               b => filterInput,
+               b => b.Optional(b.HasValue(b.Get(page, filterProperty)), b => b.Div("flex flex-row right-2 absolute items-center", b => clearButton)));
 
         }
         public static Var<HyperNode> TabServices(
