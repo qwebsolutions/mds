@@ -7,7 +7,6 @@ using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.AspNetCore.Authentication.OAuth.Claims;
@@ -93,15 +92,19 @@ namespace MdsInfrastructure
                 AddServices, 
                 app =>
             {
-                app.UseAuthorization();
+                //app.UseAuthorization();
                 app.UseSwagger();
                 app.UseSwaggerUI();
             });
-            webServerRefs.AddInfraUi();
+
+
+            Register.Everything(webServerRefs);
+            //webServerRefs.AddInfraUi();
             webServerRefs.WebApplication.AddInfraApi(arguments);
             webServerRefs.RegisterStaticFiles(typeof(MdsInfrastructure.MdsInfra).Assembly);
-            webServerRefs.RegisterStaticFiles(typeof(MdsCommon.SignIn).Assembly);
-            webServerRefs.RegisterStaticFiles(typeof(Metapsi.Hyperapp.SidePanel).Assembly);
+            webServerRefs.RegisterStaticFiles(typeof(MdsCommon.Header).Assembly);
+            webServerRefs.RegisterStaticFiles(typeof(Metapsi.Syntax.HyperNode).Assembly);
+            webServerRefs.RegisterStaticFiles(typeof(Metapsi.Syntax.BlockBuilder).Assembly);
 
             var app = references.ApplicationSetup.Revive();
             webServerRefs.WebApplication.Lifetime.ApplicationStopped.Register(async () =>
@@ -161,76 +164,21 @@ namespace MdsInfrastructure
                 options.Cookie.SameSite = SameSiteMode.Lax;
             });
 
-            builder.Services.AddScoped<DynamicRedirect>();
+            //builder.Services.AddScoped<DynamicRedirect>();
 
-            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-            //builder.Services.AddAuthentication(options =>
+            //builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            //.AddCookie(options =>
             //{
-            //    options.AddScheme("public", builder =>
-            //    {
-            //        builder.
-            //    });
-            //})
-            //.AddJwtBearer(options =>
-            //{
-            //    options.Authority = $"http://192.168.100.130/auth";
-            //})
-            .AddCookie(options =>
-            {
-                options.ExpireTimeSpan = TimeSpan.FromDays(1);
-                options.LoginPath = "/signin/credentials";
-                options.Cookie.SameSite = SameSiteMode.Lax;
-                options.EventsType = typeof(DynamicRedirect);
-            });
-            //.AddOpenIdConnect(options =>
-            //{
-            //    options.ClientId = "infrastructure";
-            //    options.ClientSecret = "FibgF1vYkYZipQuV2TutW0HbKUNzk9NE";
-            //    options.RequireHttpsMetadata = false;
-            //    options.AuthenticationMethod = OpenIdConnectRedirectBehavior.RedirectGet;
-            //    options.Prompt = "Login to ";
-            //    //options.Authority = $"http://localhost:8080/auth/realms/FI";
-            //    options.Authority = $"http://192.168.100.130/auth/realms/FI";
-            //    options.ResponseType = "code";
-            //    options.Events.OnMessageReceived = async (c) =>
-            //    {
-
-            //    };
-            //    options.Events.OnUserInformationReceived = async (c) =>
-            //    {
-
-            //    };
-
-            //    options.Events.OnAuthorizationCodeReceived = async (c) =>
-            //    {
-
-            //    };
-
-            //    options.Events.OnAuthenticationFailed = async (c) =>
-            //    {
-
-            //    };
-            //    options.CorrelationCookie.SameSite = SameSiteMode.Lax;
-            //    options.NonceCookie.SameSite = SameSiteMode.Lax;
-            //    //options.CallbackPath = "/conf/";
-            //    //options.NonceCookie.SecurePolicy = CookieSecurePolicy.Always;
-            //    //options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.Always;
-                
-            //    // Zitadel
-            //    //options.ClientId = "190968356826841091@fi";
-            //    //options.ClientSecret = "0F4VQwGFQLSUmzwHgiYhmV5HvbnbpfaQsuW6bhQL7llPJrQlqCm7876Dl7OKSwjR";
-            //    //options.RequireHttpsMetadata = false;
-            //    //options.Prompt = "Login to ";
-            //    ////options.Authority = $"http://192.168.100.130/auth";
-            //    //options.Authority = $"http://localhost:8080";
-            //    //options.ResponseType = "code";
-            //    //options.GetClaimsFromUserInfoEndpoint = true;
+            //    options.ExpireTimeSpan = TimeSpan.FromDays(1);
+            //    options.LoginPath = "/signin/credentials";
+            //    options.Cookie.SameSite = SameSiteMode.Lax;
+            //    options.EventsType = typeof(DynamicRedirect);
             //});
 
-            builder.Services.AddAuthorization(options =>
-            {
-                options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
-            });
+            //builder.Services.AddAuthorization(options =>
+            //{
+            //    options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+            //});
         }
     }
 }

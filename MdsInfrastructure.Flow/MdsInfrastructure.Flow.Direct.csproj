@@ -5,9 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\metapsi\Metapsi.Hyperapp\Metapsi.Hyperapp.csproj" />
     <ProjectReference Include="..\..\metapsi\Metapsi.Web.DataModel\Metapsi.Web.DataModel.csproj" />
-    <ProjectReference Include="..\MdsCommon.Render\MdsCommon.Render.Direct.csproj" />
+    <ProjectReference Include="..\..\metapsi\Metapsi.Web\Metapsi.Web.csproj" />
     <ProjectReference Include="..\MdsInfrastructure.DataModel\MdsInfrastructure.DataModel.Direct.csproj" />
   </ItemGroup>
 

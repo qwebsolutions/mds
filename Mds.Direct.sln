@@ -47,6 +47,18 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.JavaScript", "..\me
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Web.DataModel", "..\metapsi\Metapsi.Web.DataModel\Metapsi.Web.DataModel.csproj", "{422233D3-B381-4DFF-9CF8-09A73C52939D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsInfrastructure.Direct", "MdsInfrastructure\MdsInfrastructure.Direct.csproj", "{57AEFF88-D49C-4E1D-91CD-8879B4796F0D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsInfrastructure.DataModel.Direct", "MdsInfrastructure.DataModel\MdsInfrastructure.DataModel.Direct.csproj", "{CF1DA6F7-A7DA-43D9-A5C1-7EA56FABCC75}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsInfrastructure.Db.Direct", "MdsInfrastructure.Db\MdsInfrastructure.Db.Direct.csproj", "{3E9D2E7E-1041-4722-9DB5-A36E747C6EE6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsInfrastructure.Render.Direct", "MdsInfrastructure.Render\MdsInfrastructure.Render.Direct.csproj", "{B1807570-11C5-40C9-A612-1584E9C895E4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsInfrastructure.Ui.Direct", "MdsInfrastructure.Ui\MdsInfrastructure.Ui.Direct.csproj", "{6BE168AB-935D-4868-BD49-B659CCA757F0}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsInfrastructure.Flow.Direct", "MdsInfrastructure.Flow\MdsInfrastructure.Flow.Direct.csproj", "{2E0CE3CF-7DE5-439A-B241-EDBC7BC8B36D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -141,6 +153,30 @@ Global
 		{422233D3-B381-4DFF-9CF8-09A73C52939D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{422233D3-B381-4DFF-9CF8-09A73C52939D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{422233D3-B381-4DFF-9CF8-09A73C52939D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57AEFF88-D49C-4E1D-91CD-8879B4796F0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57AEFF88-D49C-4E1D-91CD-8879B4796F0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57AEFF88-D49C-4E1D-91CD-8879B4796F0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57AEFF88-D49C-4E1D-91CD-8879B4796F0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF1DA6F7-A7DA-43D9-A5C1-7EA56FABCC75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF1DA6F7-A7DA-43D9-A5C1-7EA56FABCC75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF1DA6F7-A7DA-43D9-A5C1-7EA56FABCC75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF1DA6F7-A7DA-43D9-A5C1-7EA56FABCC75}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E9D2E7E-1041-4722-9DB5-A36E747C6EE6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E9D2E7E-1041-4722-9DB5-A36E747C6EE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E9D2E7E-1041-4722-9DB5-A36E747C6EE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E9D2E7E-1041-4722-9DB5-A36E747C6EE6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1807570-11C5-40C9-A612-1584E9C895E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1807570-11C5-40C9-A612-1584E9C895E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1807570-11C5-40C9-A612-1584E9C895E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1807570-11C5-40C9-A612-1584E9C895E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BE168AB-935D-4868-BD49-B659CCA757F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BE168AB-935D-4868-BD49-B659CCA757F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BE168AB-935D-4868-BD49-B659CCA757F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BE168AB-935D-4868-BD49-B659CCA757F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2E0CE3CF-7DE5-439A-B241-EDBC7BC8B36D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E0CE3CF-7DE5-439A-B241-EDBC7BC8B36D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E0CE3CF-7DE5-439A-B241-EDBC7BC8B36D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E0CE3CF-7DE5-439A-B241-EDBC7BC8B36D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

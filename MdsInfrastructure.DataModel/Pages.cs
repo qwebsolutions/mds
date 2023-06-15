@@ -43,31 +43,4 @@ namespace MdsInfrastructure
         public string SecondLevelSelectedTab { get; set; } = string.Empty;
         public string ValidationMessage { get; set; } = string.Empty;
     }
-
-    public class EditConfiguration : IMetapsiRoute { }
-    public class ListDeployments : IMetapsiRoute { }
-    public class Status : IMetapsiRoute { }
-    public class Configuration : IMetapsiRoute
-    {
-        public class List : IMetapsiRoute { }
-    }
-    public class Deployments : IMetapsiRoute
-    {
-        public class List : IMetapsiRoute { }
-    }
-
-    public class Nodes : IMetapsiRoute
-    {
-        public class List : IMetapsiRoute { }
-    }
-
-    public class Projects
-    {
-        public class List : IMetapsiRoute { }
-    }
-
-    public class EventsLog : IMetapsiRoute
-    {
-        public class List : IMetapsiRoute { }
-    }
 }

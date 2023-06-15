@@ -11,5 +11,7 @@ namespace MdsInfrastructure
         public Deployment Deployment { get; set; }
         public List<InfrastructureEvent> InfrastructureEvents { get; set; }
         public string SchemaValidationMessage { get; set; } = string.Empty;
+
+        public Metapsi.Ui.User User { get; set; }
     }
 }
