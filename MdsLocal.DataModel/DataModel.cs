@@ -6,17 +6,17 @@ namespace MdsLocal
 {
     public static class Overview
     {
-        public class ListProcesses : IMetapsiRoute { }
+        public class ListProcesses : Metapsi.Route.IGet { }
     }
 
     public static class SyncHistory
     {
-        public class List : IMetapsiRoute { }
+        public class List : Metapsi.Route.IGet { }
         
         public class DataModel : IHasUser
         {
             public List<SyncResult> SyncHistory { get; set; } = new List<SyncResult>();
-            public User User { get; set; }
+            public User User { get; set; } = new();
         }
     }
 
@@ -35,7 +35,17 @@ namespace MdsLocal
     {
         public LocalSettings LocalSettings { get; set; } = new();
         public FullLocalStatus FullLocalStatus { get; set; } = new();
-        public RecordCollection<MdsLocal.RunningServiceProcess> ServiceProcesses { get; set; } = new RecordCollection<MdsLocal.RunningServiceProcess>();
+        public List<MdsLocal.RunningServiceProcess> ServiceProcesses { get; set; } = new();
         public List<string> Warnings { get; set; } = new List<string>();
+        public List<ProcessRow> Processes { get; set; } = new();
+        public string OverviewText { get; set; } = string.Empty;
     }
+
+    public static class SyncStatusCodes
+    {
+        public const string Failed = "Failed";
+        public const string UpToDate = "UpToDate";
+        public const string Changed = "Changed";
+    }
+
 }

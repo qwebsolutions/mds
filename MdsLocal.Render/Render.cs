@@ -2,13 +2,159 @@
 using MdsCommon;
 using Metapsi.Ui;
 using Metapsi.Hyperapp;
+using System.Text;
+using System.Collections.Generic;
+using System.Linq;
+using System;
+using Metapsi;
 
 namespace MdsLocal
 {
-    public static class RenderInfrastructureEventsList
+    public class RenderOverviewListProcesses : Metapsi.Hyperapp.HyperPage<OverviewPage>
     {
-        public static Var<HyperNode> RenderEventsList(BlockBuilder b, Var<ListInfrastructureEventsPage> clientModel)
+        public override Var<HyperNode> OnRender(BlockBuilder b, Var<OverviewPage> model)
         {
+            b.AddStylesheet("/static/tw.css");
+
+            var headerProps = b.NewObj<Header.Props>();
+            b.Set(headerProps, x => x.Main, b.Const(new Header.Title() { Operation = "Infrastructure events" }));
+            //b.Set(headerProps, x => x.User, b.Get(model, x => x.User));
+            b.Set(headerProps, x => x.User, b.Const<User>(new User() { Name = "Hardcoded user" }));
+
+            var clientRows = b.Get(model, x => x.Processes);
+
+            var view = b.Div("flex flex-col space-y-4");
+
+            b.If(
+                b.Get(model, x => x.Warnings.Any()),
+                b =>
+                {
+                    b.Foreach(
+                        b.Get(model, x => x.Warnings),
+                        (b, w) =>
+                        {
+                            var warningContainer = b.Add(view, b.Div("border border-solid border-red-300 bg-red-100 text-red-300 rounded w-full p-2 mb-4 drop-shadow transition-all"));
+                            b.Add(warningContainer, b.Text(w));
+                        });
+                });
+
+            var localSettings = b.Get(model, x => x.LocalSettings);
+            var title = b.Concat(
+                b.Const($"Node: "),
+                b.Get(localSettings, x => x.NodeName),
+                b.Const(" OS: "),
+                b.Const(System.Environment.OSVersion.ToString()),
+                b.Const(" infrastructure API: "),
+                b.Get(localSettings, x => x.InfrastructureApiUrl));
+
+            b.Add(view, b.InfoPanel(
+                b.Const(Panel.Style.Info),
+                b => b.Text(title),
+                b => b.Text(b.Get(model, x => x.OverviewText))));
+
+            var rc = b.Def((BlockBuilder b, Var<ProcessRow> serviceSnapshot, Var<DataTable.Column> col) =>
+            {
+                Var<string> serviceName = b.Get(serviceSnapshot, x => x.ServiceName);
+                Var<string> columnName = b.Get(col, x => x.Name);
+
+                return b.VPadded4(b.Text(b.GetProperty<string>(serviceSnapshot, columnName)));
+            });
+
+            b.If(
+                b.Get(model, model => model.FullLocalStatus.LocalServiceSnapshots.Any()),
+                b =>
+                {
+                    var props = b.NewObj<DataTable.Props<ProcessRow>>(b =>
+                    {
+                        b.AddColumn(nameof(ProcessRow.ServiceName), "Service name");
+                        b.AddColumn(nameof(ProcessRow.ProjectName), "Project name");
+                        b.AddColumn(nameof(ProcessRow.ProjectVersionTag), "Project version");
+                        b.AddColumn(nameof(ProcessRow.Pid), "Process ID");
+                        b.AddColumn(nameof(ProcessRow.UsedRamMB), "Working set (RAM, MB)");
+                        b.AddColumn(nameof(ProcessRow.RunningStatus), "Running since");
+                        b.SetRows(clientRows);
+                        b.SetRenderCell(rc);
+                    });
+
+                    b.Set(props, x => x.CreateRow, b.Def((BlockBuilder b, Var<ProcessRow> row) =>
+                    {
+                        Var<ProcessRow> processRow = row.As<ProcessRow>();
+                        return b.If(b.Get(processRow, x => x.HasError), b => b.Node("tr", "bg-red-500"), b => b.Node("tr"));
+                    }));
+
+                    b.Add(view, b.DataTable(props));
+                });
+
+            return view;
+        }
+    }
+    //public class RenderOverviewListProcesses : Metapsi.HtmlPage<OverviewPage>
+    //{
+    //    //public static Var<HyperNode> RenderEventsList(BlockBuilder b, Var<ListInfrastructureEventsPage> clientModel)
+    //    //{
+    //    //    var headerProps = b.NewObj<Header.Props>();
+    //    //    b.Set(headerProps, x => x.Main, b.Const(new Header.Title() { Operation = "Infrastructure events" }));
+    //    //    b.Set(headerProps, x => x.User, b.Get(clientModel, x => x.User));
+
+    //    //    return b.Call(
+    //    //        MdsCommon.Common.Layout,
+    //    //        b.LocalMenu(nameof(EventsLog)),
+    //    //        b.Render(headerProps),
+    //    //        b.RenderListInfrastructureEventsPage(clientModel));
+    //    //}
+
+    //    public override IHtmlNode GetHtml(OverviewPage dataModel)
+    //    {
+    //        return new HtmlTag("html")
+    //        {
+    //            Children = new() {
+    //                new HtmlTag()
+    //                {
+    //                    Tag = "head",
+    //                    Children = new()
+    //                    {
+    //                        new HtmlTag()
+    //                        {
+    //                            Tag = "title",
+    //                            Children = new()
+    //                            {
+    //                                new HtmlText()
+    //                                {
+    //                                    Text = "List processes ++++"
+    //                                }
+    //                            }
+    //                        }
+    //                    }
+    //                },
+    //                new HtmlTag()
+    //                {
+    //                    Tag = "body",
+    //                    Children = new()
+    //                    {
+    //                        new HtmlTag()
+    //                        {
+    //                            Tag = "h1",
+    //                            Children = new()
+    //                            {
+    //                                new HtmlText()
+    //                                {
+    //                                    Text = "Reload works!!!"
+    //                                }
+    //                            }
+    //                        }
+    //                    }
+    //                }
+    //            }
+    //        };
+    //    }
+    //}
+
+    public class RenderInfrastructureEventsList : HyperPage<ListInfrastructureEventsPage>
+    {
+        public override Var<HyperNode> OnRender(BlockBuilder b, Var<ListInfrastructureEventsPage> clientModel)
+        {
+            b.AddStylesheet("/static/tw.css");
+
             var headerProps = b.NewObj<Header.Props>();
             b.Set(headerProps, x => x.Main, b.Const(new Header.Title() { Operation = "Infrastructure events" }));
             b.Set(headerProps, x => x.User, b.Get(clientModel, x => x.User));
@@ -19,6 +165,46 @@ namespace MdsLocal
                 b.Render(headerProps),
                 b.RenderListInfrastructureEventsPage(clientModel));
         }
+
+        //public static Var<HyperNode> RenderEventsList(BlockBuilder b, Var<ListInfrastructureEventsPage> clientModel)
+        //{
+        //    var headerProps = b.NewObj<Header.Props>();
+        //    b.Set(headerProps, x => x.Main, b.Const(new Header.Title() { Operation = "Infrastructure events" }));
+        //    b.Set(headerProps, x => x.User, b.Get(clientModel, x => x.User));
+
+        //    return b.Call(
+        //        MdsCommon.Common.Layout,
+        //        b.LocalMenu(nameof(EventsLog)),
+        //        b.Render(headerProps),
+        //        b.RenderListInfrastructureEventsPage(clientModel));
+        //}
+
+        //public override IHtmlNode GetHtml(ListInfrastructureEventsPage dataModel)
+        //{
+        //    return new HtmlTag("html")
+        //    {
+        //        Children = new() {
+        //            new HtmlTag()
+        //            {
+        //                Tag = "head",
+        //                Children = new()
+        //                {
+        //                    new HtmlTag()
+        //                    {
+        //                        Tag = "title",
+        //                        Children = new()
+        //                        {
+        //                            new HtmlText()
+        //                            {
+        //                                Text = "List infrastructure events ....."
+        //                            }
+        //                        }
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    };
+        //}
     }
 
     public static partial class MdsLocalMenu
@@ -41,12 +227,57 @@ namespace MdsLocal
         }
     }
 
+    //public class PageDetails
+    //{
+    //    public string Version { get; set; } = string.Empty;
+    //    public string PageTitle { get; set; } = string.Empty;
+    //    public List<LinkTag> LinkTags { get; set; } = new();
+    //    public List<string> ScriptPaths { get; set; } = new();
+    //    public string Favicon { get; set; } = string.Empty;
+    //    public object InitialModel { get; set; }
+    //    public string PageScript { get; set; }
+    //    public string ModuleScriptPath { get; set; } = string.Empty;
+    //    public string BodyCss { get; set; } = string.Empty;
+    //}
+
+
+    //public abstract class PageBuilder<TModel> : IPageBuilder<TModel>
+    //{
+    //    private static Module module = null;
+
+    //    public Module GetModule()
+    //    {
+    //        if (module == null)
+    //        {
+    //            module = Page.BuildMain<TModel>(Render, Init);
+    //        }
+    //        return module;
+    //    }
+
+    //    public virtual Var<HyperType.StateWithEffects> Init(BlockBuilder b, Var<TModel> model)
+    //    {
+    //        return b.MakeStateWithEffects(model);
+    //    }
+
+    //    public abstract Var<HyperNode> Render(BlockBuilder b, Var<TModel> model);
+    //}
+
     public static partial class ListProcesses
     {
-        public static string RenderListProcessesBuilder(OverviewPage serverModel)
-        {
-            return "render list processes";
-        }
+        //public static string RenderListProcessesBuilder(OverviewPage serverModel)
+        //{
+        //    return BuildExternalScriptPageContent(new PageDetails()
+        //    {
+        //        InitialModel = serverModel,
+        //        PageTitle = "Overview",
+        //        PageScript = Metapsi.JavaScript.PrettyBuilder.Generate(
+        //            BuildMain<OverviewPage>((BlockBuilder b, Var<OverviewPage> page) => b.Text("Built!")),
+        //            string.Empty)
+        //    });
+        //}
+
+
+        
 
         public static Var<HyperNode> RenderListProcesses(BlockBuilder b, Var<OverviewPage> clientModel)
         {
@@ -157,20 +388,23 @@ namespace MdsLocal
         //}
     }
 
-    public static class RenderSyncHistory
+    public class RenderSyncHistory : HyperPage<SyncHistory.DataModel>
     {
-        public static Var<HyperNode> plm(BlockBuilder b, Var<SyncHistory.DataModel> dataModel)
+        public override Var<HyperNode> OnRender(BlockBuilder b, Var<SyncHistory.DataModel> dataModel)
         {
+
+            b.AddStylesheet("/static/tw.css");
+
             var headerProps = b.NewObj<Header.Props>();
             b.Set(headerProps, x => x.Main, b.Const(new Header.Title() { Operation = "Sync history" }));
             b.Set(headerProps, x => x.User, b.Get(dataModel, x => x.User));
 
             return b.Layout(
                 b.LocalMenu(nameof(SyncHistory)),
-                b.Render(headerProps), b.Render(dataModel));
+                b.Render(headerProps), Render2(b, dataModel));
         }
 
-        public static Var<HyperNode> Render(this BlockBuilder b, Var<SyncHistory.DataModel> dataModel)
+        public static Var<HyperNode> Render2(BlockBuilder b, Var<SyncHistory.DataModel> dataModel)
         {
             var view = b.Div("flex flex-col");
 

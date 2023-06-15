@@ -1,14 +1,22 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\metapsi\Metapsi.Hyperapp\Metapsi.Hyperapp.csproj" />
-    <ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.Direct.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\metapsi\Metapsi.Hyperapp\Metapsi.Hyperapp.csproj" />
+		<ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.Direct.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="embedded\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="embedded\Poppins-Regular.ttf" LogicalName="Poppins-Regular.ttf"></EmbeddedResource>
+	</ItemGroup>
 
 </Project>

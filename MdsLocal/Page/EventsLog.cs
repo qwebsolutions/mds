@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace MdsLocal
 {
-    public class EventsLogHandler : RouteHandler<MdsCommon.EventsLog.List>
+    public class EventsLogHandler : Http.Get<MdsCommon.EventsLog.List>
     {
-        public override async Task<IResult> Get(CommandContext commandContext, HttpContext httpContext)
+        public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext)
         {
             var allEvents = new MdsCommon.ListInfrastructureEventsPage()
             {

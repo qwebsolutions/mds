@@ -43,6 +43,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsLocal.DataModel.Direct",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Ui", "..\metapsi\Metapsi.Ui\Metapsi.Ui.csproj", "{DFEC28E2-FB5E-4A0F-A331-36D5D30A335A}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.JavaScript", "..\metapsi\Metapsi.JavaScript\Metapsi.JavaScript.csproj", "{A1A5A40F-5C37-4C1C-8130-1CE8DB7CB3E3}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Web.DataModel", "..\metapsi\Metapsi.Web.DataModel\Metapsi.Web.DataModel.csproj", "{422233D3-B381-4DFF-9CF8-09A73C52939D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -129,6 +133,14 @@ Global
 		{DFEC28E2-FB5E-4A0F-A331-36D5D30A335A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DFEC28E2-FB5E-4A0F-A331-36D5D30A335A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DFEC28E2-FB5E-4A0F-A331-36D5D30A335A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1A5A40F-5C37-4C1C-8130-1CE8DB7CB3E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1A5A40F-5C37-4C1C-8130-1CE8DB7CB3E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1A5A40F-5C37-4C1C-8130-1CE8DB7CB3E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1A5A40F-5C37-4C1C-8130-1CE8DB7CB3E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{422233D3-B381-4DFF-9CF8-09A73C52939D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{422233D3-B381-4DFF-9CF8-09A73C52939D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{422233D3-B381-4DFF-9CF8-09A73C52939D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{422233D3-B381-4DFF-9CF8-09A73C52939D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

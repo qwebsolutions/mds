@@ -7,13 +7,6 @@ using System.Threading.Tasks;
 
 namespace MdsLocal
 {
-    public static class SyncStatusCodes
-    {
-        public const string Failed = "Failed";
-        public const string UpToDate = "UpToDate";
-        public const string Changed = "Changed";
-    }
-
     static partial class MdsLocalApplication
     {
 

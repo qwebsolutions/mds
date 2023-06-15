@@ -186,7 +186,7 @@ namespace MdsLocal
 
             implementationGroup.MapRequest(MdsLocalApplication.GetRunningProcesses, async (rc) =>
             {
-                RecordCollection<RunningServiceProcess> processes = new RecordCollection<RunningServiceProcess>();
+                List<RunningServiceProcess> processes = new();
 
                 foreach (var osProcess in System.Diagnostics.Process.GetProcesses())
                 {

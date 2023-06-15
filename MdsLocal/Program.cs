@@ -4,6 +4,8 @@ using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Text;
+using Metapsi.Syntax;
+using MdsCommon;
 
 namespace MdsLocal
 {
@@ -87,8 +89,13 @@ namespace MdsLocal
                     });
             }
 
-            webServer.WebApplication.RegisterRouteHandler<ListProcessesHandler>();
-            webServer.RegisterPageBuilder<OverviewPage>(MdsLocal.ListProcesses.RenderListProcessesBuilder);
+            webServer.WebApplication.RegisterRouteHandler<ListProcessesHandler, Overview.ListProcesses>();
+            webServer.WebApplication.RegisterRouteHandler<SyncHistoryHandler, SyncHistory.List>();
+            webServer.RegisterPageBuilder<OverviewPage>(new RenderOverviewListProcesses().Render);
+            webServer.RegisterPageBuilder<ListInfrastructureEventsPage>(new RenderInfrastructureEventsList().Render);
+            webServer.RegisterPageBuilder<SyncHistory.DataModel>(new RenderSyncHistory().Render);
+            webServer.RegisterStaticFiles(typeof(BlockBuilder).Assembly);
+            webServer.RegisterStaticFiles(typeof(HyperNode).Assembly);
 
             //var h = webServer.AddHyperapp(Overview.ListProcesses);
             //h.RegisterModule(typeof(SyncHistory));
