@@ -40,7 +40,6 @@
 	  <Compile Remove="Nodes.Save.cs" />
 	  <Compile Remove="Projects.cs" />
 	  <Compile Remove="Setup.cs" />
-	  <Compile Remove="Status.Application.cs" />
 	  <Compile Remove="Status.Node.cs" />
 	</ItemGroup>
 

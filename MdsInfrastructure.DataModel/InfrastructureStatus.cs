@@ -14,4 +14,10 @@ namespace MdsInfrastructure
 
         public Metapsi.Ui.User User { get; set; }
     }
+
+    public class ApplicationStatus
+    {
+        public string ApplicationName { get; set; }
+        public InfrastructureStatus InfrastructureStatus { get; set; }
+    }   
 }
