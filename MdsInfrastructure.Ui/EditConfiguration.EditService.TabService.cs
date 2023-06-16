@@ -21,7 +21,7 @@ namespace MdsInfrastructure
             var versions = b.Get(activeProjects, selectedProjectId, (x, selectedProjectId) => x.SelectMany(x => x.Versions).Where(x => x.Enabled && x.ProjectId == selectedProjectId).ToList());
             var selectedVersionId = b.Get(service, x => x.ProjectVersionId);
             var selectedVersion = b.Get(versions, selectedVersionId, (x, selectedVersionId) => x.SingleOrDefault(x => x.Id == selectedVersionId, new ProjectVersion() { VersionTag = "(not selected)" }));
-            var versionOptions = b.Get(versions, selectedVersionId,  (x, selectedVersionId) => x.Select(y => new DropDown.Option() { label = y.VersionTag, value = y.Id.ToString(), selected = selectedVersionId == y.Id }).ToList());
+            var versionOptions = b.Get(versions, selectedVersionId, (x, selectedVersionId) => x.Select(y => new DropDown.Option() { label = y.VersionTag, value = y.Id.ToString(), selected = selectedVersionId == y.Id }).ToList());
             var versionBinaries = b.Get(selectedVersion, x => x.Binaries);
             var targetEnvironment = b.Def<string, string>((b, target) => b.If(b.AreEqual(target, b.Const("linux-x64")), b => b.Const("Linux"), b => b.Const("Windows")));
             var versionTargets = b.Get(versionBinaries, x => x.Select(x => x.Target).Distinct().ToList());
@@ -30,7 +30,7 @@ namespace MdsInfrastructure
             var matchingEnvironmentIds = b.Get(mathingEnvironment, x => x.Select(x => x.Id));
             var matchingNodes = b.Get(clientModel, matchingEnvironmentIds, (m, envIds) => m.InfrastructureNodes.Where(x => envIds.Contains(x.EnvironmentTypeId)).ToList());
             var serviceEnabled = b.Get(service, x => x.Enabled);
-                        
+
             var container = b.Div("grid grid-cols-2 place-items-center w-full gap-4");
             var serviceNamelabel = b.Add(container, b.Text("Service name"));
             b.AddClass(serviceNamelabel, "w-full");
@@ -56,10 +56,10 @@ namespace MdsInfrastructure
                 b.Def((BlockBuilder b, Var<string> inputValue) =>
                 {
                     Var<System.Guid> newId = b.ToId(inputValue);
-                    b.Set(service,x=> x.ProjectId, newId);
+                    b.Set(service, x => x.ProjectId, newId);
                     // Clear project version, it's from the previous project
                     b.Set(service, x => x.ProjectVersionId, b.EmptyId());
-                    b.Set(service, x=> x.InfrastructureNodeId, b.EmptyId());
+                    b.Set(service, x => x.InfrastructureNodeId, b.EmptyId());
                 }),
                 b.Const("Project")));
             b.AddClass(projectDd, "w-full");
@@ -70,9 +70,44 @@ namespace MdsInfrastructure
                 versionOptions,
                 b.Def((BlockBuilder b, Var<string> value) =>
                 {
+                    var infraNodeId = b.Get(service, x => x.InfrastructureNodeId);
+
+                    var previouslySelectedNodeInAssociatedList = b.Get(clientModel, matchingEnvironmentIds, infraNodeId, (m, envIds, infraNodeId) => m.InfrastructureNodes
+                    .Where(x => envIds.Contains(x.EnvironmentTypeId))
+                    .SingleOrDefault(x => x.Id == infraNodeId));
+
+                    var selectedVersionIdInDD = b.Get(service, x => x.ProjectVersionId);
+                    var selectedVersionInDD = b.Get(versions, value, (x, value) => x.SingleOrDefault(x => x.Id.ToString() == value, new ProjectVersion() { VersionTag = "(not selected)" }));
+
+                    var versionOptionsInDD = b.Get(versions, selectedVersionIdInDD, (x, selectedVersionId) => x.Select(y => new DropDown.Option() { label = y.VersionTag, value = y.Id.ToString(), selected = selectedVersionId == y.Id }).ToList());
+                    var versionBinariesInDD = b.Get(selectedVersionInDD, x => x.Binaries);
+                    var targetEnvironmentInDD = b.Def<string, string>((b, target) => b.If(b.AreEqual(target, b.Const("linux-x64")), b => b.Const("Linux"), b => b.Const("Windows")));
+                    var versionTargetsInDD = b.Get(versionBinariesInDD, x => x.Select(x => x.Target).Distinct().ToList());
+                    var versionSystemsInDD = b.Get(versionTargetsInDD, targetEnvironmentInDD, (x, targetEnvironment) => x.Select(x => targetEnvironment(x)));
+
+                    var mathingEnvironmentInDD = b.Get(clientModel, versionSystemsInDD, (clientModel, versionSystems) => clientModel.EnvironmentTypes.Where(x => versionSystems.Contains(x.OsType)));
+                    var matchingEnvironmentIdsInDD = b.Get(mathingEnvironmentInDD, x => x.Select(x => x.Id));
+
+                    var matchingNodesInDD = b.Get(clientModel, matchingEnvironmentIdsInDD, (m, envIds) => m.InfrastructureNodes.Where(x => envIds.Contains(x.EnvironmentTypeId)).ToList());
+
+                    var currentSelectedNodeInAssociatedList = b.Get(clientModel, matchingEnvironmentIdsInDD, infraNodeId, (m, envIds, infraNodeId) => m.InfrastructureNodes
+                          .Where(x => envIds.Contains(x.EnvironmentTypeId))
+                          .SingleOrDefault(x => x.Id == infraNodeId));
+
                     Var<System.Guid> newId = b.ToId(value);
-                    b.Set(service,  x=> x.ProjectVersionId, newId);
-                    b.Set(service,  x=> x.InfrastructureNodeId, b.EmptyId());
+                    b.Set(service, x => x.ProjectVersionId, newId);
+
+                    b.If(b.Not(b.HasObject(previouslySelectedNodeInAssociatedList)),
+                        b =>
+                        {
+                            b.Set(service, x => x.InfrastructureNodeId, b.EmptyId());
+                        });
+
+                    b.If(b.Not(b.HasObject(currentSelectedNodeInAssociatedList)),
+                        b =>
+                        {
+                            b.Set(service, x => x.InfrastructureNodeId, b.EmptyId());
+                        });
                 }),
                 b.Const("Version")));
             b.AddClass(versionDd, "w-full");
@@ -91,6 +126,7 @@ namespace MdsInfrastructure
 
             var nodeLabel = b.Add(container, b.Text("Deployed on node"));
             b.AddClass(nodeLabel, "w-full");
+         
             var nodeDd = b.Add(container, b.BoundDropDown(
                 b.Const("ddServiceNode"),
                 service,
