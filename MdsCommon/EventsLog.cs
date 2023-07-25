@@ -5,9 +5,9 @@ using Metapsi.Syntax;
 using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 
-namespace MdsLocal
+namespace MdsCommon
 {
-    public class EventsLogHandler : Http.Get<MdsCommon.EventsLog.List>
+    public class EventsLogHandler : Http.Get<MdsCommon.Routes.EventsLog.List>
     {
         public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext)
         {

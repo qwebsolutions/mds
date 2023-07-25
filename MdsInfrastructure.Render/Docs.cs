@@ -1,52 +1,53 @@
-﻿using Metapsi;
-using Metapsi.Hyperapp;
+﻿using Metapsi.Hyperapp;
 using Metapsi.Syntax;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+using M = MdsInfrastructure.Docs;
 using MdsCommon;
+using Metapsi.Ui;
 using System.Collections.Generic;
-using Microsoft.AspNetCore.Http;
+using System.Linq;
 
-namespace MdsInfrastructure
+namespace MdsInfrastructure.Render
 {
-    public static partial class Docs
+    public static class Docs
     {
-        public class SummaryInput
+        public class Service : MixedHyperPage<M.ServicePage, M.ServicePage>
         {
-            public string InfrastructureName { get; set; }
-            public InfrastructureConfiguration InfrastructureConfiguration { get; set; }
-            public List<InfrastructureNode> InfrastructureNodes { get; set; }
-            public List<ParameterType> ParameterTypes { get; set; }
-            public List<NoteType> NoteTypes { get; set; }
-            public Deployment CurrentDeployment { get; set; }
-        }
-
-        public static async Task<IResponse> Service(CommandContext commandContext, HttpContext requestData)
-        {
-            //var serviceId = Guid.Parse(requestData.Parameters.Single());
-            var serviceName = requestData.EntityId();
-
-            SummaryInput summaryInput = new SummaryInput()
+            public override M.ServicePage ExtractClientModel(M.ServicePage serverModel)
             {
-                CurrentDeployment = await commandContext.Do(Api.LoadCurrentDeployment),
-                InfrastructureConfiguration = await commandContext.Do(Api.LoadCurrentConfiguration),
-                InfrastructureName = await commandContext.Do(Api.GetInfrastructureName),
-                InfrastructureNodes = await commandContext.Do(Api.LoadAllNodes),
-                ParameterTypes = await commandContext.Do(Api.GetAllParameterTypes),
-                NoteTypes = await commandContext.Do(Api.GetAllNoteTypes)
-            };
+                return serverModel;
+            }
 
-            var summary = GetSummary(summaryInput);
-            var currentService = summary.ServiceReferences.Single(x => x.ServiceName == serviceName);
-
-            return Page.Response(
-                new object(), (b, clientModel) => b.Layout(b.InfraMenu(nameof(Status), requestData.User().IsSignedIn()),
+            public override Var<HyperNode> OnRender(BlockBuilder b, M.ServicePage serverModel, Var<M.ServicePage> clientModel)
+            {
+                b.AddStylesheet("/static/tw.css");
+                return b.Layout(b.InfraMenu(nameof(Routes.Status), serverModel.User.IsSignedIn()),
                 b.Render(b.Const(new Header.Props()
                 {
-                    Main = new Header.Title() { Operation = "Docs", Entity = currentService.ServiceName },
-                    User = requestData.User()
-                })), b.Render(summary, currentService)));
+                    Main = new Header.Title() { Operation = "Docs", Entity = serverModel.ServiceSummary.ServiceName },
+                    User = serverModel.User
+                })), b.Render(serverModel.InfrastructureSummary, serverModel.ServiceSummary));
+            }
+        }
+
+        public class RedisMap : MixedHyperPage<M.RedisMap, M.RedisMap>
+        {
+            public override M.RedisMap ExtractClientModel(M.RedisMap serverModel)
+            {
+                return serverModel;
+            }
+
+            public override Var<HyperNode> OnRender(BlockBuilder b, M.RedisMap serverModel, Var<M.RedisMap> clientModel)
+            {
+                b.AddStylesheet("/static/tw.css");
+                return b.Layout(
+                    b.InfraMenu(nameof(Routes.Project),
+                    serverModel.User.IsSignedIn()),
+                    b.Render(b.Const(new Header.Props()
+                    {
+                        Main = new Header.Title() { Operation = "Docs", Entity = serverModel.ServiceSummary.ServiceName },
+                        User = serverModel.User
+                    })), b.RenderRedisMap(serverModel.InfrastructureSummary, serverModel.ServiceSummary));
+            }
         }
 
         public class Connection
@@ -90,7 +91,9 @@ namespace MdsInfrastructure
             string controlId)
         {
             var container = b.Div("py-8 px-4 font-semibold");
-            var control = b.Add(container, b.Link(b.Const(serviceName), Service, b.Const(serviceName)));
+            var control = b.Add(container, b.Link(
+                b.Url<Routes.Docs.Service, string>(b.Const(serviceName)),
+                b.TextNode(b.Const(serviceName))));
             b.SetAttr(control, Html.id, controlId);
             return container;
         }
@@ -118,7 +121,9 @@ namespace MdsInfrastructure
             //var icon = b.Add(container, b.Div("text-yellow-300"));
             //b.SetInnerHtml(icon, b.FromFile("inline/antenna.svg"));
             var semiBold = b.Add(container, b.Div("font-semibold"));
-            b.Add(semiBold, b.Link(b.Const(serviceName), Service, b.Const(serviceName)));
+            b.Add(semiBold, b.Link(
+                b.Url<Routes.Docs.Service, string>(b.Const(serviceName)),
+                b.TextNode(b.Const(serviceName))));
             b.Add(container, b.Text(url));
             b.SetAttr(container, Html.id, controlId);
             return container;
@@ -172,12 +177,12 @@ namespace MdsInfrastructure
 
             foreach (var parameter in currentService.ServiceParameters)
             {
-                if(parameter.ParameterType.ToLower() == "dbconnectionstring")
+                if (parameter.ParameterType.ToLower() == "dbconnectionstring")
                 {
                     parameter.DeployedValue = MdsCommon.Parameter.ParseConnectionString(parameter.DeployedValue).ToString();
                 }
 
-                if(parameter.ParameterName.ToLower().Contains("password"))
+                if (parameter.ParameterName.ToLower().Contains("password"))
                 {
                     parameter.DeployedValue = "*****";
                 }
@@ -263,7 +268,7 @@ namespace MdsInfrastructure
             {
                 var inputService = inputServices.SingleOrDefault(x => x.Key == serviceName);
 
-                if(inputService == null)
+                if (inputService == null)
                 {
                     inputService = new ControlsMapping()
                     {
@@ -378,7 +383,7 @@ namespace MdsInfrastructure
                 redisIndex++;
                 var controlId = "server_" + redisIndex;
 
-                var serverService = GetServer(summary, accessedUrl);
+                var serverService = summary.GetServer(accessedUrl);
                 if (string.IsNullOrEmpty(serverService))
                 {
                     // external
@@ -475,230 +480,450 @@ namespace MdsInfrastructure
             return container;
         }
 
-        public static InfrastructureSummary GetSummary(SummaryInput summaryInput)
+
+
+        public class Graph
         {
-            var currentInfrastructure = summaryInput.InfrastructureConfiguration;// await commandContext.Do(MdsInfrastructureApplication.LoadCurrentConfiguration);
-            var allNodes = summaryInput.InfrastructureNodes; //await commandContext.Do(MdsInfrastructureApplication.LoadAllNodes);
-            var allParameterTypes = summaryInput.ParameterTypes; //await commandContext.Do(MdsInfrastructureApplication.GetAllParameterTypes);
-            var allNoteTypes = summaryInput.NoteTypes;// await commandContext.Do(MdsInfrastructureApplication.GetAllNoteTypes);
-            var currentDeployment = summaryInput.CurrentDeployment;// await commandContext.Do(MdsInfrastructureApplication.LoadCurrentDeployment);
-            var infrastructureName = summaryInput.InfrastructureName;// await commandContext.Do(MdsInfrastructureApplication.GetInfrastructureName);
+            public List<Node> nodes { get; set; } = new List<Node>();
+            public List<Edge> edges { get; set; } = new List<Edge>();
+        }
 
-            // Known parameter types
-            var redisInputQueue = allParameterTypes.SingleOrDefault(x => x.Code.ToLower() == "redisinputqueue");
-            var redisOutputQueue = allParameterTypes.SingleOrDefault(x => x.Code.ToLower() == "redisoutputqueue");
-            var redisInputChannel = allParameterTypes.SingleOrDefault(x => x.Code.ToLower() == "redisinputchannel");
-            var redisOutputChannel = allParameterTypes.SingleOrDefault(x => x.Code.ToLower() == "redisoutputchannel");
-            var port = allParameterTypes.Single(x => x.Code.ToLower() == "port");
-            var apiUrl = allParameterTypes.Single(x => x.Code.ToLower() == "apiaccessurl");
+        public class NodeData
+        {
+            public string id { get; set; }
+            public int FontWeight { get; set; } = 600;
+            public string NodeColor { get; set; } = "#666";
+        }
 
-            // Known note types
-            var paramNoteType = allNoteTypes.SingleOrDefault(x => x.Code.ToLower() == "parameter");
-            var altUrl = allNoteTypes.SingleOrDefault(x => x.Code.ToLower() == "alturl");
-            var serviceComment = allNoteTypes.SingleOrDefault(x => x.Code.ToLower() == "summary");
+        public class Position
+        {
+            public int x { get; set; }
+            public int y { get; set; }
+        }
 
-            var deployedServiceSnapshots = currentDeployment.GetDeployedServices();
-            var deployedSnapshotIds = new HashSet<Guid>(deployedServiceSnapshots.Select(x => x.Id));
+        public class Node
+        {
+            public NodeData data { get; set; }
+            public Position position { get; set; }
+        }
 
-            InfrastructureSummary summary = new InfrastructureSummary();
-            summary.InfrastructureName = infrastructureName;
+        public class EdgeData
+        {
+            public string source { get; set; }
+            public string target { get; set; }
+        }
 
-            var deployedServices = currentDeployment.GetDeployedServices().OrderBy(x => x.ServiceName).ToList();
+        public class Edge
+        {
+            public EdgeData data { get; set; }
+        }
 
-            if (currentDeployment != null && deployedServices.Any())
+
+        public static Var<HyperNode> RenderRedisMap(this BlockBuilder b, InfrastructureSummary summary, ServiceSummary serviceSummary)
+        {
+            b.AddScript("cytoscape.min.js");
+            b.AddSubscription<object>(
+                "initCy",
+                (BlockBuilder b, Var<object> state) =>
+                b.Listen<object, object>(
+                    b.Const("afterRender"),
+                    b.MakeAction((BlockBuilder b, Var<object> state, Var<object> _noPayload) =>
+                    {
+                        b.CallExternal("cy", "updateCy");
+                        return state;
+                    })));
+
+            var isMaximized = b.CallExternal<bool>("cy", "getMaximized");
+
+            var container = b.Div("");
+
+            b.If(isMaximized, b =>
             {
-                foreach (var serviceSnapshot in deployedServices)
+                b.Log("render maximized");
+                b.AddClass(container, "fixed w-screen h-screen top-0 left-0 bg-white z-50");
+            },
+            b =>
+            {
+                b.AddClass(container, "h-full w-full relative bg-white z-10");
+            });
+
+            var microBar = b.Add(container, b.Div("absolute right-1 top-1 z-30 flex flex-row space-x-1 items-stretch opacity-50 hover:opacity-100 transition text-sky-600"));
+
+            var onPlus = b.MakeAction((BlockBuilder b, Var<InfrastructureSummary> state) =>
+            {
+                b.Log("+");
+                b.CallExternal("cy", "plusZoom");
+                return b.Clone(state);
+            });
+
+            var plus = b.NewObj<CommandButton.Props<InfrastructureSummary>>(b =>
+            {
+                //b.Set(x => x.ColorClass, "bg-white");
+                b.Set(x => x.SvgIcon, MdsCommon.Icon.Plus);
+                b.Set(x => x.OnClick, onPlus);
+            });
+
+            b.AddClass(b.Add(microBar, b.CommandButton(plus)), "bg-white");
+
+
+            var onMinus = b.MakeAction((BlockBuilder b, Var<InfrastructureSummary> state) =>
+            {
+                b.Log("-");
+                b.CallExternal("cy", "minusZoom");
+                return b.Clone(state);
+            });
+
+            var minus = b.NewObj<CommandButton.Props<InfrastructureSummary>>(b =>
+            {
+                //b.Set(x => x.ColorClass, "bg-white");
+                b.Set(x => x.SvgIcon, MdsCommon.Icon.Minus);
+                b.Set(x => x.OnClick, onMinus);
+            });
+
+            b.AddClass(b.Add(microBar, b.CommandButton(minus)), "bg-white");
+
+            b.If(isMaximized, b =>
+            {
+                var onMinimize = b.MakeAction((BlockBuilder b, Var<InfrastructureSummary> state) =>
                 {
-                    var infraService = currentInfrastructure.InfrastructureServices.SingleOrDefault(x => x.ServiceName == serviceSnapshot.ServiceName);
-                    var serviceNode = allNodes.SingleOrDefault(x => x.NodeName == serviceSnapshot.NodeName, new InfrastructureNode());
+                    b.Log("minimize");
+                    b.CallExternal("cy", "minimize");
+                    return b.Clone(state);
+                });
 
+                var minimize = b.NewObj<CommandButton.Props<InfrastructureSummary>>(b =>
+                {
+                    //b.Set(x => x.ColorClass, "bg-white");
+                    b.Set(x => x.SvgIcon, MdsCommon.Icon.Minimize);
+                    b.Set(x => x.OnClick, onMinimize);
+                });
 
-                    ServiceSummary serviceSummary = new ServiceSummary()
+                b.AddClass(b.Add(microBar, b.CommandButton(minimize)), "bg-white");
+            },
+            b =>
+            {
+                var onMaximize = b.MakeAction((BlockBuilder b, Var<InfrastructureSummary> state) =>
+                {
+                    b.Log("maximize");
+                    b.CallExternal("cy", "maximize");
+                    return b.Clone(state);
+                });
+
+                var maximize = b.NewObj<CommandButton.Props<InfrastructureSummary>>(b =>
+                {
+                    //b.Set(x => x.ColorClass, "bg-white");
+                    b.Set(x => x.SvgIcon, MdsCommon.Icon.Maximize);
+                    b.Set(x => x.OnClick, onMaximize);
+                });
+
+                b.AddClass(b.Add(microBar, b.CommandButton(maximize)), "bg-white");
+            });
+
+            var cy = b.Add(container, b.Div("h-full w-full absolute"));
+            b.SetAttr(cy, Html.id, "cy");
+
+            //b.ModuleBuilder.AddImport("import {setGraph, plusZoom, minusZoom, maximize, minimize, getMaximized } from '/cy.js'");
+
+            var graph = RedisGraph(summary, serviceSummary);
+
+            b.CallExternal("cy", "setGraph", b.Const(graph));
+
+            return container;
+        }
+
+        public class ServiceColumn
+        {
+            public List<string> Services { get; set; } = new List<string>();
+        }
+
+        public static List<ServiceSummary> GetDownstreamServices(InfrastructureSummary summary, ServiceSummary currentService)
+        {
+            List<ServiceSummary> outputServices = new();
+            foreach (var outputQueue in currentService.OutputQueues)
+            {
+                outputServices.AddRange(summary.GetReaderServices(outputQueue));
+            }
+
+            foreach (var outputChannel in currentService.OutputChannels)
+            {
+                outputServices.AddRange(summary.GetListenerServices(outputChannel));
+            }
+
+            return outputServices.Distinct().ToList();
+        }
+
+        public static List<ServiceSummary> GetUpstreamServices(InfrastructureSummary summary, ServiceSummary currentService)
+        {
+            List<ServiceSummary> inputServices = new();
+            foreach (var inputQueue in currentService.InputQueues)
+            {
+                inputServices.AddRange(summary.GetWriterServices(inputQueue));
+            }
+
+            foreach (var inputChannel in currentService.InputChannels)
+            {
+                inputServices.AddRange(summary.GetNotificationServices(inputChannel));
+            }
+
+            return inputServices.Distinct().ToList();
+        }
+
+        public static bool AddEdge(this Graph graph, string from, string to)
+        {
+            if (!graph.edges.Any(x => x.data.source == from && x.data.target == to))
+            {
+                graph.edges.Add(new Edge()
+                {
+                    data = new EdgeData()
                     {
-                        ServiceName = serviceSnapshot.ServiceName,
-                        NodeName = serviceSnapshot.NodeName,
-                        MachineIp = serviceNode.MachineIp,
-                        Project = serviceSnapshot.ProjectName,
-                        Version = serviceSnapshot.ProjectVersionTag,
-                        ServiceDescription = GetServiceComment(infraService, serviceComment)
-                    };
+                        source = from,
+                        target = to
+                    }
+                });
+                return true;
+            }
+            return false;
+        }
 
-                    summary.ServiceReferences.Add(serviceSummary);
 
-                    foreach (var p in serviceSnapshot.ServiceConfigurationSnapshotParameters)
+        const int hSpace = 700;
+        const int vSpace = 100;
+
+        public static bool AddNode(this Graph graph, string name, int column, int row, bool selected = false)
+        {
+            int xOffset = new System.Random().Next(10, 50);
+            int x = column * hSpace;
+            int yOffset = new System.Random().Next(20);
+
+            if (column % 2 == 0)
+                yOffset = yOffset * -1;
+
+            int y = row * vSpace + yOffset;
+
+            if (!graph.nodes.Any(x => x.data.id == name))
+            {
+                graph.nodes.Add(new Node()
+                {
+                    data = new NodeData()
                     {
-                        var serviceParameter = new ServiceParameter()
-                        {
-                            ParameterName = p.ParameterName,
-                            ParameterComment = GetParameterComment(infraService, p.ParameterName, paramNoteType),
-                            DeployedValue = p.DeployedValue,
-                            ParameterType = allParameterTypes.SingleOrDefault(x => x.Id == p.ParameterTypeId, new ParameterType() { Code = String.Empty }).Code,
-                            ParameterTypeDescription = allParameterTypes.SingleOrDefault(x => x.Id == p.ParameterTypeId, new ParameterType() { Code = String.Empty }).Description
-                        };
+                        id = name,
+                        FontWeight = selected ? 800 : 500,
+                        NodeColor = selected ? "#0ea5e9" : "#666"
+                    },
+                    position = new Position()
+                    {
+                        x = x + xOffset,
+                        y = y + yOffset
+                    }
+                });
+                return true;
+            }
+            return false;
+        }
 
-                        serviceSummary.ServiceParameters.Add(serviceParameter);
+        public static string ProjectLabel(this ServiceSummary service)
+        {
+            return $"{service.Project} {service.Version}";
+        }
 
-                        switch (serviceParameter.ParameterType.ToLower())
+        public static Graph RedisGraph(InfrastructureSummary summary, ServiceSummary service)
+        {
+            Graph graph = new Graph();
+
+            graph.AddNode(service.ServiceName, 0, 0, true);
+
+            List<ServiceSummary> alreadyAdded = new List<ServiceSummary>();
+            alreadyAdded.Add(service);
+
+            List<ServiceSummary> currentServicesColumn = new List<ServiceSummary>();
+            currentServicesColumn.Add(service);
+
+            int column = 0;
+
+            // Add input
+            while (true)
+            {
+                int row = 0;
+                column -= 1;
+                List<ServiceSummary> inputServices = new List<ServiceSummary>();
+                foreach (var currentService in currentServicesColumn)
+                {
+                    foreach (var inputChannel in currentService.InputChannels)
+                    {
+                        foreach (var inputService in summary.GetNotificationServices(inputChannel).OrderBy(x => x.ServiceName))
                         {
-                            case "redisinputqueue":
-                                {
-                                    serviceSummary.InputQueues.Add(serviceParameter.DeployedValue);
-                                }
-                                break;
-                            case "redisoutputqueue":
-                                {
-                                    serviceSummary.OutputQueues.Add(serviceParameter.DeployedValue);
-                                }
-                                break;
-                            case "redisinputchannel":
-                                {
-                                    serviceSummary.InputChannels.Add(serviceParameter.DeployedValue);
-                                }
-                                break;
-                            case "redisoutputchannel":
-                                {
-                                    serviceSummary.OutputChannels.Add(serviceParameter.DeployedValue);
-                                }
-                                break;
-                            case "port":
-                                {
-                                    serviceSummary.ListeningPorts.Add(Int32.Parse(serviceParameter.DeployedValue));
-                                }
-                                break;
-                            case "apiaccessurl":
-                                {
-                                    if (!string.IsNullOrWhiteSpace(serviceParameter.DeployedValue))
-                                    {
-                                        serviceSummary.AccessedUrls.Add(serviceParameter.DeployedValue);
-                                    }
-                                }
-                                break;
-                            case "dbconnectionstring":
-                                {
-                                    if (!string.IsNullOrWhiteSpace(serviceParameter.DeployedValue))
-                                    {
-                                        //serviceParameter.DeployedValue = ParseConnectionString(serviceParameter.DeployedValue).ToString();
-                                        serviceSummary.DbConnections.Add(serviceParameter.DeployedValue);
-                                    }
-                                }
-                                break;
+                            if (!alreadyAdded.Contains(inputService))
+                            {
+                                inputServices.Add(inputService);
+
+                                if (graph.AddNode(inputService.ServiceName, column, row))
+                                    row++;
+                            }
+
+                            graph.AddEdge(inputService.ServiceName, currentService.ServiceName);
+                        }
+                    }
+
+                    foreach (var inputQueue in currentService.InputQueues)
+                    {
+                        foreach (var inputService in summary.GetWriterServices(inputQueue).OrderBy(x => x.ServiceName))
+                        {
+                            if (!alreadyAdded.Contains(inputService))
+                            {
+                                inputServices.Add(inputService);
+
+                                if (graph.AddNode(inputService.ServiceName, column, row))
+                                    row++;
+                            }
+
+                            graph.AddEdge(inputService.ServiceName, currentService.ServiceName);
                         }
                     }
                 }
+
+
+                if (!inputServices.Any())
+                    break;
+
+                alreadyAdded.AddRange(inputServices);
+                currentServicesColumn = inputServices;
             }
 
-            return summary;
-        }
+            currentServicesColumn.Clear();
+            currentServicesColumn.Add(service);
 
-        public static string GetParameterComment(
-            InfrastructureService infrastructureService,
-            string parameterName,
-            NoteType paramNoteType)
-        {
-            if (infrastructureService == null)
-                return string.Empty;
+            column = 0;
 
-            var configParam = infrastructureService.InfrastructureServiceParameterDeclarations.SingleOrDefault(x => x.ParameterName == parameterName);
-
-            if (configParam == null)
-                return String.Empty;
-
-            var paramNote = infrastructureService.InfrastructureServiceNotes.SingleOrDefault(x => x.NoteTypeId == paramNoteType.Id && x.Reference == configParam.Id.ToString());
-
-            if (paramNote == null)
-                return String.Empty;
-
-            return paramNote.Note;
-        }
-
-        public static string GetServiceComment(
-            InfrastructureService infrastructureService,
-            NoteType noteType)
-        {
-            if (infrastructureService == null)
-                return string.Empty;
-
-            var note = infrastructureService.InfrastructureServiceNotes.SingleOrDefault(x => x.NoteTypeId == noteType.Id);
-            if (note == null)
-                return String.Empty;
-
-            return note.Note;
-        }
-
-        public static List<ServiceSummary> GetWriterServices(this InfrastructureSummary summary, string queueName)
-        {
-            return summary.ServiceReferences.Where(x => x.OutputQueues.Contains(queueName)).ToList();
-        }
-
-        public static List<ServiceSummary> GetReaderServices(this InfrastructureSummary summary, string queueName)
-        {
-            return summary.ServiceReferences.Where(x => x.InputQueues.Contains(queueName)).ToList();
-        }
-
-        public static List<ServiceSummary> GetNotificationServices(this InfrastructureSummary summary, string channelName)
-        {
-            return summary.ServiceReferences.Where(x => x.OutputChannels.Contains(channelName)).ToList();
-        }
-
-        public static List<ServiceSummary> GetListenerServices(this InfrastructureSummary summary, string channelName)
-        {
-            return summary.ServiceReferences.Where(x => x.InputChannels.Contains(channelName)).ToList();
-        }
-
-        public static List<ServiceSummary> GetClientServices(this InfrastructureSummary summary, string machineIp, int port)
-        {
-            List<ServiceSummary> clientServices = new();
-
-            foreach (var service in summary.ServiceReferences)
+            // Add output
+            while (true)
             {
-                foreach (string url in service.AccessedUrls)
+                int row = 0;
+                column += 1;
+                List<ServiceSummary> outputServices = new List<ServiceSummary>();
+                foreach (var currentService in currentServicesColumn)
                 {
-                    var urlData = ParseUrl(url);
-                    if(urlData.Machine == machineIp && urlData.Port == port)
+                    foreach (var outputChannel in currentService.OutputChannels)
                     {
-                        clientServices.Add(service);
+                        foreach (var outputService in summary.GetListenerServices(outputChannel).OrderBy(x => x.ServiceName))
+                        {
+                            if (!alreadyAdded.Contains(outputService))
+                            {
+                                outputServices.Add(outputService);
+
+                                if (graph.AddNode(outputService.ServiceName, column, row))
+                                    row++;
+                            }
+
+                            graph.AddEdge(currentService.ServiceName, outputService.ServiceName);
+                        }
+                    }
+
+                    foreach (var outputQueue in currentService.OutputQueues)
+                    {
+                        foreach (var outputService in summary.GetReaderServices(outputQueue).OrderBy(x => x.ServiceName))
+                        {
+                            if (!alreadyAdded.Contains(outputService))
+                            {
+                                outputServices.Add(outputService);
+
+                                if (graph.AddNode(outputService.ServiceName, column, row))
+                                    row++;
+                            }
+
+                            graph.AddEdge(currentService.ServiceName, outputService.ServiceName);
+                        }
                     }
                 }
+
+                if (!outputServices.Any())
+                    break;
+
+                alreadyAdded.AddRange(outputServices);
+                currentServicesColumn = outputServices;
             }
 
-            return clientServices;
+            return graph;
         }
 
-        public static string GetServer(this InfrastructureSummary summary, string url)
+        public static Graph RedisGraph(InfrastructureSummary summary)
         {
-            var urlData = ParseUrl(url);
+            Graph graph = new Graph();
 
-            foreach (var service in summary.ServiceReferences)
+            //List<List<ServiceSummary>> columns = new List<List<ServiceSummary>>();
+
+            List<string> remainingServiceNames = summary.ServiceReferences.Select(x => x.ServiceName).ToList();
+
+            List<ServiceSummary> currentColumnServices = summary.ServiceReferences.Where(x => GetUpstreamServices(summary, x).Count == 0).ToList();
+
+            List<int> maxIndexes = new List<int>();
+
+            int NextRowIndex(int column)
             {
-                if (service.MachineIp == urlData.Machine)
+                while (maxIndexes.Count() <= column)
                 {
-                    if (service.ListeningPorts.Contains(urlData.Port))
-                        return service.ServiceName;
+                    maxIndexes.Add(0);
                 }
+
+                maxIndexes[column]++;
+                return maxIndexes[column];
             }
 
-            return String.Empty;
-        }
-
-        public class UrlData
-        {
-            public string Machine { get; set; }
-            public int Port { get; set; } = 80;
-        }
-
-        public static UrlData ParseUrl(string url)
-        {
-            UrlData urlData = new UrlData();
-
-            if (url.Replace("http://", string.Empty).Replace("https://", string.Empty).Contains(":"))
+            int columnIndex = 2;
+            while (remainingServiceNames.Any())
             {
-                urlData.Port = Int32.Parse(url.Split(':').Last().Split('/', '?').First());
+                int serviceRowIndex = 0;
+
+                foreach (var service in currentColumnServices.OrderBy(x => x.ServiceName))
+                {
+                    if (graph.AddNode(service.ProjectLabel(), columnIndex * 500, serviceRowIndex * 100))
+                        serviceRowIndex++;
+
+                    foreach (var inputChannel in service.InputChannels.Where(x => !string.IsNullOrWhiteSpace(x)).OrderBy(x => x))
+                    {
+                        foreach (var inputService in summary.GetNotificationServices(inputChannel))
+                        {
+                            graph.AddNode(inputService.ProjectLabel(), (columnIndex - 1) * 500, NextRowIndex(columnIndex - 1) * 100);
+                            graph.AddEdge(inputService.ProjectLabel(), service.ProjectLabel());
+                        }
+                    }
+
+                    foreach (var inputQueue in service.InputQueues.Where(x => !string.IsNullOrWhiteSpace(x)).OrderBy(x => x))
+                    {
+                        foreach (var inputService in summary.GetWriterServices(inputQueue))
+                        {
+                            graph.AddNode(inputService.ProjectLabel(), (columnIndex - 1) * 500, NextRowIndex(columnIndex - 1) * 100);
+                            graph.AddEdge(inputService.ProjectLabel(), service.ProjectLabel());
+                        }
+                    }
+
+                    foreach (var outputChannel in service.OutputChannels.Where(x => !string.IsNullOrWhiteSpace(x)).OrderBy(x => x))
+                    {
+                        foreach (var outputService in summary.GetListenerServices(outputChannel))
+                        {
+                            graph.AddNode(outputService.ProjectLabel(), (columnIndex + 1) * 500, NextRowIndex(columnIndex + 1) * 100);
+                            graph.AddEdge(service.ProjectLabel(), outputService.ProjectLabel());
+                        }
+                    }
+
+                    foreach (var outputQueue in service.OutputQueues.Where(x => !string.IsNullOrWhiteSpace(x)).OrderBy(x => x))
+                    {
+                        foreach (var outputService in summary.GetReaderServices(outputQueue))
+                        {
+                            graph.AddNode(outputService.ProjectLabel(), (columnIndex + 1) * 500, NextRowIndex(columnIndex + 1) * 100);
+                            graph.AddEdge(service.ProjectLabel(), outputService.ProjectLabel());
+                        }
+                    }
+                }
+
+                columnIndex += 2;
+
+                remainingServiceNames.RemoveAll(x => currentColumnServices.Select(x => x.ServiceName).Contains(x));
+                currentColumnServices = currentColumnServices.SelectMany(x => GetDownstreamServices(summary, x)).Where(x => remainingServiceNames.Contains(x.ServiceName)).ToList();
             }
 
-            urlData.Machine = url.Replace("http://", string.Empty).Split(new char[] { ':', '/' }).First();
-
-            return urlData;
+            return graph;
         }
+
     }
 
     public static class connect
@@ -709,4 +934,3 @@ namespace MdsInfrastructure
         }
     }
 }
-

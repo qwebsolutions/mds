@@ -1,10 +1,8 @@
 ﻿using Metapsi;
+using System;
 
 namespace MdsInfrastructure.Routes
 {
-    public class EditConfiguration : Route.IGet { }
-    public class ListDeployments : Route.IGet { }
-
     public class Status
     {
         public class Infra : Route.IGet { }
@@ -15,23 +13,23 @@ namespace MdsInfrastructure.Routes
     public class Configuration
     {
         public class List : Route.IGet { }
-    }
-    public class Deployments
-    {
-        public class List : Route.IGet { }
+        public class Add : Route.IGet { }
+        public class Edit : Route.IGet { }
     }
 
-    public class Nodes
+    public class Deployment
     {
         public class List : Route.IGet { }
+        public class Review : Route.IGet<Guid> { }
     }
 
-    public class Projects
+    public class Node
     {
         public class List : Route.IGet { }
+        public class Edit : Route.IGet<Guid> { }
     }
 
-    public class EventsLog : Route.IGet
+    public class Project
     {
         public class List : Route.IGet { }
     }
@@ -39,5 +37,6 @@ namespace MdsInfrastructure.Routes
     public class Docs
     {
         public class Service : Route.IGet<string> { }
+        public class RedisMap: Route.IGet<string> { }
     }
 }

@@ -6,14 +6,14 @@ using System.Linq;
 
 namespace MdsInfrastructure.Render
 {
-    public class ApplicationStatusPage : MixedHyperPage<ApplicationStatus, ApplicationStatus>
+    public class ApplicationStatus : MixedHyperPage<MdsInfrastructure.ApplicationStatus, MdsInfrastructure.ApplicationStatus>
     {
-        public override ApplicationStatus ExtractDataModel(ApplicationStatus serverData)
+        public override MdsInfrastructure.ApplicationStatus ExtractClientModel(MdsInfrastructure.ApplicationStatus serverData)
         {
             return serverData;
         }
 
-        public override Var<HyperNode> OnRender(BlockBuilder b, Var<ApplicationStatus> clientModel, ApplicationStatus serverData)
+        public override Var<HyperNode> OnRender(BlockBuilder b, MdsInfrastructure.ApplicationStatus serverData, Var<MdsInfrastructure.ApplicationStatus> clientModel)
         {
             b.AddStylesheet("/static/tw.css");
 
@@ -37,13 +37,13 @@ namespace MdsInfrastructure.Render
 
         public Var<HyperNode> Render(
             BlockBuilder b,
-            InfrastructureStatus applicationStatusPage,
+            MdsInfrastructure.InfrastructureStatus applicationStatusPage,
             string selectedApplicationName)
         {
             var page = b.Div("flex flex-col space-y-4");
             var selectedApplication = applicationStatusPage.InfrastructureConfiguration.Applications.Single(x => x.Name == selectedApplicationName);
 
-            b.RenderApplicationPanel<InfrastructureStatus, InfrastructureStatus>(
+            b.RenderApplicationPanel<MdsInfrastructure.InfrastructureStatus, MdsInfrastructure.InfrastructureStatus>(
                 applicationStatusPage.Deployment,
                 applicationStatusPage.HealthStatus,
                 applicationStatusPage.InfrastructureEvents,

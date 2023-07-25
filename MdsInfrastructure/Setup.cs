@@ -190,7 +190,7 @@ namespace MdsInfrastructure
                     e.Logger.LogInfo("NodeStatus");
                     e.Logger.LogInfo(e.EventData.Payload);
                     MdsCommon.SerializableHealthStatus serializableHealthStatus = Metapsi.Serialize.FromJson<MdsCommon.SerializableHealthStatus>(e.EventData.Payload);
-                    var healthStatus = NodeStatus.FromSerializable(serializableHealthStatus);
+                    var healthStatus = MdsCommon.NodeStatus.FromSerializable(serializableHealthStatus);
                     e.Logger.LogInfo($"HealthStatus notification {Metapsi.Serialize.ToJson(healthStatus)}");
 
                     await httpClient.Command(Api.StoreHealthStatus, healthStatus);

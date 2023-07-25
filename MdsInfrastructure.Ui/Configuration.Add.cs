@@ -5,14 +5,17 @@ using System.Threading.Tasks;
 
 namespace MdsInfrastructure
 {
-    public static partial class Configuration
-    {
-        public static async Task<IResult> Add(CommandContext commandContext, HttpContext requestData)
-        {
-            var newConfig = new InfrastructureConfiguration();
-            var serverModel = await MdsInfrastructureFunctions.InitializeEditConfiguration(commandContext, newConfig);
+    // TODO: Most likely should be completely removed, multiple configurations were never used 
+    // If kept, should be an API call 
 
-            return await EditConfiguration.BuildModulePage(commandContext, requestData, serverModel, requestData.User());
-        }
-    }
+    //public static partial class Configuration
+    //{
+    //    public static async Task<IResult> Add(CommandContext commandContext, HttpContext requestData)
+    //    {
+    //        var newConfig = new InfrastructureConfiguration();
+    //        var serverModel = await MdsInfrastructureFunctions.InitializeEditConfiguration(commandContext, newConfig);
+
+    //        return await EditConfiguration.BuildModulePage(commandContext, requestData, serverModel, requestData.User());
+    //    }
+    //}
 }

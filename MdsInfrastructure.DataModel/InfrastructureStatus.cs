@@ -20,4 +20,10 @@ namespace MdsInfrastructure
         public string ApplicationName { get; set; } = string.Empty;
         public InfrastructureStatus InfrastructureStatus { get; set; } = new();
     }
+
+    public class NodeStatus
+    {
+        public string NodeName { get; set; } = string.Empty;
+        public InfrastructureStatus InfrastructureStatus { get; set; } = new();
+    }
 }

@@ -1,36 +1,38 @@
-﻿using Metapsi;
+﻿using MdsCommon;
+using Metapsi;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
-using System.Threading.Tasks;
-using System.Linq;
+using Metapsi.Ui;
 using System;
-using System.Collections.Generic;
-using MdsCommon;
-using Microsoft.AspNetCore.Http;
+using System.Linq;
 
-namespace MdsInfrastructure
+namespace MdsInfrastructure.Render
 {
-    public static partial class Configuration
+    public class ListConfigurations : MixedHyperPage<ListConfigurationsPage, ConfigurationHeadersList>
     {
-        public static async Task<IResult> List(CommandContext commandContext, HttpContext requestData)
+        public override ConfigurationHeadersList ExtractClientModel(ListConfigurationsPage serverData)
         {
-            var configurationsList = await MdsInfrastructureFunctions.Configurations(commandContext);
+            return serverData.ConfigurationHeadersList;
+        }
 
-            return Page.Response(configurationsList,
-                (b, clientModel) => b.Layout(
-                    b.InfraMenu(nameof(Configuration), requestData.User().IsSignedIn()),
+        public override Var<HyperNode> OnRender(BlockBuilder b, ListConfigurationsPage serverModel, Var<ConfigurationHeadersList> clientModel)
+        {
+            b.AddStylesheet("/static/tw.css");
+
+            return b.Layout(
+                    b.InfraMenu(nameof(MdsInfrastructure.Routes.Configuration),
+                    serverModel.User.IsSignedIn()),
                     b.Render(b.Const(new Header.Props()
                     {
                         Main = new Header.Title() { Operation = "Configurations" },
-                        User = requestData.User()
+                        User = serverModel.User,
                     })),
-                    Render(b, clientModel)),
-                string.Empty);
+                    Render(b, clientModel));
         }
 
-        public static Var<HyperNode> Render(BlockBuilder b, Var<ConfigurationHeadersList> clientModel)
+        private static Var<HyperNode> Render(BlockBuilder b, Var<ConfigurationHeadersList> clientModel)
         {
-            var addConfigurationUrl = b.Url(Configuration.Add);
+            var addConfigurationUrl = Route.Path<Routes.Configuration.Add>();
             var rows = b.Get(clientModel, x => x.ConfigurationHeaders.OrderBy(x => x.Name).ToList());
 
             var rc = b.RenderCell<InfrastructureConfiguration>((b, configurationHeader, column) =>
@@ -46,7 +48,7 @@ namespace MdsInfrastructure
                     {
                         var confName = b.Get(configurationHeader, x => x.Name);
                         var confId = b.Get(configurationHeader, x => x.Id);
-                        var link = b.Add(cell, b.Link(confName, b.Url(EditConfiguration.Edit, confId)));
+                        var link = b.Add(cell, b.Link(confName, b.Concat(b.Const(Route.Path<Routes.Configuration.Edit>()), b.AsString(confId))));
                     },
                     b =>
                     {
@@ -55,7 +57,7 @@ namespace MdsInfrastructure
                     });
 
                 return b.VPadded4(cell);
-            }); 
+            });
 
             var dataGrid = b.DataGrid<InfrastructureConfiguration>(
                 new()
@@ -77,4 +79,3 @@ namespace MdsInfrastructure
         }
     }
 }
-

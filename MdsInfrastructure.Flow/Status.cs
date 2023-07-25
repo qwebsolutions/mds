@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MdsInfrastructure.Flow;
 
-public static class Status
+public static partial class Status
 {
     public class Infra : Metapsi.Http.Get<Routes.Status.Infra>
     {
@@ -29,6 +29,21 @@ public static class Status
             return Page.Result<ApplicationStatus>(new ApplicationStatus()
             {
                 ApplicationName = applicationName,
+                InfrastructureStatus = pageData
+            });
+        }
+    }
+
+    public class Node : Metapsi.Http.Get<Routes.Status.Node, string>
+    {
+        public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext, string nodeName)
+        {
+            var pageData = await Load.Status(commandContext);
+            pageData.User = httpContext.User();
+
+            return Page.Result<NodeStatus>(new NodeStatus()
+            {
+                NodeName = nodeName,
                 InfrastructureStatus = pageData
             });
         }

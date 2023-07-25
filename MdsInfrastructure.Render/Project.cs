@@ -1,48 +1,30 @@
-﻿using Metapsi;
-using Metapsi.Hyperapp;
+﻿using Metapsi.Hyperapp;
 using Metapsi.Syntax;
-using System.Threading.Tasks;
-using System.Linq;
-using System.Collections.Generic;
 using MdsCommon;
-using Microsoft.AspNetCore.Http;
+using Metapsi.Ui;
+using System.Linq;
 
-namespace MdsInfrastructure
+namespace MdsInfrastructure.Render
 {
-    public static partial class Projects
+    public static class Project
     {
-        public class ListProjectsPage : IHasSidePanel, IHasLoadingPanel, IHasValidationPanel
+        public class List : MixedHyperPage<MdsInfrastructure.ListProjectsPage, MdsInfrastructure.ListProjectsPage>
         {
-            public List<Project> ProjectsList { get; set; }
-            public List<InfrastructureConfiguration> AllConfigurationHeaders { get; set; }
-            public List<InfrastructureService> InfrastructureServices { get; set; }
-            public bool ShowSidePanel { get; set; }
-            public Project SelectedProject { get; set; }
-            public bool IsLoading { get; set; }
-            public string ValidationMessage { get; set; }
-        }
-
-        public static async Task<IResponse> List(CommandContext commandContext, HttpContext requestData)
-        {
-            var allConfigurations = await commandContext.Do(Api.LoadAllConfigurationHeaders);
-
-            ListProjectsPage page = new ListProjectsPage()
+            public override ListProjectsPage ExtractClientModel(ListProjectsPage serverModel)
             {
-                ProjectsList = await commandContext.Do(Api.LoadAllProjects),
-                AllConfigurationHeaders = allConfigurations.ConfigurationHeaders,
-                InfrastructureServices = allConfigurations.Services
-            };
+                return serverModel;
+            }
 
-            return Page.Response(
-                page, 
-                (b, clientModel) => 
-                b.Layout(
-                    b.InfraMenu(nameof(Projects), requestData.User().IsSignedIn()),
+            public override Var<HyperNode> OnRender(BlockBuilder b, ListProjectsPage serverModel, Var<ListProjectsPage> clientModel)
+            {
+                return b.Layout(
+                    b.InfraMenu(nameof(Routes.Project), serverModel.User.IsSignedIn()),
                     b.Render(b.Const(new Header.Props()
                     {
                         Main = new Header.Title() { Operation = "Projects" },
-                        User = requestData.User()
-                    })), b.Render(clientModel)));
+                        User = serverModel.User
+                    })), b.Render(clientModel));
+            }
         }
 
         //public static async Task<ProjectVersion> SaveVersionEnabled(CommandContext commandContext, ProjectVersion version)
@@ -61,7 +43,7 @@ namespace MdsInfrastructure
             var view = b.Div();
             b.Add(view, b.ValidationPanel(clientModel));
 
-            b.Add(view, b.SidePanel<ListProjectsPage>( 
+            b.Add(view, b.SidePanel<ListProjectsPage>(
                 clientModel,
                 b =>
                 {
@@ -85,7 +67,7 @@ namespace MdsInfrastructure
 
                         var checkboxText = b.Get(
                             version,
-                            b.Def<string, List<string>, string>(Native.JoinStrings),
+                            b.Def<string, System.Collections.Generic.List<string>, string>(Native.JoinStrings),
                             buildDescriptions,
                             (version, join, buildDescriptions) => version.VersionTag + "(" + join(", ", buildDescriptions) + ")");
 
@@ -102,8 +84,8 @@ namespace MdsInfrastructure
                                     return b.AsyncResult(
                                         b.Clone(state),
                                         b.CallApi<ListProjectsPage, ProjectVersion>(
-                                            Api.SaveVersionEnabled, 
-                                            version, 
+                                            Api.SaveVersionEnabled,
+                                            version,
                                             (BlockBuilder b, Var<ListProjectsPage> state) => b.HideLoading(state),
                                             (BlockBuilder b, Var<ListProjectsPage> state, Var<ApiError> error) =>
                                             {
@@ -115,29 +97,29 @@ namespace MdsInfrastructure
                                             }));
 
                                 }),
-                                //b.AsyncCommand<ListProjectsPage, bool, ProjectVersion>(
-                                //    b.Def((BlockBuilder b, Var<ListProjectsPage> clientModel, Var<bool> isChecked) =>
-                                //    {
-                                //        b.ShowLoading();
-                                //        b.Set(version, x => x.Enabled, isChecked);
-                                //        return clientModel;
-                                //    }),
-                                //    b.Def((BlockBuilder b, Var<ListProjectsPage> clientModel, Var<bool> isChecked, Var<System.Action<ProjectVersion>> onDone) =>
-                                //    {
-                                //        b.CallApi(Api.SaveVersionEnabled, version, b.Def(b => { b.Call(onDone, version); }));
-                                //        //throw new System.NotImplementedException("API calls are different now");
-                                //        //b.PostData(b.Url(SaveVersionEnabled), version, onDone, b.Def((BlockBuilder b, Var<object> error) =>
-                                //        //{
-                                //        //    b.HideLoading();
-                                //        //    b.SetValidationMessage(b.AsString(error));
-                                //        //    b.Call(onDone, version);
-                                //        //}));
-                                //    }),
-                                //    b.Def((BlockBuilder b, Var<ListProjectsPage> clientModel, Var<ProjectVersion> newData) =>
-                                //    {
-                                //        b.HideLoading();
-                                //        return b.Clone(clientModel);
-                                //    })),
+                                    //b.AsyncCommand<ListProjectsPage, bool, ProjectVersion>(
+                                    //    b.Def((BlockBuilder b, Var<ListProjectsPage> clientModel, Var<bool> isChecked) =>
+                                    //    {
+                                    //        b.ShowLoading();
+                                    //        b.Set(version, x => x.Enabled, isChecked);
+                                    //        return clientModel;
+                                    //    }),
+                                    //    b.Def((BlockBuilder b, Var<ListProjectsPage> clientModel, Var<bool> isChecked, Var<System.Action<ProjectVersion>> onDone) =>
+                                    //    {
+                                    //        b.CallApi(Api.SaveVersionEnabled, version, b.Def(b => { b.Call(onDone, version); }));
+                                    //        //throw new System.NotImplementedException("API calls are different now");
+                                    //        //b.PostData(b.Url(SaveVersionEnabled), version, onDone, b.Def((BlockBuilder b, Var<object> error) =>
+                                    //        //{
+                                    //        //    b.HideLoading();
+                                    //        //    b.SetValidationMessage(b.AsString(error));
+                                    //        //    b.Call(onDone, version);
+                                    //        //}));
+                                    //    }),
+                                    //    b.Def((BlockBuilder b, Var<ListProjectsPage> clientModel, Var<ProjectVersion> newData) =>
+                                    //    {
+                                    //        b.HideLoading();
+                                    //        return b.Clone(clientModel);
+                                    //    })),
                                     checkboxText,
                                     checkboxText,
                                     b =>
@@ -171,7 +153,7 @@ namespace MdsInfrastructure
 
             var projectRows = b.Get(clientModel, x => x.ProjectsList.OrderBy(x => x.Name).ToList());
 
-            var props = b.NewObj<DataTable.Props<Project>>(b =>
+            var props = b.NewObj<DataTable.Props<MdsCommon.Project>>(b =>
             {
 
                 b.AddColumn(nameof(MdsCommon.Project.Name), "Project");

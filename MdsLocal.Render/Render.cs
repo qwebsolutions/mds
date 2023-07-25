@@ -88,124 +88,6 @@ namespace MdsLocal
             return view;
         }
     }
-    //public class RenderOverviewListProcesses : Metapsi.HtmlPage<OverviewPage>
-    //{
-    //    //public static Var<HyperNode> RenderEventsList(BlockBuilder b, Var<ListInfrastructureEventsPage> clientModel)
-    //    //{
-    //    //    var headerProps = b.NewObj<Header.Props>();
-    //    //    b.Set(headerProps, x => x.Main, b.Const(new Header.Title() { Operation = "Infrastructure events" }));
-    //    //    b.Set(headerProps, x => x.User, b.Get(clientModel, x => x.User));
-
-    //    //    return b.Call(
-    //    //        MdsCommon.Common.Layout,
-    //    //        b.LocalMenu(nameof(EventsLog)),
-    //    //        b.Render(headerProps),
-    //    //        b.RenderListInfrastructureEventsPage(clientModel));
-    //    //}
-
-    //    public override IHtmlNode GetHtml(OverviewPage dataModel)
-    //    {
-    //        return new HtmlTag("html")
-    //        {
-    //            Children = new() {
-    //                new HtmlTag()
-    //                {
-    //                    Tag = "head",
-    //                    Children = new()
-    //                    {
-    //                        new HtmlTag()
-    //                        {
-    //                            Tag = "title",
-    //                            Children = new()
-    //                            {
-    //                                new HtmlText()
-    //                                {
-    //                                    Text = "List processes ++++"
-    //                                }
-    //                            }
-    //                        }
-    //                    }
-    //                },
-    //                new HtmlTag()
-    //                {
-    //                    Tag = "body",
-    //                    Children = new()
-    //                    {
-    //                        new HtmlTag()
-    //                        {
-    //                            Tag = "h1",
-    //                            Children = new()
-    //                            {
-    //                                new HtmlText()
-    //                                {
-    //                                    Text = "Reload works!!!"
-    //                                }
-    //                            }
-    //                        }
-    //                    }
-    //                }
-    //            }
-    //        };
-    //    }
-    //}
-
-    public class RenderInfrastructureEventsList : HyperPage<ListInfrastructureEventsPage>
-    {
-        public override Var<HyperNode> OnRender(BlockBuilder b, Var<ListInfrastructureEventsPage> clientModel)
-        {
-            b.AddStylesheet("/static/tw.css");
-
-            var headerProps = b.NewObj<Header.Props>();
-            b.Set(headerProps, x => x.Main, b.Const(new Header.Title() { Operation = "Infrastructure events" }));
-            b.Set(headerProps, x => x.User, b.Get(clientModel, x => x.User));
-
-            return b.Call(
-                MdsCommon.Common.Layout,
-                b.LocalMenu(nameof(EventsLog)),
-                b.Render(headerProps),
-                b.RenderListInfrastructureEventsPage(clientModel));
-        }
-
-        //public static Var<HyperNode> RenderEventsList(BlockBuilder b, Var<ListInfrastructureEventsPage> clientModel)
-        //{
-        //    var headerProps = b.NewObj<Header.Props>();
-        //    b.Set(headerProps, x => x.Main, b.Const(new Header.Title() { Operation = "Infrastructure events" }));
-        //    b.Set(headerProps, x => x.User, b.Get(clientModel, x => x.User));
-
-        //    return b.Call(
-        //        MdsCommon.Common.Layout,
-        //        b.LocalMenu(nameof(EventsLog)),
-        //        b.Render(headerProps),
-        //        b.RenderListInfrastructureEventsPage(clientModel));
-        //}
-
-        //public override IHtmlNode GetHtml(ListInfrastructureEventsPage dataModel)
-        //{
-        //    return new HtmlTag("html")
-        //    {
-        //        Children = new() {
-        //            new HtmlTag()
-        //            {
-        //                Tag = "head",
-        //                Children = new()
-        //                {
-        //                    new HtmlTag()
-        //                    {
-        //                        Tag = "title",
-        //                        Children = new()
-        //                        {
-        //                            new HtmlText()
-        //                            {
-        //                                Text = "List infrastructure events ....."
-        //                            }
-        //                        }
-        //                    }
-        //                }
-        //            }
-        //        }
-        //    };
-        //}
-    }
 
     public static partial class MdsLocalMenu
     {
@@ -216,7 +98,7 @@ namespace MdsLocal
             var menuEntries = new List<Metapsi.Ui.Menu.Entry>() {
                 new (){Code = nameof(Overview), Label = "Overview", Href = Route.Path<Overview.ListProcesses>()},
                 new (){Code = nameof(SyncHistory), Label = "Sync history", Href = Route.Path<SyncHistory.List>()},
-                new (){Code = nameof(EventsLog) , Label = "Events log", Href = Route.Path<EventsLog.List>() }
+                new (){Code = nameof(MdsCommon.Routes.EventsLog) , Label = "Events log", Href = Route.Path<MdsCommon.Routes.EventsLog.List>() }
             };
 
             return b.Menu(b.Const(new Metapsi.Hyperapp.Menu.Props()

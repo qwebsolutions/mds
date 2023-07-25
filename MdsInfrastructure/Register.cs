@@ -9,8 +9,8 @@ namespace MdsInfrastructure
             refs.WebApplication.RegisterRouteHandler<MdsInfrastructure.Flow.Status.Infra, Routes.Status.Infra>();
             refs.WebApplication.RegisterRouteHandler<MdsInfrastructure.Flow.Status.Application, Routes.Status.Application, string>();
 
-            refs.RegisterPageBuilder<MdsInfrastructure.Render.InfrastructureStatusPage, InfrastructureStatus>(new Render.InfrastructureStatusPage());
-            refs.RegisterPageBuilder<MdsInfrastructure.Render.ApplicationStatusPage, ApplicationStatus>(new Render.ApplicationStatusPage());
+            refs.RegisterPageBuilder<MdsInfrastructure.Render.InfrastructureStatus, InfrastructureStatus>(new Render.InfrastructureStatus());
+            refs.RegisterPageBuilder<MdsInfrastructure.Render.ApplicationStatus, ApplicationStatus>(new Render.ApplicationStatus());
         }
     }
 }

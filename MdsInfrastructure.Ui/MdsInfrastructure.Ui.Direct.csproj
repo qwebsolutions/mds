@@ -5,13 +5,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="Configuration.Add.cs" />
-	  <Compile Remove="Configuration.List.cs" />
 	  <Compile Remove="ConfigurationPage.cs" />
-	  <Compile Remove="Deployments.List.cs" />
-	  <Compile Remove="Deployments.Review.cs" />
-	  <Compile Remove="Docs.RedisMap.cs" />
-	  <Compile Remove="Docs.Service.cs" />
 	  <Compile Remove="EditConfiguration.ConfirmDeployment.cs" />
 	  <Compile Remove="EditConfiguration.cs" />
 	  <Compile Remove="EditConfiguration.DeploymentReport.cs" />
@@ -35,12 +29,8 @@
 	  <Compile Remove="EventsLog.cs" />
 	  <Compile Remove="IEditPage.cs" />
 	  <Compile Remove="Nodes.Add.cs" />
-	  <Compile Remove="Nodes.Edit.cs" />
-	  <Compile Remove="Nodes.List.cs" />
 	  <Compile Remove="Nodes.Save.cs" />
-	  <Compile Remove="Projects.cs" />
 	  <Compile Remove="Setup.cs" />
-	  <Compile Remove="Status.Node.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -32,11 +32,6 @@ namespace MdsCommon
         public static InfrastructureEvent NoEvent = new InfrastructureEvent() { Id = System.Guid.Empty };
     }
 
-    public static class EventsLog
-    {
-        public class List : Metapsi.Route.IGet { }
-    }
-
     public static partial class Header
     {
         public class Title

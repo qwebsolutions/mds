@@ -7,14 +7,14 @@ using System.Linq;
 
 namespace MdsInfrastructure.Render
 {
-    public class InfrastructureStatusPage: MixedHyperPage<InfrastructureStatus, InfrastructureStatus>
+    public class InfrastructureStatus: MixedHyperPage<MdsInfrastructure.InfrastructureStatus, MdsInfrastructure.InfrastructureStatus>
     {
-        public override InfrastructureStatus ExtractDataModel(InfrastructureStatus serverData)
+        public override MdsInfrastructure.InfrastructureStatus ExtractClientModel(MdsInfrastructure.InfrastructureStatus serverData)
         {
             return serverData;
         }
 
-        public override Var<HyperNode> OnRender(BlockBuilder b, Var<InfrastructureStatus> clientModel, InfrastructureStatus serverModel)
+        public override Var<HyperNode> OnRender(BlockBuilder b, MdsInfrastructure.InfrastructureStatus serverModel, Var<MdsInfrastructure.InfrastructureStatus> clientModel)
         {
             b.AddStylesheet("/static/tw.css");
 
@@ -30,7 +30,7 @@ namespace MdsInfrastructure.Render
                 Render(b, serverModel));
         }
 
-        public static Var<HyperNode> Render(BlockBuilder b, InfrastructureStatus dataModel)
+        public static Var<HyperNode> Render(BlockBuilder b, MdsInfrastructure.InfrastructureStatus dataModel)
         {
             if (!string.IsNullOrEmpty(dataModel.SchemaValidationMessage))
             {
@@ -61,7 +61,7 @@ namespace MdsInfrastructure.Render
             foreach (var nodeName in dataModel.Deployment.GetDeployedServices().Select(x => x.NodeName).Distinct())
             {
                 var node = dataModel.InfrastructureNodes.Single(x => x.NodeName == nodeName);
-                var nodePanel = b.RenderNodePanel<InfrastructureStatus, InfrastructureStatus>(node, dataModel.HealthStatus);
+                var nodePanel = b.RenderNodePanel<MdsInfrastructure.InfrastructureStatus, MdsInfrastructure.InfrastructureStatus>(node, dataModel.HealthStatus);
                 b.Add(nodesContainer, nodePanel);
             }
 
@@ -69,7 +69,7 @@ namespace MdsInfrastructure.Render
 
             foreach (var applicationName in dataModel.Deployment.GetDeployedServices().Select(x => x.ApplicationName).Distinct())
             {
-                var appPanel = b.Add(appsContainer, b.RenderApplicationPanel<InfrastructureStatus, InfrastructureStatus>(
+                var appPanel = b.Add(appsContainer, b.RenderApplicationPanel<MdsInfrastructure.InfrastructureStatus, MdsInfrastructure.InfrastructureStatus>(
                     dataModel.Deployment,
                     dataModel.HealthStatus,
                     dataModel.InfrastructureEvents,

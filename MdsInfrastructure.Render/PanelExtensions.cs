@@ -108,7 +108,7 @@ namespace MdsInfrastructure.Render
 
         public static Var<HyperNode> RenderApplicationPanel<TFromPage, TToPage>(
             this BlockBuilder b,
-            Deployment deployment,
+            MdsInfrastructure.Deployment deployment,
             List<MachineStatus> healthStatus,
             List<InfrastructureEvent> allInfrastructureEvents,
             string applicationName)
@@ -152,7 +152,7 @@ namespace MdsInfrastructure.Render
 
         public static Var<HyperNode> RenderServicePanel(
             this BlockBuilder b,
-            Deployment deployment,
+            MdsInfrastructure.Deployment deployment,
             List<MachineStatus> healthStatus,
             MdsCommon.ServiceConfigurationSnapshot service,
             List<InfrastructureEvent> allInfrastructureEvents)
