@@ -38,7 +38,7 @@ public static partial class MdsInfrastructureFunctions
         editConfigurationPage.LastConfigurationDeployment = await commandContext.Do(Api.LoadLastConfigurationDeployment, editConfigurationPage.Configuration.Id);
         editConfigurationPage.LastInfrastructureDeployment = activeInfraDeployment;
         editConfigurationPage.AllProjects = await commandContext.Do(Api.LoadAllProjects);
-        editConfigurationPage.InitialConfiguration = editConfigurationPage.Configuration.Clone();
+        //editConfigurationPage.InitialConfiguration = editConfigurationPage.Configuration.Clone();
         editConfigurationPage.EnvironmentTypes = await commandContext.Do(Api.LoadEnvironmentTypes);
         editConfigurationPage.InfrastructureNodes = await commandContext.Do(Api.LoadAllNodes);
 
@@ -54,7 +54,7 @@ public static partial class MdsInfrastructureFunctions
     public static async Task<EditConfigurationPage> SaveConfiguration(CommandContext commandContext, EditConfigurationPage dataModel, Guid id)
     {
         await commandContext.Do(Api.SaveConfiguration, dataModel.Configuration);
-        dataModel.InitialConfiguration = dataModel.Configuration.Clone();
+        //dataModel.InitialConfiguration = dataModel.Configuration.Clone();
         return dataModel;
     }
 

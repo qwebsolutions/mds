@@ -14,7 +14,7 @@ namespace MdsLocal
     {
         public override Var<HyperNode> OnRender(BlockBuilder b, Var<OverviewPage> model)
         {
-            b.AddStylesheet("/static/tw.css");
+            b.AddStylesheet("metapsi.hyperapp.css");
 
             var headerProps = b.NewObj<Header.Props>();
             b.Set(headerProps, x => x.Main, b.Const(new Header.Title() { Operation = "Infrastructure events" }));
@@ -275,7 +275,7 @@ namespace MdsLocal
         public override Var<HyperNode> OnRender(BlockBuilder b, Var<SyncHistory.DataModel> dataModel)
         {
 
-            b.AddStylesheet("/static/tw.css");
+            b.AddStylesheet("metapsi.hyperapp.css");
 
             var headerProps = b.NewObj<Header.Props>();
             b.Set(headerProps, x => x.Main, b.Const(new Header.Title() { Operation = "Sync history" }));

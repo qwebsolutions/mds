@@ -19,7 +19,7 @@ namespace MdsInfrastructure.Render
 
             public override Var<HyperNode> OnRender(BlockBuilder b, M.ServicePage serverModel, Var<M.ServicePage> clientModel)
             {
-                b.AddStylesheet("/static/tw.css");
+                b.AddStylesheet("metapsi.hyperapp.css");
                 return b.Layout(b.InfraMenu(nameof(Routes.Status), serverModel.User.IsSignedIn()),
                 b.Render(b.Const(new Header.Props()
                 {
@@ -38,7 +38,7 @@ namespace MdsInfrastructure.Render
 
             public override Var<HyperNode> OnRender(BlockBuilder b, M.RedisMap serverModel, Var<M.RedisMap> clientModel)
             {
-                b.AddStylesheet("/static/tw.css");
+                b.AddStylesheet("metapsi.hyperapp.css");
                 return b.Layout(
                     b.InfraMenu(nameof(Routes.Project),
                     serverModel.User.IsSignedIn()),

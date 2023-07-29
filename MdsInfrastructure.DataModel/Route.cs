@@ -14,13 +14,14 @@ namespace MdsInfrastructure.Routes
     {
         public class List : Route.IGet { }
         public class Add : Route.IGet { }
-        public class Edit : Route.IGet { }
+        public class Edit : Route.IGet<Guid> { }
     }
 
     public class Deployment
     {
         public class List : Route.IGet { }
         public class Review : Route.IGet<Guid> { }
+        public class ConfigurationPreview : Route.IGet<Guid> { }
     }
 
     public class Node
@@ -38,5 +39,10 @@ namespace MdsInfrastructure.Routes
     {
         public class Service : Route.IGet<string> { }
         public class RedisMap: Route.IGet<string> { }
+    }
+
+    public class SignIn : Route.IGet
+    {
+        public class Credentials: Route.IPost<MdsCommon.InputCredentials> { }
     }
 }

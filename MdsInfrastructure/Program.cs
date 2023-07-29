@@ -96,6 +96,34 @@ namespace MdsInfrastructure
                 app.UseSwagger();
                 app.UseSwaggerUI();
             });
+            
+            {
+                var app = webServerRefs.WebApplication;
+
+
+
+                app.MapGet("/signin-redirect", (HttpContext httpContext) =>
+                {
+                    var rootPath = httpContext.GetHostedRootPath();
+                    //return Results.Redirect(rootPath + WebServer.Path(state.DefaultPage.Method, state.DefaultParameter));
+                    return Results.Redirect("/Status/Infra");
+                }).RequireAuthorization().ExcludeFromDescription();
+
+                app.MapGet("/signout", (HttpContext httpContext) =>
+                {
+                    var rootPath = httpContext.GetHostedRootPath();
+                    foreach (var cookie in httpContext.Request.Cookies)
+                    {
+                        httpContext.Response.Cookies.Delete(cookie.Key);
+                    }
+                    httpContext.Response.Redirect(httpContext.GetHostedRootPath() + "/");
+                }).RequireAuthorization().ExcludeFromDescription();
+            }
+
+            // Redirect to default page
+            // app.MapGet("/", () => Results.Redirect(RelativePath(state.DefaultPage.Method, state.DefaultParameter))).AllowAnonymous().ExcludeFromDescription();
+
+
 
 
             Register.Everything(webServerRefs);
@@ -105,14 +133,17 @@ namespace MdsInfrastructure
             webServerRefs.RegisterStaticFiles(typeof(MdsCommon.Header).Assembly);
             webServerRefs.RegisterStaticFiles(typeof(Metapsi.Syntax.HyperNode).Assembly);
             webServerRefs.RegisterStaticFiles(typeof(Metapsi.Syntax.BlockBuilder).Assembly);
-
-            var app = references.ApplicationSetup.Revive();
-            webServerRefs.WebApplication.Lifetime.ApplicationStopped.Register(async () =>
+            webServerRefs.RegisterStaticFiles(typeof(MdsCommon.HeaderRenderer).Assembly);
+            
             {
-                Console.WriteLine("Stop triggered from web app");
-                await app.Suspend();
-            });
-            await app.SuspendComplete;
+                var app = references.ApplicationSetup.Revive();
+                webServerRefs.WebApplication.Lifetime.ApplicationStopped.Register(async () =>
+                {
+                    Console.WriteLine("Stop triggered from web app");
+                    await app.Suspend();
+                });
+                await app.SuspendComplete;
+            }
         }
 
         public static void AddActiveDirectory(WebApplicationBuilder builder)
@@ -146,6 +177,26 @@ namespace MdsInfrastructure
 
         public static void AddServices(WebApplicationBuilder builder)
         {
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.Cookie.SameSite = SameSiteMode.Lax;
+            });
+
+            builder.Services.AddScoped<DynamicRedirect>();
+
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.ExpireTimeSpan = TimeSpan.FromDays(1);
+                    options.LoginPath = "/signin";
+                    options.Cookie.SameSite = SameSiteMode.Lax;
+                    options.EventsType = typeof(DynamicRedirect);
+                });
+
+            builder.Services.AddAuthorization(options =>
+            {
+                //options.FallbackPolicy = new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build();
+            });
 
             builder.Services.Configure<ForwardedHeadersOptions>(options =>
             {
@@ -157,11 +208,6 @@ namespace MdsInfrastructure
             builder.Services.AddHttpLogging(options =>
             {
                 options.LoggingFields = HttpLoggingFields.RequestPropertiesAndHeaders;
-            });
-
-            builder.Services.ConfigureApplicationCookie(options =>
-            {
-                options.Cookie.SameSite = SameSiteMode.Lax;
             });
 
             //builder.Services.AddScoped<DynamicRedirect>();

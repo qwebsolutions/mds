@@ -22,7 +22,56 @@ namespace MdsInfrastructure
                 Code = nameof(Routes.Status),
                 Label = "Status",
                 Href = Metapsi.Route.Path<Routes.Status.Infra>(),
-                SvgIcon = string.Empty /*Icon.Status*/
+                SvgIcon = MdsCommon.Icon.Status
+            });
+
+            if (isSignedIn)
+            {
+                menuEntries.Add(new()
+                {
+                    Code = nameof(Routes.Configuration),
+                    Label = "Configurations",
+                    Href = Metapsi.Route.Path<Routes.Configuration.List>(),
+                    SvgIcon =MdsCommon.Icon.Configuration
+                });
+            }
+
+            menuEntries.Add(new()
+            {
+                Code = nameof(Routes.Node),
+                Label = "Nodes",
+                Href = Metapsi.Route.Path<Routes.Node.List>(),
+                SvgIcon = MdsCommon.Icon.Computer
+            });
+
+            if (isSignedIn)
+            {
+                menuEntries.Add(new()
+                {
+                    Code = nameof(Routes.Deployment),
+                    Label = "Deployments",
+                    Href = Metapsi.Route.Path<Routes.Deployment.List>(),
+                    SvgIcon = MdsCommon.Icon.Package
+                });
+            }
+
+            if (isSignedIn)
+            {
+                menuEntries.Add(new()
+                {
+                    Code = nameof(Routes.Project),
+                    Label = "Projects",
+                    Href = Metapsi.Route.Path<Routes.Project.List>(),
+                    SvgIcon = MdsCommon.Icon.DocumentText
+                });
+            }
+
+            menuEntries.Add(new()
+            {
+                Code = nameof(MdsCommon.Routes.EventsLog),
+                Label = "Events log",
+                Href = Metapsi.Route.Path<MdsCommon.Routes.EventsLog.List>(),
+                SvgIcon = MdsCommon.Icon.History
             });
 
             return b.Menu(b.Const(new Menu.Props()

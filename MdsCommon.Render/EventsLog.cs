@@ -12,6 +12,8 @@ namespace MdsCommon
     {
         public static Var<HyperNode> RenderListInfrastructureEventsPage(this BlockBuilder b, Var<ListInfrastructureEventsPage> clientModel)
         {
+            b.AddStylesheet("MdsCommon.css");
+
             var container = b.Div();
             b.Comment("Created container");
             b.Comment("Client model consted");

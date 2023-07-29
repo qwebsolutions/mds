@@ -1,5 +1,6 @@
 ﻿using Metapsi;
 using Microsoft.AspNetCore.Http;
+using System;
 using System.Threading.Tasks;
 
 namespace MdsInfrastructure.Flow;
@@ -20,17 +21,14 @@ public static class Configuration
         }
     }
 
-    //public class Add : Metapsi.Http.Get<Routes.Configuration.Add>
-    //{
-    //    public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext)
-    //    {
-    //        var newConfig = new InfrastructureConfiguration();
-    //        var serverModel = await MdsInfrastructureFunctions.InitializeEditConfiguration(commandContext, newConfig);
-
-    //        return Page.Result(new AddConfigurationPage()
-    //        {
-    //            EditConfigurationPage = serverModel
-    //        });
-    //    }
-    //}
+    public class Edit : Metapsi.Http.Get<Routes.Configuration.Edit, Guid>
+    {
+        public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext, Guid configurationId)
+        {
+            var savedConfiguration = await commandContext.Do(Api.LoadConfiguration, configurationId);
+            var serverModel = await MdsInfrastructureFunctions.InitializeEditConfiguration(commandContext, savedConfiguration);
+            serverModel.User = httpContext.User();
+            return Page.Result(serverModel);
+        }
+    }
 }

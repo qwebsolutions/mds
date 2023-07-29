@@ -19,7 +19,7 @@ namespace MdsInfrastructure.Render
 
             public override Var<HyperNode> OnRender(BlockBuilder b, M.List serverModel, Var<M.List> clientModel)
             {
-                b.AddStylesheet("/static/tw.css");
+                b.AddStylesheet("metapsi.hyperapp.css");
                 return b.Layout(
                     b.InfraMenu(nameof(Routes.Node), serverModel.User.IsSignedIn()),
                     b.Render(
@@ -42,7 +42,7 @@ namespace MdsInfrastructure.Render
 
             public override Var<HyperNode> OnRender(BlockBuilder b, M.EditPage serverModel, Var<M.EditPage> clientModel)
             {
-                b.AddStylesheet("/static/tw.css");
+                b.AddStylesheet("metapsi.hyperapp.css");
 
                 var nodeName = b.Get(clientModel, x => x.InfrastructureNode.NodeName);
 

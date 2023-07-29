@@ -89,8 +89,8 @@ namespace MdsLocal
                     });
             }
 
-            webServer.WebApplication.RegisterRouteHandler<ListProcessesHandler, Overview.ListProcesses>();
-            webServer.WebApplication.RegisterRouteHandler<SyncHistoryHandler, SyncHistory.List>();
+            webServer.WebApplication.RegisterGetHandler<ListProcessesHandler, Overview.ListProcesses>();
+            webServer.WebApplication.RegisterGetHandler<SyncHistoryHandler, SyncHistory.List>();
             webServer.RegisterPageBuilder<OverviewPage>(new RenderOverviewListProcesses().Render);
             webServer.RegisterPageBuilder<ListInfrastructureEventsPage>(new RenderInfrastructureEventsList().Render);
             webServer.RegisterPageBuilder<SyncHistory.DataModel>(new RenderSyncHistory().Render);

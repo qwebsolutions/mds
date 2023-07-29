@@ -5,27 +5,6 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Compile Remove="ConfigurationPage.cs" />
-	  <Compile Remove="EditConfiguration.ConfirmDeployment.cs" />
-	  <Compile Remove="EditConfiguration.cs" />
-	  <Compile Remove="EditConfiguration.DeploymentReport.cs" />
-	  <Compile Remove="EditConfiguration.EditApplication.cs" />
-	  <Compile Remove="EditConfiguration.EditPage.cs" />
-	  <Compile Remove="EditConfiguration.EditService.cs" />
-	  <Compile Remove="EditConfiguration.EditService.EditNote.cs" />
-	  <Compile Remove="EditConfiguration.EditService.EditParameter.cs" />
-	  <Compile Remove="EditConfiguration.EditService.TabNotes.cs" />
-	  <Compile Remove="EditConfiguration.EditService.TabParameters.cs" />
-	  <Compile Remove="EditConfiguration.EditService.TabService.cs" />
-	  <Compile Remove="EditConfiguration.EditVariable.cs" />
-	  <Compile Remove="EditConfiguration.Form.cs" />
-	  <Compile Remove="EditConfiguration.MainPage.cs" />
-	  <Compile Remove="EditConfiguration.ReviewConfiguration.cs" />
-	  <Compile Remove="EditConfiguration.Save.cs" />
-	  <Compile Remove="EditConfiguration.TabApplications.cs" />
-	  <Compile Remove="EditConfiguration.TabConfiguration.cs" />
-	  <Compile Remove="EditConfiguration.TabServices.cs" />
-	  <Compile Remove="EditConfiguration.TabVariables.cs" />
 	  <Compile Remove="EventsLog.cs" />
 	  <Compile Remove="IEditPage.cs" />
 	  <Compile Remove="Nodes.Add.cs" />

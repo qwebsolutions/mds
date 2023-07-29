@@ -7,16 +7,24 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Compile Remove="tailwind\**" />
+		<EmbeddedResource Remove="tailwind\**" />
+		<None Remove="tailwind\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Remove="embedded\form.js" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\..\metapsi\Metapsi.Hyperapp\Metapsi.Hyperapp.csproj" />
 		<ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.Direct.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="embedded\" />
-	</ItemGroup>
-
-	<ItemGroup>
+		<EmbeddedResource Include="embedded\form.js" LogicalName ="form.js"/>
 		<EmbeddedResource Include="embedded\Poppins-Regular.ttf" LogicalName="Poppins-Regular.ttf"></EmbeddedResource>
+		<EmbeddedResource Include="embedded\MdsCommon.css" LogicalName="MdsCommon.css"></EmbeddedResource>
 	</ItemGroup>
 
 </Project>

@@ -6,8 +6,7 @@ namespace MdsInfrastructure
 {
     public class EditConfigurationPage //: IEditPage<EditConfigurationPage>, IHasTabs, IHasValidationPanel
     {
-        public Guid EntityId { get; set; }
-        //public PageStack.Stack<EditConfigurationPage> EditStack { get; set; } = new();
+        public Metapsi.Ui.User User { get; set; }
 
         public InfrastructureConfiguration Configuration { get; set; }
         public List<MdsCommon.Project> AllProjects { get; set; }
@@ -15,11 +14,19 @@ namespace MdsInfrastructure
         //public Page Page { get; set; } = new Page();
         public Deployment LastConfigurationDeployment { get; set; }
         public Deployment LastInfrastructureDeployment { get; set; }
-        public InfrastructureConfiguration InitialConfiguration { get; set; }
+        public string InitialConfiguration { get; set; }
         public List<EnvironmentType> EnvironmentTypes { get; set; }
         public List<ParameterType> ParameterTypes { get; set; }
         public List<NoteType> NoteTypes { get; set; }
         public string LastDeployed { get; set; }
+
+
+        // Edited entities
+        public Guid EditVariableId { get; set; }
+        public Guid EditServiceId { get; set; }
+        public Guid EditParameterId { get; set; }
+        public Guid EditApplicationId { get; set; }
+        public Guid EditServiceNoteId { get; set; }
 
         public bool IsActiveConfiguration
         {
@@ -39,8 +46,6 @@ namespace MdsInfrastructure
             }
         }
 
-        public string FirstLevelSelectedTab { get; set; } = string.Empty;
-        public string SecondLevelSelectedTab { get; set; } = string.Empty;
         public string ValidationMessage { get; set; } = string.Empty;
     }
 }
