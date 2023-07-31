@@ -34,8 +34,8 @@
         //}
     }
 
-    public static class NodeCommand
-    {
-        public const string StopService = "StopService";
-    }
+    //public static class NodeCommand
+    //{
+    //    public const string StopService = "StopService";
+    //}
 }

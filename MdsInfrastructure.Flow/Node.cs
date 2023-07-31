@@ -17,7 +17,8 @@ public static class Node
             {
                 EnvironmentTypes = await commandContext.Do(Api.LoadEnvironmentTypes),
                 InfrastructureNodes = await commandContext.Do(Api.LoadAllNodes),
-                InfrastructureServices = await commandContext.Do(Api.LoadAllServices)
+                InfrastructureServices = await commandContext.Do(Api.LoadAllServices),
+                User = httpContext.User()
             };
 
             return Page.Result(nodesList);

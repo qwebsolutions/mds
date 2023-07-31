@@ -19,7 +19,7 @@ namespace MdsInfrastructure.Render
 
             public override Var<HyperNode> OnRender(BlockBuilder b, M.List serverModel, Var<M.List> clientModel)
             {
-                b.AddStylesheet("metapsi.hyperapp.css");
+                b.AddStylesheet("MdsInfrastructure.css");
                 return b.Layout(
                     b.InfraMenu(nameof(Routes.Node), serverModel.User.IsSignedIn()),
                     b.Render(
@@ -42,8 +42,6 @@ namespace MdsInfrastructure.Render
 
             public override Var<HyperNode> OnRender(BlockBuilder b, M.EditPage serverModel, Var<M.EditPage> clientModel)
             {
-                b.AddStylesheet("metapsi.hyperapp.css");
-
                 var nodeName = b.Get(clientModel, x => x.InfrastructureNode.NodeName);
 
                 var header = b.NewObj(new Header.Props()
@@ -58,6 +56,8 @@ namespace MdsInfrastructure.Render
                     b.Render(header),
                     b.RenderEditNodePage(clientModel));
 
+                b.AddStylesheet("MdsInfrastructure.css");
+
                 return layout;
             }
         }
@@ -71,9 +71,6 @@ namespace MdsInfrastructure.Render
 
             var rc = b.RenderCell((BlockBuilder b, Var<InfrastructureNode> node, Var<DataTable.Column> col) =>
             {
-                b.Log("Nodes.List original renderer node", node);
-                b.Log("Nodes.List original renderer col", col);
-
                 var envTypes = b.Get(clientModel, x => x.EnvironmentTypes);
                 var nodeNameRef = b.Ref(b.Get(node, x => x.NodeName));
 
@@ -149,7 +146,7 @@ namespace MdsInfrastructure.Render
                     b.Set(x => x.Label, "Save");
                     b.Set(x => x.Href, saveUrl);
                     b.Set(x => x.Payload, node);
-                    b.Set(x => x.ButtonClass, "rounded text-white py-2 px-4 shadow");
+                    b.Set(x => x.ButtonClass, "rounded text-white py-2 px-4 shadow bg-sky-500");
                 }));
 
             var form = b.Form(toolbar);

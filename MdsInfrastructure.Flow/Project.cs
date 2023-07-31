@@ -16,7 +16,8 @@ public static class Project
             {
                 ProjectsList = await commandContext.Do(Api.LoadAllProjects),
                 AllConfigurationHeaders = allConfigurations.ConfigurationHeaders,
-                InfrastructureServices = allConfigurations.Services
+                InfrastructureServices = allConfigurations.Services,
+                User = httpContext.User()
             };
 
             return Page.Result(page);

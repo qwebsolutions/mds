@@ -38,6 +38,7 @@ namespace MdsInfrastructure.Flow
                 return Page.Result(new DeploymentReview()
                 {
                     ChangesReport = changes,
+                    Deployment = deployment,
                     User = httpContext.User()
                 });
             }

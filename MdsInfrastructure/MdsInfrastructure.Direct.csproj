@@ -25,6 +25,7 @@
 		<ProjectReference Include="..\..\metapsi\Metapsi.Redis\Metapsi.Redis.csproj" />
 		<ProjectReference Include="..\..\metapsi\Metapsi.Runtime\Metapsi.Runtime.csproj" />
 		<ProjectReference Include="..\..\metapsi\Metapsi.Web\Metapsi.Web.csproj" />
+		<ProjectReference Include="..\MdsCommon.Render\MdsCommon.Render.Direct.csproj" />
 		<ProjectReference Include="..\MdsInfrastructure.Flow\MdsInfrastructure.Flow.Direct.csproj" />
 		<ProjectReference Include="..\MdsInfrastructure.Render\MdsInfrastructure.Render.Direct.csproj" />
 		<ProjectReference Include="..\MdsInfrastructure.Ui\MdsInfrastructure.Ui.Direct.csproj" />

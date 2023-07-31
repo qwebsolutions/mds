@@ -9,6 +9,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\metapsi\Metapsi.Runtime\Metapsi.Runtime.csproj" />
 		<ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.Direct.csproj" />
+		<ProjectReference Include="..\MdsCommon\MdsCommon.Direct.csproj" />
 	</ItemGroup>
 
 </Project>

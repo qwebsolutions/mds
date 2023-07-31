@@ -13,7 +13,8 @@ namespace MdsCommon
         {
             var allEvents = new MdsCommon.ListInfrastructureEventsPage()
             {
-                InfrastructureEvents = await commandContext.Do(MdsCommon.Api.GetAllInfrastructureEvents)
+                InfrastructureEvents = await commandContext.Do(MdsCommon.Api.GetAllInfrastructureEvents),
+                User = httpContext.User()
             };
 
             return Page.Result(allEvents);
