@@ -104,7 +104,7 @@ namespace MdsInfrastructure.Render
                             User = serverModel.User,
                         })),
                         Render(b, clientModel));
-                        //Render(b, clientModel));
+                //Render(b, clientModel));
             }
 
             public override Var<HyperType.StateWithEffects> OnInit(BlockBuilder b, Var<EditConfigurationPage> model)
@@ -126,6 +126,98 @@ namespace MdsInfrastructure.Render
                     EditConfiguration.EditService,
                     EditConfiguration.EditVariable);
             }
+        }
+
+        public class Review : MixedHyperPage<ReviewConfigurationPage, ReviewConfigurationPage>
+        {
+            public override ReviewConfigurationPage ExtractClientModel(ReviewConfigurationPage serverModel)
+            {
+                return serverModel;
+            }
+
+            public override Var<HyperNode> OnRender(BlockBuilder b, ReviewConfigurationPage serverModel, Var<ReviewConfigurationPage> clientModel)
+            {
+                b.AddModuleStylesheet();
+
+                return b.Layout(
+                    b.InfraMenu(nameof(Configuration),
+                    serverModel.User.IsSignedIn()),
+                    b.Render(
+                        b.Const(new Header.Props()
+                        {
+                            Main = new Header.Title() { Operation = "Review configuration" },
+                            User = serverModel.User
+                        })),
+                    RenderDeploymentConfiguration(b, serverModel.Snapshot, serverModel.SavedConfiguration));
+            }
+
+            public class ConfigurationRow
+            {
+                public string ServiceName { get; set; }
+                public string Property { get; set; }
+                public string Value { get; set; }
+            }
+
+            public Var<HyperNode> RenderDeploymentConfiguration(
+                BlockBuilder b,
+                System.Collections.Generic.List<MdsCommon.ServiceConfigurationSnapshot> infrastructureSnapshot,
+                InfrastructureConfiguration infrastructureConfiguration)
+            {
+                var view = b.Div();
+
+                var deploymentReportUrl = b.Url<Routes.Deployment.ConfigurationPreview, Guid>(b.Const(infrastructureConfiguration.Id));
+                //var confirmDeploymentUrl = b.Url(ConfirmDeployment, b.Const(infrastructureConfiguration.Id));
+
+                var swapIcon = Icon.Swap;
+
+                var toolbar = b.Add(view,
+                    b.Toolbar(
+                        b => b.NavigateButton(b =>
+                        {
+                            b.Set(x => x.Label, "Review deployment actions");
+                            b.Set(x => x.Href, deploymentReportUrl);
+                            b.Set(x => x.SvgIcon, swapIcon);
+                        }),
+                        b => b.NavigateButton(b =>
+                        {
+                            b.Set(x => x.Label, "Not implemented - Deploy now");
+                            //b.Set(x => x.Href, confirmDeploymentUrl);
+                            b.Set(x => x.Style, Button.Style.Danger);
+                        })));
+
+                b.AddClass(toolbar, "justify-end");
+
+                System.Collections.Generic.List<ConfigurationRow> configurationRows = new();
+                foreach (ServiceConfigurationSnapshot serviceSnapshot in infrastructureSnapshot.OrderBy(x => x.ServiceName))
+                {
+                    configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = "Node", Value = serviceSnapshot.NodeName });
+                    configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = "Project", Value = serviceSnapshot.ProjectName });
+                    configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = "Version", Value = serviceSnapshot.ProjectVersionTag });
+                    foreach (var param in serviceSnapshot.ServiceConfigurationSnapshotParameters)
+                    {
+                        configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = param.ParameterName, Value = param.DeployedValue });
+                    }
+                }
+
+                var rc = b.Def((BlockBuilder b, Var<ConfigurationRow> row, Var<DataTable.Column> column) =>
+                {
+                    return b.VPadded4(b.Text(b.GetProperty<string>(row, b.Get(column, x => x.Name))));
+                });
+
+                var dataTableProps = b.NewObj<DataTable.Props<ConfigurationRow>>(b =>
+                {
+                    b.SetRows(b.Const(configurationRows.ToList()));
+                    b.AddColumn(nameof(ConfigurationRow.ServiceName), "Service name");
+                    b.AddColumn(nameof(ConfigurationRow.Property));
+                    b.AddColumn(nameof(ConfigurationRow.Value));
+                    b.SetRenderCell(rc);
+                });
+
+                b.Add(view, b.DataTable(dataTableProps));
+
+                return view;
+            }
+
         }
     }
 

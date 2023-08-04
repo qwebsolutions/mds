@@ -34,13 +34,51 @@ namespace MdsInfrastructure.Flow
                 var toSnapshotIds = deployment.Transitions.Select(x => x.ToServiceConfigurationSnapshotId);
 
                 var changes = ChangesReport.Get(deployment.Transitions.Select(x => x.FromSnapshot).Where(x => x != null).ToList(), deployment.GetDeployedServices().ToList());
-                
+
                 return Page.Result(new DeploymentReview()
                 {
                     ChangesReport = changes,
                     Deployment = deployment,
                     User = httpContext.User()
                 });
+            }
+        }
+
+        public class Preview : Metapsi.Http.Get<Routes.Deployment.ConfigurationPreview, Guid>
+        {
+            public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext, Guid configurationId)
+            {
+                var savedConfiguration = await commandContext.Do(Backend.LoadConfiguration, configurationId);
+                var serverModel = await MdsInfrastructureFunctions.InitializeEditConfiguration(commandContext, savedConfiguration);
+
+                var currentDeployment = await commandContext.Do(Backend.LoadCurrentDeployment);
+                if (currentDeployment == null)
+                    currentDeployment = new MdsInfrastructure.Deployment();
+
+                var snapshot = await MdsInfrastructureFunctions.TakeConfigurationSnapshot(
+                    commandContext,
+                    savedConfiguration,
+                    serverModel.AllProjects,
+                    serverModel.InfrastructureNodes);
+
+                var changesReport = MdsInfrastructure.ChangesReport.Get(currentDeployment.GetDeployedServices().ToList(), snapshot);
+                return Page.Result(new DeploymentPreview()
+                {
+                    SavedConfiguration = savedConfiguration,
+                    ChangesReport = changesReport,
+                    Deployment = currentDeployment,
+                    User = httpContext.User()
+                });
+                //return Page.Response(changesReport, (b, clientModel) =>
+                //{
+                //    var layout = b.Layout(b.InfraMenu(nameof(Configuration), requestData.User().IsSignedIn()),
+                //        b.Render(b.Const(new Header.Props()
+                //        {
+                //            Main = new Header.Title() { Operation = "Review deployment", Entity = currentDeployment.Timestamp.ItalianFormat() },
+                //            User = requestData.User()
+                //        })), RenderDeploymentReport(b, changesReport, savedConfiguration));
+                //    return layout;
+                //});
             }
         }
     }

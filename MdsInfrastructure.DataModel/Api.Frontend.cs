@@ -5,8 +5,7 @@ namespace MdsInfrastructure
 {
     public static class Frontend
     {
-        public static Request<SaveResponse, InfrastructureConfiguration> SaveConfiguration { get; set; } = new(nameof(SaveConfiguration));
-
         public class SaveResponse : ApiResponse { }
+        public static Request<SaveResponse, InfrastructureConfiguration> SaveConfiguration { get; set; } = new(nameof(SaveConfiguration));
     }
 }

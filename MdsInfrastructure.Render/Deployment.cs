@@ -80,6 +80,85 @@ namespace MdsInfrastructure.Render
             }
         }
 
+        public class Preview : MixedHyperPage<DeploymentPreview, DeploymentPreview>
+        {
+            public override DeploymentPreview ExtractClientModel(DeploymentPreview serverModel)
+            {
+                return serverModel;
+            }
+
+            public override Var<HyperNode> OnRender(BlockBuilder b, DeploymentPreview serverModel, Var<DeploymentPreview> clientModel)
+            {
+                b.AddStylesheet("metapsi.hyperapp.css");
+                b.AddModuleStylesheet();
+
+                var selectedDeployment = serverModel.Deployment.Timestamp.ItalianFormat();
+                var layout = b.Layout(
+                    b.InfraMenu(
+                        nameof(Routes.Deployment),
+                        serverModel.User.IsSignedIn()),
+                        b.Render(b.Const(new Header.Props()
+                        {
+                            Main = new Header.Title() { Operation = "Review deployment", Entity = selectedDeployment },
+                            User = serverModel.User
+                        })),
+                        RenderDeploymentReport(b, serverModel.ChangesReport, serverModel.SavedConfiguration));
+                return layout;
+            }
+        }
+
+
+        public static Var<HyperNode> RenderDeploymentReport(
+            this BlockBuilder b,
+            MdsInfrastructure.ChangesReport serverModel,
+            InfrastructureConfiguration infrastructureConfiguration)
+        {
+            var serviceChanges = serverModel.ServiceChanges;
+            if (!serviceChanges.Any() || serviceChanges.All(x => x.ServiceChangeType == ChangeType.None))
+            {
+                var view = b.Div("flex flex-col w-full h-full items-center justify-center");
+
+                var img = b.Node("img");
+                b.SetAttr(img, Html.src, "/nowork.png");
+                b.Add(view, img);
+
+                var messageLine = b.Add(view, b.Div("flex flex-row space-x-2"));
+                b.Add(messageLine, b.Text("There are no changes to deploy."));
+                //b.Add(messageLine, b.Link(b.Const("Edit"), EditConfiguration.Edit, b.Const(infrastructureConfiguration.Id.ToString())));
+                b.Add(messageLine, b.Link(b.Const("Edit"), b.Const(string.Empty)));
+
+                return view;
+            }
+            else
+            {
+                var view = b.Div();
+
+                var reviewConfigurationUrl = b.Url<Routes.Configuration.Review, Guid>(b.Const(infrastructureConfiguration.Id));
+                var confirmDeploymentUrl = b.Const(string.Empty); //b.Url(ConfirmDeployment, b.Const(infrastructureConfiguration.Id));
+                var swapIcon = Icon.Swap;
+
+                var toolbar = b.Add(view, b.Toolbar(b =>
+                    b.NavigateButton(b =>
+                    {
+                        b.Set(x => x.Label, "Review configuration");
+                        b.Set(x => x.Href, reviewConfigurationUrl);
+                        b.Set(x => x.SvgIcon, swapIcon);
+                    }),
+                    b => b.NavigateButton(b =>
+                    {
+                        b.Set(x => x.Label, "Not implemented -  Deploy now");
+                        b.Set(x => x.Href, confirmDeploymentUrl);
+                        b.Set(x => x.Style, Button.Style.Danger);
+                    })));
+                b.AddClass(toolbar, "justify-end");
+
+                b.Add(view, b.ChangesReport(serviceChanges));
+
+                return view;
+            }
+        }
+
+
         public static Var<HyperNode> ReviewDeployment(this BlockBuilder b, ChangesReport serverModel)
         {
             var view = b.Div("flex flex-col");

@@ -32,4 +32,28 @@ public static class Configuration
             return Page.Result(serverModel);
         }
     }
+
+    public class Review : Metapsi.Http.Get<Routes.Configuration.Review, Guid>
+    {
+        public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext, Guid configurationId)
+        {
+            var savedConfiguration = await commandContext.Do(Backend.LoadConfiguration, configurationId);
+            var allProjects = await commandContext.Do(Backend.LoadAllProjects);
+            var allNodes = await commandContext.Do(Backend.LoadAllNodes);
+
+            var snapshot = await MdsInfrastructureFunctions.TakeConfigurationSnapshot(
+                commandContext,
+                savedConfiguration,
+                allProjects,
+                allNodes);
+
+            return Page.Result(
+                new ReviewConfigurationPage()
+                {
+                    SavedConfiguration = savedConfiguration,
+                    Snapshot = snapshot,
+                    User = httpContext.User()
+                });
+        }
+    }
 }

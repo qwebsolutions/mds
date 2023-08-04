@@ -52,6 +52,25 @@ namespace MdsInfrastructure.Render
                         })));
             }));
 
+            var deployLink = b.Node(
+                "a",
+                "rounded text-white py-2 px-4 shadow",
+                b => b.Text("Deploy", "text-white"));
+
+            b.SetAttr(deployLink, Html.href, deploymentReportUrl);
+
+            b.If(b.Not(isSaved),
+                b =>
+                {
+                    b.SetAttr(deployLink, Html.disabled, true);
+                    b.AddClass(deployLink, "bg-gray-300");
+                },
+                b =>
+                {
+                    b.SetAttr(deployLink, Html.disabled, false);
+                    b.AddClass(deployLink, "bg-sky-500");
+                });
+
             // TODO: Change to API//
             //var saveUrl = b.Url(Save);
             //var saveUrl = "/save";
@@ -59,6 +78,7 @@ namespace MdsInfrastructure.Render
             var container = b.Div("flex flex-col w-full");
             //b.Add(container, b.ValidationPanel(clientModel));
             var toolbar = b.Toolbar(
+                b=> deployLink,
                 //b => b.FromDefault<NavigateButton.Props>(NavigateButton.Render, b =>
                 //{
                 //    b.Set(x => x.Label, "Deploy");
