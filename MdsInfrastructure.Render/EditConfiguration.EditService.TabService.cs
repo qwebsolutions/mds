@@ -10,9 +10,10 @@ namespace MdsInfrastructure.Render
     {
         public static Var<HyperNode> TabService(
            BlockBuilder b,
-           Var<EditConfigurationPage> clientModel,
-           Var<Guid> serviceId)
+           Var<EditConfigurationPage> clientModel)
         {
+            var serviceId = b.Get(clientModel, x => x.EditServiceId);
+
             var service = b.Get(clientModel, serviceId, (x, id) => x.Configuration.InfrastructureServices.Single(x => x.Id == id));
             var allApplications = b.Get(clientModel, x => x.Configuration.Applications.ToList());
             var activeProjects = b.Get(clientModel, x => x.AllProjects.Where(x => x.Enabled).ToList());

@@ -13,8 +13,8 @@ namespace MdsInfrastructure.Render
             var configName = b.Get(clientModel, x => x.Configuration.Name);
 
             var content = b.Div("flex flex-col space-y-4 w-full");
-            var configuratioNameRow = b.Add(content, b.Div("flex flex-row justify-between"));
-            b.Add(configuratioNameRow, b.Text("Configuration name"));
+            var configuratioNameRow = b.Add(content, b.Div("flex flex-row justify-between items-center gap-8"));
+            b.Add(configuratioNameRow, b.Text("Configuration name", "whitespace-nowrap"));
             b.Add(configuratioNameRow, b.BoundInput(clientModel, x => x.Configuration, x => x.Name));
             b.Add(content, b.Text(b.Get(clientModel, x => x.LastDeployed)));
 

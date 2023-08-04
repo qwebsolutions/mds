@@ -20,7 +20,7 @@ namespace MdsInfrastructure.Render
 
 
             var top = b.Add(view, b.Div("flex flex-row justify-end"));
-            var toolbar = b.Toolbar(b.OkButton(EditService, x=>x.EditParameterId));
+            var toolbar = b.Toolbar(b.OkButton(EditService, x => x.EditParameterId));
 
             b.Add(top, toolbar);
 

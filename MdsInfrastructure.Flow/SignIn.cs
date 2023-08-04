@@ -15,42 +15,46 @@ public static class SignIn
     {
         public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext)
         {
-            var payload = await httpContext.Payload();
-            if (!string.IsNullOrEmpty(payload))
-            {
-                var p = Metapsi.Serialize.FromJson<InputCredentials>(payload);
-                var credentials = await commandContext.Do(MdsCommon.Api.GetAdminCredentials);
+            var returnUrl = HttpUtility.UrlDecode(httpContext.Request.Query["ReturnUrl"]);
 
-                if (p.UserName != credentials.AdminUserName || p.Password != credentials.AdminPassword)
-                {
-                    var queryString = httpContext.Request.QueryString.Value;
+            return Page.Result(new SignInPage() { ReturnUrl = returnUrl });
 
-                    return Page.Result(new SignInPage()
-                    {
-                        ErrorMessage = "User name or password not valid",
-                        Credentials = new(),
-                        ReturnUrl = "/signin-credentials"
-                    });
-                }
+            //var payload = await httpContext.Payload();
+            //if (!string.IsNullOrEmpty(payload))
+            //{
+            //    var p = Metapsi.Serialize.FromJson<InputCredentials>(payload);
+            //    var credentials = await commandContext.Do(MdsCommon.Api.GetAdminCredentials);
 
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.NameIdentifier, p.UserName),
-                    new Claim(ClaimTypes.Name, p.UserName)
-                };
+            //    if (p.UserName != credentials.AdminUserName || p.Password != credentials.AdminPassword)
+            //    {
+            //        var queryString = httpContext.Request.QueryString.Value;
 
-                //var identity = new ClaimsIdentity(claims, "LDAP");
-                var identity = new ClaimsIdentity(claims, "OIDC");
+            //        return Page.Result(new SignInPage()
+            //        {
+            //            ErrorMessage = "User name or password not valid",
+            //            Credentials = new(),
+            //            ReturnUrl = "/signin-credentials"
+            //        });
+            //    }
 
-                var plm = new System.Security.Claims.ClaimsPrincipal(identity);
-                await httpContext.SignInAsync(plm);
-                return Results.Redirect(HttpUtility.UrlDecode(httpContext.Request.Query["ReturnUrl"]));
-            }
-            else
-            {
-                var queryString = httpContext.Request.QueryString.Value;// requestData.Request.Query["ReturnUrl"].ToString();
-                return Page.Result(new SignInPage());
-            }
+            //    var claims = new List<Claim>
+            //    {
+            //        new Claim(ClaimTypes.NameIdentifier, p.UserName),
+            //        new Claim(ClaimTypes.Name, p.UserName)
+            //    };
+
+            //    //var identity = new ClaimsIdentity(claims, "LDAP");
+            //    var identity = new ClaimsIdentity(claims, "OIDC");
+
+            //    var plm = new System.Security.Claims.ClaimsPrincipal(identity);
+            //    await httpContext.SignInAsync(plm);
+            //    return Results.Redirect(HttpUtility.UrlDecode(httpContext.Request.Query["ReturnUrl"]));
+            //}
+            //else
+            //{
+            //    var queryString = httpContext.Request.QueryString.Value;// requestData.Request.Query["ReturnUrl"].ToString();
+            //    return Page.Result(new SignInPage());
+            //}
         }
     }
 
@@ -58,8 +62,10 @@ public static class SignIn
     {
         public override async Task<IResult> OnPost(CommandContext commandContext, HttpContext httpContext, InputCredentials p)
         {
-            var credentials = await commandContext.Do(MdsCommon.Api.GetAdminCredentials);
+            var returnUrl = HttpUtility.UrlDecode(httpContext.Request.Query["ReturnUrl"]);
 
+            var credentials = await commandContext.Do(MdsCommon.Api.GetAdminCredentials);
+            
             if (p.UserName != credentials.AdminUserName || p.Password != credentials.AdminPassword)
             {
                 var queryString = httpContext.Request.QueryString.Value;
@@ -67,8 +73,8 @@ public static class SignIn
                 return Page.Result(new SignInPage()
                 {
                     ErrorMessage = "User name or password not valid",
-                    Credentials = new(),
-                    ReturnUrl = "/signin-credentials"
+                    Credentials = p,
+                    ReturnUrl = returnUrl
                 });
             }
 
@@ -83,7 +89,7 @@ public static class SignIn
 
             var plm = new System.Security.Claims.ClaimsPrincipal(identity);
             await httpContext.SignInAsync(plm);
-            return Results.Redirect(HttpUtility.UrlDecode(httpContext.Request.Query["ReturnUrl"]));
+            return Results.Redirect(returnUrl);
         }
     }
 }

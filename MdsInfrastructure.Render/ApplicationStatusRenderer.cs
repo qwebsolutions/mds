@@ -15,7 +15,7 @@ namespace MdsInfrastructure.Render
 
         public override Var<HyperNode> OnRender(BlockBuilder b, MdsInfrastructure.ApplicationStatus serverData, Var<MdsInfrastructure.ApplicationStatus> clientModel)
         {
-            b.AddStylesheet("metapsi.hyperapp.css");
+            b.AddModuleStylesheet();
 
             return b.Layout(
                 b.InfraMenu(nameof(Routes.Status), serverData.InfrastructureStatus.User.IsSignedIn()),

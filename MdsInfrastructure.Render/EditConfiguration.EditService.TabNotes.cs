@@ -10,9 +10,10 @@ namespace MdsInfrastructure.Render
     {
         public static Var<HyperNode> TabNotes(
             BlockBuilder b,
-            Var<EditConfigurationPage> clientModel,
-            Var<Guid> serviceId)
+            Var<EditConfigurationPage> clientModel)
         {
+            var serviceId = b.Get(clientModel, x => x.EditServiceId);
+            b.Log("serviceId", serviceId);
             var service = b.Get(clientModel, serviceId, (x, serviceId) => x.Configuration.InfrastructureServices.Single(x => x.Id == serviceId));
 
             var removeIcon = Icon.Remove;
@@ -70,11 +71,11 @@ namespace MdsInfrastructure.Render
             return b.DataGrid<InfrastructureServiceNote>(
                 new()
                 {
-                    b=> b.CommandButton<EditConfigurationPage>(b=>
+                    b=> b.AddClass(b.CommandButton<EditConfigurationPage>(b=>
                     {
                         b.Set(x=>x.Label, "Add note");
                         b.Set(x => x.OnClick, addCommand);
-                    })
+                    }),"text-white")
                 },
                 b =>
                 {

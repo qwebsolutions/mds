@@ -49,11 +49,11 @@ namespace MdsInfrastructure.Render
             return b.DataGrid<Application>(
                 new()
                 {
-                    b=> b.CommandButton<EditConfigurationPage>(b=>
+                    b=> b.AddClass(b.CommandButton<EditConfigurationPage>(b=>
                     {
                         b.Set(x=>x.Label, "Add application");
                         b.Set(x => x.OnClick, addApplication);
-                    })
+                    }), "text-white")
                 },
                 (b) =>
                 {

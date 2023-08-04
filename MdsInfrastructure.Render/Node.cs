@@ -19,7 +19,7 @@ namespace MdsInfrastructure.Render
 
             public override Var<HyperNode> OnRender(BlockBuilder b, M.List serverModel, Var<M.List> clientModel)
             {
-                b.AddStylesheet("MdsInfrastructure.css");
+                b.AddModuleStylesheet();
                 return b.Layout(
                     b.InfraMenu(nameof(Routes.Node), serverModel.User.IsSignedIn()),
                     b.Render(
@@ -56,7 +56,7 @@ namespace MdsInfrastructure.Render
                     b.Render(header),
                     b.RenderEditNodePage(clientModel));
 
-                b.AddStylesheet("MdsInfrastructure.css");
+                b.AddModuleStylesheet();
 
                 return layout;
             }
@@ -101,11 +101,11 @@ namespace MdsInfrastructure.Render
             var dg = b.DataGrid<InfrastructureNode>(
                 new()
                 {
-                    b=> b.NavigateButton(b=>
+                    b=> b.AddClass(b.NavigateButton(b=>
                     {
                         b.Set(x=>x.Label, "Add node");
                         b.Set(x => x.Href, addUrl);
-                    })
+                    }), "text-white")
                 },
                 b =>
                 {

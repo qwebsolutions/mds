@@ -32,6 +32,7 @@ namespace MdsInfrastructure.Render
                 b.Push(b.Get(clientModel, x => x.Configuration.InfrastructureServices), newService);
 
                 b.Set(clientModel, x => x.EditServiceId, newId);
+                b.Log("EditServiceId", newId);
                 return b.EditView<EditConfigurationPage>(clientModel, EditService);
             });
 
@@ -47,6 +48,7 @@ namespace MdsInfrastructure.Render
                 var goToEditService = (BlockBuilder b, Var<EditConfigurationPage> clientModel) =>
                 {
                     b.Set(clientModel, x => x.EditServiceId, b.Get(row, x => x.Id));
+                    b.Log("EditServiceId", b.Get(row, x => x.Id));
                     return b.EditView<EditConfigurationPage>(clientModel, EditService);
                 };
 
@@ -74,11 +76,11 @@ namespace MdsInfrastructure.Render
             return b.DataGrid<InfrastructureService>(
                 new()
                 {
-                    b=>b.CommandButton<EditConfigurationPage>(b=>
+                    b=> b.AddClass(b.CommandButton<EditConfigurationPage>(b=>
                     {
                         b.Set(x=>x.Label, "Add service");
                         b.Set(x => x.OnClick, onAddService);
-                    })
+                    }), "text-white")
                 },
                 b =>
                 {

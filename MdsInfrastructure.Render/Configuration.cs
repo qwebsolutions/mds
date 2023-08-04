@@ -20,6 +20,7 @@ namespace MdsInfrastructure.Render
             public override Var<HyperNode> OnRender(BlockBuilder b, ListConfigurationsPage serverModel, Var<ConfigurationHeadersList> clientModel)
             {
                 b.AddStylesheet("metapsi.hyperapp.css");
+                b.AddModuleStylesheet();
 
                 return b.Layout(
                         b.InfraMenu(nameof(MdsInfrastructure.Routes.Configuration),
@@ -64,11 +65,11 @@ namespace MdsInfrastructure.Render
                 var dataGrid = b.DataGrid<InfrastructureConfiguration>(
                     new()
                     {
-                    b => b.FromDefault<NavigateButton.Props>(NavigateButton.Render, b=>
+                    b => b.AddClass(b.FromDefault<NavigateButton.Props>(NavigateButton.Render, b=>
                     {
                         b.Set(x=>x.Label, "Add configuration");
                         b.Set(x => x.Href, addConfigurationUrl);
-                    })
+                    }), "text-white")
                     },
                     b =>
                     {
@@ -92,6 +93,7 @@ namespace MdsInfrastructure.Render
             public override Var<HyperNode> OnRender(BlockBuilder b, EditConfigurationPage serverModel, Var<EditConfigurationPage> clientModel)
             {
                 b.AddStylesheet("metapsi.hyperapp.css");
+                b.AddModuleStylesheet();
 
                 return b.Layout(
                         b.InfraMenu(nameof(MdsInfrastructure.Routes.Configuration),

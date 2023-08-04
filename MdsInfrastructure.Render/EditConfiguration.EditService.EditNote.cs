@@ -23,7 +23,7 @@ namespace MdsInfrastructure.Render
             var view = b.Div();
             var noteOptions = b.Get(noteTypes, x => x.Select(x => new DropDown.Option() { value = x.Id.ToString(), label = x.Description }).ToList());
 
-            var toolbar = b.Toolbar(b.OkButton(EditService, x => x.EditServiceId));
+            var toolbar = b.Toolbar(b.OkButton(EditService, x => x.EditServiceNoteId));
 
             var form = b.Add(view, b.Form(toolbar));
             b.AddClass(form, "bg-white rounded");

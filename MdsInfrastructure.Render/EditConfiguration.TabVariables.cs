@@ -47,11 +47,11 @@ namespace MdsInfrastructure.Render
             return b.DataGrid<InfrastructureVariable>(
                 new()
                 {
-                    b=> b.CommandButton<EditConfigurationPage>(b=>
+                    b=> b.AddClass(b.CommandButton<EditConfigurationPage>(b=>
                     {
                         b.Set(x => x.Label, "Add variable");
                         b.Set(x => x.OnClick, onAddVariable);
-                    })
+                    }), "text-white")
                 },
                 b =>
                 {

@@ -12,30 +12,28 @@ namespace MdsInfrastructure.Render
            this BlockBuilder b,
            Var<EditConfigurationPage> clientModel)
         {
-            var serviceId = b.Get(clientModel, x => x.EditServiceId);
-
-            var toolbar = b.Toolbar(b.OkButton(MainPage, x=>x.EditServiceId));
+            var toolbar = b.Toolbar(b.OkButton(MainPage, x => x.EditServiceId));
 
             var tabs = b.Tabs(
-                clientModel, 
+                clientModel,
                 b.Const("serviceTabs"),
                 toolbar,
                 new Metapsi.Hyperapp.Controls.TabRenderer()
                 {
-                    TabHeader = b=>b.Text("Service"),
-                    TabContent = b => b.Call(TabService, clientModel, serviceId),
+                    TabHeader = b => b.Text("Service"),
+                    TabContent = b => b.Call(TabService, clientModel),
                     TabPageCode = "Service"
                 },
                 new Metapsi.Hyperapp.Controls.TabRenderer()
                 {
                     TabHeader = b => b.Text("Parameters"),
-                    TabContent = b => b.Call(TabParameters, clientModel, serviceId),
+                    TabContent = b => b.Call(TabParameters, clientModel),
                     TabPageCode = "Parameters"
                 },
                 new Metapsi.Hyperapp.Controls.TabRenderer()
                 {
                     TabHeader = b => b.Text("Notes"),
-                    TabContent = b => b.Call(TabNotes, clientModel, serviceId),
+                    TabContent = b => b.Call(TabNotes, clientModel),
                     TabPageCode = "Notes"
                 });
 

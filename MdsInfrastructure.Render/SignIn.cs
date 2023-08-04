@@ -11,6 +11,7 @@ namespace MdsInfrastructure.Render
             public override Var<HyperNode> OnRender(BlockBuilder b, Var<SignInPage> clientModel)
             {
                 b.AddStylesheet("metapsi.hyperapp.css");
+                b.AddModuleStylesheet();
 
                 var page = b.Div("flex flex-col justify-center items-center w-full h-screen bg-gray-100");
                 var center = b.Add(page, b.Div("flex flex-row justify-center items-center"));
@@ -25,7 +26,7 @@ namespace MdsInfrastructure.Render
                 b.Add(container, b.BoundInput(clientModel, x => x.Credentials, x => x.UserName, "User name"));
                 var password = b.Add(container, b.BoundInput(clientModel, x => x.Credentials, x => x.Password, "Password"));
                 b.SetAttr(password, Html.type, "password");
-                var url = b.Concat(b.Url<Routes.SignIn.Credentials, MdsCommon.InputCredentials>(), b.Get(clientModel, x => x.ReturnUrl));
+                var url = b.Concat(b.Url<Routes.SignIn.Credentials, MdsCommon.InputCredentials>(), b.Const("?ReturnUrl="), b.Get(clientModel, x => x.ReturnUrl));
                 var buttonToRight = b.Add(container, b.Div("flex flex-row justify-end w-full pt-8"));
                 var credentials = b.Get(clientModel, x => x.Credentials);
                 var submit = b.Add(buttonToRight, b.SubmitButton(b.NewObj<SubmitButton.Props<InputCredentials>>(b =>

@@ -10,9 +10,10 @@ namespace MdsInfrastructure.Render
     {
         public static Var<HyperNode> TabParameters(
             BlockBuilder b,
-            Var<EditConfigurationPage> clientModel,
-            Var<Guid> serviceId)
+            Var<EditConfigurationPage> clientModel)
         {
+            var serviceId = b.Get(clientModel, x => x.EditServiceId);
+
             var onAddParameter = b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> clientModel) =>
             {
                 var service = b.Get(clientModel, serviceId, (x, id) => x.Configuration.InfrastructureServices.Single(x => x.Id == id));
@@ -66,11 +67,11 @@ namespace MdsInfrastructure.Render
             return b.DataGrid<InfrastructureServiceParameterDeclaration>(
                 new()
                 {
-                    b=>b.CommandButton<EditConfigurationPage>(b=>
+                    b=>b.AddClass(b.CommandButton<EditConfigurationPage>(b=>
                     {
                         b.Set(x=>x.Label, "Add parameter");
                         b.Set(x => x.OnClick, onAddParameter);
-                    })
+                    }), "text-white")
                 },
                 b =>
                 {

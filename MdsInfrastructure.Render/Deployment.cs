@@ -66,7 +66,7 @@ namespace MdsInfrastructure.Render
             public override Var<HyperNode> OnRender(BlockBuilder b, DeploymentReview serverModel, Var<DeploymentReview> clientModel)
             {
                 b.AddStylesheet("metapsi.hyperapp.css");
-                b.AddStylesheet("MdsInfrastructure.css");
+                b.AddModuleStylesheet();
 
                 var selectedDeployment = serverModel.Deployment.Timestamp.ItalianFormat();
                 var layout = b.Layout(b.InfraMenu(nameof(Routes.Deployment), serverModel.User.IsSignedIn()),
