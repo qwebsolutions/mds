@@ -99,6 +99,25 @@ namespace MdsInfrastructure
             
             {
                 var app = webServerRefs.WebApplication;
+                var api = app.MapGroup("api");
+
+                api.MapRequest(Frontend.SaveConfiguration, async (commandContext, httpContext, configuration) =>
+                {
+                    try
+                    {
+                        await commandContext.Do(Backend.SaveConfiguration, configuration);
+                        return new Frontend.SaveResponse() { ResultCode = ApiResultCode.Ok };
+                    }
+                    catch (Exception ex)
+                    {
+                        return new Frontend.SaveResponse()
+                        {
+                            ResultCode = ApiResultCode.Error,
+                            ErrorMessage = ex.Message
+                        };
+                    }
+                },
+                WebServer.Authorization.Require);
 
 
 

@@ -10,11 +10,11 @@ public static class Project
     {
         public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext)
         {
-            var allConfigurations = await commandContext.Do(Api.LoadAllConfigurationHeaders);
+            var allConfigurations = await commandContext.Do(Backend.LoadAllConfigurationHeaders);
 
             ListProjectsPage page = new ListProjectsPage()
             {
-                ProjectsList = await commandContext.Do(Api.LoadAllProjects),
+                ProjectsList = await commandContext.Do(Backend.LoadAllProjects),
                 AllConfigurationHeaders = allConfigurations.ConfigurationHeaders,
                 InfrastructureServices = allConfigurations.Services,
                 User = httpContext.User()

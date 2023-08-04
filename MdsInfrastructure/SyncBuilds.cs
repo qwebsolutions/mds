@@ -9,8 +9,8 @@ namespace MdsInfrastructure
     {
         public static async Task SyncBuilds(CommandContext commandContext, State state)
         {
-            var buildsList = await commandContext.Do(Api.GetRemoteBuilds);
-            var newBinaries = await commandContext.Do(Api.RegisterNewBinaries, buildsList);
+            var buildsList = await commandContext.Do(Backend.GetRemoteBuilds);
+            var newBinaries = await commandContext.Do(Backend.RegisterNewBinaries, buildsList);
 
             if (newBinaries.Any())
             {
@@ -21,7 +21,7 @@ namespace MdsInfrastructure
                     newBinariesDescription.Add($"Project: {newBinary.Name}, version {newBinary.Version}, target {newBinary.Target}");
                 }
 
-                commandContext.PostEvent(new Api.Event.BinariesSynchronized()
+                commandContext.PostEvent(new Backend.Event.BinariesSynchronized()
                 {
                     BinariesDescription = string.Join("\n", newBinariesDescription),
                 });

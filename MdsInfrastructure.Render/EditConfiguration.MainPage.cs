@@ -10,7 +10,6 @@ namespace MdsInfrastructure.Render
 {
     public static partial class EditConfiguration
     {
-
         public static Var<HyperNode> MainPage(
             BlockBuilder b,
             Var<EditConfigurationPage> clientModel)
@@ -21,28 +20,62 @@ namespace MdsInfrastructure.Render
 
             var deploymentReportUrl = b.Url<Routes.Deployment.ConfigurationPreview, Guid>(configId);
 
-            // TODO: Change to API
+            var saveButton = b.Node(
+                "button",
+                "rounded text-white py-2 px-4 shadow",
+                b => b.Text("Save", "text-white"));
+
+            b.If(isSaved,
+                b =>
+                {
+                    b.SetAttr(saveButton, Html.disabled, true);
+                    b.AddClass(saveButton, "bg-gray-300");
+                },
+                b =>
+                {
+                    b.SetAttr(saveButton, Html.disabled, false);
+                    b.AddClass(saveButton, "bg-sky-500");
+                });
+
+            b.SetOnClick(saveButton, b.MakeAction<EditConfigurationPage>((b, model) =>
+            {
+                return b.AsyncResult(
+                    b.ShowPanel(model),
+                    b.Request(
+                        Frontend.SaveConfiguration,
+                        b.Get(model, x => x.Configuration),
+                        b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> page, Var<Frontend.SaveResponse> response) =>
+                        {
+                            b.Set(page, x => x.InitialConfiguration, b.Serialize(b.Get(page, x => x.Configuration)));
+                            b.Log("InitialConfiguration set", page);
+                            return b.Clone(page);
+                        })));
+            }));
+
+            // TODO: Change to API//
             //var saveUrl = b.Url(Save);
-            var saveUrl = "/save";
+            //var saveUrl = "/save";
 
             var container = b.Div("flex flex-col w-full");
             //b.Add(container, b.ValidationPanel(clientModel));
             var toolbar = b.Toolbar(
-                b => b.FromDefault<NavigateButton.Props>(NavigateButton.Render, b =>
-                {
-                    b.Set(x => x.Label, "Deploy");
-                    b.Set(x => x.Href, deploymentReportUrl);
-                    b.Set(x => x.Enabled, isSaved);
-                }),
+                //b => b.FromDefault<NavigateButton.Props>(NavigateButton.Render, b =>
+                //{
+                //    b.Set(x => x.Label, "Deploy");
+                //    b.Set(x => x.Href, deploymentReportUrl);
+                //    b.Set(x => x.Enabled, isSaved);
+                //}),
+                b=> saveButton
                 //Href or validate. Return Id + Property + validation message. On blur, remove validation (this is still not done. this sucks.)
-                b => b.SubmitButton<InfrastructureConfiguration>(b =>
-                {
-                    b.Set(x => x.Label, "Save");
-                    b.Set(x => x.Href, saveUrl);
-                    b.Set(x => x.Payload, configuration);
-                    b.Set(x => x.Enabled, b.Not(isSaved));
-                    b.Set(x => x.ButtonClass, "rounded text-white py-2 px-4 shadow");
-                }));
+                //b => b.SubmitButton<InfrastructureConfiguration>(b =>
+                //{
+                //    b.Set(x => x.Label, "Save");
+                //    b.Set(x => x.Href, saveUrl);
+                //    b.Set(x => x.Payload, configuration);
+                //    b.Set(x => x.Enabled, b.Not(isSaved));
+                //    b.Set(x => x.ButtonClass, "rounded text-white py-2 px-4 shadow");
+                //})
+                );
 
             b.AddClass(toolbar, "justify-end");
 

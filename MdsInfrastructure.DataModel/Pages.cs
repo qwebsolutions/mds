@@ -1,10 +1,12 @@
 ﻿using Metapsi;
+using Metapsi.Hyperapp;
 using System;
 using System.Collections.Generic;
 
 namespace MdsInfrastructure
 {
-    public class EditConfigurationPage //: IEditPage<EditConfigurationPage>, IHasTabs, IHasValidationPanel
+    // TODO: Remove explicit API support
+    public class EditConfigurationPage : IApiSupportState //: IEditPage<EditConfigurationPage>, IHasTabs, IHasValidationPanel
     {
         public Metapsi.Ui.User User { get; set; }
 
@@ -47,5 +49,8 @@ namespace MdsInfrastructure
         }
 
         public string ValidationMessage { get; set; } = string.Empty;
+
+        // TODO: Remove explicit support
+        public ApiSupport ApiSupport { get; set; } = new();
     }
 }

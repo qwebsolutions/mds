@@ -26,12 +26,12 @@ namespace MdsInfrastructure.Flow
             {
                 SummaryInput summaryInput = new SummaryInput()
                 {
-                    CurrentDeployment = await commandContext.Do(Api.LoadCurrentDeployment),
-                    InfrastructureConfiguration = await commandContext.Do(Api.LoadCurrentConfiguration),
-                    InfrastructureName = await commandContext.Do(Api.GetInfrastructureName),
-                    InfrastructureNodes = await commandContext.Do(Api.LoadAllNodes),
-                    ParameterTypes = await commandContext.Do(Api.GetAllParameterTypes),
-                    NoteTypes = await commandContext.Do(Api.GetAllNoteTypes)
+                    CurrentDeployment = await commandContext.Do(Backend.LoadCurrentDeployment),
+                    InfrastructureConfiguration = await commandContext.Do(Backend.LoadCurrentConfiguration),
+                    InfrastructureName = await commandContext.Do(Backend.GetInfrastructureName),
+                    InfrastructureNodes = await commandContext.Do(Backend.LoadAllNodes),
+                    ParameterTypes = await commandContext.Do(Backend.GetAllParameterTypes),
+                    NoteTypes = await commandContext.Do(Backend.GetAllNoteTypes)
                 };
 
                 var summary = GetSummary(summaryInput);
@@ -52,12 +52,12 @@ namespace MdsInfrastructure.Flow
             {
                 SummaryInput summaryInput = new SummaryInput()
                 {
-                    CurrentDeployment = await commandContext.Do(Api.LoadCurrentDeployment),
-                    InfrastructureConfiguration = await commandContext.Do(Api.LoadCurrentConfiguration),
-                    InfrastructureName = await commandContext.Do(Api.GetInfrastructureName),
-                    InfrastructureNodes = await commandContext.Do(Api.LoadAllNodes),
-                    ParameterTypes = await commandContext.Do(Api.GetAllParameterTypes),
-                    NoteTypes = await commandContext.Do(Api.GetAllNoteTypes)
+                    CurrentDeployment = await commandContext.Do(Backend.LoadCurrentDeployment),
+                    InfrastructureConfiguration = await commandContext.Do(Backend.LoadCurrentConfiguration),
+                    InfrastructureName = await commandContext.Do(Backend.GetInfrastructureName),
+                    InfrastructureNodes = await commandContext.Do(Backend.LoadAllNodes),
+                    ParameterTypes = await commandContext.Do(Backend.GetAllParameterTypes),
+                    NoteTypes = await commandContext.Do(Backend.GetAllNoteTypes)
                 };
 
                 var summary = GetSummary(summaryInput);

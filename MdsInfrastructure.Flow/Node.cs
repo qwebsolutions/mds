@@ -15,9 +15,9 @@ public static class Node
         {
             M.List nodesList = new()
             {
-                EnvironmentTypes = await commandContext.Do(Api.LoadEnvironmentTypes),
-                InfrastructureNodes = await commandContext.Do(Api.LoadAllNodes),
-                InfrastructureServices = await commandContext.Do(Api.LoadAllServices),
+                EnvironmentTypes = await commandContext.Do(Backend.LoadEnvironmentTypes),
+                InfrastructureNodes = await commandContext.Do(Backend.LoadAllNodes),
+                InfrastructureServices = await commandContext.Do(Backend.LoadAllServices),
                 User = httpContext.User()
             };
 
@@ -29,10 +29,10 @@ public static class Node
     {
         public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext, Guid nodeId)
         {
-            var allNodes = await commandContext.Do(Api.LoadAllNodes);
+            var allNodes = await commandContext.Do(Backend.LoadAllNodes);
             M.EditPage editPage = new()
             {
-                EnvironmentTypes = await commandContext.Do(Api.LoadEnvironmentTypes),
+                EnvironmentTypes = await commandContext.Do(Backend.LoadEnvironmentTypes),
                 InfrastructureNode = allNodes.Single(x => x.Id == nodeId),
                 User = httpContext.User()
             };

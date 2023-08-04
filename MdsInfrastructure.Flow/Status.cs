@@ -54,7 +54,7 @@ internal static partial class Load
 {
     public static async Task<InfrastructureStatus> Status(CommandContext commandContext)
     {
-        string validation = await commandContext.Do(Api.ValidateSchema);
+        string validation = await commandContext.Do(Backend.ValidateSchema);
 
         if (!string.IsNullOrEmpty(validation))
         {
@@ -64,6 +64,6 @@ internal static partial class Load
             };
         }
 
-        return await commandContext.Do(Api.LoadInfraStatus);
+        return await commandContext.Do(Backend.LoadInfraStatus);
     }
 }

@@ -5,7 +5,7 @@ using System;
 
 namespace MdsInfrastructure
 {
-    public static class Api
+    public static class Backend
     {
         public static class Event
         {

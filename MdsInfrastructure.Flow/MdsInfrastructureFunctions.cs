@@ -9,7 +9,7 @@ public static partial class MdsInfrastructureFunctions
 {
     public static async Task<ConfigurationHeadersList> Configurations(CommandContext commandContext)
     {
-        return await commandContext.Do(Api.LoadAllConfigurationHeaders);
+        return await commandContext.Do(Backend.LoadAllConfigurationHeaders);
     }
 
     public static string GetConfigurationCellValue(ConfigurationHeadersList dataModel, InfrastructureConfiguration configurationHeader, string fieldName)
@@ -33,29 +33,21 @@ public static partial class MdsInfrastructureFunctions
         EditConfigurationPage editConfigurationPage = new EditConfigurationPage();
         editConfigurationPage.Configuration = configuration;
 
-        var activeInfraDeployment = await commandContext.Do(Api.LoadCurrentDeployment);
+        var activeInfraDeployment = await commandContext.Do(Backend.LoadCurrentDeployment);
 
-        editConfigurationPage.LastConfigurationDeployment = await commandContext.Do(Api.LoadLastConfigurationDeployment, editConfigurationPage.Configuration.Id);
+        editConfigurationPage.LastConfigurationDeployment = await commandContext.Do(Backend.LoadLastConfigurationDeployment, editConfigurationPage.Configuration.Id);
         editConfigurationPage.LastInfrastructureDeployment = activeInfraDeployment;
-        editConfigurationPage.AllProjects = await commandContext.Do(Api.LoadAllProjects);
+        editConfigurationPage.AllProjects = await commandContext.Do(Backend.LoadAllProjects);
         //editConfigurationPage.InitialConfiguration = editConfigurationPage.Configuration.Clone();
-        editConfigurationPage.EnvironmentTypes = await commandContext.Do(Api.LoadEnvironmentTypes);
-        editConfigurationPage.InfrastructureNodes = await commandContext.Do(Api.LoadAllNodes);
+        editConfigurationPage.EnvironmentTypes = await commandContext.Do(Backend.LoadEnvironmentTypes);
+        editConfigurationPage.InfrastructureNodes = await commandContext.Do(Backend.LoadAllNodes);
 
-        editConfigurationPage.ParameterTypes = await commandContext.Do(Api.GetAllParameterTypes);
-        editConfigurationPage.NoteTypes = await commandContext.Do(Api.GetAllNoteTypes);
+        editConfigurationPage.ParameterTypes = await commandContext.Do(Backend.GetAllParameterTypes);
+        editConfigurationPage.NoteTypes = await commandContext.Do(Backend.GetAllNoteTypes);
         editConfigurationPage.LastDeployed = editConfigurationPage.LastDeploymentLabel();
 
         Console.WriteLine($"=== InitializeEditConfiguration : {sw.ElapsedMilliseconds} ms ===");
         return editConfigurationPage;
-    }
-
-
-    public static async Task<EditConfigurationPage> SaveConfiguration(CommandContext commandContext, EditConfigurationPage dataModel, Guid id)
-    {
-        await commandContext.Do(Api.SaveConfiguration, dataModel.Configuration);
-        //dataModel.InitialConfiguration = dataModel.Configuration.Clone();
-        return dataModel;
     }
 
     public static string LastDeploymentLabel(this EditConfigurationPage dataModel)

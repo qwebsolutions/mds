@@ -16,7 +16,7 @@ namespace MdsInfrastructure.Flow
             {
                 return Page.Result(new DeploymentHistory()
                 {
-                    Deployments = await commandContext.Do(Api.LoadDeploymentsHistory),
+                    Deployments = await commandContext.Do(Backend.LoadDeploymentsHistory),
                     User = httpContext.User()
                 });
             }
@@ -27,7 +27,7 @@ namespace MdsInfrastructure.Flow
             public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext, Guid deploymentId)
             {
                 var deployment = await commandContext.Do(
-                    Api.LoadDeploymentById,
+                    Backend.LoadDeploymentById,
                     deploymentId);
 
                 var fromSnapshotIds = deployment.Transitions.Select(x => x.FromServiceConfigurationSnapshotId);

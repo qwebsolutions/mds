@@ -193,7 +193,7 @@ namespace MdsInfrastructure
                     var healthStatus = MdsCommon.NodeStatus.FromSerializable(serializableHealthStatus);
                     e.Logger.LogInfo($"HealthStatus notification {Metapsi.Serialize.ToJson(healthStatus)}");
 
-                    await httpClient.Command(Api.StoreHealthStatus, healthStatus);
+                    await httpClient.Command(Backend.StoreHealthStatus, healthStatus);
                 });
 
             applicationSetup.MapEventIf<RedisListener.Event.NotificationReceived>(
@@ -229,7 +229,7 @@ namespace MdsInfrastructure
                     }
                 });
 
-            applicationSetup.MapEvent<Api.Event.BroadcastDeployment>(
+            applicationSetup.MapEvent<Backend.Event.BroadcastDeployment>(
                 e =>
                 {
                     e.Logger.LogDebug($"Broadcast deployment on {arguments.BroadcastDeploymentOutputChannel}");
@@ -241,7 +241,7 @@ namespace MdsInfrastructure
                             String.Empty));
                 });
 
-            applicationSetup.MapEvent<Api.Event.BinariesSynchronized>(
+            applicationSetup.MapEvent<Backend.Event.BinariesSynchronized>(
                 e =>
                 {
                     var _ = MdsCommon.Db.SaveInfrastructureEvent(fullDbPath, new MdsCommon.InfrastructureEvent()
@@ -267,30 +267,30 @@ namespace MdsInfrastructure
 
             #region Operation mappings
 
-            implementationGroup.MapRequest(Api.ValidateSchema, httpClient);
-            implementationGroup.MapRequest(Api.LoadInfraStatus, httpClient);
-            implementationGroup.MapRequest(Api.LoadAllConfigurationHeaders, httpClient);
-            implementationGroup.MapRequest(Api.LoadConfiguration, httpClient);
-            implementationGroup.MapCommand(Api.SaveConfiguration, httpClient);
-            implementationGroup.MapCommand(Api.SaveNode, httpClient);
-            implementationGroup.MapCommand(Api.DeleteConfigurationById, httpClient);
-            implementationGroup.MapRequest(Api.LoadCurrentDeployment, httpClient);
-            implementationGroup.MapRequest(Api.LoadCurrentConfiguration, httpClient);
-            implementationGroup.MapRequest(Api.LoadDeploymentById, httpClient);
-            implementationGroup.MapRequest(Api.LoadDeploymentsHistory, httpClient);
-            implementationGroup.MapRequest(Api.LoadAllProjects, httpClient);
-            implementationGroup.MapRequest(Api.LoadAllNodes, httpClient);
-            implementationGroup.MapRequest(Api.LoadAllServices, httpClient);
-            implementationGroup.MapRequest(Api.RegisterNewBinaries, httpClient);
-            implementationGroup.MapCommand(Api.SaveVersionEnabled, httpClient);
-            implementationGroup.MapRequest(Api.LoadLastConfigurationDeployment, httpClient);
-            implementationGroup.MapCommand(Api.ConfirmDeployment, httpClient);
-            implementationGroup.MapRequest(Api.LoadServiceSnapshotByHash, httpClient);
-            implementationGroup.MapRequest(Api.LoadEnvironmentTypes, httpClient);
-            implementationGroup.MapRequest(Api.LoadHealthStatus, httpClient);
-            implementationGroup.MapRequest(Api.GetAllParameterTypes, httpClient);
-            implementationGroup.MapRequest(Api.GetInfrastructureName, httpClient);
-            implementationGroup.MapRequest(Api.GetAllNoteTypes, httpClient);
+            implementationGroup.MapRequest(Backend.ValidateSchema, httpClient);
+            implementationGroup.MapRequest(Backend.LoadInfraStatus, httpClient);
+            implementationGroup.MapRequest(Backend.LoadAllConfigurationHeaders, httpClient);
+            implementationGroup.MapRequest(Backend.LoadConfiguration, httpClient);
+            implementationGroup.MapCommand(Backend.SaveConfiguration, (CommandRoutingContext cc, InfrastructureConfiguration c) => Db.SaveConfiguration(fullDbPath, c));
+            implementationGroup.MapCommand(Backend.SaveNode, httpClient);
+            implementationGroup.MapCommand(Backend.DeleteConfigurationById, httpClient);
+            implementationGroup.MapRequest(Backend.LoadCurrentDeployment, httpClient);
+            implementationGroup.MapRequest(Backend.LoadCurrentConfiguration, httpClient);
+            implementationGroup.MapRequest(Backend.LoadDeploymentById, httpClient);
+            implementationGroup.MapRequest(Backend.LoadDeploymentsHistory, httpClient);
+            implementationGroup.MapRequest(Backend.LoadAllProjects, httpClient);
+            implementationGroup.MapRequest(Backend.LoadAllNodes, httpClient);
+            implementationGroup.MapRequest(Backend.LoadAllServices, httpClient);
+            implementationGroup.MapRequest(Backend.RegisterNewBinaries, httpClient);
+            implementationGroup.MapCommand(Backend.SaveVersionEnabled, httpClient);
+            implementationGroup.MapRequest(Backend.LoadLastConfigurationDeployment, httpClient);
+            implementationGroup.MapCommand(Backend.ConfirmDeployment, httpClient);
+            implementationGroup.MapRequest(Backend.LoadServiceSnapshotByHash, httpClient);
+            implementationGroup.MapRequest(Backend.LoadEnvironmentTypes, httpClient);
+            implementationGroup.MapRequest(Backend.LoadHealthStatus, httpClient);
+            implementationGroup.MapRequest(Backend.GetAllParameterTypes, httpClient);
+            implementationGroup.MapRequest(Backend.GetInfrastructureName, httpClient);
+            implementationGroup.MapRequest(Backend.GetAllNoteTypes, httpClient);
 
             implementationGroup.MapRequest(MdsCommon.Api.GetAdminCredentials, async (rc) =>
             {
@@ -301,7 +301,7 @@ namespace MdsInfrastructure
                 };
             });
 
-            implementationGroup.MapCommand(Api.RestartService, async (rc, serviceName) =>
+            implementationGroup.MapCommand(Backend.RestartService, async (rc, serviceName) =>
             {
                 //var serviceConfiguration = await Db.LoadServiceConfiguration(fullDbPath, serviceName);
                 var serviceConfiguration = await httpClient.Request(new Request<ServiceConfigurationSnapshot, string>("LoadServiceConfiguration"), serviceName);
@@ -333,7 +333,7 @@ namespace MdsInfrastructure
 
             });
 
-            implementationGroup.MapRequest(Api.GetRemoteBuilds,
+            implementationGroup.MapRequest(Backend.GetRemoteBuilds,
                 async (rc) =>
                 {
                     if (string.IsNullOrEmpty(arguments.BuildManagerUrl))

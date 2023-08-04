@@ -15,7 +15,7 @@ namespace MdsInfrastructure
     {
         public static async Task<ConfigurationHeadersList> Configurations(CommandContext commandContext)
         {
-            return await commandContext.Do(Api.LoadAllConfigurationHeaders);
+            return await commandContext.Do(Backend.LoadAllConfigurationHeaders);
         }
 
         public static string GetConfigurationCellValue(ConfigurationHeadersList dataModel, InfrastructureConfiguration configurationHeader, string fieldName)
@@ -29,15 +29,6 @@ namespace MdsInfrastructure
                 return configurationHeader.Name;
 
             return string.Empty;
-        }
-
-        
-
-        public static async Task<EditConfigurationPage> SaveConfiguration(CommandContext commandContext, EditConfigurationPage dataModel, Guid id)
-        {
-            await commandContext.Do(Api.SaveConfiguration, dataModel.Configuration);
-            //dataModel.InitialConfiguration = dataModel.Configuration.Clone();
-            return dataModel;
         }
 
         public static string LastDeploymentLabel(this EditConfigurationPage dataModel)
@@ -218,7 +209,7 @@ namespace MdsInfrastructure
             List<MdsCommon.Project> allProjects,
             List<InfrastructureNode> allNodes)
         {
-            var infrastructureName = await commandContext.Do(Api.GetInfrastructureName);
+            var infrastructureName = await commandContext.Do(Backend.GetInfrastructureName);
             var substitutionValues = infrastructureConfiguration.GetSubstitutionValues(allNodes);
             substitutionValues["InfrastructureName"] = infrastructureName;
 
@@ -282,7 +273,7 @@ namespace MdsInfrastructure
 
             string hash = GetHash(snapshot);
 
-            var existingSnapshot = await commandContext.Do(Api.LoadServiceSnapshotByHash, hash);
+            var existingSnapshot = await commandContext.Do(Backend.LoadServiceSnapshotByHash, hash);
 
             // Does not already exist, so return this one
             if (existingSnapshot == null)

@@ -84,7 +84,7 @@ namespace MdsInfrastructure.Render
                                     return b.AsyncResult(
                                         b.Clone(state),
                                         b.CallApi<ListProjectsPage, ProjectVersion>(
-                                            Api.SaveVersionEnabled,
+                                            Backend.SaveVersionEnabled,
                                             version,
                                             (BlockBuilder b, Var<ListProjectsPage> state) => b.HideLoading(state),
                                             (BlockBuilder b, Var<ListProjectsPage> state, Var<ApiError> error) =>

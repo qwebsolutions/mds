@@ -69,7 +69,7 @@ namespace MdsInfrastructure
 
             app.MapGet("restartservice/{servicename}", async (CommandContext cc, string serviceName) =>
             {
-                await cc.Do(Api.RestartService, serviceName);
+                await cc.Do(Backend.RestartService, serviceName);
                 return Results.Ok();
             });
         }
@@ -81,31 +81,31 @@ namespace MdsInfrastructure
 
             var app = webApp.MapGroup("/api");//.AllowAnonymous();
 
-            app.MapRequest(Api.ValidateSchema, (CommandContext cc, HttpContext http) => Db.ValidateSchema(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapRequest(Api.LoadInfraStatus, (CommandContext cc, HttpContext http) => Db.LoadInfrastructureStatus(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapRequest(Api.LoadAllConfigurationHeaders, (CommandContext cc, HttpContext http) => Db.LoadConfigurationHeaders(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapRequest(Api.LoadConfiguration, (CommandContext cc,HttpContext http, Guid id) => Db.LoadSpecificConfiguration(fullDbPath, id), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapCommand(Api.SaveConfiguration, (CommandContext cc, HttpContext http, InfrastructureConfiguration c) => Db.SaveConfiguration(fullDbPath, c), WebServer.Authorization.Public, WebServer.SwaggerTryout.Block);
-            app.MapCommand(Api.SaveNode, (CommandContext cc, HttpContext http, InfrastructureNode node) => Db.SaveNode(fullDbPath, node), WebServer.Authorization.Public, WebServer.SwaggerTryout.Block);
-            app.MapCommand(Api.DeleteConfigurationById, (CommandContext cc, HttpContext http, Guid id) => Db.DeleteConfiguration(fullDbPath, id), WebServer.Authorization.Public, WebServer.SwaggerTryout.Block);
-            app.MapRequest(Api.LoadCurrentDeployment, (CommandContext cc, HttpContext http) => Db.LoadActiveDeployment(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapRequest(Api.LoadLastConfigurationDeployment, (CommandContext cc, HttpContext http, Guid id) => Db.LoadLastDeploymentOfConfiguration(fullDbPath, id), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapRequest(Api.LoadCurrentConfiguration, (CommandContext cc, HttpContext http) => Db.LoadCurrentConfiguration(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapRequest(Api.LoadDeploymentById, (CommandContext cc, HttpContext http, Guid id) => Db.LoadSpecificDeployment(fullDbPath, id), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapRequest(Api.LoadDeploymentsHistory, (CommandContext cc, HttpContext http) => Db.LoadDeploymentHistory(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapRequest(Api.LoadAllProjects, (CommandContext cc, HttpContext http) => Db.LoadAllProjects(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapRequest(Api.LoadAllNodes, (CommandContext cc, HttpContext http) => Db.LoadAllNodes(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapRequest(Api.LoadAllServices, (CommandContext cc, HttpContext http) => Db.LoadAllServices(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapCommand(Api.ConfirmDeployment, (CommandContext cc, HttpContext http, ConfirmDeploymentInput input) => Db.ConfirmDeployment(fullDbPath, input.Snapshots, input.Configuration), WebServer.Authorization.Public, WebServer.SwaggerTryout.Block);
-            app.MapRequest(Api.GetAllParameterTypes, (CommandContext cc, HttpContext http) => Db.LoadParameterTypes(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapRequest(Api.LoadServiceSnapshotByHash, (CommandContext cc, HttpContext http, String hash) => Db.LoadServiceSnapshotByHash(fullDbPath, hash), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapRequest(Api.LoadEnvironmentTypes, (CommandContext cc, HttpContext http) => Db.LoadEnvironmentTypes(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapRequest(Api.LoadHealthStatus, (CommandContext cc, HttpContext http) => Db.LoadFullInfrastructureHealthStatus(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapRequest(Api.GetInfrastructureName, async (CommandContext cc, HttpContext http) => await Task.FromResult(infrastructureName), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapRequest(Api.GetAllNoteTypes, (CommandContext cc, HttpContext http) => Db.LoadAllNoteTypes(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapCommand(Api.StoreHealthStatus, (CommandContext cc, HttpContext http, MachineStatus hs) => Db.StoreHealthStatus(fullDbPath, hs), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapRequest(Api.RegisterNewBinaries, async (CommandContext cc, HttpContext http, List<AlgorithmInfo> algInfo) => await Db.SaveNewBinaries(fullDbPath, algInfo), WebServer.Authorization.Public, WebServer.SwaggerTryout.Block);
-            app.MapCommand(Api.SaveVersionEnabled, (CommandContext cc, HttpContext http, ProjectVersion version) => Db.SaveVersionEnabled(fullDbPath, version), WebServer.Authorization.Public, WebServer.SwaggerTryout.Block);
+            app.MapRequest(Backend.ValidateSchema, (CommandContext cc, HttpContext http) => Db.ValidateSchema(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
+            app.MapRequest(Backend.LoadInfraStatus, (CommandContext cc, HttpContext http) => Db.LoadInfrastructureStatus(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
+            app.MapRequest(Backend.LoadAllConfigurationHeaders, (CommandContext cc, HttpContext http) => Db.LoadConfigurationHeaders(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
+            app.MapRequest(Backend.LoadConfiguration, (CommandContext cc,HttpContext http, Guid id) => Db.LoadSpecificConfiguration(fullDbPath, id), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
+            //app.MapCommand(Backend.SaveConfiguration, (CommandContext cc, HttpContext http, InfrastructureConfiguration c) => Db.SaveConfiguration(fullDbPath, c), WebServer.Authorization.Public, WebServer.SwaggerTryout.Block);
+            app.MapCommand(Backend.SaveNode, (CommandContext cc, HttpContext http, InfrastructureNode node) => Db.SaveNode(fullDbPath, node), WebServer.Authorization.Public, WebServer.SwaggerTryout.Block);
+            app.MapCommand(Backend.DeleteConfigurationById, (CommandContext cc, HttpContext http, Guid id) => Db.DeleteConfiguration(fullDbPath, id), WebServer.Authorization.Public, WebServer.SwaggerTryout.Block);
+            app.MapRequest(Backend.LoadCurrentDeployment, (CommandContext cc, HttpContext http) => Db.LoadActiveDeployment(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
+            app.MapRequest(Backend.LoadLastConfigurationDeployment, (CommandContext cc, HttpContext http, Guid id) => Db.LoadLastDeploymentOfConfiguration(fullDbPath, id), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
+            app.MapRequest(Backend.LoadCurrentConfiguration, (CommandContext cc, HttpContext http) => Db.LoadCurrentConfiguration(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
+            app.MapRequest(Backend.LoadDeploymentById, (CommandContext cc, HttpContext http, Guid id) => Db.LoadSpecificDeployment(fullDbPath, id), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
+            app.MapRequest(Backend.LoadDeploymentsHistory, (CommandContext cc, HttpContext http) => Db.LoadDeploymentHistory(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
+            app.MapRequest(Backend.LoadAllProjects, (CommandContext cc, HttpContext http) => Db.LoadAllProjects(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
+            app.MapRequest(Backend.LoadAllNodes, (CommandContext cc, HttpContext http) => Db.LoadAllNodes(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
+            app.MapRequest(Backend.LoadAllServices, (CommandContext cc, HttpContext http) => Db.LoadAllServices(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
+            app.MapCommand(Backend.ConfirmDeployment, (CommandContext cc, HttpContext http, ConfirmDeploymentInput input) => Db.ConfirmDeployment(fullDbPath, input.Snapshots, input.Configuration), WebServer.Authorization.Public, WebServer.SwaggerTryout.Block);
+            app.MapRequest(Backend.GetAllParameterTypes, (CommandContext cc, HttpContext http) => Db.LoadParameterTypes(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
+            app.MapRequest(Backend.LoadServiceSnapshotByHash, (CommandContext cc, HttpContext http, String hash) => Db.LoadServiceSnapshotByHash(fullDbPath, hash), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
+            app.MapRequest(Backend.LoadEnvironmentTypes, (CommandContext cc, HttpContext http) => Db.LoadEnvironmentTypes(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
+            app.MapRequest(Backend.LoadHealthStatus, (CommandContext cc, HttpContext http) => Db.LoadFullInfrastructureHealthStatus(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
+            app.MapRequest(Backend.GetInfrastructureName, async (CommandContext cc, HttpContext http) => await Task.FromResult(infrastructureName), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
+            app.MapRequest(Backend.GetAllNoteTypes, (CommandContext cc, HttpContext http) => Db.LoadAllNoteTypes(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
+            app.MapCommand(Backend.StoreHealthStatus, (CommandContext cc, HttpContext http, MachineStatus hs) => Db.StoreHealthStatus(fullDbPath, hs), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
+            app.MapRequest(Backend.RegisterNewBinaries, async (CommandContext cc, HttpContext http, List<AlgorithmInfo> algInfo) => await Db.SaveNewBinaries(fullDbPath, algInfo), WebServer.Authorization.Public, WebServer.SwaggerTryout.Block);
+            app.MapCommand(Backend.SaveVersionEnabled, (CommandContext cc, HttpContext http, ProjectVersion version) => Db.SaveVersionEnabled(fullDbPath, version), WebServer.Authorization.Public, WebServer.SwaggerTryout.Block);
             app.MapRequest(MdsCommon.Api.GetInfrastructureNodeSettings,
                 async (CommandContext cc, HttpContext http, string nodeName) =>
                 {

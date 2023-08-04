@@ -7,6 +7,7 @@ namespace MdsInfrastructure.Flow;
 
 public static class Configuration
 {
+    //
     public class List: Metapsi.Http.Get<Routes.Configuration.List>
     {
         public async override Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext)
@@ -25,7 +26,7 @@ public static class Configuration
     {
         public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext, Guid configurationId)
         {
-            var savedConfiguration = await commandContext.Do(Api.LoadConfiguration, configurationId);
+            var savedConfiguration = await commandContext.Do(Backend.LoadConfiguration, configurationId);
             var serverModel = await MdsInfrastructureFunctions.InitializeEditConfiguration(commandContext, savedConfiguration);
             serverModel.User = httpContext.User();
             return Page.Result(serverModel);
