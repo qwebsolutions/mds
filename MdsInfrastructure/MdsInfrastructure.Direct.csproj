@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<isPackable>false</isPackable>
+		<AssemblyName>MdsInfrastructure</AssemblyName>
 	</PropertyGroup>
 
 

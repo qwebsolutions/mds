@@ -10,6 +10,7 @@ namespace MdsInfrastructure
         {
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Status.Infra, Routes.Status.Infra>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Status.Application, Routes.Status.Application, string>();
+            refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Status.Node, Routes.Status.Node, string>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Configuration.List, Routes.Configuration.List>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Configuration.Edit, Routes.Configuration.Edit, Guid>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Configuration.Review, Routes.Configuration.Review, Guid>();
@@ -25,6 +26,7 @@ namespace MdsInfrastructure
 
             refs.RegisterPageBuilder<MdsInfrastructure.Render.InfrastructureStatus, InfrastructureStatus>();
             refs.RegisterPageBuilder<MdsInfrastructure.Render.ApplicationStatus, ApplicationStatus>();
+            refs.RegisterPageBuilder<MdsInfrastructure.Render.NodeStatus, NodeStatus>();
             refs.RegisterPageBuilder<MdsInfrastructure.Render.Configuration.List, MdsInfrastructure.ListConfigurationsPage>();
             refs.RegisterPageBuilder<MdsInfrastructure.Render.Configuration.Edit, MdsInfrastructure.EditConfigurationPage>();
             refs.RegisterPageBuilder<MdsInfrastructure.Render.Configuration.Review, MdsInfrastructure.ReviewConfigurationPage>();

@@ -94,7 +94,7 @@ namespace MdsInfrastructure.Render
                 }
 
                 var asLink = b.Node("a");
-                b.SetAttr(asLink, Html.href, b.Const(Route.Path<Routes.Status.Node, string>(node.Id.ToString())));
+                b.SetAttr(asLink, Html.href, b.Const(Route.Path<Routes.Status.Node, string>(node.NodeName)));
 
                 b.Add(asLink,
                     b.InfoPanel(
