@@ -100,6 +100,10 @@ namespace MdsInfrastructure
             
             {
                 var app = webServerRefs.WebApplication;
+
+                // Redirect to default page
+                app.MapGet("/", () => Results.Redirect(WebServer.Url<Routes.Status.Infra>())).AllowAnonymous().ExcludeFromDescription();
+
                 var api = app.MapGroup("api");
 
                 api.MapRequest(Frontend.SaveConfiguration, async (commandContext, httpContext, configuration) =>
@@ -171,10 +175,6 @@ namespace MdsInfrastructure
                     httpContext.Response.Redirect(httpContext.GetHostedRootPath() + "/");
                 }).RequireAuthorization().ExcludeFromDescription();
             }
-
-            // Redirect to default page
-            // app.MapGet("/", () => Results.Redirect(RelativePath(state.DefaultPage.Method, state.DefaultParameter))).AllowAnonymous().ExcludeFromDescription();
-
 
 
 
