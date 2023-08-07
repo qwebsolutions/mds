@@ -242,7 +242,7 @@ namespace MdsInfrastructure.Render
                 b.SetAttr(a, Html.href, b.Const(Route.Path<Routes.Docs.Service, string>(service.ServiceName)));
 
                 // TODO: Add back
-                //b.Add(a, b.Svg(Icon.Info, "w-full h-full"));
+                b.Add(a, b.Svg(Icon.Info, "w-full h-full"));
 
                 return b.InfoPanel(
                     b.Const(panelStyle),
