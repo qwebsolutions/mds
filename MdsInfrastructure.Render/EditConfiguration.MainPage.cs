@@ -44,7 +44,7 @@ namespace MdsInfrastructure.Render
                     b.Request(
                         Frontend.SaveConfiguration,
                         b.Get(model, x => x.Configuration),
-                        b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> page, Var<Frontend.SaveResponse> response) =>
+                        b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> page, Var<Frontend.SaveConfigurationResponse> response) =>
                         {
                             b.Set(page, x => x.InitialConfiguration, b.Serialize(b.Get(page, x => x.Configuration)));
                             b.Log("InitialConfiguration set", page);

@@ -125,7 +125,7 @@ namespace MdsInfrastructure.Render
                 var messageLine = b.Add(view, b.Div("flex flex-row space-x-2"));
                 b.Add(messageLine, b.Text("There are no changes to deploy."));
                 //b.Add(messageLine, b.Link(b.Const("Edit"), EditConfiguration.Edit, b.Const(infrastructureConfiguration.Id.ToString())));
-                b.Add(messageLine, b.Link(b.Const("Edit"), b.Const(string.Empty)));
+                b.Add(messageLine, b.Link(b.Const("Edit"), b.Url<Routes.Configuration.Edit, Guid>(b.Const(infrastructureConfiguration.Id))));
 
                 return view;
             }
@@ -137,6 +137,26 @@ namespace MdsInfrastructure.Render
                 var confirmDeploymentUrl = b.Const(string.Empty); //b.Url(ConfirmDeployment, b.Const(infrastructureConfiguration.Id));
                 var swapIcon = Icon.Swap;
 
+                var deployNowButton = b.Node(
+                    "button",
+                    "bg-red-500 rounded px-4 py-2 text-white",
+                    b => b.Text("Deploy now"));
+
+                b.SetOnClick(deployNowButton, b.MakeAction((BlockBuilder b, Var<DeploymentPreview> model) =>
+                {
+                    return b.AsyncResult(
+                        b.ShowPanel(model),
+                        b.Request(
+                            Frontend.ConfirmDeployment,
+                            b.Get(model, x => x.SavedConfiguration.Id),
+                            b.MakeAction((BlockBuilder b, Var<DeploymentPreview> model, Var<Frontend.ConfirmDeploymentResponse> response) =>
+                            {
+                                b.SetUrl(b.Const("/"));
+                                return model;
+                            }))
+                        );
+                }));
+
                 var toolbar = b.Add(view, b.Toolbar(b =>
                     b.NavigateButton(b =>
                     {
@@ -144,12 +164,14 @@ namespace MdsInfrastructure.Render
                         b.Set(x => x.Href, reviewConfigurationUrl);
                         b.Set(x => x.SvgIcon, swapIcon);
                     }),
-                    b => b.NavigateButton(b =>
-                    {
-                        b.Set(x => x.Label, "Not implemented -  Deploy now");
-                        b.Set(x => x.Href, confirmDeploymentUrl);
-                        b.Set(x => x.Style, Button.Style.Danger);
-                    })));
+                    b=> deployNowButton
+                    //b => b.NavigateButton(b =>
+                    //{
+                    //    b.Set(x => x.Label, "Not implemented -  Deploy now");
+                    //    b.Set(x => x.Href, confirmDeploymentUrl);
+                    //    b.Set(x => x.Style, Button.Style.Danger);
+                    //})
+                    ));
                 b.AddClass(toolbar, "justify-end");
 
                 b.Add(view, b.ChangesReport(serviceChanges));

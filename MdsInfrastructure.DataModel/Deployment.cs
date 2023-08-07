@@ -1,4 +1,5 @@
 ﻿using Metapsi;
+using Metapsi.Hyperapp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -65,11 +66,12 @@ namespace MdsInfrastructure
         public Metapsi.Ui.User User { get; set; }
     }
 
-    public class DeploymentPreview
+    public class DeploymentPreview : IApiSupportState
     {
         public Deployment Deployment { get; set; }
         public ChangesReport ChangesReport { get; set; }
         public InfrastructureConfiguration SavedConfiguration { get; set; }
         public Metapsi.Ui.User User { get; set; }
+        public ApiSupport ApiSupport { get; set; } = new();
     }
 }

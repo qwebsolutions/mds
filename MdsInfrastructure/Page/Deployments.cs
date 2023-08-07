@@ -33,8 +33,8 @@ namespace MdsInfrastructure
     //    public InfrastructureConfiguration InfrastructureConfiguration { get; set; }
     //}
 
-    public static partial class MdsInfrastructureFunctions
-    {
+    //public static partial class MdsInfrastructureFunctions
+    //{
         //        public const string ReportType = "ReportType";
         //        public const string ShowJustDiff = "JustDiff";
         //        public const string ShowAll = "ShowAll";
@@ -560,5 +560,5 @@ namespace MdsInfrastructure
 
         //            return await Status(commandContext);// dataModel;
         //        }
-    }
+    //}
 }

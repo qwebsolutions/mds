@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using System.Net;
 using System.Web;
 using System.Text;
+using MdsInfrastructure.Flow;
 
 namespace MdsInfrastructure
 {
@@ -106,11 +107,11 @@ namespace MdsInfrastructure
                     try
                     {
                         await commandContext.Do(Backend.SaveConfiguration, configuration);
-                        return new Frontend.SaveResponse() { ResultCode = ApiResultCode.Ok };
+                        return new Frontend.SaveConfigurationResponse() { ResultCode = ApiResultCode.Ok };
                     }
                     catch (Exception ex)
                     {
-                        return new Frontend.SaveResponse()
+                        return new Frontend.SaveConfigurationResponse()
                         {
                             ResultCode = ApiResultCode.Error,
                             ErrorMessage = ex.Message
@@ -118,6 +119,38 @@ namespace MdsInfrastructure
                     }
                 },
                 WebServer.Authorization.Require);
+
+                api.MapRequest(Frontend.ConfirmDeployment, async (commandContext, httpContext, configurationId) =>
+                {
+                    try
+                    {
+                        var savedConfiguration = await commandContext.Do(Backend.LoadConfiguration, configurationId);
+                        var serverModel = await MdsInfrastructureFunctions.InitializeEditConfiguration(commandContext, savedConfiguration);
+                        var newInfraSnapshot = await MdsInfrastructureFunctions.TakeConfigurationSnapshot(
+                            commandContext,
+                            savedConfiguration,
+                            serverModel.AllProjects,
+                            serverModel.InfrastructureNodes);
+                        await commandContext.Do(Backend.ConfirmDeployment, new ConfirmDeploymentInput()
+                        {
+                            Snapshots = newInfraSnapshot,
+                            Configuration = savedConfiguration
+                        });
+
+                        Backend.Event.BroadcastDeployment broadcastDeployment = new();
+                        commandContext.PostEvent(broadcastDeployment);
+
+                        return new Frontend.ConfirmDeploymentResponse() { ResultCode = ApiResultCode.Ok };
+                    }
+                    catch (Exception ex)
+                    {
+                        return new Frontend.ConfirmDeploymentResponse()
+                        {
+                            ResultCode = ApiResultCode.Error,
+                            ErrorMessage = ex.Message
+                        };
+                    }
+                }, WebServer.Authorization.Require);
 
 
 
