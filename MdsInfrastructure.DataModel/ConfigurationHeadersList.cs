@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Metapsi.Hyperapp;
+using System.Collections.Generic;
 
 namespace MdsInfrastructure
 {
@@ -19,10 +20,11 @@ namespace MdsInfrastructure
         public EditConfigurationPage EditConfigurationPage { get; set; } = new();
     }
 
-    public class ReviewConfigurationPage
+    public class ReviewConfigurationPage : IApiSupportState
     {
         public InfrastructureConfiguration SavedConfiguration { get; set; }
         public List<MdsCommon.ServiceConfigurationSnapshot> Snapshot { get; set; } = new();
         public Metapsi.Ui.User User { get; set; } = new();
+        public ApiSupport ApiSupport { get; set; } = new();
     }
 }

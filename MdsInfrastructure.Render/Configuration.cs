@@ -170,6 +170,26 @@ namespace MdsInfrastructure.Render
 
                 var swapIcon = Icon.Swap;
 
+                var deployNowButton = b.Node(
+                    "button",
+                    "bg-red-500 rounded px-4 py-2 text-white",
+                    b => b.Text("Deploy now"));
+
+                b.SetOnClick(deployNowButton, b.MakeAction((BlockBuilder b, Var<ReviewConfigurationPage> model) =>
+                {
+                    return b.AsyncResult(
+                        b.ShowPanel(model),
+                        b.Request(
+                            Frontend.ConfirmDeployment,
+                            b.Get(model, x => x.SavedConfiguration.Id),
+                            b.MakeAction((BlockBuilder b, Var<ReviewConfigurationPage> model, Var<Frontend.ConfirmDeploymentResponse> response) =>
+                            {
+                                b.SetUrl(b.Const("/"));
+                                return model;
+                            }))
+                        );
+                }));
+
                 var toolbar = b.Add(view,
                     b.Toolbar(
                         b => b.NavigateButton(b =>
@@ -178,12 +198,7 @@ namespace MdsInfrastructure.Render
                             b.Set(x => x.Href, deploymentReportUrl);
                             b.Set(x => x.SvgIcon, swapIcon);
                         }),
-                        b => b.NavigateButton(b =>
-                        {
-                            b.Set(x => x.Label, "Not implemented - Deploy now");
-                            //b.Set(x => x.Href, confirmDeploymentUrl);
-                            b.Set(x => x.Style, Button.Style.Danger);
-                        })));
+                        b => deployNowButton));
 
                 b.AddClass(toolbar, "justify-end");
 
