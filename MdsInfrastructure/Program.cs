@@ -27,9 +27,6 @@ namespace MdsInfrastructure
     {
         static async Task Main(string[] args)
         {
-            //var plm = new DynModule().view(new ListConfigurationsPage());
-
-
             DateTime start = DateTime.UtcNow;
 
             if (args.Length < 1)
@@ -177,13 +174,12 @@ namespace MdsInfrastructure
             }
 
 
-
             Register.Everything(webServerRefs);
             //webServerRefs.AddInfraUi();
             webServerRefs.WebApplication.AddInfraApi(arguments);
             webServerRefs.RegisterStaticFiles(typeof(MdsInfrastructure.MdsInfra).Assembly);
             webServerRefs.RegisterStaticFiles(typeof(MdsCommon.Header).Assembly);
-            webServerRefs.RegisterStaticFiles(typeof(Metapsi.Syntax.HyperNode).Assembly);
+            webServerRefs.RegisterStaticFiles(typeof(Metapsi.Hyperapp.HyperNode).Assembly);
             webServerRefs.RegisterStaticFiles(typeof(Metapsi.Syntax.BlockBuilder).Assembly);
             webServerRefs.RegisterStaticFiles(typeof(MdsCommon.HeaderRenderer).Assembly);
             

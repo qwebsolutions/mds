@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using Metapsi;
+using MdsCommon.Controls;
 
 namespace MdsLocal
 {
@@ -101,7 +102,7 @@ namespace MdsLocal
                 new (){Code = nameof(MdsCommon.Routes.EventsLog) , Label = "Events log", Href = Route.Path<MdsCommon.Routes.EventsLog.List>() }
             };
 
-            return b.Menu(b.Const(new Metapsi.Hyperapp.Menu.Props()
+            return b.Menu(b.Const(new MdsCommon.Controls.Menu.Props()
             {
                 ActiveCode = selectedCode,
                 Entries = menuEntries.ToList()

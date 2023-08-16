@@ -3,6 +3,7 @@ using Metapsi.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MdsCommon.Controls;
 
 namespace MdsInfrastructure.Render
 {
@@ -18,19 +19,19 @@ namespace MdsInfrastructure.Render
                 clientModel,
                 b.Const("serviceTabs"),
                 toolbar,
-                new Metapsi.Hyperapp.Controls.TabRenderer()
+                new TabRenderer()
                 {
                     TabHeader = b => b.Text("Service"),
                     TabContent = b => b.Call(TabService, clientModel),
                     TabPageCode = "Service"
                 },
-                new Metapsi.Hyperapp.Controls.TabRenderer()
+                new TabRenderer()
                 {
                     TabHeader = b => b.Text("Parameters"),
                     TabContent = b => b.Call(TabParameters, clientModel),
                     TabPageCode = "Parameters"
                 },
-                new Metapsi.Hyperapp.Controls.TabRenderer()
+                new TabRenderer()
                 {
                     TabHeader = b => b.Text("Notes"),
                     TabContent = b => b.Call(TabNotes, clientModel),

@@ -1,4 +1,5 @@
-﻿using Metapsi;
+﻿using MdsCommon.Controls;
+using Metapsi;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using System;
@@ -103,25 +104,25 @@ namespace MdsInfrastructure.Render
                 clientModel,
                 b.Const("configurationTabs"),
                 toolbar,
-                new Metapsi.Hyperapp.Controls.TabRenderer()
+                new TabRenderer()
                 {
                     TabPageCode = "Configuration",
                     TabHeader = b => b.Text("Configuration"),
                     TabContent = b => b.Call(EditConfiguration.TabConfiguration, clientModel)
                 },
-                new Metapsi.Hyperapp.Controls.TabRenderer()
+                new TabRenderer()
                 {
                     TabPageCode = "Services",
                     TabHeader = b => b.Text("Services"),
                     TabContent = b => b.Call(EditConfiguration.TabServices, clientModel)
                 },
-                new Metapsi.Hyperapp.Controls.TabRenderer()
+                new TabRenderer()
                 {
                     TabPageCode = "Applications",
                     TabHeader = b => b.Text("Applications"),
                     TabContent = b => b.Call(EditConfiguration.TabApplications, clientModel)
                 },
-                new Metapsi.Hyperapp.Controls.TabRenderer()
+                new TabRenderer()
                 {
                     TabPageCode = "Variables",
                     TabHeader = b => b.Text("Variables"),
