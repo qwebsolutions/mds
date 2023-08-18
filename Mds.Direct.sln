@@ -61,6 +61,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Heroicons", "..\met
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsCommon.Controls", "MdsCommon.Controls\MdsCommon.Controls.csproj", "{0932295A-95B3-4E77-BAC1-2F89D9F67123}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.ChoicesJs", "..\metapsi\Metapsi.ChoicesJs\Metapsi.ChoicesJs.csproj", "{4A52A684-2836-41FA-A111-6875E9B2474A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -183,6 +185,10 @@ Global
 		{0932295A-95B3-4E77-BAC1-2F89D9F67123}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0932295A-95B3-4E77-BAC1-2F89D9F67123}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0932295A-95B3-4E77-BAC1-2F89D9F67123}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A52A684-2836-41FA-A111-6875E9B2474A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A52A684-2836-41FA-A111-6875E9B2474A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A52A684-2836-41FA-A111-6875E9B2474A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A52A684-2836-41FA-A111-6875E9B2474A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

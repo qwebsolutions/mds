@@ -10,7 +10,7 @@ namespace MdsCommon
             this BlockBuilder b,
             Var<SignInPage> clientModel)
         {
-            b.AddStylesheet("MdsCommon.css");
+            b.AddModuleStylesheet();
 
             var page = b.Div("flex flex-col justify-center items-center w-full h-screen bg-gray-100");
             var center = b.Add(page, b.Div("flex flex-row justify-center items-center"));
@@ -59,7 +59,7 @@ namespace MdsCommon
             Var<HyperNode> header,
             Var<HyperNode> page)
         {
-            //b.AddStylesheet("metapsi.hyperapp.css");
+            b.AddModuleStylesheet();
 
             var rootNode = b.Node("div", "flex flex-row w-full h-screen");
             //b.AddLoadingPanel(rootNode);

@@ -13,6 +13,10 @@ namespace MdsInfrastructure
         public string SchemaValidationMessage { get; set; } = string.Empty;
 
         public Metapsi.Ui.User User { get; set; } = new();
+
+        public string SingleChoiceTest { get; set; } = string.Empty;
+        public List<string> MultiChoiceTest { get; set; } = new();
+        public List<string> InputChoiceTest { get; set; } = new();
     }
 
     public class ApplicationStatus

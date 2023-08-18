@@ -20,7 +20,7 @@ namespace MdsInfrastructure.Render
 
             public override Var<HyperNode> OnRender(BlockBuilder b, DeploymentHistory serverModel, Var<DeploymentHistory> clientModel)
             {
-                b.AddStylesheet("metapsi.hyperapp.css");
+                b.AddModuleStylesheet();
 
                 return b.Layout(
                     b.InfraMenu(nameof(Routes.Deployment), serverModel.User.IsSignedIn()),
@@ -66,7 +66,6 @@ namespace MdsInfrastructure.Render
 
             public override Var<HyperNode> OnRender(BlockBuilder b, DeploymentReview serverModel, Var<DeploymentReview> clientModel)
             {
-                b.AddStylesheet("metapsi.hyperapp.css");
                 b.AddModuleStylesheet();
 
                 var selectedDeployment = serverModel.Deployment.Timestamp.ItalianFormat();
@@ -90,7 +89,6 @@ namespace MdsInfrastructure.Render
 
             public override Var<HyperNode> OnRender(BlockBuilder b, DeploymentPreview serverModel, Var<DeploymentPreview> clientModel)
             {
-                b.AddStylesheet("metapsi.hyperapp.css");
                 b.AddModuleStylesheet();
 
                 var selectedDeployment = serverModel.Deployment.Timestamp.ItalianFormat();

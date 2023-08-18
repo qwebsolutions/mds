@@ -4,6 +4,7 @@ using Metapsi.Syntax;
 using System;
 using System.Linq;
 using MdsCommon.Controls;
+using Metapsi.ChoicesJs;
 
 namespace MdsInfrastructure.Render
 {
@@ -19,11 +20,16 @@ namespace MdsInfrastructure.Render
             var allApplications = b.Get(clientModel, x => x.Configuration.Applications.ToList());
             var activeProjects = b.Get(clientModel, x => x.AllProjects.Where(x => x.Enabled).ToList());
             var selectedProjectId = b.Get(service, x => x.ProjectId);
-            var projectOptions = b.Get(activeProjects, selectedProjectId, (x, selectedProjectId) => x.Select(y => new DropDown.Option() { label = y.Name, value = y.Id.ToString(), selected = y.Id == selectedProjectId }).ToList());
+            //var projectOptions = b.Get(activeProjects, selectedProjectId, (x, selectedProjectId) => x.Select(y => new DropDown.Option() { label = y.Name, value = y.Id.ToString(), selected = y.Id == selectedProjectId }).ToList());
+            var projectOptions = b.MapChoices<MdsCommon.Project, Guid>(activeProjects, x => x.Id, x => x.Name);
+            b.SetSelectedChoice(projectOptions, b.AsString(selectedProjectId));
+
             var versions = b.Get(activeProjects, selectedProjectId, (x, selectedProjectId) => x.SelectMany(x => x.Versions).Where(x => x.Enabled && x.ProjectId == selectedProjectId).ToList());
             var selectedVersionId = b.Get(service, x => x.ProjectVersionId);
             var selectedVersion = b.Get(versions, selectedVersionId, (x, selectedVersionId) => x.SingleOrDefault(x => x.Id == selectedVersionId, new ProjectVersion() { VersionTag = "(not selected)" }));
-            var versionOptions = b.Get(versions, selectedVersionId,  (x, selectedVersionId) => x.Select(y => new DropDown.Option() { label = y.VersionTag, value = y.Id.ToString(), selected = selectedVersionId == y.Id }).ToList());
+            //var versionOptions = b.Get(versions, selectedVersionId,  (x, selectedVersionId) => x.Select(y => new DropDown.Option() { label = y.VersionTag, value = y.Id.ToString(), selected = selectedVersionId == y.Id }).ToList());
+            var versionOptions = b.MapChoices(versions, x => x.Id, x => x.VersionTag, selectedVersionId);
+            
             var versionBinaries = b.Get(selectedVersion, x => x.Binaries);
             var targetEnvironment = b.Def<string, string>((b, target) => b.If(b.AreEqual(target, b.Const("linux-x64")), b => b.Const("Linux"), b => b.Const("Windows")));
             var versionTargets = b.Get(versionBinaries, x => x.Select(x => x.Target).Distinct().ToList());
@@ -41,64 +47,114 @@ namespace MdsInfrastructure.Render
 
             var applicationNameLabel = b.Add(container, b.Text("Application"));
             b.AddClass(applicationNameLabel, "w-full");
-            var applicationDd = b.Add(container,
-                b.BoundDropDown(
-                    b.Const("ddServiceApplication"),
-                    service,
-                    x => x.ApplicationId,
-                    allApplications,
-                    b.Def((BlockBuilder b, Var<Application> app) => b.Get(app, app => new DropDown.Option() { label = app.Name, value = app.Id.ToString() }))));
+            //var applicationDd = b.Add(container,
+            //    b.BoundDropDown(
+            //        b.Const("ddServiceApplication"),
+            //        service,
+            //        x => x.ApplicationId,
+            //        allApplications,
+            //        b.Def((BlockBuilder b, Var<Application> app) => b.Get(app, app => new DropDown.Option() { label = app.Name, value = app.Id.ToString() }))));
+
+            var getEditedService = b.Def<EditConfigurationPage, InfrastructureService>(EditEntity.EditedService);
+
+            var appChoices = b.MapChoices(allApplications, x => x.Id, x => x.Name);
+            b.SetSelectedChoice(appChoices, b.Get(service, x => x.ApplicationId));
+            var applicationDd = b.Add(container, b.DropDown(appChoices));
+            b.SingleBindTo<EditConfigurationPage, InfrastructureService, Guid>(
+                applicationDd,
+                getEditedService,
+                x => x.ApplicationId);
+
             b.AddClass(applicationDd, "w-full");
 
             var projectLabel = b.Add(container, b.Text("Project")); b.AddClass(projectLabel, "w-full");
 
-            var projectDd = b.Add(container, b.DropDown(b.Const("projectDd"),
-                selectedProjectId.As<string>(),
-                projectOptions,
-                b.Def((BlockBuilder b, Var<string> inputValue) =>
-                {
-                    Var<System.Guid> newId = b.ToId(inputValue);
-                    b.Set(service,x=> x.ProjectId, newId);
-                    // Clear project version, it's from the previous project
-                    b.Set(service, x => x.ProjectVersionId, b.EmptyId());
-                    b.Set(service, x=> x.InfrastructureNodeId, b.EmptyId());
-                }),
-                b.Const("Project")));
+            //var projectDd = b.Add(container, b.DropDown(b.Const("projectDd"),
+            //    selectedProjectId.As<string>(),
+            //    projectOptions,
+            //    b.Def((BlockBuilder b, Var<string> inputValue) =>
+            //    {
+            //        Var<System.Guid> newId = b.ToId(inputValue);
+            //        b.Set(service,x=> x.ProjectId, newId);
+            //        // Clear project version, it's from the previous project
+            //        b.Set(service, x => x.ProjectVersionId, b.EmptyId());
+            //        b.Set(service, x=> x.InfrastructureNodeId, b.EmptyId());
+            //    }),
+            //    b.Const("Project")));
+
+            var projectDd = b.Add(container, b.DropDown(projectOptions));
+            Metapsi.ChoicesJs.Event.SetOnChange(b, projectDd, b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
+            {
+                var service = b.Call(getEditedService, page);
+                var selectedId = b.ParseId(value);
+                b.Set(service, x => x.ProjectId, selectedId);
+                b.Set(service, x => x.ProjectVersionId, b.EmptyId());
+                b.Set(service, x => x.InfrastructureNodeId, b.EmptyId());
+                return b.Clone(page);
+            }));
+
             b.AddClass(projectDd, "w-full");
 
             var versionLabel = b.Add(container, b.Text("Version")); b.AddClass(versionLabel, "w-full");
-            var versionDd = b.Add(container, b.DropDown(b.Const("versionDd"),
-                selectedVersionId.As<string>(),
-                versionOptions,
-                b.Def((BlockBuilder b, Var<string> value) =>
-                {
-                    Var<System.Guid> newId = b.ToId(value);
-                    b.Set(service,  x=> x.ProjectVersionId, newId);
-                    b.Set(service,  x=> x.InfrastructureNodeId, b.EmptyId());
-                }),
-                b.Const("Version")));
+
+            //var versionDd = b.Add(container, b.DropDown(b.Const("versionDd"),
+            //    selectedVersionId.As<string>(),
+            //    versionOptions,
+            //    b.Def((BlockBuilder b, Var<string> value) =>
+            //    {
+            //        Var<System.Guid> newId = b.ToId(value);
+            //        b.Set(service,  x=> x.ProjectVersionId, newId);
+            //        b.Set(service,  x=> x.InfrastructureNodeId, b.EmptyId());
+            //    }),
+            //    b.Const("Version")));
+
+            var versionDd = b.Add(container, b.DropDown(versionOptions));
+
+            Metapsi.ChoicesJs.Event.SetOnChange(b, versionDd, b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
+            {
+                var service = b.Call(getEditedService, page);
+                var selectedId = b.ParseId(value);
+                b.Set(service, x => x.ProjectVersionId, selectedId);
+                b.Set(service, x => x.InfrastructureNodeId, b.EmptyId());
+                return b.Clone(page);
+            }));
+
             b.AddClass(versionDd, "w-full");
 
-            var transform = (BlockBuilder b, Var<InfrastructureNode> node) =>
-            {
-                var nodeName = b.Get(node, x => x.NodeName);
-                var nodeId = b.Get(node, x => x.Id.ToString());
+            //var transform = (BlockBuilder b, Var<InfrastructureNode> node) =>
+            //{
+            //    var nodeName = b.Get(node, x => x.NodeName);
+            //    var nodeId = b.Get(node, x => x.Id.ToString());
 
-                return b.NewObj<DropDown.Option>(b =>
-                {
-                    b.Set(x => x.label, nodeName);
-                    b.Set(x => x.value, nodeId);
-                });
-            };
+            //    return b.NewObj<DropDown.Option>(b =>
+            //    {
+            //        b.Set(x => x.label, nodeName);
+            //        b.Set(x => x.value, nodeId);
+            //    });
+            //};
 
             var nodeLabel = b.Add(container, b.Text("Deployed on node"));
             b.AddClass(nodeLabel, "w-full");
-            var nodeDd = b.Add(container, b.BoundDropDown(
-                b.Const("ddServiceNode"),
-                service,
-                x => x.InfrastructureNodeId,
-                matchingNodes,
-                b.Def(transform)));
+            //var nodeDd = b.Add(container, b.BoundDropDown(
+            //    b.Const("ddServiceNode"),
+            //    service,
+            //    x => x.InfrastructureNodeId,
+            //    matchingNodes,
+            //    b.Def(transform)));
+
+            var nodeChoices = b.MapChoices(matchingNodes, x => x.Id, x => x.NodeName);
+            b.SetSelectedChoice(nodeChoices, b.Get(service, x => x.InfrastructureNodeId));
+
+            var nodeDd = b.Add(container, b.DropDown(nodeChoices));
+
+            Metapsi.ChoicesJs.Event.SetOnChange(b, nodeDd, b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
+            {
+                var service = b.Call(getEditedService, page);
+                var selectedId = b.ParseId(value);
+                b.Set(service, x => x.InfrastructureNodeId, selectedId);
+                return b.Clone(page);
+            }));
+
             b.AddClass(nodeDd, "w-full");
 
             var enabledLabel = b.Add(container, b.Text("Service status")); b.AddClass(enabledLabel, "w-full");
@@ -109,6 +165,14 @@ namespace MdsInfrastructure.Render
             b.AddClass(enabledToggle, "w-full");
 
             return container;
+        }
+    }
+
+    public static class EditEntity
+    {
+        public static Var<InfrastructureService> EditedService(BlockBuilder b, Var<EditConfigurationPage> page)
+        {
+            return b.Get(page, page => page.Configuration.InfrastructureServices.Single(service => service.Id == page.EditServiceId));
         }
     }
 }

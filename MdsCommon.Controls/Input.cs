@@ -18,6 +18,8 @@ namespace MdsCommon.Controls
 
         public static Var<HyperNode> Render<TState>(BlockBuilder b, Var<Props<TState>> props)
         {
+            b.AddModuleStylesheet();
+
             var input = b.Node("input", b.Concat(b.Get(props, x => x.CssClass), b.Const(" w-full")));
             var isPassword = b.Get(props, x => x.IsPassword);
             b.If(isPassword, b =>

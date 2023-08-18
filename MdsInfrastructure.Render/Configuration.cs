@@ -20,7 +20,6 @@ namespace MdsInfrastructure.Render
 
             public override Var<HyperNode> OnRender(BlockBuilder b, ListConfigurationsPage serverModel, Var<ConfigurationHeadersList> clientModel)
             {
-                b.AddStylesheet("metapsi.hyperapp.css");
                 b.AddModuleStylesheet();
 
                 return b.Layout(
@@ -93,7 +92,6 @@ namespace MdsInfrastructure.Render
 
             public override Var<HyperNode> OnRender(BlockBuilder b, EditConfigurationPage serverModel, Var<EditConfigurationPage> clientModel)
             {
-                b.AddStylesheet("metapsi.hyperapp.css");
                 b.AddModuleStylesheet();
 
                 return b.Layout(

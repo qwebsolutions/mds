@@ -182,6 +182,8 @@ namespace MdsInfrastructure
             webServerRefs.RegisterStaticFiles(typeof(Metapsi.Hyperapp.HyperNode).Assembly);
             webServerRefs.RegisterStaticFiles(typeof(Metapsi.Syntax.BlockBuilder).Assembly);
             webServerRefs.RegisterStaticFiles(typeof(MdsCommon.HeaderRenderer).Assembly);
+            webServerRefs.RegisterStaticFiles(typeof(MdsCommon.Controls.Control).Assembly);
+            webServerRefs.RegisterStaticFiles(typeof(Metapsi.ChoicesJs.Control).Assembly);
             
             {
                 var app = references.ApplicationSetup.Revive();

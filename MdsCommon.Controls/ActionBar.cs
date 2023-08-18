@@ -21,6 +21,8 @@ namespace MdsCommon.Controls
 
         public static Var<HyperNode> Render<TItem>(BlockBuilder b, Var<Props<TItem>> props, Var<TItem> entity)
         {
+            b.AddModuleStylesheet();
+
             var commands = b.Get(props, x => x.Commands);
 
             var rootContainer = b.Div("flex flex-row space-x-2 justify-end");

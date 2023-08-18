@@ -1,1 +1,1 @@
-tailwindcss -i input.css -o ../embedded/MdsCommon.css
+tailwindcss -i input.css -o ../embedded/MdsCommon.Render.css

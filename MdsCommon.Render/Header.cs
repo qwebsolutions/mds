@@ -11,7 +11,7 @@ namespace MdsCommon
     {
         public static Var<HyperNode> Render(this BlockBuilder b, Var<MdsCommon.Header.Props> props)
         {
-            b.AddStylesheet("MdsCommon.css");
+            b.AddModuleStylesheet();
 
             var container = b.Div("flex flex-row justify-between items-center");
             var mainOperation =  b.Get(props, x => x.Main.Operation);

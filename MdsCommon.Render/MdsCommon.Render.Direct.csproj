@@ -25,7 +25,7 @@
 	<ItemGroup>
 		<EmbeddedResource Include="embedded\form.js" LogicalName="form.js" />
 		<EmbeddedResource Include="embedded\Poppins-Regular.ttf" LogicalName="Poppins-Regular.ttf"></EmbeddedResource>
-		<EmbeddedResource Include="embedded\MdsCommon.css" LogicalName="MdsCommon.css"></EmbeddedResource>
+		<EmbeddedResource Include="embedded\MdsCommon.Render.css" LogicalName="MdsCommon.Render.Direct.css"></EmbeddedResource>
 	</ItemGroup>
 
 </Project>

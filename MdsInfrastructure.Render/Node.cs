@@ -6,6 +6,7 @@ using M = MdsInfrastructure.Node;
 using System.Linq;
 using System;
 using MdsCommon.Controls;
+using Metapsi.ChoicesJs;
 
 namespace MdsInfrastructure.Render
 {
@@ -157,14 +158,12 @@ namespace MdsInfrastructure.Render
             b.FormField(form, "Machine address", b.BoundInput(clientModel, x => x.InfrastructureNode, x => x.MachineIp));
             b.FormField(form, "Node UI port", b.BoundInput(clientModel, x => x.InfrastructureNode, x => x.UiPort, b.Const(string.Empty)));
 
-            b.FormField(form, "OS type",
-                b.BoundDropDown(
-                    b.Const("ddOsType"),
-                    node,
-                    x => x.EnvironmentTypeId,
-                    envTypes,
-                    x => x.Id,
-                    x => x.Name));
+            var osChoicesDd = b.DropDown(b.MapChoices(envTypes, x => x.Id, x => x.Name, b.Get(node, x => x.EnvironmentTypeId)));
+            b.SetOnChoiceSelected<M.EditPage, Guid>(osChoicesDd, (b, state, value) =>
+            {
+                var node = b.Get(clientModel, x => x.InfrastructureNode);
+                b.Set(node, x => x.EnvironmentTypeId, value);
+            });
 
             return form;
         }

@@ -11,7 +11,6 @@ namespace MdsInfrastructure.Render
         {
             public override Var<HyperNode> OnRender(BlockBuilder b, Var<SignInPage> clientModel)
             {
-                b.AddStylesheet("metapsi.hyperapp.css");
                 b.AddModuleStylesheet();
 
                 var page = b.Div("flex flex-col justify-center items-center w-full h-screen bg-gray-100");

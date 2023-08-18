@@ -9159,11 +9159,6 @@ video {
   transition-duration: 150ms;
 }
 
-button[type="button"], [type="reset"], [type="submit"].button-primary {
-  --tw-bg-opacity: 1;
-  background-color: rgb(14 165 233 / var(--tw-bg-opacity));
-}
-
 .hover\:text-white:hover {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity));

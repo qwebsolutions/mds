@@ -1,0 +1,1 @@
+tailwindcss -i input.css -o ../embedded/MdsCommon.Controls.css

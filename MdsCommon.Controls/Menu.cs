@@ -16,7 +16,7 @@ namespace MdsCommon.Controls
 
         public static Var<HyperNode> Render(this BlockBuilder b, Var<Props> props)
         {
-            b.AddStylesheet("metapsi.hyperapp.css");
+            b.AddModuleStylesheet();
 
             var isEmptyString = b.Def<string,bool>(Native.IsEmpty);
             var missingIcons = b.Get(props, isEmptyString, (props, empty) => props.Entries.Any(x => empty(x.SvgIcon)));
