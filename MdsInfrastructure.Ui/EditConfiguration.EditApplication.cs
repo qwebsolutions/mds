@@ -18,6 +18,7 @@ namespace MdsInfrastructure
             b.Add(form, b.Text("Application name"));
             //b.Add(form, b.BoundInput(app, x => x.Name, b.Const("Application name")));
             b.Add(form, b.BoundInput(clientModel, appId, (x, appId) => x.Configuration.Applications.Single(x => x.Id == appId), x => x.Name, b.Const("")));
+            b.Call(ApplyApplicationsFilter, clientModel);
 
             return form;
         }

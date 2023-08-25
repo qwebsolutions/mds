@@ -1,4 +1,5 @@
 ﻿using Metapsi;
+using System;
 using System.Collections.Generic;
 
 namespace MdsInfrastructure
@@ -55,5 +56,17 @@ namespace MdsInfrastructure
         public System.Guid NoteTypeId { get; set; }
         public System.String Reference { get; set; } = string.Empty;
         public string Note { get; set; } = string.Empty;
+    }
+
+    public class SearchableInfrastructureService : IRecord
+    {
+        public System.Guid Id { get; set; } = System.Guid.NewGuid();
+        public System.String ServiceName { get; set; } = System.String.Empty;
+        public System.String ProjectId { get; set; }
+        public System.String InfrastructureNodeId { get; set; }
+        public System.Boolean Enabled { get; set; }
+        public System.String ApplicationId { get; set; }
+        public System.String ProjectVersionId { get; set; }
+        public System.String ConfigurationHeaderId { get; set; }
     }
 }

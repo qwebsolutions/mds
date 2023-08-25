@@ -8,6 +8,18 @@ namespace MdsInfrastructure
 {
     public static partial class EditConfiguration
     {
+        public static void ApplyApplicationsFilter(this BlockBuilder b, Var<EditConfigurationPage> clientModel)
+        {
+            b.Log("am apelat filtrul din app");
+            b.Set(
+                 clientModel,
+                 x => x.FilteredApplications,
+                 b.ContainingText(
+                     b.Get(
+                         clientModel,
+                         x => x.Configuration.Applications),
+                     b.Get(clientModel, x => x.ApplicationsFilterValue)));
+        }
         public static Var<HyperNode> TabApplications(
            BlockBuilder b,
            Var<EditConfigurationPage> clientModel)
@@ -26,11 +38,13 @@ namespace MdsInfrastructure
                     b.Set(x => x.Name, string.Empty);
                 });
                 b.Push(b.Get(clientModel, x => x.Configuration.Applications), newApp);
+                b.Call(ApplyApplicationsFilter, state);
+
                 return b.GoTo(state, EditApplication, newId);
             });
 
-            var rows = b.Get(clientModel, x => x.Configuration.Applications.OrderBy(x => x.Name).ToList());
-
+            var rows = b.Get(clientModel, x => x.FilteredApplications.OrderBy(x => x.Name).ToList());
+          
             var rc = b.Def((BlockBuilder b, Var<Application> app, Var<DataTable.Column> col) =>
             {
                 var name = b.Get(app, x => x.Name, "(not set)");
@@ -44,7 +58,12 @@ namespace MdsInfrastructure
                     {
                         b.Set(x=>x.Label, "Add application");
                         b.Set(x => x.OnClick, addApplication);
-                    })
+                    }),
+                      b => b.Filter<EditConfigurationPage>(
+                                clientModel,
+                                x => x.ApplicationsFilterValue,
+                                ApplyApplicationsFilter,
+                                "")
                 },
                 (b) =>
                 {
@@ -60,6 +79,8 @@ namespace MdsInfrastructure
                     {
                         var removed = b.Get(clientModel, application, (x, application) => x.Configuration.Applications.Where(x => x != application).ToList());
                         b.Set(b.Get(clientModel, x => x.Configuration), x => x.Applications, removed);
+
+                        b.Call(ApplyApplicationsFilter, clientModel);
                     });
 
                     var removeIcon = Icon.Remove;

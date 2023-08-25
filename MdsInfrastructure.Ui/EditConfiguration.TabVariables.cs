@@ -8,6 +8,16 @@ namespace MdsInfrastructure
 {
     public static partial class EditConfiguration
     {
+        public static void ApplyVariablesFilter(this BlockBuilder b, Var<EditConfigurationPage> clientModel)
+        {
+            b.Set(
+                 clientModel,
+                 x => x.FilteredVariables,
+                 b.ContainingText(
+                     b.Get(clientModel, x => x.Configuration.InfrastructureVariables),
+                     b.Get(clientModel, x => x.VariablesFilterValue)
+                     ));
+        }
         public static Var<HyperNode> TabVariables(
            BlockBuilder b,
            Var<EditConfigurationPage> clientModel)
@@ -23,11 +33,13 @@ namespace MdsInfrastructure
                     b.Set(x => x.Id, newId);
                 });
                 b.Push(b.Get(clientModel, x => x.Configuration.InfrastructureVariables), newVar);
+                b.Call(ApplyVariablesFilter, clientModel);
                 b.GoTo(clientModel, EditVariable, newVar);
+
                 return b.Clone(clientModel);
             });
 
-            var rows = b.Get(clientModel, x => x.Configuration.InfrastructureVariables.OrderBy(x => x.VariableName).ToList());
+            var rows = b.Get(clientModel, x => x.FilteredVariables.OrderBy(x => x.VariableName).ToList());
             var rc = b.RenderCell<InfrastructureVariable>((b, row, column) =>
             {
                 var columnName = b.Get(column, x => x.Name);
@@ -43,7 +55,12 @@ namespace MdsInfrastructure
                     {
                         b.Set(x => x.Label, "Add variable");
                         b.Set(x => x.OnClick, onAddVariable);
-                    })
+                    }),
+                      b => b.Filter<EditConfigurationPage>(
+                                clientModel,
+                                x => x.VariablesFilterValue,
+                                ApplyVariablesFilter,
+                                "")
                 },
                 b =>
                 {
@@ -65,6 +82,7 @@ namespace MdsInfrastructure
                         var typed = variable.As<InfrastructureVariable>();
                         var removed = b.Get(clientModel, typed, (x, typed) => x.Configuration.InfrastructureVariables.Where(x => x != typed).ToList());
                         b.Set(b.Get(clientModel, x => x.Configuration), x => x.InfrastructureVariables, removed);
+                        b.Set(clientModel, x => x.FilteredVariables, removed);
                     });
 
                     b.If(b.Not(isInUse), b =>
