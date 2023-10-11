@@ -68,7 +68,7 @@ namespace MdsInfrastructure.Render
 
                         var checkboxText = b.Get(
                             version,
-                            b.Def<string, System.Collections.Generic.List<string>, string>(Native.JoinStrings),
+                            b.Def<string, System.Collections.Generic.List<string>, string>(Core.JoinStrings),
                             buildDescriptions,
                             (version, join, buildDescriptions) => version.VersionTag + "(" + join(", ", buildDescriptions) + ")");
 

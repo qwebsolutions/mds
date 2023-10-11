@@ -1,5 +1,6 @@
 ﻿using MdsCommon;
 using Metapsi;
+using Metapsi.Dom;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using Metapsi.Ui;

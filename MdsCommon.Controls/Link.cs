@@ -17,7 +17,7 @@ namespace MdsCommon.Controls
         {
             var a = b.Node("a", "underline text-sky-500");
             var props = b.Get(a, x => x.props);
-            b.Set(props, Html.href, absoluteUrl);
+            b.SetDynamic(props, Html.href, absoluteUrl);
             b.Add(a, b.Text(text));
             return a;
         }
@@ -27,7 +27,7 @@ namespace MdsCommon.Controls
         {
             var a = b.Node("a", "");
             var props = b.Get(a, x => x.props);
-            b.Set(props, Html.href, url);
+            b.SetDynamic(props, Html.href, url);
             b.Add(a, content);
             return a;
         }
@@ -43,7 +43,7 @@ namespace MdsCommon.Controls
         {
             var a = b.Node("a", "underline text-sky-500");
             var props = b.Get(a, x => x.props);
-            b.Set(props, Html.href, b.Const("javascript:void(0);"));
+            b.SetDynamic(props, Html.href, b.Const("javascript:void(0);"));
             b.SetOnClick(a, onClick);
             b.Add(a, b.Text(text));
             return a;

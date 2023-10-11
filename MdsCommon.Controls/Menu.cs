@@ -18,7 +18,7 @@ namespace MdsCommon.Controls
         {
             b.AddModuleStylesheet();
 
-            var isEmptyString = b.Def<string,bool>(Native.IsEmpty);
+            var isEmptyString = b.Def<string,bool>(Core.IsEmpty);
             var missingIcons = b.Get(props, isEmptyString, (props, empty) => props.Entries.Any(x => empty(x.SvgIcon)));
             
             var selectedCode = b.Get(props, x => x.ActiveCode);

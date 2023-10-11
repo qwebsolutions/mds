@@ -1,4 +1,5 @@
 ﻿using Metapsi;
+using Metapsi.Dom;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 
@@ -38,7 +39,7 @@ namespace MdsCommon.Controls
                 new DynamicProperty<HyperType.Action<TState, DomEvent<ToggleTarget>>>("onclick"),
                 b.MakeAction((BlockBuilder b, Var<TState> state, Var<DomEvent<ToggleTarget>> @event) =>
                 {
-                    b.CallExternal(nameof(Metapsi.Syntax.Native), "stopPropagation", @event);
+                    b.StopPropagation(@event);
                     var target = b.Get(@event, x => x.target);
                     var value = b.Get(target, x => x.@checked);
                     return b.MakeActionDescriptor(onToggle, value);

@@ -1,6 +1,7 @@
 ﻿using Metapsi.Syntax;
 using Metapsi.Hyperapp;
 using MdsCommon.Controls;
+using Metapsi.Dom;
 
 namespace MdsCommon
 {
