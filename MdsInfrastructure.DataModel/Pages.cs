@@ -10,6 +10,8 @@ namespace MdsInfrastructure
     {
         public Metapsi.Ui.User User { get; set; }
 
+        public string ServicesFilter { get; set; } = string.Empty;
+
         public InfrastructureConfiguration Configuration { get; set; }
         public List<MdsCommon.Project> AllProjects { get; set; }
         public List<InfrastructureNode> InfrastructureNodes { get; set; }

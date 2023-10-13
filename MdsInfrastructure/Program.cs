@@ -75,11 +75,6 @@ namespace MdsInfrastructure
             });
 
 
-#if DEBUG
-            WebServer.WebRootPaths.Add("D:\\qweb\\mes\\Mds\\MdsInfrastructure\\inline");
-            WebServer.WebRootPaths.Add("D:\\qweb\\mes\\Metapsi.Hyperapp\\inline");
-#endif
-
             MdsInfrastructureApplication.InputArguments arguments = Mds.ParametersAs<MdsInfrastructureApplication.InputArguments>(parameters);
 
             var references = MdsInfrastructureApplication.Setup(arguments, start);
@@ -184,6 +179,7 @@ namespace MdsInfrastructure
             webServerRefs.RegisterStaticFiles(typeof(Metapsi.Syntax.BlockBuilder).Assembly);
             webServerRefs.RegisterStaticFiles(typeof(MdsCommon.HeaderRenderer).Assembly);
             webServerRefs.RegisterStaticFiles(typeof(MdsCommon.Controls.Control).Assembly);
+            webServerRefs.RegisterStaticFiles(typeof(Metapsi.Dom.ClickTarget).Assembly);
             webServerRefs.RegisterStaticFiles(typeof(Metapsi.ChoicesJs.Control).Assembly);
             
             {
