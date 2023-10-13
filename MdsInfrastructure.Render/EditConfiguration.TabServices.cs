@@ -127,15 +127,48 @@ namespace MdsInfrastructure.Render
 
             var contextToolbar = b.Div("flex flex-row");
 
+            var hInputInput = b.NewObj<HParams>();
+            b.Set(hInputInput, x => x.Tag, "input");
+            b.SetDynamic(b.Get(hInputInput, x => x.Props), Html.type, b.Const("text"));
+
+            //var firstInputText = b.Add(contextToolbar, b.H(hInputInput));
+            //var secondInputText = b.Add(contextToolbar, b.BuildControl(b.Const("input"), b.NewObj<InputText>(b =>
+            //{
+            //    b.Set(x => x.Value, "abc");
+            //})));
+
+            //var thirdInputText = b.Add(contextToolbar, b.BuildControl<InputText>(
+            //    b.Const("input"),
+            //    (b, props) =>
+            //    {
+            //        b.Set(props, x => x.Value, "from builder");
+            //    }));
+
+
             b.OnModel(
                 clientModel,
                 (b, modelContext) =>
                 {
-                    var filter = b.Filter(modelContext, b =>
+                    b.Add(contextToolbar, b.Filter((b, filterBuilder) =>
                     {
-                        b.BindTextValue(x => x.ServicesFilter);
-                    });
-                    b.Add(contextToolbar, filter);
+                        b.Customize(filterBuilder, x => x.ClearButtonContent, (b, p) =>
+                        {
+                            b.SetProp(p, Html.@class, "text-red-500");
+                        });
+
+                        b.InBindingContext(modelContext, filterBuilder, b =>
+                        {
+                            b.BindFilter(x => x.ServicesFilter);
+                        });
+
+                        var plm = b.NewObj<InputText>();
+
+                        b.InBindingContext(modelContext, plm, b =>
+                        {
+                            b.
+                        });
+
+                    }));
                 });
 
             return b.DataGrid<InfrastructureServiceRow>(
