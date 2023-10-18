@@ -235,46 +235,33 @@ namespace MdsInfrastructure.Render
                     //    }).As<HyperNode>());
 
 
-                    //b.Add(container, b.DataTable<InfrastructureServiceRow>(
-                    //    (b, builder) =>
-                    //    {
+                    b.Add(container, b.Table<InfrastructureServiceRow>(
+                        (b, data) =>
+                        {
+                            b.FillFrom(filteredServices, exceptColumns: new()
+                                {
+                                    nameof(InfrastructureServiceRow.Id),
+                                    nameof(InfrastructureServiceRow.Tags)
+                                });
 
-                    //        b.GuessColumns(
-                    //            builder,
-                    //            except: new()
-                    //            {
-                    //                nameof(InfrastructureServiceRow.Id),
-                    //                nameof(InfrastructureServiceRow.Tags)
-                    //            });
+                            b.SetCommonStyle();
 
-                    //        b.SetCommonStyle(builder);
+                            b.OverrideColumnCell(
+                                b.Const(nameof(InfrastructureServiceRow.Name)),
+                                (b, data, props) => b.RenderServiceNameCell(b.Get(data, x => x.Row)));
 
-                    //        builder.TableCell.WrapBuildControl((b, cellData, props, baseBuilder) =>
-                    //        {
-                    //            return b.If(
-                    //                b.Get(cellData, x => x.Column == nameof(InfrastructureServiceRow.Name)),
-                    //                b =>
-                    //                {
-                    //                    return b.H(
-                    //                        "td",
-                    //                        props,
-                    //                        b.RenderServiceNameCell(b.Get(cellData, x => x.Row)));
-                    //                },
-                    //                b => baseBuilder(b, cellData, props));
-                    //        });
-
-                    //        b.Set(builder.Data, x => x.Rows, filteredServices);
-                    //    }).As<HyperNode>());
+                        }).As<HyperNode>());
 
                     b.Add(contextToolbar, b.Filter(
                         (b, filterBuilder, data) =>
                         {
-                            b.BindFilter(filterBuilder, context, x => x.ServicesFilter, data);
+                            b.BindFilter(context, x => x.ServicesFilter);
                             
                             filterBuilder.ClearButton.EditProps((b, data, props) =>
                             {
                                 b.AddClass(props, b.Const("text-green-400"));
                             });
+
                         }).As<HyperNode>());
                 });
 

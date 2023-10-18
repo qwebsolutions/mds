@@ -4,6 +4,7 @@ using Metapsi.Syntax;
 using Metapsi.Ui;
 using System;
 using System.Collections.Generic;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MdsCommon.HtmlControls
 {
@@ -24,42 +25,69 @@ namespace MdsCommon.HtmlControls
 
     public static class DataTableExtensions
     {
+        public static void GuessColumns<TRow>(
+            this ControlBuilder<TableDefinition<TRow>, TableData<TRow>> b, 
+            List<string> except = null)
+        {
+            if (except == null) except = new List<string>();
+            
+            var properties = typeof(TRow).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            foreach (var property in properties)
+            {
+                if (!except.Contains(property.Name))
+                {
+                    b.Push(b.Get(b.Data, x => x.Columns), b.Const(property.Name));
+                }
+            }
 
-        //public static Var<IVNode> DataTable<TRow>(this LayoutBuilder b, Action<TableBuilder<TRow>, Var<TableData<TRow>>> customize = null)
-        //    where TRow : new()
-        //{
-        //    return b.BuildControl<TableBuilder<TRow>, TableData<TRow>>(customize);
-        //}
+            b.Control.HeaderCell.BuildControl = (b, column, props) =>
+            {
+                return b.H("th", props, b.T(column));
+            };
+            b.Control.CellContent.BuildControl = (b, cellData, props) =>
+            {
+                return b.T(b.AsString(b.GetProperty<object>(b.Get(cellData, x => x.Row), b.Get(cellData, x => x.Column))));
+            };
+        }
 
-        //public static void GuessColumns<TRow>(this TableBuilder<TRow> tableBuilder, List<string> except = null)
-        //    where TRow : new()
-        //{
-        //    if (except == null) except = new List<string>();
+        public static void FillFrom<TRow>(
+            this ControlBuilder<TableDefinition<TRow>, TableData<TRow>> b,
+            Var<List<TRow>> rows,
+            List<string> exceptColumns = null)
+        {
+            b.GuessColumns(exceptColumns);
+            b.Set(b.Data, x => x.Rows, rows);
+        }
 
-        //    tableBuilder.FillData((b, data) =>
-        //    {
-        //        var properties = typeof(TRow).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-        //        foreach (var property in properties)
-        //        {
-        //            if (!except.Contains(property.Name))
-        //            {
-        //                b.Push(b.Get(data, x => x.Columns), b.Const(property.Name));
-        //            }
-        //        }
-        //    });
+        public static void OverrideColumnCell<TRow>(
+            this ControlBuilder<TableDefinition<TRow>, TableData<TRow>> b,
+            Var<string> columName,
+            Func<LayoutBuilder, Var<CellData<TRow>>, Var<DynamicObject>, Var<IVNode>> render)
+        {
+            b.Control.CellContent.WrapBuildControl((b, cellData, props, baseBuilder) =>
+            {
+                b.Log("column name", b.Get(cellData, x => x.Column));
 
-        //    tableBuilder.HeaderCell.BuildControl = (b, column, props) =>
-        //    {
-        //        return b.H("th", props, b.T(column));
-        //    };
-        //    tableBuilder.TableCell.BuildControl = (b, cellData, props) =>
-        //    {
-        //        return b.H("td", props, b.T(b.AsString(b.GetProperty<object>(b.Get(cellData, x => x.Row), b.Get(cellData, x => x.Column)))));
-        //    };
-        //}
+                return b.If(
+                    b.AreEqual(b.Get(cellData, x => x.Column), columName),
+                    b =>
+                    {
+                        return b.Call(render, cellData, props);
+                    },
+                    b => baseBuilder(b, cellData, props));
+            });
+        }
+
+        public static void OverrideColumnCell<TRow>(
+            this ControlBuilder<TableDefinition<TRow>, TableData<TRow>> b,
+            string columName,
+            Func<LayoutBuilder, Var<CellData<TRow>>, Var<DynamicObject>, Var<IVNode>> render)
+        {
+            b.OverrideColumnCell(b.Const(columName), render);
+        }
 
         public static void WrapBuildControl<TData>(
-            this HtmlControlBuilder<TData> builder,
+            this ControlDefinition<TData> builder,
             Func<LayoutBuilder, Var<TData>, Var<DynamicObject>, Func<LayoutBuilder, Var<TData>, Var<DynamicObject>, Var<IVNode>>, Var<IVNode>> wrapper)
             where TData : new()
         {
@@ -70,28 +98,30 @@ namespace MdsCommon.HtmlControls
             };
         }
 
-        public static void SetCommonStyle<TRow>(this BlockBuilder b, TableBuilder<TRow> builder)
+        public static void SetCommonStyle<TRow>(this ControlBuilder<TableDefinition<TRow>, TableData<TRow>> b)
             where TRow : new()
         {
-            //builder.Table.SetProps(b =>
-            //{
-            //    b.AddClass(b.Const("border-collapse w-full overflow-hidden"));
-            //});
+            var builder = b.Control;
 
-            //builder.TableCell.SetProps(b =>
-            //{
-            //    b.AddClass(b.Const("border-b border-gray-300 py-4"));
-            //});
+            builder.Table.EditProps((b, props) =>
+            {
+                b.AddClass(props, b.Const("border-collapse w-full overflow-hidden"));
+            });
 
-            //builder.HeaderRow.SetProps(b =>
-            //{
-            //    b.AddClass(b.Const("text-left text-sm text-gray-500 bg-white drop-shadow-sm"));
-            //});
+            builder.TableCell.EditProps((b, props) =>
+            {
+                b.AddClass(props, b.Const("border-b border-gray-300 py-4"));
+            });
 
-            //builder.HeaderCell.SetProps(b =>
-            //{
-            //    b.AddClass(b.Const("py-4 border-b border-gray-300 bg-white"));
-            //});
+            builder.HeaderRow.EditProps((b, props) =>
+            {
+                b.AddClass(props, b.Const("text-left text-sm text-gray-500 bg-white drop-shadow-sm"));
+            });
+
+            builder.HeaderCell.EditProps((b, props) =>
+            {
+                b.AddClass(props, b.Const("py-4 border-b border-gray-300 bg-white"));
+            });
         }
 
 

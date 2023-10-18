@@ -31,20 +31,20 @@ namespace MdsCommon.HtmlControls
         public string Value { get; set; } = string.Empty;
     }
 
-    public class FilterBuilder
+    public class FilterDefinition
     {
-        public HtmlControlBuilder<Filter> Container { get; set; }
-        public HtmlControlBuilder<Filter> Input { get; set; }
-        public HtmlControlBuilder<Filter> ClearButton { get; set; }
-        public HtmlControlBuilder<Filter> ClearIcon { get; set; }
+        public ControlDefinition<Filter> Container { get; set; }
+        public ControlDefinition<Filter> Input { get; set; }
+        public ControlDefinition<Filter> ClearButton { get; set; }
+        public ControlDefinition<Filter> ClearIcon { get; set; }
 
     }
 
     public static class FilterExtensions
     {
-        public static void DefaultFilter(this FilterBuilder filterBuilder)
+        public static void DefaultFilter(this FilterDefinition filterBuilder)
         {
-            filterBuilder.Container = HtmlControlBuilder.New<Filter>(
+            filterBuilder.Container = ControlDefinition.New<Filter>(
                 "div",
                 (b, data, props) =>
                 {
@@ -55,7 +55,7 @@ namespace MdsCommon.HtmlControls
                     b.HasValue(b.Get(data, x => x.Value)),
                     b => b.Render(filterBuilder.ClearButton, data)));
 
-            filterBuilder.Input = HtmlControlBuilder.New<Filter>(
+            filterBuilder.Input = ControlDefinition.New<Filter>(
                 "input",
                 (b, data, props) =>
                 {
@@ -76,7 +76,7 @@ namespace MdsCommon.HtmlControls
                     b.SetClass(props, b.Const("border rounded-full px-4 py-2"));
                 });
 
-            filterBuilder.ClearButton = HtmlControlBuilder.New<Filter>(
+            filterBuilder.ClearButton = ControlDefinition.New<Filter>(
                     "button",
                     (b, data, props) =>
                     {
@@ -90,7 +90,7 @@ namespace MdsCommon.HtmlControls
                     },
                     (b, data) => b.Render(filterBuilder.ClearIcon, data));
 
-            filterBuilder.ClearIcon = HtmlControlBuilder.New<Filter>(
+            filterBuilder.ClearIcon = ControlDefinition.New<Filter>(
                 "div",
                 (b, data, props) =>
                 {
@@ -100,33 +100,31 @@ namespace MdsCommon.HtmlControls
 
         public static Var<IVNode> Filter(
             this LayoutBuilder b,
-            Action<BlockBuilder, FilterBuilder, Var<Filter>> customize)
+            Action<ControlBuilder<FilterDefinition, Filter>, FilterDefinition, Var<Filter>> customize)
         {
             var data = b.NewObj<Filter>();
-            FilterBuilder filterBuilder = new FilterBuilder();
-            filterBuilder.DefaultFilter();
+            FilterDefinition controlDefinition = new FilterDefinition();
+            controlDefinition.DefaultFilter();
             if (customize != null)
             {
-                BlockBuilder blockBuilder = new BlockBuilder(b.ModuleBuilder, b.Block);
-                customize(blockBuilder, filterBuilder, data);
+                ControlBuilder<FilterDefinition, Filter> blockBuilder = new(b, controlDefinition, data);
+                customize(blockBuilder, controlDefinition, data);
             }
 
-            return b.Render(filterBuilder.Container, data);
+            return b.Render(controlDefinition.Container, data);
         }
 
         public static void BindFilter<TPageModel, TSubmodel>(
-            this BlockBuilder b,
-            FilterBuilder filterBuilder,
+            this ControlBuilder<FilterDefinition, Filter> b,
             Var<DataContext<TPageModel, TSubmodel>> dataContext,
-            System.Linq.Expressions.Expression<Func<TSubmodel, string>> property,
-            Var<Filter> filter)
+            System.Linq.Expressions.Expression<Func<TSubmodel, string>> property)
         {
-            b.InBindingContext(dataContext, filter, b =>
+            b.InBindingContext(dataContext, b.Data, b =>
             {
                 b.BindOneWay(x => x.Value, property);
             });
 
-            filterBuilder.Input.EditProps((b, props) =>
+            b.Control.Input.EditProps((b, props) =>
             {
                 b.OnInputAction(
                     props,
@@ -139,7 +137,7 @@ namespace MdsCommon.HtmlControls
                     }));
             });
 
-            filterBuilder.ClearButton.EditProps((b, props) =>
+            b.Control.ClearButton.EditProps((b, props) =>
             {
                 b.OnClickAction(props, b.MakeAction((BlockBuilder b, Var<TPageModel> pageModel) =>
                 {
