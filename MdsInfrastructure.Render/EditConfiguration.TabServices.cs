@@ -32,6 +32,26 @@ namespace MdsInfrastructure.Render
 
     public static partial class EditConfiguration
     {
+        public static Var<EditConfigurationPage> OnAddService(BlockBuilder b, Var<EditConfigurationPage> clientModel)
+        {
+            var configHeaderId = b.Get(clientModel, x => x.Configuration.Id);
+            var services = b.Get(clientModel, x => x.Configuration.InfrastructureServices);
+            var newId = b.NewId();
+
+            var newService = b.NewObj<InfrastructureService>(b =>
+            {
+                b.Set(x => x.Id, newId);
+                b.Set(x => x.ConfigurationHeaderId, configHeaderId);
+                b.Set(x => x.Enabled, true);
+            });
+            b.Comment("onAddService");
+            b.Push(b.Get(clientModel, x => x.Configuration.InfrastructureServices), newService);
+
+            b.Set(clientModel, x => x.EditServiceId, newId);
+            b.Log("EditServiceId", newId);
+            return b.EditView<EditConfigurationPage>(clientModel, EditService);
+        }
+
         public static Var<string> GetApplicationLabel(this BlockBuilder b, Var<EditConfigurationPage> model, Var<Guid> applicationId)
         {
             return b.Get(model, applicationId, (x, applicationId) => x.Configuration.Applications.SingleOrDefault(y => y.Id == applicationId, new Application() { Name = "(not set)" }).Name);
@@ -151,42 +171,33 @@ namespace MdsInfrastructure.Render
 
             var contextToolbar = b.Div("flex flex-row items-end");
 
-            //var hInputInput = b.NewObj<HParams>();
-            //b.Set(hInputInput, x => x.Tag, "input");
-            //b.SetDynamic(b.Get(hInputInput, x => x.Props), Html.type, b.Const("text"));
-
-            //var firstInputText = b.Add(contextToolbar, b.H(hInputInput));
-            //var secondInputText = b.Add(contextToolbar, b.BuildControl(b.Const("input"), b.NewObj<InputText>(b =>
-            //{
-            //    b.Set(x => x.Value, "abc");
-            //})));
-
-            //var thirdInputText = b.Add(contextToolbar, b.BuildControl<InputText>(
-            //    b.Const("input"),
-            //    (b, props) =>
-            //    {
-            //        b.Set(props, x => x.Value, "from builder");
-            //    }));
-
-
             b.OnModel(
                 clientModel,
-                (b, context) =>
+                (bParent, context) =>
                 {
+                    var b = new LayoutBuilder();
+                    b.Init(bParent.ModuleBuilder, bParent.Block);
                     b.Add(container, b.DataGrid<InfrastructureServiceRow>(
-                        (b, builder) =>
+                        b =>
                         {
-                            builder.Toolbar.BuildControl = (b, props) =>
+                            b.Toolbar.BuildControl = (b, props) =>
                             {
-                                //b.OnClickAction(onAddService);
-
-                                return b.H(
-                                    "div",
-                                    props,
-                                    b.H(
-                                        "button",
+                                return b.Div(
+                                    b.EditProps(props, b=>
+                                    {
+                                        b.Log("EditProps", props);
+                                    }),
+                                    b.Button(
                                         b =>
                                         {
+                                            b.OnClickAction<EditConfigurationPage>(OnAddService);
+                                            b.SetClass("rounded py-2 px-4 shadow bg-sky-500 text-white");
+                                        },
+                                        b.T("Add service")),
+                                    b.Button(
+                                        b =>
+                                        {
+                                            b.OnClickAction<EditConfigurationPage>(OnAddService);
                                             b.SetClass("rounded py-2 px-4 shadow bg-sky-500 text-white");
                                         },
                                         b.T("Add service"))
@@ -194,16 +205,16 @@ namespace MdsInfrastructure.Render
                             };
 
                             b.GuessColumns(
-                                builder.Table,
+                                b.Table,
                                 except: new()
                                 {
                                     nameof(InfrastructureServiceRow.Id),
                                     nameof(InfrastructureServiceRow.Tags)
                                 });
 
-                            b.SetCommonStyle(builder.Table);
+                            b.SetCommonStyle(b.Table);
 
-                            builder.Table.TableCell.WrapBuildControl((b, cellData, props, baseBuilder) =>
+                            b.Table.TableCell.WrapBuildControl((b, cellData, props, baseBuilder) =>
                             {
                                 return b.If(
                                     b.Get(cellData, x => x.Column == nameof(InfrastructureServiceRow.Name)),
@@ -217,13 +228,14 @@ namespace MdsInfrastructure.Render
                                     b => baseBuilder(b, cellData, props));
                             });
 
-                            b.Set(builder.Table.Data, x => x.Rows, filteredServices);
+                            b.Set(b.Table.Data, x => x.Rows, filteredServices);
                         }).As<HyperNode>());
 
 
                     //b.Add(container, b.DataTable<InfrastructureServiceRow>(
                     //    (b, builder) =>
                     //    {
+
                     //        b.GuessColumns(
                     //            builder,
                     //            except: new()
@@ -262,7 +274,7 @@ namespace MdsInfrastructure.Render
                                     b.BindOneWay(x => x.Value, x => x.ServicesFilter);
                                 });
 
-                            b.Set(filter.Data, x => x.SetValue, b.DefineAction<object, string>((b, o, s) =>
+                            b.Set(filter.Data, x => x.SetValue, b.DefineAction<LayoutBuilder, object, string>((b, o, s) =>
                             {
                                 b.Set(o.As<EditConfigurationPage>(), x => x.ServicesFilter, s);
                             }));

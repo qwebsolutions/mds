@@ -38,12 +38,12 @@ namespace MdsCommon.HtmlControls
         public ControlBuilder ClearButton { get; set; }
         public ControlBuilder ClearIcon { get; set; }
 
-        public override Var<IVNode> GetRoot(BlockBuilder b)
+        public override Var<IVNode> GetRoot(LayoutBuilder b)
         {
             return Container.GetRoot(b);
         }
 
-        protected override void Setup(BlockBuilder b)
+        protected override void Setup(LayoutBuilder b)
         {
             this.Container = ControlBuilder.New(
                 "div", b =>
@@ -112,7 +112,7 @@ namespace MdsCommon.HtmlControls
             var filteredItems = b.Get(
                 list,
                 value,
-                b.DefineFunc<TItem, string, bool>(ContainsValue),
+                b.DefineFunc<BlockBuilder, TItem, string, bool>(ContainsValue),
                 (all, value, filterFunc) => all.Where(x => filterFunc(x, value)).ToList());
 
             return filteredItems;
@@ -173,7 +173,7 @@ namespace MdsCommon.HtmlControls
         //    b.SetProp(hParams, new DynamicProperty<HyperType.Action<TState, DomEvent<ClickTarget>>>("onclick"), clickEvent);
         //}
 
-        public static Var<IVNode> Optional(this BlockBuilder b, Var<bool> ifValue, System.Func<BlockBuilder, Var<IVNode>> buildControl)
+        public static Var<IVNode> Optional(this LayoutBuilder b, Var<bool> ifValue, System.Func<LayoutBuilder, Var<IVNode>> buildControl)
         {
             return b.If(
                 ifValue,
@@ -183,22 +183,22 @@ namespace MdsCommon.HtmlControls
 
 
         public static Var<IVNode> Filter(
-            this BlockBuilder b,
-            Action<BlockBuilder, FilterBuilder> customize = null)
+            this LayoutBuilder b,
+            Action<LayoutBuilder, FilterBuilder> customize = null)
         {
             return b.BuildControl<FilterBuilder, Filter>(customize);
         }
 
         public static Var<IVNode> BuildControl<TBuilder, TData>(
-            this BlockBuilder b,
-            Action<BlockBuilder, TBuilder> customize = null)
+            this LayoutBuilder b,
+            Action<TBuilder, Var<TData>> customize = null)
             where TBuilder : CompoundBuilder<TData>, new()
             where TData : new()
         {
             var builder = ControlBuilder.New<TBuilder, TData>(b);
             if (customize != null)
             {
-                customize(b, builder);
+                customize(builder);
             }
 
             return builder.GetRoot(b);

@@ -114,7 +114,7 @@ namespace MdsInfrastructure.Render
         {
             var parameterId = b.Get(parameter, x => x.Id);
             var parameterValue = b.Get(parameter, parameterId, (x, parameterId) => x.InfrastructureServiceParameterValues.SingleOrDefault(x => x.InfrastructureServiceParameterDeclarationId == parameterId));
-            return b.If<string>(
+            return b.If(
                 b.HasObject(parameterValue),
                 b => b.Get(parameterValue, x => x.ParameterValue),
                 b =>

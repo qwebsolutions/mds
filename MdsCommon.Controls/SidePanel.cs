@@ -26,7 +26,7 @@ namespace MdsCommon.Controls
             var container = b.Add(verticalLayout, b.Div("w-full h-full overflow-auto"));
             b.Add(container, content);
 
-            var onClick = b.Def<Metapsi.Ui.IHasSidePanel, Metapsi.Ui.IHasSidePanel>((b, state) =>
+            var onClick = b.Def<BlockBuilder, Metapsi.Ui.IHasSidePanel, Metapsi.Ui.IHasSidePanel>((b, state) =>
             {
                 b.Set(state, x => x.ShowSidePanel, b.Const(false));
                 return b.Clone(state);

@@ -32,7 +32,7 @@ namespace MdsCommon.Controls
                 var action = b.Div("flex rounded bg-gray-200 w-10 h-10 p-1 cursor-pointer justify-center items-center opacity-50 hover:opacity-100 text-red-500");
                 b.SetInnerHtml(action, b.Get(command, x => x.IconHtml));
 
-                var onClick = b.Def<object, object>((b, state) =>
+                var onClick = b.Def<BlockBuilder, object, object>((b, state) =>
                 {
                     var onCommand = b.Get(command, x => x.OnCommand);
                     b.Call(onCommand, entity);

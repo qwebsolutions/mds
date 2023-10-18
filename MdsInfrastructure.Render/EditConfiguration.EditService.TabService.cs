@@ -31,7 +31,7 @@ namespace MdsInfrastructure.Render
             var versionOptions = b.MapChoices(versions, x => x.Id, x => x.VersionTag, selectedVersionId);
             
             var versionBinaries = b.Get(selectedVersion, x => x.Binaries);
-            var targetEnvironment = b.Def<string, string>((b, target) => b.If(b.AreEqual(target, b.Const("linux-x64")), b => b.Const("Linux"), b => b.Const("Windows")));
+            var targetEnvironment = b.Def<BlockBuilder, string, string>((b, target) => b.If(b.AreEqual(target, b.Const("linux-x64")), b => b.Const("Linux"), b => b.Const("Windows")));
             var versionTargets = b.Get(versionBinaries, x => x.Select(x => x.Target).Distinct().ToList());
             var versionSystems = b.Get(versionTargets, targetEnvironment, (x, targetEnvironment) => x.Select(x => targetEnvironment(x)));
             var mathingEnvironment = b.Get(clientModel, versionSystems, (clientModel, versionSystems) => clientModel.EnvironmentTypes.Where(x => versionSystems.Contains(x.OsType)));
@@ -55,7 +55,7 @@ namespace MdsInfrastructure.Render
             //        allApplications,
             //        b.Def((BlockBuilder b, Var<Application> app) => b.Get(app, app => new DropDown.Option() { label = app.Name, value = app.Id.ToString() }))));
 
-            var getEditedService = b.Def<EditConfigurationPage, InfrastructureService>(EditEntity.EditedService);
+            var getEditedService = b.Def<BlockBuilder, EditConfigurationPage, InfrastructureService>(EditEntity.EditedService);
 
             var appChoices = b.MapChoices(allApplications, x => x.Id, x => x.Name);
             b.SetSelectedChoice(appChoices, b.Get(service, x => x.ApplicationId));

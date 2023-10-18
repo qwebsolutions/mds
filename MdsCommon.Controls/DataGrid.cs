@@ -18,7 +18,7 @@ namespace MdsCommon.Controls
         public ControlBuilder Container { get; set; }
         public ControlBuilder Toolbar { get; set; }
 
-        protected override void Setup(BlockBuilder b)
+        protected override void Setup(LayoutBuilder b)
         {
             this.Table = new TableBuilder<TRow>();
             this.Table.Init(b);
@@ -36,7 +36,7 @@ namespace MdsCommon.Controls
                 });
         }
 
-        public override Var<IVNode> GetRoot(BlockBuilder b)
+        public override Var<IVNode> GetRoot(LayoutBuilder b)
         {
             return this.Container.GetRoot(b);
         }
@@ -44,7 +44,7 @@ namespace MdsCommon.Controls
 
     public static partial class DataGridExtensions
     {
-        public static Var<IVNode> DataGrid<TRow>(this BlockBuilder b, Action<BlockBuilder, DataGridBuilder<TRow>> customize)
+        public static Var<IVNode> DataGrid<TRow>(this LayoutBuilder b, Action<DataGridBuilder<TRow>> customize)
             where TRow : new()
         {
             return b.BuildControl<DataGridBuilder<TRow>, DataGridData>(customize);
@@ -71,10 +71,10 @@ namespace MdsCommon.Controls
             {
                 var dataTableProps = b.NewObj<DataTable.Props<TRow>>(buildDataTable);
                 var originalRenderer = b.Get(dataTableProps, x => x.CreateCell);
-                var renderCell = b.Def<TRow, DataTable.Column, HyperNode>((b, row, col) =>
+                var renderCell = b.Def<BlockBuilder, TRow, DataTable.Column, HyperNode>((b, row, col) =>
                 {
                     var currentRenderer = b.Get(dataTableProps, x => x.CreateCell);
-                    return b.If<HyperNode>(
+                    return b.If(
                         b.AreEqual(b.Get(col, x => x.Name), b.Const("__action__")),
                         b =>
                         {

@@ -46,7 +46,7 @@ namespace MdsInfrastructure.Render
                             var noteTypeCode = b.ToLowercase(b.Get(noteType, x => x.Code));
                             var refAsId = b.Get(row, x => x.Reference).As<System.Guid>();
 
-                            var reference = b.If<string>(
+                            var reference = b.If(
                                 b.AreEqual(noteTypeCode, b.Const("parameter")),
                                 b => b.Get(service, refAsId, (x, refAsId) => x.InfrastructureServiceParameterDeclarations.SingleOrDefault(
                                     x => x.Id == refAsId,

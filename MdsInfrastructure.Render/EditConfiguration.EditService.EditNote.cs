@@ -13,7 +13,7 @@ namespace MdsInfrastructure.Render
     {
         public static Var<Func<TIn, TOut>> Def<TIn, TOut>(this BlockBuilder b, System.Linq.Expressions.Expression<Func<TIn, TOut>> getProperty)
         {
-            return b.DefineFunc<TIn, TOut>((BlockBuilder b, Var<TIn> input) => b.Get(input, getProperty));
+            return b.DefineFunc<BlockBuilder, TIn, TOut>((BlockBuilder b, Var<TIn> input) => b.Get(input, getProperty));
         }
 
         public static Var<HyperNode> EditNote(
@@ -56,7 +56,7 @@ namespace MdsInfrastructure.Render
                 form, 
                 b.BoundDropDown<EditConfigurationPage, InfrastructureServiceNote, NoteType, Guid>(
                     clientModel,
-                    b.DefineFunc<EditConfigurationPage, InfrastructureServiceNote>(GetEditedNote),
+                    b.DefineFunc<BlockBuilder, EditConfigurationPage, InfrastructureServiceNote>(GetEditedNote),
                     x => x.NoteTypeId,
                     b.Def<EditConfigurationPage, List<NoteType>>(x => x.NoteTypes),
                     b.Def<NoteType, Guid>(x => x.Id),

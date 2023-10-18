@@ -22,29 +22,29 @@ namespace MdsCommon.HtmlControls
     public class TableBuilder<TRow> : CompoundBuilder<TableData<TRow>>
         where TRow: new()
     {
-        public ControlBuilder Table { get; set; }
-        public ControlBuilder HeaderRow { get; set; }
+        public ControlBuilder<TableData<TRow>> Table { get; set; }
+        public ControlBuilder<List<string>> HeaderRow { get; set; }
         public ControlBuilder<string> HeaderCell { get; set; }
         public ControlBuilder<TRow> TableRow { get; set; }
         public ControlBuilder<CellData<TRow>> TableCell { get; set; }
 
-        public override Var<IVNode> GetRoot(BlockBuilder b)
+        public override Var<IVNode> GetRoot(LayoutBuilder b)
         {
             return Table.GetRoot(b);
         }
 
-        protected override void Setup(BlockBuilder b)
+        protected override void Setup(LayoutBuilder b)
         {
-            this.Table = ControlBuilder.New(
+            this.Table = ControlBuilder.New<TableData<TRow>>(
                 "table", 
                 b => { },
-                b=>
+                (b, data)=>
                 {
                     var rows = b.NewCollection<IVNode>();
                     b.Push(rows, HeaderRow.GetRoot(b));
 
                     b.Foreach(
-                        b.Get(Data, x => x.Rows),
+                        b.Get(data, x => x.Rows),
                         (b, row) =>
                         {
                             b.Push(rows, TableRow.Build(b, row));
@@ -56,8 +56,8 @@ namespace MdsCommon.HtmlControls
             this.HeaderRow = ControlBuilder.New(
                 "tr",
                 b => { },
-                b => b.Map(
-                    b.Get(Data, x => x.Columns),
+                (b, data) => b.Map(
+                    b.Get(data, x => x.Columns),
                     (b, column) => this.HeaderCell.Build(b, column)));
 
             this.HeaderCell = ControlBuilder.New<string>(
@@ -92,33 +92,37 @@ namespace MdsCommon.HtmlControls
     public static class DataTableExtensions
     {
 
-        public static Var<IVNode> DataTable<TRow>(this BlockBuilder b, Action<BlockBuilder, TableBuilder<TRow>> customize = null)
+        public static Var<IVNode> DataTable<TRow>(this LayoutBuilder b, Action<TableBuilder<TRow>, Var<TableData<TRow>>> customize = null)
             where TRow : new()
         {
             return b.BuildControl<TableBuilder<TRow>, TableData<TRow>>(customize);
         }
 
-        public static void GuessColumns<TRow>(this BlockBuilder b, TableBuilder<TRow> tableBuilder, List<string> except = null)
+        public static void GuessColumns<TRow>(this TableBuilder<TRow> tableBuilder, List<string> except = null)
             where TRow : new()
         {
             if (except == null) except = new List<string>();
 
-            var properties = typeof(TRow).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-            foreach (var property in properties)
+            tableBuilder.FillData = (b, data) =>
             {
-                if (!except.Contains(property.Name))
+                var properties = typeof(TRow).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                foreach (var property in properties)
                 {
-                    b.Push(b.Get(tableBuilder.Data, x => x.Columns), b.Const(property.Name));
-                    tableBuilder.HeaderCell.BuildControl = (b, column, props) =>
+                    if (!except.Contains(property.Name))
                     {
-                        return b.H("th", props, b.T(column));
-                    };
-                    tableBuilder.TableCell.BuildControl = (b, cellData, props) =>
-                    {
-                        return b.H("td", props, b.T(b.AsString(b.GetProperty<object>(b.Get(cellData, x => x.Row), b.Get(cellData, x => x.Column)))));
-                    };
+                        b.Push(b.Get(data, x => x.Columns), b.Const(property.Name));
+                    }
                 }
-            }
+            };
+
+            tableBuilder.HeaderCell.BuildControl = (b, column, props) =>
+            {
+                return b.H("th", props, b.T(column));
+            };
+            tableBuilder.TableCell.BuildControl = (b, cellData, props) =>
+            {
+                return b.H("td", props, b.T(b.AsString(b.GetProperty<object>(b.Get(cellData, x => x.Row), b.Get(cellData, x => x.Column)))));
+            };
         }
 
         public static void WrapBuildControl<TData>(
@@ -173,7 +177,12 @@ namespace MdsCommon.HtmlControls
             b.SetDynamic(b.Props, Html.@class, b.Concat(currentClass, b.Const(" "), @class));
         }
 
-        public static Var<IVNode> Table(this BlockBuilder b, Action<PropsBuilder> buildProps)
+        public static void AddClass(this PropsBuilder b, string @class)
+        {
+            b.AddClass(b.Const(@class));
+        }
+
+        public static Var<IVNode> Table(this LayoutBuilder b, Action<PropsBuilder> buildProps)
         {
             return b.H("table", buildProps);
         }

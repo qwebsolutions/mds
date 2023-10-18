@@ -64,11 +64,11 @@ namespace MdsInfrastructure.Render
                         var isInUse = b.Get(clientModel, versionId, (x, versionId) => x.InfrastructureServices.Any(x => x.ProjectVersionId == versionId));
 
                         var versionBuilds = b.Get(version, x => x.Binaries);
-                        var buildDescriptions = b.Get(versionBuilds, b.Def<string, string>(TargetEnvironment), (version, getTarget) => version.Select(x => "Build " + x.BuildNumber + " " + getTarget(x.Target)).ToList());
+                        var buildDescriptions = b.Get(versionBuilds, b.Def<BlockBuilder, string, string>(TargetEnvironment), (version, getTarget) => version.Select(x => "Build " + x.BuildNumber + " " + getTarget(x.Target)).ToList());
 
                         var checkboxText = b.Get(
                             version,
-                            b.Def<string, System.Collections.Generic.List<string>, string>(Core.JoinStrings),
+                            b.Def<BlockBuilder, string, System.Collections.Generic.List<string>, string>(Core.JoinStrings),
                             buildDescriptions,
                             (version, join, buildDescriptions) => version.VersionTag + "(" + join(", ", buildDescriptions) + ")");
 
