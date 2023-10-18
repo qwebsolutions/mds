@@ -6,50 +6,50 @@ using System.Collections.Generic;
 
 namespace MdsCommon.Controls
 {
-    public class DataGridData
-    {
+    //public class DataGridData<TRow>
+    //{
+    //    public TableData<TRow> TableData { get; set; }
+    //}
 
-    }
+    //public class DataGridBuilder<TRow> : CompoundBuilder<DataGridData<TRow>>
+    //    where TRow : new()
+    //{
+    //    public TableBuilder<TRow> Table { get; set; }
+    //    public HtmlControlBuilder Container { get; set; }
+    //    public HtmlControlBuilder Toolbar { get; set; }
 
-    public class DataGridBuilder<TRow> : CompoundBuilder<DataGridData>
-        where TRow : new()
-    {
-        public TableBuilder<TRow> Table { get; set; }
-        public ControlBuilder Container { get; set; }
-        public ControlBuilder Toolbar { get; set; }
+    //    protected override void Setup()
+    //    {
+    //        this.Table = new TableBuilder<TRow>();
+    //        this.Table.Init(b);
+    //        this.Container = HtmlControlBuilder.New("div", b =>
+    //        {
+    //            b.SetClass("flex flex-col w-full");
+    //        },
+    //        b => Toolbar.GetRoot(b),
+    //        b => Table.GetRoot(b));
 
-        protected override void Setup(LayoutBuilder b)
-        {
-            this.Table = new TableBuilder<TRow>();
-            this.Table.Init(b);
-            this.Container = ControlBuilder.New("div", b =>
-            {
-                b.SetClass("flex flex-col w-full");
-            },
-            b => Toolbar.GetRoot(b),
-            b => Table.GetRoot(b));
+    //        this.Toolbar = HtmlControlBuilder.New("div",
+    //            b =>
+    //            {
+    //                b.SetClass("flex flex-row gap-2");
+    //            });
+    //    }
 
-            this.Toolbar = ControlBuilder.New("div",
-                b =>
-                {
-                    b.SetClass("flex flex-row gap-2");
-                });
-        }
+    //    public override Var<IVNode> GetRoot(LayoutBuilder b)
+    //    {
+    //        return this.Container.GetRoot(b);
+    //    }
+    //}
 
-        public override Var<IVNode> GetRoot(LayoutBuilder b)
-        {
-            return this.Container.GetRoot(b);
-        }
-    }
-
-    public static partial class DataGridExtensions
-    {
-        public static Var<IVNode> DataGrid<TRow>(this LayoutBuilder b, Action<DataGridBuilder<TRow>> customize)
-            where TRow : new()
-        {
-            return b.BuildControl<DataGridBuilder<TRow>, DataGridData>(customize);
-        }
-    }
+    //public static partial class DataGridExtensions
+    //{
+    //    public static Var<IVNode> DataGrid2<TRow>(this LayoutBuilder b, Action<DataGridBuilder<TRow>> customize)
+    //        where TRow : new()
+    //    {
+    //        return b.BuildControl<DataGridBuilder<TRow>, DataGridData<TRow>>(customize);
+    //    }
+    //}
 
     public static partial class DataGrid
     {

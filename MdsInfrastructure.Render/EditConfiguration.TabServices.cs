@@ -175,61 +175,64 @@ namespace MdsInfrastructure.Render
                 clientModel,
                 (bParent, context) =>
                 {
-                    var b = new LayoutBuilder();
-                    b.Init(bParent.ModuleBuilder, bParent.Block);
-                    b.Add(container, b.DataGrid<InfrastructureServiceRow>(
-                        b =>
-                        {
-                            b.Toolbar.BuildControl = (b, props) =>
-                            {
-                                return b.Div(
-                                    b.EditProps(props, b=>
-                                    {
-                                        b.Log("EditProps", props);
-                                    }),
-                                    b.Button(
-                                        b =>
-                                        {
-                                            b.OnClickAction<EditConfigurationPage>(OnAddService);
-                                            b.SetClass("rounded py-2 px-4 shadow bg-sky-500 text-white");
-                                        },
-                                        b.T("Add service")),
-                                    b.Button(
-                                        b =>
-                                        {
-                                            b.OnClickAction<EditConfigurationPage>(OnAddService);
-                                            b.SetClass("rounded py-2 px-4 shadow bg-sky-500 text-white");
-                                        },
-                                        b.T("Add service"))
-                                    );
-                            };
+                    var b = new LayoutBuilder(bParent);
+                    //b.Add(container, b.DataGrid2<InfrastructureServiceRow>(
+                    //    b =>
+                    //    {
+                    //        b.FillData((b, data) =>
+                    //        {
+                    //        });
 
-                            b.GuessColumns(
-                                b.Table,
-                                except: new()
-                                {
-                                    nameof(InfrastructureServiceRow.Id),
-                                    nameof(InfrastructureServiceRow.Tags)
-                                });
+                    //        b.Toolbar.BuildControl = (b, props) =>
+                    //        {
+                    //            return b.Div(
+                    //                b.EditProps(props, b=>
+                    //                {
+                    //                    b.Log("EditProps", props);
+                    //                }),
+                    //                b.Button(
+                    //                    b =>
+                    //                    {
+                    //                        b.OnClickAction<EditConfigurationPage>(OnAddService);
+                    //                        b.SetClass("rounded py-2 px-4 shadow bg-sky-500 text-white");
+                    //                    },
+                    //                    b.T("Add service")),
+                    //                b.Button(
+                    //                    b =>
+                    //                    {
+                    //                        b.OnClickAction<EditConfigurationPage>(OnAddService);
+                    //                        b.SetClass("rounded py-2 px-4 shadow bg-sky-500 text-white");
+                    //                    },
+                    //                    b.T("Add service"))
+                    //                );
+                    //        };
 
-                            b.SetCommonStyle(b.Table);
+                    //        b.GuessColumns(
+                    //            b.Table,
+                    //            except: new()
+                    //            {
+                    //                nameof(InfrastructureServiceRow.Id),
+                    //                nameof(InfrastructureServiceRow.Tags)
+                    //            });
 
-                            b.Table.TableCell.WrapBuildControl((b, cellData, props, baseBuilder) =>
-                            {
-                                return b.If(
-                                    b.Get(cellData, x => x.Column == nameof(InfrastructureServiceRow.Name)),
-                                    b =>
-                                    {
-                                        return b.H(
-                                            "td",
-                                            props,
-                                            b.RenderServiceNameCell(b.Get(cellData, x => x.Row)));
-                                    },
-                                    b => baseBuilder(b, cellData, props));
-                            });
+                    //        b.SetCommonStyle(b.Table);
 
-                            b.Set(b.Table.Data, x => x.Rows, filteredServices);
-                        }).As<HyperNode>());
+                    //        b.Table.TableCell.WrapBuildControl((b, cellData, props, baseBuilder) =>
+                    //        {
+                    //            return b.If(
+                    //                b.Get(cellData, x => x.Column == nameof(InfrastructureServiceRow.Name)),
+                    //                b =>
+                    //                {
+                    //                    return b.H(
+                    //                        "td",
+                    //                        props,
+                    //                        b.RenderServiceNameCell(b.Get(cellData, x => x.Row)));
+                    //                },
+                    //                b => baseBuilder(b, cellData, props));
+                    //        });
+
+                    //        b.Set(b.Table.Data, x => x.Rows, filteredServices);
+                    //    }).As<HyperNode>());
 
 
                     //b.Add(container, b.DataTable<InfrastructureServiceRow>(
@@ -264,24 +267,13 @@ namespace MdsInfrastructure.Render
                     //    }).As<HyperNode>());
 
                     b.Add(contextToolbar, b.Filter(
-                        (b, filter) =>
+                        (b, filterBuilder, data) =>
                         {
-                            b.InBindingContext(
-                                context,
-                                filter.Data,
-                                b =>
-                                {
-                                    b.BindOneWay(x => x.Value, x => x.ServicesFilter);
-                                });
-
-                            b.Set(filter.Data, x => x.SetValue, b.DefineAction<LayoutBuilder, object, string>((b, o, s) =>
+                            b.BindFilter(filterBuilder, context, x => x.ServicesFilter, data);
+                            
+                            filterBuilder.ClearButton.EditProps((b, data, props) =>
                             {
-                                b.Set(o.As<EditConfigurationPage>(), x => x.ServicesFilter, s);
-                            }));
-
-                            filter.ClearButton.SetProps(b =>
-                            {
-                                b.AddClass(b.Const("text-green-400"));
+                                b.AddClass(props, b.Const("text-green-400"));
                             });
                         }).As<HyperNode>());
                 });

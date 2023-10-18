@@ -13,87 +13,152 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MdsCommon.HtmlControls
 {
 
-    public interface IHasStringValue
-    {
-        string Value { get; set; }
-    }
+    //public interface IHasStringValue
+    //{
+    //    string Value { get; set; }
+    //}
 
-    public interface IHasOnInputEvent { }
-    public interface IHasClearEvent { }
+    //public interface IHasOnInputEvent { }
+    //public interface IHasClearEvent { }
 
     public class Filter
     {
         public string Value { get; set; } = string.Empty;
-        public Action<object, string> SetValue { get; set; }
     }
 
-    public class FilterBuilder : CompoundBuilder<Filter>
+    public class FilterBuilder
     {
-        public ControlBuilder Container { get; set; }
-        public ControlBuilder Input { get; set; }
-        public ControlBuilder ClearButton { get; set; }
-        public ControlBuilder ClearIcon { get; set; }
+        public HtmlControlBuilder<Filter> Container { get; set; }
+        public HtmlControlBuilder<Filter> Input { get; set; }
+        public HtmlControlBuilder<Filter> ClearButton { get; set; }
+        public HtmlControlBuilder<Filter> ClearIcon { get; set; }
 
-        public override Var<IVNode> GetRoot(LayoutBuilder b)
+    }
+
+    public static class FilterExtensions
+    {
+        public static void DefaultFilter(this FilterBuilder filterBuilder)
         {
-            return Container.GetRoot(b);
+            filterBuilder.Container = HtmlControlBuilder.New<Filter>(
+                "div",
+                (b, data, props) =>
+                {
+                    b.SetClass(props, b.Const("flex flex-row items-center"));
+                },
+                (b, data) => b.Render(filterBuilder.Input, data),
+                (b, data) => b.Optional(
+                    b.HasValue(b.Get(data, x => x.Value)),
+                    b => b.Render(filterBuilder.ClearButton, data)));
+
+            filterBuilder.Input = HtmlControlBuilder.New<Filter>(
+                "input",
+                (b, data, props) =>
+                {
+                    b.SetDynamic(props, Html.type, b.Const("text"));
+                    b.SetDynamic(props, Html.value, b.Get(data, x => x.Value));
+                    //b.SetDynamic(props,
+                    //    new DynamicProperty<object>("oninput"),
+                    //    b.MakeAction<object, DomEvent<InputTarget>>(
+                    //        (BlockBuilder b, Var<object> state, Var<DomEvent<InputTarget>> @event) =>
+                    //    {
+                    //        var target = b.Get(@event, x => x.target);
+                    //        var value = b.Get(target, x => x.value);
+                    //        b.Call(b.Get(data, x => x.SetValue), state, value);
+                    //        b.Log("oninput", value);
+                    //        return b.Clone(state);
+                    //    }).As<object>());
+
+                    b.SetClass(props, b.Const("border rounded-full px-4 py-2"));
+                });
+
+            filterBuilder.ClearButton = HtmlControlBuilder.New<Filter>(
+                    "button",
+                    (b, data, props) =>
+                    {
+                        b.SetClass(props, b.Const("-mx-10 w-6 h-6 text-gray-300"));
+                        //b.SetDynamic(props, new DynamicProperty<object>("onclick"),
+                        //    b.MakeAction((BlockBuilder b, Var<object> model) =>
+                        //    {
+                        //        b.Call(b.Get(data, x => x.SetValue), model, b.Const(string.Empty));
+                        //        return b.Clone(model);
+                        //    }).As<object>());
+                    },
+                    (b, data) => b.Render(filterBuilder.ClearIcon, data));
+
+            filterBuilder.ClearIcon = HtmlControlBuilder.New<Filter>(
+                "div",
+                (b, data, props) =>
+                {
+                    b.SetDynamic(props, Html.innerHTML, b.Const(Metapsi.Heroicons.Outline.XCircle));
+                });
         }
 
-        protected override void Setup(LayoutBuilder b)
+        public static Var<IVNode> Filter(
+            this LayoutBuilder b,
+            Action<BlockBuilder, FilterBuilder, Var<Filter>> customize)
         {
-            this.Container = ControlBuilder.New(
-                "div", b =>
-                {
-                    b.SetClass(b.Const("flex flex-row items-center"));
-                },
-                b => Input.GetRoot(b),
-                b => b.Optional(
-                    b.HasValue(b.Get(this.Data, x => x.Value)),
-                    b => ClearButton.GetRoot(b)));
-
-            this.Input = ControlBuilder.New("input", b =>
+            var data = b.NewObj<Filter>();
+            FilterBuilder filterBuilder = new FilterBuilder();
+            filterBuilder.DefaultFilter();
+            if (customize != null)
             {
-                b.SetDynamic(b.Props, Html.type, b.Const("text"));
-                b.SetDynamic(b.Props, Html.value, b.Get(this.Data, x => x.Value));
-                b.Log("this.Data", this.Data);
+                BlockBuilder blockBuilder = new BlockBuilder(b.ModuleBuilder, b.Block);
+                customize(blockBuilder, filterBuilder, data);
+            }
 
-                b.SetDynamic(b.Props,
-                    new DynamicProperty<object>("oninput"),
-                    b.MakeAction<object, DomEvent<InputTarget>>(
-                        (BlockBuilder b, Var<object> state, Var<DomEvent<InputTarget>> @event) =>
-                        {
-                            var target = b.Get(@event, x => x.target);
-                            var value = b.Get(target, x => x.value);
-                            b.Call(b.Get(this.Data, x => x.SetValue), state, value);
-                            b.Log("oninput", value);
-                            return b.Clone(state);
-                        }).As<object>());
+            return b.Render(filterBuilder.Container, data);
+        }
 
-                b.SetClass(b.Const("border rounded-full px-4 py-2"));
+        public static void BindFilter<TPageModel, TSubmodel>(
+            this BlockBuilder b,
+            FilterBuilder filterBuilder,
+            Var<DataContext<TPageModel, TSubmodel>> dataContext,
+            System.Linq.Expressions.Expression<Func<TSubmodel, string>> property,
+            Var<Filter> filter)
+        {
+            b.InBindingContext(dataContext, filter, b =>
+            {
+                b.BindOneWay(x => x.Value, property);
             });
 
-            this.ClearButton = ControlBuilder.New(
-                    "button",
-                    b=>
+            filterBuilder.Input.EditProps((b, props) =>
+            {
+                b.OnInputAction(
+                    props,
+                    b.MakeAction((BlockBuilder b, Var<TPageModel> pageModel, Var<string> newValue) =>
                     {
-                        b.SetClass(b.Const("-mx-10 w-6 h-6 text-gray-300"));
-                        b.SetDynamic(b.Props, new DynamicProperty<object>("onclick"),
-                            b.MakeAction((BlockBuilder b, Var<object> model) =>
-                            {
-                                b.Call(b.Get(this.Data, x=>x.SetValue), model, b.Const(string.Empty));
-                                return b.Clone(model);
-                            }).As<object>());
-                    },
-                    b=> ClearIcon.GetRoot(b));
-
-            this.ClearIcon = ControlBuilder.New("div", b =>
-            {
-                b.SetDynamic(b.Props, Html.innerHTML, b.Const(Metapsi.Heroicons.Outline.XCircle));
+                        var accessData = b.Get(dataContext, x => x.AccessData);
+                        var data = b.Call(accessData, pageModel);
+                        b.Set(data, property, newValue);
+                        return b.Clone(pageModel);
+                    }));
             });
+
+            filterBuilder.ClearButton.EditProps((b, props) =>
+            {
+                b.OnClickAction(props, b.MakeAction((BlockBuilder b, Var<TPageModel> pageModel) =>
+                {
+                    var accessData = b.Get(dataContext, x => x.AccessData);
+                    var data = b.Call(accessData, pageModel);
+                    b.Set(data, property, b.Const(string.Empty));
+                    return b.Clone(pageModel);
+                }));
+            });
+
+            //b.Set(filter, x => x.SetValue, b.DefineAction<BlockBuilder, object, string>((b, o, s) =>
+            //{
+            //    b.Set(o.As<EditConfigurationPage>(), x => x.ServicesFilter, s);
+            //}));
+
+            //filterBuilder.ClearButton.EditProps((b, data, props) =>
+            //{
+            //    b.AddClass(props, b.Const("text-green-400"));
+            //});
         }
     }
 
@@ -178,31 +243,11 @@ namespace MdsCommon.HtmlControls
             return b.If(
                 ifValue,
                 b => b.Call(buildControl),
-                b => b.H(ViewBuilder.VoidNodeTag, b => { }));
+                b => b.H(ViewBuilder.VoidNodeTag, (b, props) => { }));
         }
 
 
-        public static Var<IVNode> Filter(
-            this LayoutBuilder b,
-            Action<LayoutBuilder, FilterBuilder> customize = null)
-        {
-            return b.BuildControl<FilterBuilder, Filter>(customize);
-        }
 
-        public static Var<IVNode> BuildControl<TBuilder, TData>(
-            this LayoutBuilder b,
-            Action<TBuilder, Var<TData>> customize = null)
-            where TBuilder : CompoundBuilder<TData>, new()
-            where TData : new()
-        {
-            var builder = ControlBuilder.New<TBuilder, TData>(b);
-            if (customize != null)
-            {
-                customize(builder);
-            }
-
-            return builder.GetRoot(b);
-        }
 
 
         //public static void BindFilter<TPageModel, TLocalModel>(
