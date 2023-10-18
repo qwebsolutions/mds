@@ -1,11 +1,57 @@
-﻿using Metapsi.Hyperapp;
+﻿using MdsCommon.HtmlControls;
+using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using System;
 using System.Collections.Generic;
 
 namespace MdsCommon.Controls
 {
-    public static class DataGrid
+    public class DataGridData
+    {
+
+    }
+
+    public class DataGridBuilder<TRow> : CompoundBuilder<DataGridData>
+        where TRow : new()
+    {
+        public TableBuilder<TRow> Table { get; set; }
+        public ControlBuilder Container { get; set; }
+        public ControlBuilder Toolbar { get; set; }
+
+        protected override void Setup(BlockBuilder b)
+        {
+            this.Table = new TableBuilder<TRow>();
+            this.Table.Init(b);
+            this.Container = ControlBuilder.New("div", b =>
+            {
+                b.SetClass("flex flex-col w-full");
+            },
+            b => Toolbar.GetRoot(b),
+            b => Table.GetRoot(b));
+
+            this.Toolbar = ControlBuilder.New("div",
+                b =>
+                {
+                    b.SetClass("flex flex-row gap-2");
+                });
+        }
+
+        public override Var<IVNode> GetRoot(BlockBuilder b)
+        {
+            return this.Container.GetRoot(b);
+        }
+    }
+
+    public static partial class DataGridExtensions
+    {
+        public static Var<IVNode> DataGrid<TRow>(this BlockBuilder b, Action<BlockBuilder, DataGridBuilder<TRow>> customize)
+            where TRow : new()
+        {
+            return b.BuildControl<DataGridBuilder<TRow>, DataGridData>(customize);
+        }
+    }
+
+    public static partial class DataGrid
     {
         public class Props
         {

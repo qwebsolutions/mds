@@ -10,6 +10,8 @@ using System.Xml.Serialization;
 using Metapsi.ChoicesJs;
 using MdsCommon.HtmlControls;
 using Microsoft.AspNetCore.Http.HttpResults;
+using Metapsi.Dom;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MdsInfrastructure.Render
 {
@@ -21,8 +23,7 @@ namespace MdsInfrastructure.Render
     public class InfrastructureServiceRow
     {
         public Guid Id { get; set; }
-        public string ServiceName { get; set; }
-        public bool Enabled { get; set; }
+        public string Name { get; set; }
         public string Project { get; set; }
         public string Application { get; set; }
         public string Node { get; set; }
@@ -49,24 +50,47 @@ namespace MdsInfrastructure.Render
             var configuration = b.Get(model, x => x.Configuration);
             var row = b.NewObj<InfrastructureServiceRow>();
             b.Set(row, x => x.Id, b.Get(service, x => x.Id));
-            b.Set(row, x => x.ServiceName, b.Get(service, x => x.ServiceName));
+            b.Set(row, x => x.Name, b.Get(service, x => x.ServiceName));
             b.Set(row, x => x.Project, GetProjectLabel(b, model, service));
             b.Set(row, x => x.Application, b.GetApplicationLabel(model, b.Get(service, x => x.ApplicationId)));
             b.Set(row, x => x.Node, b.GetNodeLabel(model, b.Get(service, x => x.InfrastructureNodeId)));
-            b.Set(row, x => x.Enabled, b.Get(service, x => x.Enabled));
 
             b.If(
-                b.Get(row, x => x.Enabled),
+                b.Get(service, x => x.Enabled),
                 b => b.Push(b.Get(row, x => x.Tags), b.Const("enabled")),
                 b => b.Push(b.Get(row, x => x.Tags), b.Const("disabled")));
 
             return row;
         }
 
+        public static Var<IVNode> RenderServiceNameCell(this BlockBuilder b, Var<InfrastructureServiceRow> row)
+        {
+            var serviceName = b.Get(row, x => x.Name);
+            var serviceDisabled = b.Includes(b.Get(row, x => x.Tags), b.Const("disabled"));
+            b.Log("service disabled", serviceDisabled);
+
+            var goToEditService = (BlockBuilder b, Var<EditConfigurationPage> clientModel) =>
+            {
+                b.Set(clientModel, x => x.EditServiceId, b.Get(row, x => x.Id));
+                return b.EditView<EditConfigurationPage>(clientModel, EditService);
+            };
+
+            var container = b.Span();
+            b.Add(container, b.Link<EditConfigurationPage>(b.WithDefault(serviceName), b.MakeAction<EditConfigurationPage>(goToEditService)));
+            b.If(serviceDisabled, (BlockBuilder b) =>
+            {
+                var badge = b.Add(container, b.Badge(b.Const("disabled")));
+                b.AddClass(badge, "bg-gray-400");
+            });
+            return container.As<IVNode>();
+        }
+
         public static Var<HyperNode> TabServices(
            BlockBuilder b,
            Var<EditConfigurationPage> clientModel)
         {
+            var container = b.Div("w-full h-full");
+
             var allServices = b.Get(clientModel, x => x.Configuration.InfrastructureServices.OrderBy(x => x.ServiceName).ToList());
             var serviceRows = b.Map(allServices, (b, service) => b.ServiceRow(clientModel, service));
             var filteredServices = b.FilterList(serviceRows, b.Get(clientModel, x => x.ServicesFilter));
@@ -94,8 +118,8 @@ namespace MdsInfrastructure.Render
             var rc = b.RenderCell((BlockBuilder b, Var<InfrastructureServiceRow> row, Var<DataTable.Column> col) =>
             {
                 var columnName = b.Get(col, x => x.Name);
-                var serviceName = b.Get(row, x => x.ServiceName);
-                var serviceDisabled = b.Get(row, x => !x.Enabled);
+                var serviceName = b.Get(row, x => x.Name);
+                var serviceDisabled = b.Includes(b.Get(row, x => x.Tags), b.Const("disabled"));
 
                 var goToEditService = (BlockBuilder b, Var<EditConfigurationPage> clientModel) =>
                 {
@@ -125,11 +149,11 @@ namespace MdsInfrastructure.Render
                     ));
             });
 
-            var contextToolbar = b.Div("flex flex-row");
+            var contextToolbar = b.Div("flex flex-row items-end");
 
-            var hInputInput = b.NewObj<HParams>();
-            b.Set(hInputInput, x => x.Tag, "input");
-            b.SetDynamic(b.Get(hInputInput, x => x.Props), Html.type, b.Const("text"));
+            //var hInputInput = b.NewObj<HParams>();
+            //b.Set(hInputInput, x => x.Tag, "input");
+            //b.SetDynamic(b.Get(hInputInput, x => x.Props), Html.type, b.Const("text"));
 
             //var firstInputText = b.Add(contextToolbar, b.H(hInputInput));
             //var secondInputText = b.Add(contextToolbar, b.BuildControl(b.Const("input"), b.NewObj<InputText>(b =>
@@ -147,31 +171,110 @@ namespace MdsInfrastructure.Render
 
             b.OnModel(
                 clientModel,
-                (b, modelContext) =>
+                (b, context) =>
                 {
-                    b.Add(contextToolbar, b.Filter((b, filterBuilder) =>
-                    {
-                        b.Customize(filterBuilder, x => x.ClearButtonContent, (b, p) =>
+                    b.Add(container, b.DataGrid<InfrastructureServiceRow>(
+                        (b, builder) =>
                         {
-                            b.SetProp(p, Html.@class, "text-red-500");
-                        });
+                            builder.Toolbar.BuildControl = (b, props) =>
+                            {
+                                //b.OnClickAction(onAddService);
 
-                        b.InBindingContext(modelContext, filterBuilder, b =>
+                                return b.H(
+                                    "div",
+                                    props,
+                                    b.H(
+                                        "button",
+                                        b =>
+                                        {
+                                            b.SetClass("rounded py-2 px-4 shadow bg-sky-500 text-white");
+                                        },
+                                        b.T("Add service"))
+                                    );
+                            };
+
+                            b.GuessColumns(
+                                builder.Table,
+                                except: new()
+                                {
+                                    nameof(InfrastructureServiceRow.Id),
+                                    nameof(InfrastructureServiceRow.Tags)
+                                });
+
+                            b.SetCommonStyle(builder.Table);
+
+                            builder.Table.TableCell.WrapBuildControl((b, cellData, props, baseBuilder) =>
+                            {
+                                return b.If(
+                                    b.Get(cellData, x => x.Column == nameof(InfrastructureServiceRow.Name)),
+                                    b =>
+                                    {
+                                        return b.H(
+                                            "td",
+                                            props,
+                                            b.RenderServiceNameCell(b.Get(cellData, x => x.Row)));
+                                    },
+                                    b => baseBuilder(b, cellData, props));
+                            });
+
+                            b.Set(builder.Table.Data, x => x.Rows, filteredServices);
+                        }).As<HyperNode>());
+
+
+                    //b.Add(container, b.DataTable<InfrastructureServiceRow>(
+                    //    (b, builder) =>
+                    //    {
+                    //        b.GuessColumns(
+                    //            builder,
+                    //            except: new()
+                    //            {
+                    //                nameof(InfrastructureServiceRow.Id),
+                    //                nameof(InfrastructureServiceRow.Tags)
+                    //            });
+
+                    //        b.SetCommonStyle(builder);
+
+                    //        builder.TableCell.WrapBuildControl((b, cellData, props, baseBuilder) =>
+                    //        {
+                    //            return b.If(
+                    //                b.Get(cellData, x => x.Column == nameof(InfrastructureServiceRow.Name)),
+                    //                b =>
+                    //                {
+                    //                    return b.H(
+                    //                        "td",
+                    //                        props,
+                    //                        b.RenderServiceNameCell(b.Get(cellData, x => x.Row)));
+                    //                },
+                    //                b => baseBuilder(b, cellData, props));
+                    //        });
+
+                    //        b.Set(builder.Data, x => x.Rows, filteredServices);
+                    //    }).As<HyperNode>());
+
+                    b.Add(contextToolbar, b.Filter(
+                        (b, filter) =>
                         {
-                            b.BindFilter(x => x.ServicesFilter);
-                        });
+                            b.InBindingContext(
+                                context,
+                                filter.Data,
+                                b =>
+                                {
+                                    b.BindOneWay(x => x.Value, x => x.ServicesFilter);
+                                });
 
-                        var plm = b.NewObj<InputText>();
+                            b.Set(filter.Data, x => x.SetValue, b.DefineAction<object, string>((b, o, s) =>
+                            {
+                                b.Set(o.As<EditConfigurationPage>(), x => x.ServicesFilter, s);
+                            }));
 
-                        b.InBindingContext(modelContext, plm, b =>
-                        {
-                            b.
-                        });
-
-                    }));
+                            filter.ClearButton.SetProps(b =>
+                            {
+                                b.AddClass(b.Const("text-green-400"));
+                            });
+                        }).As<HyperNode>());
                 });
 
-            return b.DataGrid<InfrastructureServiceRow>(
+            b.Add(container, b.DataGrid<InfrastructureServiceRow>(
                 new()
                 {
                     b=> b.AddClass(b.CommandButton<EditConfigurationPage>(b=>
@@ -210,7 +313,9 @@ namespace MdsInfrastructure.Render
                             b.Set(x => x.OnCommand, onRemove);
                         });
                     });
-                });
+                }));
+
+            return container;
         }
 
         public static Var<string> GetProjectLabel(BlockBuilder b, Var<EditConfigurationPage> clientModel, Var<InfrastructureService> service)
