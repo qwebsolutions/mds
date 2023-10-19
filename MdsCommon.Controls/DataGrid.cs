@@ -3,107 +3,123 @@ using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace MdsCommon.Controls
 {
-    public class DataGridData<TRow>
+    public enum HorizontalPlacement
     {
-        public TableData<TRow> TableData { get; set; }
+        Left,
+        Right
     }
 
-    public class DataGridDefinition<TRow>
+    public enum VerticalPlacement
+    {
+        Top,
+        Bottom
+    }
+
+    public class DataGridData<TRow>
+    {
+        public TableData<TRow> TableData { get; set; } = new();
+        public ToolbarData ToolbarData { get; set; } = new();
+    }
+
+    public class DataGridDefinition<TRow> : IControlDefinition<DataGridData<TRow>>
     {
         public ControlDefinition<DataGridData<TRow>> Container { get; set; }
         public TableDefinition<TRow> Table { get; set; }
-        public ControlDefinition<DataGridData<TRow>> Toolbar { get; set; }
+        public ToolbarDefinition Toolbar { get; set; }
+        public ControlDefinition<TRow> ToolbarRowAction { get; set; }
+
+        public Func<LayoutBuilder, Var<DataGridData<TRow>>, Var<IVNode>> GetRenderer()
+        {
+            return Container.GetRenderer();
+        }
     }
 
     public static class DataGridExtensions
     {
-        public static void DefaultDataGrid<TRow>(this DataGridDefinition<TRow> dataGrid)
+        public static DataGridDefinition<TRow> DefaultDataGrid<TRow>()
         {
+            var dataGrid = new DataGridDefinition<TRow>();
             dataGrid.Container = ControlDefinition.New<DataGridData<TRow>>(
                 "div",
                 (b, data, props) =>
                 {
                     b.SetClass(props, b.Const("flex flex-col gap-2"));
                 },
-                (b, data) => b.Render(dataGrid.Toolbar, data),
-                (b, data) => b.Render(dataGrid.Table.Table, b.Get(data, x => x.TableData)));
+                (b, data) => b.Render(dataGrid.Toolbar, b.Get(data, x => x.ToolbarData)),
+                (b, data) => b.Render(dataGrid.Table, b.Get(data, x => x.TableData)));
 
-            dataGrid.Table = new TableDefinition<TRow>();
-            dataGrid.Table.DefaultTable();
-
-            dataGrid.Toolbar = ControlDefinition.New<DataGridData<TRow>>(
+            dataGrid.Table = MdsCommon.HtmlControls.Control.DefaultTable<TRow>();
+            dataGrid.Toolbar = MdsCommon.Controls.Control.DefaultToolbar();
+            dataGrid.ToolbarRowAction = ControlDefinition.New<TRow>(
                 "div",
                 (b, data, props) =>
                 {
-                    b.SetClass(props, b.Const("flex flex-col gap-2"));
+                    b.SetClass(props, "flex flex-row gap-2");
                 });
+
+            dataGrid.Table.TableRow.EditProps((b, props) =>
+            {
+                b.AddClass(props, "group");
+            });
+
+            dataGrid.Table.TableRow.AddChild(
+                (b, data) =>
+                {
+                    return b.H(
+                        "td",
+                        (b, props) =>
+                        {
+                            b.AddClass(props, "relative");
+                        },
+                        b.H(
+                            "div",
+                            (b, props) =>
+                            {
+                                b.SetClass(props, "hidden absolute group-hover:flex flex-row items-center justify-center right-1 top-0 bottom-0");
+                            },
+                            b.Render(dataGrid.ToolbarRowAction, b.Get(data, x => x.Row))));
+                });
+
+            return dataGrid;
         }
 
         public static Var<IVNode> DataGrid<TRow>(
             this LayoutBuilder b,
-            Action<ControlBuilder<DataGridDefinition<TRow>, DataGridData<TRow>>, Var<DataGridData<TRow>>> customize)
+            Action<ControlBuilder<DataGridDefinition<TRow>, DataGridData<TRow>>, Var<DataGridData<TRow>>> custom)
         {
-            var data = b.NewObj<DataGridData<TRow>>();
-            DataGridDefinition<TRow> controlDefinition = new();
-            controlDefinition.DefaultDataGrid();
-            if (customize != null)
-            {
-                ControlBuilder<DataGridDefinition<TRow>, DataGridData<TRow>> blockBuilder = new(b, controlDefinition, data);
-                customize(blockBuilder, data);
-            }
+            return b.FromDefinition(DefaultDataGrid<TRow>, custom);
+        }
 
-            return b.Render(controlDefinition.Container, data);
+        public static void OnTable<TRow>(
+            this ControlBuilder<DataGridDefinition<TRow>, DataGridData<TRow>> b,
+            Action<ControlBuilder<TableDefinition<TRow>, TableData<TRow>>> action)
+        {
+            b.OnControl(x => x.Table, x => x.TableData, action);
+        }
+
+        public static void OnToolbarLeft<TRow>(
+            this ControlBuilder<DataGridDefinition<TRow>, DataGridData<TRow>> b,
+            Action<ControlBuilder<ControlDefinition<ToolbarData>, ToolbarData>> action)
+        {
+            b.OnControl(x => x.Toolbar.Left, x => x.ToolbarData, action);
+        }
+
+        public static void AddToolbarChild<TRow>(
+            this ControlBuilder<DataGridDefinition<TRow>, DataGridData<TRow>> b,
+            Func<LayoutBuilder, Var<IVNode>> buildChild,
+            HorizontalPlacement placement = HorizontalPlacement.Left)
+        {
+            b.OnControl(
+                x => x.Toolbar,
+                x => x.ToolbarData,
+                b => b.AddToolbarChild(buildChild, placement));
         }
     }
 
-
-    //public class DataGridData<TRow>
-    //{
-    //    public TableData<TRow> TableData { get; set; }
-    //}
-
-    //public class DataGridBuilder<TRow> : CompoundBuilder<DataGridData<TRow>>
-    //    where TRow : new()
-    //{
-    //    public TableBuilder<TRow> Table { get; set; }
-    //    public HtmlControlBuilder Container { get; set; }
-    //    public HtmlControlBuilder Toolbar { get; set; }
-
-    //    protected override void Setup()
-    //    {
-    //        this.Table = new TableBuilder<TRow>();
-    //        this.Table.Init(b);
-    //        this.Container = HtmlControlBuilder.New("div", b =>
-    //        {
-    //            b.SetClass("flex flex-col w-full");
-    //        },
-    //        b => Toolbar.GetRoot(b),
-    //        b => Table.GetRoot(b));
-
-    //        this.Toolbar = HtmlControlBuilder.New("div",
-    //            b =>
-    //            {
-    //                b.SetClass("flex flex-row gap-2");
-    //            });
-    //    }
-
-    //    public override Var<IVNode> GetRoot(LayoutBuilder b)
-    //    {
-    //        return this.Container.GetRoot(b);
-    //    }
-    //}
-
-    //public static partial class DataGridExtensions
-    //{
-    //    public static Var<IVNode> DataGrid2<TRow>(this LayoutBuilder b, Action<DataGridBuilder<TRow>> customize)
-    //        where TRow : new()
-    //    {
-    //        return b.BuildControl<DataGridBuilder<TRow>, DataGridData<TRow>>(customize);
-    //    }
-    //}
 
     public static partial class DataGrid
     {

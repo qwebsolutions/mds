@@ -24,7 +24,7 @@ namespace MdsCommon.HtmlControls
         public string Column { get; set; }
     }
 
-    public class TableDefinition<TRow>
+    public class TableDefinition<TRow> : IControlDefinition<TableData<TRow>>
     {
         public ControlDefinition<TableData<TRow>> Table { get; set; }
         public ControlDefinition<List<string>> HeaderRow { get; set; }
@@ -32,12 +32,18 @@ namespace MdsCommon.HtmlControls
         public ControlDefinition<TableRowData<TRow>> TableRow { get; set; }
         public ControlDefinition<CellData<TRow>> TableCell { get; set; }
         public ControlDefinition<CellData<TRow>> CellContent { get; set; }
+
+        public Func<LayoutBuilder, Var<TableData<TRow>>, Var<IVNode>> GetRenderer()
+        {
+            return Table.GetRenderer();
+        }
     }
 
-    public static class TableBuilderExtensions
+    public static partial class Control
     {
-        public static TableDefinition<TRow> DefaultTable<TRow>(this TableDefinition<TRow> builder)
+        public static TableDefinition<TRow> DefaultTable<TRow>()
         {
+            TableDefinition<TRow> builder = new();
             builder.Table = ControlDefinition.New<TableData<TRow>>(
                 "table",
                 (b, data, props) => { },
@@ -101,37 +107,9 @@ namespace MdsCommon.HtmlControls
             this LayoutBuilder b,
             Action<ControlBuilder<TableDefinition<TRow>, TableData<TRow>>, Var<TableData<TRow>>> customize)
         {
-            var data = b.NewObj<TableData<TRow>>();
-            TableDefinition<TRow> controlDefinition = new TableDefinition<TRow>();
-            controlDefinition.DefaultTable();
-            if (customize != null)
-            {
-                ControlBuilder<TableDefinition<TRow>, TableData<TRow>> controlBuilder = new(b, controlDefinition, data);
-                customize(controlBuilder, data);
-            }
-
-            return b.Render(controlDefinition.Table, data);
+            return b.FromDefinition(DefaultTable<TRow>, customize);
         }
 
-        public static Var<IVNode> Custom<TDefinition, TData>(
-            this LayoutBuilder b,
-            Action<TDefinition> init,
-            ControlDefinition<TData> root,
-            Action<ControlBuilder<TDefinition, TData>, Var<TData>> customize)
-            where TData : new()
-            where TDefinition : new()
-        {
-            var data = b.NewObj<TData>();
-            TDefinition controlDefinition = new();
-            init(controlDefinition);
-            if (customize != null)
-            {
-                ControlBuilder<TDefinition, TData> controlBuilder = new(b, controlDefinition, data);
-                customize(controlBuilder, data);
-            }
-
-            return b.Render(root, data);
-        }
     }
 }
 

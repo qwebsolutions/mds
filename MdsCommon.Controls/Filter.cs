@@ -13,7 +13,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+
+
 
 namespace MdsCommon.HtmlControls
 {
@@ -31,24 +32,26 @@ namespace MdsCommon.HtmlControls
         public string Value { get; set; } = string.Empty;
     }
 
-    public class FilterDefinition
+    public class FilterDefinition : IControlDefinition<Filter>
     {
         public ControlDefinition<Filter> Container { get; set; }
         public ControlDefinition<Filter> Input { get; set; }
         public ControlDefinition<Filter> ClearButton { get; set; }
         public ControlDefinition<Filter> ClearIcon { get; set; }
 
+        public Func<LayoutBuilder, Var<Filter>, Var<IVNode>> GetRenderer() => Container.GetRenderer();
     }
 
-    public static class FilterExtensions
+    public static partial class Control
     {
-        public static void DefaultFilter(this FilterDefinition filterBuilder)
+        public static FilterDefinition DefaultFilter()
         {
+            FilterDefinition filterBuilder = new();
             filterBuilder.Container = ControlDefinition.New<Filter>(
                 "div",
                 (b, data, props) =>
                 {
-                    b.SetClass(props, b.Const("flex flex-row items-center"));
+                    b.SetClass(props, b.Const("flex flex-row items-center relative"));
                 },
                 (b, data) => b.Render(filterBuilder.Input, data),
                 (b, data) => b.Optional(
@@ -68,7 +71,7 @@ namespace MdsCommon.HtmlControls
                     "button",
                     (b, data, props) =>
                     {
-                        b.SetClass(props, b.Const("-mx-10 w-6 h-6 text-gray-300"));
+                        b.SetClass(props, b.Const("absolute right-3 w-6 h-6 text-gray-300"));
                     },
                     (b, data) => b.Render(filterBuilder.ClearIcon, data));
 
@@ -78,23 +81,30 @@ namespace MdsCommon.HtmlControls
                 {
                     b.SetDynamic(props, Html.innerHTML, b.Const(Metapsi.Heroicons.Outline.XCircle));
                 });
+
+            return filterBuilder;
         }
 
-        public static Var<IVNode> Filter(
-            this LayoutBuilder b,
-            Action<ControlBuilder<FilterDefinition, Filter>, FilterDefinition, Var<Filter>> customize)
+        public static Var<IVNode> Filter(this LayoutBuilder b, Action<ControlBuilder<FilterDefinition, Filter>, Var<Filter>> custom)
         {
-            var data = b.NewObj<Filter>();
-            FilterDefinition controlDefinition = new FilterDefinition();
-            controlDefinition.DefaultFilter();
-            if (customize != null)
-            {
-                ControlBuilder<FilterDefinition, Filter> blockBuilder = new(b, controlDefinition, data);
-                customize(blockBuilder, controlDefinition, data);
-            }
-
-            return b.Render(controlDefinition.Container, data);
+            return b.FromDefinition(DefaultFilter, custom);
         }
+
+        //public static Var<IVNode> Filter(
+        //    this LayoutBuilder b,
+        //    Action<ControlBuilder<FilterDefinition, Filter>, FilterDefinition, Var<Filter>> customize)
+        //{
+        //    var data = b.NewObj<Filter>();
+        //    FilterDefinition controlDefinition = new FilterDefinition();
+        //    controlDefinition.DefaultFilter();
+        //    if (customize != null)
+        //    {
+        //        ControlBuilder<FilterDefinition, Filter> blockBuilder = new(b, controlDefinition, data);
+        //        customize(blockBuilder, controlDefinition, data);
+        //    }
+
+        //    return b.Render(controlDefinition.Container, data);
+        //}
 
         public static void BindFilter<TPageModel, TSubmodel>(
             this ControlBuilder<FilterDefinition, Filter> b,

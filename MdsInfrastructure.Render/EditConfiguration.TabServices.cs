@@ -52,6 +52,14 @@ namespace MdsInfrastructure.Render
             return b.EditView<EditConfigurationPage>(clientModel, EditService);
         }
 
+        public static Var<EditConfigurationPage> OnRemoveService(BlockBuilder b, Var<EditConfigurationPage> page, Var<InfrastructureServiceRow> row)
+        {
+            var serviceId = b.Get(row, x => x.Id);
+            var serviceRemoved = b.Get(page, serviceId, (x, serviceId) => x.Configuration.InfrastructureServices.Where(x => x.Id != serviceId).ToList());
+            b.Set(b.Get(page, x => x.Configuration), x => x.InfrastructureServices, serviceRemoved);
+            return b.Clone(page);
+        }
+
         public static Var<string> GetApplicationLabel(this BlockBuilder b, Var<EditConfigurationPage> model, Var<Guid> applicationId)
         {
             return b.Get(model, applicationId, (x, applicationId) => x.Configuration.Applications.SingleOrDefault(y => y.Id == applicationId, new Application() { Name = "(not set)" }).Name);
@@ -176,107 +184,60 @@ namespace MdsInfrastructure.Render
                 (bParent, context) =>
                 {
                     var b = new LayoutBuilder(bParent);
-                    //b.Add(container, b.DataGrid2<InfrastructureServiceRow>(
-                    //    b =>
-                    //    {
-                    //        b.FillData((b, data) =>
-                    //        {
-                    //        });
 
-                    //        b.Toolbar.BuildControl = (b, props) =>
-                    //        {
-                    //            return b.Div(
-                    //                b.EditProps(props, b=>
-                    //                {
-                    //                    b.Log("EditProps", props);
-                    //                }),
-                    //                b.Button(
-                    //                    b =>
-                    //                    {
-                    //                        b.OnClickAction<EditConfigurationPage>(OnAddService);
-                    //                        b.SetClass("rounded py-2 px-4 shadow bg-sky-500 text-white");
-                    //                    },
-                    //                    b.T("Add service")),
-                    //                b.Button(
-                    //                    b =>
-                    //                    {
-                    //                        b.OnClickAction<EditConfigurationPage>(OnAddService);
-                    //                        b.SetClass("rounded py-2 px-4 shadow bg-sky-500 text-white");
-                    //                    },
-                    //                    b.T("Add service"))
-                    //                );
-                    //        };
-
-                    //        b.GuessColumns(
-                    //            b.Table,
-                    //            except: new()
-                    //            {
-                    //                nameof(InfrastructureServiceRow.Id),
-                    //                nameof(InfrastructureServiceRow.Tags)
-                    //            });
-
-                    //        b.SetCommonStyle(b.Table);
-
-                    //        b.Table.TableCell.WrapBuildControl((b, cellData, props, baseBuilder) =>
-                    //        {
-                    //            return b.If(
-                    //                b.Get(cellData, x => x.Column == nameof(InfrastructureServiceRow.Name)),
-                    //                b =>
-                    //                {
-                    //                    return b.H(
-                    //                        "td",
-                    //                        props,
-                    //                        b.RenderServiceNameCell(b.Get(cellData, x => x.Row)));
-                    //                },
-                    //                b => baseBuilder(b, cellData, props));
-                    //        });
-
-                    //        b.Set(b.Table.Data, x => x.Rows, filteredServices);
-                    //    }).As<HyperNode>());
-
-
-                    b.Add(container, b.Table<InfrastructureServiceRow>(
+                    b.Add(container, b.DataGrid<InfrastructureServiceRow>(
                         (b, data) =>
                         {
-                            b.FillFrom(filteredServices, exceptColumns: new()
+                            b.OnTable(b =>
+                            {
+                                b.FillFrom(filteredServices, exceptColumns: new()
                                 {
                                     nameof(InfrastructureServiceRow.Id),
                                     nameof(InfrastructureServiceRow.Tags)
                                 });
 
-                            b.SetCommonStyle();
+                                b.SetCommonStyle();
 
-                            b.OverrideColumnCell(
-                                b.Const(nameof(InfrastructureServiceRow.Name)),
-                                (b, data, props) => b.RenderServiceNameCell(b.Get(data, x => x.Row)));
+                                b.OverrideColumnCell(
+                                    b.Const(nameof(InfrastructureServiceRow.Name)),
+                                    (b, data) => b.RenderServiceNameCell(b.Get(data, x => x.Row)));
 
-                        }).As<HyperNode>());
+                            });
 
-                    b.Add(container, b.DataGrid<InfrastructureServiceRow>(
-                        (b, data) =>
-                        {
-                            //new LayoutBuilder().Custom(...);
+                            b.AddHoverRowAction<EditConfigurationPage, InfrastructureServiceRow>(OnRemoveService, Icon.Remove, (b, data, props)=>
+                            {
+                                b.AddClass(props, "text-red-500");
+                            });
+                            b.AddHoverRowAction<EditConfigurationPage, InfrastructureServiceRow>(OnRemoveService);
 
-                            //b.Control.Table.FillFrom(filteredServices, exceptColumns: new()
-                            //    {
-                            //                            nameof(InfrastructureServiceRow.Id),
-                            //                            nameof(InfrastructureServiceRow.Tags)
-                            //    });
+                            b.OnControl(x => x.Toolbar, x => x.ToolbarData, b =>
+                            {
+                                b.Control.Left.AddChild(AddServiceButton);
+                            });
 
-                            //b.SetCommonStyle();
+                            b.AddToolbarChild(AddServiceButton);
 
-                            //b.OverrideColumnCell(
-                            //    b.Const(nameof(InfrastructureServiceRow.Name)),
-                            //    (b, data, props) => b.RenderServiceNameCell(b.Get(data, x => x.Row)));
+                            b.AddToolbarChild(
+                                b => b.Filter(
+                                    (b, data) =>
+                                    {
+                                        b.BindFilter(context, x => x.ServicesFilter);
+
+                                        b.Control.ClearButton.EditProps((b, data, props) =>
+                                        {
+                                            b.AddClass(props, b.Const("text-green-400"));
+                                        });
+
+                                    }), HorizontalPlacement.Right);
 
                         }).As<HyperNode>());
 
                     b.Add(contextToolbar, b.Filter(
-                        (b, filterBuilder, data) =>
+                        (b, data) =>
                         {
                             b.BindFilter(context, x => x.ServicesFilter);
-                            
-                            filterBuilder.ClearButton.EditProps((b, data, props) =>
+
+                            b.Control.ClearButton.EditProps((b, data, props) =>
                             {
                                 b.AddClass(props, b.Const("text-green-400"));
                             });
@@ -355,6 +316,20 @@ namespace MdsInfrastructure.Render
             });
 
             return b.GetRef(projectLabelRef);
+        }
+
+        public static Var<IVNode> AddServiceButton(this LayoutBuilder b)
+        {
+            return b.Render(ControlDefinition.New<object>(
+                "button",
+                (b, data, props) =>
+                {
+                    b.OnClickAction<EditConfigurationPage>(props, OnAddService);
+                    b.SetClass(props, "rounded py-2 px-4 shadow bg-sky-500 text-white");
+                },
+                (b, data) => b.T("Add service")), 
+                b.Const(new object()));
+
         }
     }
 }
