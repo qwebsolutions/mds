@@ -252,6 +252,25 @@ namespace MdsInfrastructure.Render
 
                         }).As<HyperNode>());
 
+                    b.Add(container, b.DataGrid<InfrastructureServiceRow>(
+                        (b, data) =>
+                        {
+                            //new LayoutBuilder().Custom(...);
+
+                            //b.Control.Table.FillFrom(filteredServices, exceptColumns: new()
+                            //    {
+                            //                            nameof(InfrastructureServiceRow.Id),
+                            //                            nameof(InfrastructureServiceRow.Tags)
+                            //    });
+
+                            //b.SetCommonStyle();
+
+                            //b.OverrideColumnCell(
+                            //    b.Const(nameof(InfrastructureServiceRow.Name)),
+                            //    (b, data, props) => b.RenderServiceNameCell(b.Get(data, x => x.Row)));
+
+                        }).As<HyperNode>());
+
                     b.Add(contextToolbar, b.Filter(
                         (b, filterBuilder, data) =>
                         {

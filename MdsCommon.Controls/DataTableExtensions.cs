@@ -66,8 +66,6 @@ namespace MdsCommon.HtmlControls
         {
             b.Control.CellContent.WrapBuildControl((b, cellData, props, baseBuilder) =>
             {
-                b.Log("column name", b.Get(cellData, x => x.Column));
-
                 return b.If(
                     b.AreEqual(b.Get(cellData, x => x.Column), columName),
                     b =>

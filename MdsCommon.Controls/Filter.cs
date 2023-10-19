@@ -61,18 +61,6 @@ namespace MdsCommon.HtmlControls
                 {
                     b.SetDynamic(props, Html.type, b.Const("text"));
                     b.SetDynamic(props, Html.value, b.Get(data, x => x.Value));
-                    //b.SetDynamic(props,
-                    //    new DynamicProperty<object>("oninput"),
-                    //    b.MakeAction<object, DomEvent<InputTarget>>(
-                    //        (BlockBuilder b, Var<object> state, Var<DomEvent<InputTarget>> @event) =>
-                    //    {
-                    //        var target = b.Get(@event, x => x.target);
-                    //        var value = b.Get(target, x => x.value);
-                    //        b.Call(b.Get(data, x => x.SetValue), state, value);
-                    //        b.Log("oninput", value);
-                    //        return b.Clone(state);
-                    //    }).As<object>());
-
                     b.SetClass(props, b.Const("border rounded-full px-4 py-2"));
                 });
 
@@ -81,12 +69,6 @@ namespace MdsCommon.HtmlControls
                     (b, data, props) =>
                     {
                         b.SetClass(props, b.Const("-mx-10 w-6 h-6 text-gray-300"));
-                        //b.SetDynamic(props, new DynamicProperty<object>("onclick"),
-                        //    b.MakeAction((BlockBuilder b, Var<object> model) =>
-                        //    {
-                        //        b.Call(b.Get(data, x => x.SetValue), model, b.Const(string.Empty));
-                        //        return b.Clone(model);
-                        //    }).As<object>());
                     },
                     (b, data) => b.Render(filterBuilder.ClearIcon, data));
 

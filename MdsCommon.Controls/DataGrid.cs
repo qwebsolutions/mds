@@ -6,6 +6,60 @@ using System.Collections.Generic;
 
 namespace MdsCommon.Controls
 {
+    public class DataGridData<TRow>
+    {
+        public TableData<TRow> TableData { get; set; }
+    }
+
+    public class DataGridDefinition<TRow>
+    {
+        public ControlDefinition<DataGridData<TRow>> Container { get; set; }
+        public TableDefinition<TRow> Table { get; set; }
+        public ControlDefinition<DataGridData<TRow>> Toolbar { get; set; }
+    }
+
+    public static class DataGridExtensions
+    {
+        public static void DefaultDataGrid<TRow>(this DataGridDefinition<TRow> dataGrid)
+        {
+            dataGrid.Container = ControlDefinition.New<DataGridData<TRow>>(
+                "div",
+                (b, data, props) =>
+                {
+                    b.SetClass(props, b.Const("flex flex-col gap-2"));
+                },
+                (b, data) => b.Render(dataGrid.Toolbar, data),
+                (b, data) => b.Render(dataGrid.Table.Table, b.Get(data, x => x.TableData)));
+
+            dataGrid.Table = new TableDefinition<TRow>();
+            dataGrid.Table.DefaultTable();
+
+            dataGrid.Toolbar = ControlDefinition.New<DataGridData<TRow>>(
+                "div",
+                (b, data, props) =>
+                {
+                    b.SetClass(props, b.Const("flex flex-col gap-2"));
+                });
+        }
+
+        public static Var<IVNode> DataGrid<TRow>(
+            this LayoutBuilder b,
+            Action<ControlBuilder<DataGridDefinition<TRow>, DataGridData<TRow>>, Var<DataGridData<TRow>>> customize)
+        {
+            var data = b.NewObj<DataGridData<TRow>>();
+            DataGridDefinition<TRow> controlDefinition = new();
+            controlDefinition.DefaultDataGrid();
+            if (customize != null)
+            {
+                ControlBuilder<DataGridDefinition<TRow>, DataGridData<TRow>> blockBuilder = new(b, controlDefinition, data);
+                customize(blockBuilder, data);
+            }
+
+            return b.Render(controlDefinition.Container, data);
+        }
+    }
+
+
     //public class DataGridData<TRow>
     //{
     //    public TableData<TRow> TableData { get; set; }

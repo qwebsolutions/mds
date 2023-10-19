@@ -112,6 +112,26 @@ namespace MdsCommon.HtmlControls
 
             return b.Render(controlDefinition.Table, data);
         }
+
+        public static Var<IVNode> Custom<TDefinition, TData>(
+            this LayoutBuilder b,
+            Action<TDefinition> init,
+            ControlDefinition<TData> root,
+            Action<ControlBuilder<TDefinition, TData>, Var<TData>> customize)
+            where TData : new()
+            where TDefinition : new()
+        {
+            var data = b.NewObj<TData>();
+            TDefinition controlDefinition = new();
+            init(controlDefinition);
+            if (customize != null)
+            {
+                ControlBuilder<TDefinition, TData> controlBuilder = new(b, controlDefinition, data);
+                customize(controlBuilder, data);
+            }
+
+            return b.Render(root, data);
+        }
     }
 }
 
