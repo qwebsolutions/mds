@@ -3,22 +3,9 @@ using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
 namespace MdsCommon.Controls
 {
-    public enum HorizontalPlacement
-    {
-        Left,
-        Right
-    }
-
-    public enum VerticalPlacement
-    {
-        Top,
-        Bottom
-    }
-
     public class DataGridData<TRow>
     {
         public TableData<TRow> TableData { get; set; } = new();

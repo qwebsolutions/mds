@@ -72,62 +72,62 @@ namespace MdsInfrastructure.Render
                     b.AddClass(deployLink, "bg-sky-500");
                 });
 
-            // TODO: Change to API//
-            //var saveUrl = b.Url(Save);
-            //var saveUrl = "/save";
+            var container = b.Div("flex flex-col w-full bg-white rounded shadow");
+            var layoutBuilder = new LayoutBuilder(b);
+            b.Add(
+                container,
+                layoutBuilder.Tabs(
+                    b =>
+                    {
+                        b.AddTab(
+                            "Configuration",
+                            b => b.Call(EditConfiguration.TabConfiguration, clientModel).As<IVNode>());
 
-            var container = b.Div("flex flex-col w-full");
-            //b.Add(container, b.ValidationPanel(clientModel));
-            var toolbar = b.Toolbar(
-                b=> deployLink,
-                //b => b.FromDefault<NavigateButton.Props>(NavigateButton.Render, b =>
-                //{
-                //    b.Set(x => x.Label, "Deploy");
-                //    b.Set(x => x.Href, deploymentReportUrl);
-                //    b.Set(x => x.Enabled, isSaved);
-                //}),
-                b=> saveButton
-                //Href or validate. Return Id + Property + validation message. On blur, remove validation (this is still not done. this sucks.)
-                //b => b.SubmitButton<InfrastructureConfiguration>(b =>
-                //{
-                //    b.Set(x => x.Label, "Save");
-                //    b.Set(x => x.Href, saveUrl);
-                //    b.Set(x => x.Payload, configuration);
-                //    b.Set(x => x.Enabled, b.Not(isSaved));
-                //    b.Set(x => x.ButtonClass, "rounded text-white py-2 px-4 shadow");
-                //})
-                );
+                        b.AddTab(
+                            "Services",
+                            b => b.Call(EditConfiguration.TabServices, clientModel).As<IVNode>());
 
-            b.AddClass(toolbar, "justify-end");
+                        b.AddTab(
+                            "Applications",
+                            b => b.Call(EditConfiguration.TabApplications, clientModel).As<IVNode>());
 
-            b.Add(container, b.Tabs(
-                clientModel,
-                b.Const("configurationTabs"),
-                toolbar,
-                new TabRenderer()
-                {
-                    TabPageCode = "Configuration",
-                    TabHeader = b => b.Text("Configuration"),
-                    TabContent = b => b.Call(EditConfiguration.TabConfiguration, clientModel)
-                },
-                new TabRenderer()
-                {
-                    TabPageCode = "Services",
-                    TabHeader = b => b.Text("Services"),
-                    TabContent = b => b.Call(EditConfiguration.TabServices, clientModel)
-                },
-                new TabRenderer()
-                {
-                    TabPageCode = "Applications",
-                    TabHeader = b => b.Text("Applications"),
-                    TabContent = b => b.Call(EditConfiguration.TabApplications, clientModel)
-                },
-                new TabRenderer()
-                {
-                    TabPageCode = "Variables",
-                    TabHeader = b => b.Text("Variables"),
-                    TabContent = b => b.Call(EditConfiguration.TabVariables, clientModel)
-                }));
+                        b.AddTab(
+                            "Variables",
+                            b => b.Call(EditConfiguration.TabVariables, clientModel).As<IVNode>());
+
+                        b.AddToolbarCommand(b => deployLink.As<IVNode>());
+                        b.AddToolbarCommand(b => saveButton.As<IVNode>());
+
+                    }).As<HyperNode>());
+
+            //b.Add(container, b.Tabs(
+            //    clientModel,
+            //    b.Const("configurationTabs"),
+            //    toolbar,
+            //    new TabRenderer()
+            //    {
+            //        TabPageCode = "Configuration",
+            //        TabHeader = b => b.Text("Configuration"),
+            //        TabContent = b => b.Call(EditConfiguration.TabConfiguration, clientModel)
+            //    },
+            //    new TabRenderer()
+            //    {
+            //        TabPageCode = "Services",
+            //        TabHeader = b => b.Text("Services"),
+            //        TabContent = b => b.Call(EditConfiguration.TabServices, clientModel)
+            //    },
+            //    new TabRenderer()
+            //    {
+            //        TabPageCode = "Applications",
+            //        TabHeader = b => b.Text("Applications"),
+            //        TabContent = b => b.Call(EditConfiguration.TabApplications, clientModel)
+            //    },
+            //    new TabRenderer()
+            //    {
+            //        TabPageCode = "Variables",
+            //        TabHeader = b => b.Text("Variables"),
+            //        TabContent = b => b.Call(EditConfiguration.TabVariables, clientModel)
+            //    }));
 
             return container;
         }

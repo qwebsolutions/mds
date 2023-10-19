@@ -228,14 +228,6 @@ namespace MdsCommon.HtmlControls
         //    b.SetProp(hParams, new DynamicProperty<HyperType.Action<TState, DomEvent<ClickTarget>>>("onclick"), clickEvent);
         //}
 
-        public static Var<IVNode> Optional(this LayoutBuilder b, Var<bool> ifValue, System.Func<LayoutBuilder, Var<IVNode>> buildControl)
-        {
-            return b.If(
-                ifValue,
-                b => b.Call(buildControl),
-                b => b.H(ViewBuilder.VoidNodeTag, (b, props) => { }));
-        }
-
 
 
 

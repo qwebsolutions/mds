@@ -123,62 +123,6 @@ namespace MdsInfrastructure.Render
             var serviceRows = b.Map(allServices, (b, service) => b.ServiceRow(clientModel, service));
             var filteredServices = b.FilterList(serviceRows, b.Get(clientModel, x => x.ServicesFilter));
 
-            var onAddService = b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> clientModel) =>
-            {
-                var configHeaderId = b.Get(clientModel, x => x.Configuration.Id);
-                var services = b.Get(clientModel, x => x.Configuration.InfrastructureServices);
-                var newId = b.NewId();
-
-                var newService = b.NewObj<InfrastructureService>(b =>
-                {
-                    b.Set(x => x.Id, newId);
-                    b.Set(x => x.ConfigurationHeaderId, configHeaderId);
-                    b.Set(x => x.Enabled, true);
-                });
-                b.Comment("onAddService");
-                b.Push(b.Get(clientModel, x => x.Configuration.InfrastructureServices), newService);
-
-                b.Set(clientModel, x => x.EditServiceId, newId);
-                b.Log("EditServiceId", newId);
-                return b.EditView<EditConfigurationPage>(clientModel, EditService);
-            });
-
-            var rc = b.RenderCell((BlockBuilder b, Var<InfrastructureServiceRow> row, Var<DataTable.Column> col) =>
-            {
-                var columnName = b.Get(col, x => x.Name);
-                var serviceName = b.Get(row, x => x.Name);
-                var serviceDisabled = b.Includes(b.Get(row, x => x.Tags), b.Const("disabled"));
-
-                var goToEditService = (BlockBuilder b, Var<EditConfigurationPage> clientModel) =>
-                {
-                    b.Set(clientModel, x => x.EditServiceId, b.Get(row, x => x.Id));
-                    b.Log("EditServiceId", b.Get(row, x => x.Id));
-                    return b.EditView<EditConfigurationPage>(clientModel, EditService);
-                };
-
-                var serviceNameCellBuilder = (BlockBuilder b) =>
-                {
-                    var container = b.Span();
-                    b.Add(container, b.Link<EditConfigurationPage>(b.WithDefault(serviceName), b.MakeAction<EditConfigurationPage>(goToEditService)));
-                    b.If(serviceDisabled, (BlockBuilder b) =>
-                    {
-                        var badge = b.Add(container, b.Badge(b.Const("disabled")));
-                        b.AddClass(badge, "bg-gray-400");
-                    });
-                    return container;
-                };
-
-                return b.VPadded4(b.Switch(columnName,
-                    x => b.Text("not supported"),
-                    (nameof(InfrastructureService.ServiceName), serviceNameCellBuilder),
-                    (nameof(InfrastructureService.ProjectId), b => b.Text(b.Get(row, x => x.Project))),
-                    (nameof(InfrastructureService.ApplicationId), b => b.Text(b.Get(row, x => x.Application))),
-                    (nameof(InfrastructureService.InfrastructureNodeId), b => b.Text(b.Get(row, x => x.Node)))
-                    ));
-            });
-
-            var contextToolbar = b.Div("flex flex-row items-end");
-
             b.OnModel(
                 clientModel,
                 (bParent, context) =>
@@ -210,11 +154,6 @@ namespace MdsInfrastructure.Render
                             });
                             b.AddHoverRowAction<EditConfigurationPage, InfrastructureServiceRow>(OnRemoveService);
 
-                            b.OnControl(x => x.Toolbar, x => x.ToolbarData, b =>
-                            {
-                                b.Control.Left.AddChild(AddServiceButton);
-                            });
-
                             b.AddToolbarChild(AddServiceButton);
 
                             b.AddToolbarChild(
@@ -222,69 +161,11 @@ namespace MdsInfrastructure.Render
                                     (b, data) =>
                                     {
                                         b.BindFilter(context, x => x.ServicesFilter);
-
-                                        b.Control.ClearButton.EditProps((b, data, props) =>
-                                        {
-                                            b.AddClass(props, b.Const("text-green-400"));
-                                        });
-
-                                    }), HorizontalPlacement.Right);
-
-                        }).As<HyperNode>());
-
-                    b.Add(contextToolbar, b.Filter(
-                        (b, data) =>
-                        {
-                            b.BindFilter(context, x => x.ServicesFilter);
-
-                            b.Control.ClearButton.EditProps((b, data, props) =>
-                            {
-                                b.AddClass(props, b.Const("text-green-400"));
-                            });
+                                    }), 
+                                HorizontalPlacement.Right);
 
                         }).As<HyperNode>());
                 });
-
-            b.Add(container, b.DataGrid<InfrastructureServiceRow>(
-                new()
-                {
-                    b=> b.AddClass(b.CommandButton<EditConfigurationPage>(b=>
-                    {
-                        b.Set(x=>x.Label, "Add service");
-                        b.Set(x => x.OnClick, onAddService);
-                    }), "text-white"),
-                    b=> contextToolbar
-                },
-                b =>
-                {
-                    b.AddColumn(nameof(InfrastructureService.ServiceName), "Name");
-                    b.AddColumn(nameof(InfrastructureService.ProjectId), "Project");
-                    b.AddColumn(nameof(InfrastructureService.ApplicationId), "Application");
-                    b.AddColumn(nameof(InfrastructureService.InfrastructureNodeId), "Node");
-                    b.SetRows(filteredServices);
-                    b.SetRenderCell(rc);
-                },
-                (b, actions, item) =>
-                {
-                    var removeIcon = Icon.Remove;
-
-                    var onRemove = b.Def((BlockBuilder b, Var<InfrastructureServiceRow> item) =>
-                        {
-                            var serviceId = b.Get(item, x => x.Id);
-                            var serviceRemoved = b.Get(clientModel, serviceId, (x, serviceId) => x.Configuration.InfrastructureServices.Where(x => x.Id != serviceId).ToList());
-                            b.Log(serviceRemoved);
-                            b.Set(b.Get(clientModel, x => x.Configuration), x => x.InfrastructureServices, serviceRemoved);
-                        });
-
-                    b.Modify(actions, b => b.Commands, b =>
-                    {
-                        b.Add(b =>
-                        {
-                            b.Set(x => x.IconHtml, removeIcon);
-                            b.Set(x => x.OnCommand, onRemove);
-                        });
-                    });
-                }));
 
             return container;
         }
