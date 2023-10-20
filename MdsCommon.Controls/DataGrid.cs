@@ -76,7 +76,8 @@ namespace MdsCommon.Controls
 
         public static Var<IVNode> DataGrid<TRow>(
             this LayoutBuilder b,
-            Action<ControlBuilder<DataGridDefinition<TRow>, DataGridData<TRow>>, Var<DataGridData<TRow>>> custom)
+            Action<ControlBuilder<DataGridDefinition<TRow>, DataGridData<TRow>>> custom)
+            where TRow: new()
         {
             return b.FromDefinition(DefaultDataGrid<TRow>, custom);
         }

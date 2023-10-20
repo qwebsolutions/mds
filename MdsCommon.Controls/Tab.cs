@@ -145,7 +145,7 @@ namespace MdsCommon.Controls
             this LayoutBuilder b,
             Action<ControlBuilder<TabDefinition, TabData>> custom)
         {
-            return b.FromDefinition(DefaultTabs, b.Const(new TabData()), (b, data) => custom(b));
+            return b.FromDefinition(DefaultTabs, custom, b => b.Const(new TabData()));
         }
     }
 

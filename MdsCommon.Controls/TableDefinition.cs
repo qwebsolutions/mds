@@ -105,7 +105,8 @@ namespace MdsCommon.HtmlControls
 
         public static Var<IVNode> Table<TRow>(
             this LayoutBuilder b,
-            Action<ControlBuilder<TableDefinition<TRow>, TableData<TRow>>, Var<TableData<TRow>>> customize)
+            Action<ControlBuilder<TableDefinition<TRow>, TableData<TRow>>> customize)
+            where TRow : new()
         {
             return b.FromDefinition(DefaultTable<TRow>, customize);
         }

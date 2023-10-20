@@ -130,7 +130,7 @@ namespace MdsInfrastructure.Render
                     var b = new LayoutBuilder(bParent);
 
                     b.Add(container, b.DataGrid<InfrastructureServiceRow>(
-                        (b, data) =>
+                        b =>
                         {
                             b.OnTable(b =>
                             {
@@ -143,7 +143,7 @@ namespace MdsInfrastructure.Render
                                 b.SetCommonStyle();
 
                                 b.OverrideColumnCell(
-                                    b.Const(nameof(InfrastructureServiceRow.Name)),
+                                    nameof(InfrastructureServiceRow.Name),
                                     (b, data) => b.RenderServiceNameCell(b.Get(data, x => x.Row)));
 
                             });
@@ -158,10 +158,10 @@ namespace MdsInfrastructure.Render
 
                             b.AddToolbarChild(
                                 b => b.Filter(
-                                    (b, data) =>
+                                    b =>
                                     {
                                         b.BindFilter(context, x => x.ServicesFilter);
-                                    }), 
+                                    }),
                                 HorizontalPlacement.Right);
 
                         }).As<HyperNode>());

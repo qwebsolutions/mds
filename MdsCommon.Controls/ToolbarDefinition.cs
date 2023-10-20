@@ -70,7 +70,7 @@ namespace MdsCommon.Controls
 
         public static Var<IVNode> Toolbar<TRow>(
             this LayoutBuilder b,
-            Action<ControlBuilder<ToolbarDefinition, ToolbarData>, Var<ToolbarData>> custom)
+            Action<ControlBuilder<ToolbarDefinition, ToolbarData>> custom)
         {
             return b.FromDefinition(DefaultToolbar, custom);
         }

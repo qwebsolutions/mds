@@ -85,7 +85,7 @@ namespace MdsCommon.HtmlControls
             return filterBuilder;
         }
 
-        public static Var<IVNode> Filter(this LayoutBuilder b, Action<ControlBuilder<FilterDefinition, Filter>, Var<Filter>> custom)
+        public static Var<IVNode> Filter(this LayoutBuilder b, Action<ControlBuilder<FilterDefinition, Filter>> custom)
         {
             return b.FromDefinition(DefaultFilter, custom);
         }
@@ -107,13 +107,16 @@ namespace MdsCommon.HtmlControls
         //}
 
         public static void BindFilter<TPageModel, TSubmodel>(
-            this ControlBuilder<FilterDefinition, Filter> b,
+            this ControlBuilder<FilterDefinition, MdsCommon.HtmlControls.Filter> b,
             Var<DataContext<TPageModel, TSubmodel>> dataContext,
             System.Linq.Expressions.Expression<Func<TSubmodel, string>> property)
         {
-            b.InBindingContext(dataContext, b.Data, b =>
+            b.SetData((b, data) =>
             {
-                b.BindOneWay(x => x.Value, property);
+                b.InBindingContext(dataContext, data, b =>
+                {
+                    b.BindOneWay(x => x.Value, property);
+                });
             });
 
             b.Control.Input.EditProps((b, props) =>

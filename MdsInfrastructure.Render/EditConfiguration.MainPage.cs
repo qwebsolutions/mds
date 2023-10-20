@@ -81,7 +81,7 @@ namespace MdsInfrastructure.Render
                     {
                         b.AddTab(
                             "Configuration",
-                            b => b.Call(EditConfiguration.TabConfiguration, clientModel).As<IVNode>());
+                            b => b.Call(EditConfiguration.TabConfiguration, clientModel));
 
                         b.AddTab(
                             "Services",
