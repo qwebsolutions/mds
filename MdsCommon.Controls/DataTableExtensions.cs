@@ -71,7 +71,7 @@ namespace MdsCommon.HtmlControls
 
         public static void AddHoverRowAction<TState, TRow>(
             this ControlBuilder<DataGridDefinition<TRow>, DataGridData<TRow>> b,
-            Func<BlockBuilder, Var<TState>, Var<TRow>, Var<TState>> onClick,
+            Func<SyntaxBuilder, Var<TState>, Var<TRow>, Var<TState>> onClick,
             string iconSvg = HeroiconsCog6Tooth,
             Action<PropsBuilder, Var<TRow>, Var<DynamicObject>> extraProps = null)
         {
@@ -83,7 +83,7 @@ namespace MdsCommon.HtmlControls
                     {
                         b.SetClass(props, "flex rounded bg-gray-200 w-10 h-10 p-1 cursor-pointer justify-center items-center opacity-50 hover:opacity-100");
                         b.SetDynamic(props, Html.innerHTML, b.Const(iconSvg));
-                        b.OnClickAction(props, b.MakeAction((BlockBuilder b, Var<TState> state) =>
+                        b.OnClickAction(props, b.MakeAction((SyntaxBuilder b, Var<TState> state) =>
                         {
                             return b.Call(onClick, state, row);
                         }));

@@ -32,7 +32,7 @@ namespace MdsInfrastructure.Render
 
     public static partial class EditConfiguration
     {
-        public static Var<EditConfigurationPage> OnAddService(BlockBuilder b, Var<EditConfigurationPage> clientModel)
+        public static Var<EditConfigurationPage> OnAddService(SyntaxBuilder b, Var<EditConfigurationPage> clientModel)
         {
             var configHeaderId = b.Get(clientModel, x => x.Configuration.Id);
             var services = b.Get(clientModel, x => x.Configuration.InfrastructureServices);
@@ -52,7 +52,7 @@ namespace MdsInfrastructure.Render
             return b.EditView<EditConfigurationPage>(clientModel, EditService);
         }
 
-        public static Var<EditConfigurationPage> OnRemoveService(BlockBuilder b, Var<EditConfigurationPage> page, Var<InfrastructureServiceRow> row)
+        public static Var<EditConfigurationPage> OnRemoveService(SyntaxBuilder b, Var<EditConfigurationPage> page, Var<InfrastructureServiceRow> row)
         {
             var serviceId = b.Get(row, x => x.Id);
             var serviceRemoved = b.Get(page, serviceId, (x, serviceId) => x.Configuration.InfrastructureServices.Where(x => x.Id != serviceId).ToList());
@@ -60,18 +60,18 @@ namespace MdsInfrastructure.Render
             return b.Clone(page);
         }
 
-        public static Var<string> GetApplicationLabel(this BlockBuilder b, Var<EditConfigurationPage> model, Var<Guid> applicationId)
+        public static Var<string> GetApplicationLabel(this SyntaxBuilder b, Var<EditConfigurationPage> model, Var<Guid> applicationId)
         {
             return b.Get(model, applicationId, (x, applicationId) => x.Configuration.Applications.SingleOrDefault(y => y.Id == applicationId, new Application() { Name = "(not set)" }).Name);
         }
 
-        public static Var<string> GetNodeLabel(this BlockBuilder b, Var<EditConfigurationPage> model, Var<Guid> nodeId)
+        public static Var<string> GetNodeLabel(this SyntaxBuilder b, Var<EditConfigurationPage> model, Var<Guid> nodeId)
         {
             return b.Get(model, nodeId, (x, nodeId) => x.InfrastructureNodes.SingleOrDefault(y => y.Id == nodeId, new InfrastructureNode() { NodeName = "(not set)" }).NodeName);
         }
 
         public static Var<InfrastructureServiceRow> ServiceRow(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<EditConfigurationPage> model,
             Var<InfrastructureService> service)
         {
@@ -91,13 +91,13 @@ namespace MdsInfrastructure.Render
             return row;
         }
 
-        public static Var<IVNode> RenderServiceNameCell(this BlockBuilder b, Var<InfrastructureServiceRow> row)
+        public static Var<IVNode> RenderServiceNameCell(this LayoutBuilder b, Var<InfrastructureServiceRow> row)
         {
             var serviceName = b.Get(row, x => x.Name);
             var serviceDisabled = b.Includes(b.Get(row, x => x.Tags), b.Const("disabled"));
             b.Log("service disabled", serviceDisabled);
 
-            var goToEditService = (BlockBuilder b, Var<EditConfigurationPage> clientModel) =>
+            var goToEditService = (SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
             {
                 b.Set(clientModel, x => x.EditServiceId, b.Get(row, x => x.Id));
                 return b.EditView<EditConfigurationPage>(clientModel, EditService);
@@ -105,7 +105,7 @@ namespace MdsInfrastructure.Render
 
             var container = b.Span();
             b.Add(container, b.Link<EditConfigurationPage>(b.WithDefault(serviceName), b.MakeAction<EditConfigurationPage>(goToEditService)));
-            b.If(serviceDisabled, (BlockBuilder b) =>
+            b.If(serviceDisabled, (LayoutBuilder b) =>
             {
                 var badge = b.Add(container, b.Badge(b.Const("disabled")));
                 b.AddClass(badge, "bg-gray-400");
@@ -114,7 +114,7 @@ namespace MdsInfrastructure.Render
         }
 
         public static Var<HyperNode> TabServices(
-           BlockBuilder b,
+           LayoutBuilder b,
            Var<EditConfigurationPage> clientModel)
         {
             var container = b.Div("w-full h-full");
@@ -170,7 +170,7 @@ namespace MdsInfrastructure.Render
             return container;
         }
 
-        public static Var<string> GetProjectLabel(BlockBuilder b, Var<EditConfigurationPage> clientModel, Var<InfrastructureService> service)
+        public static Var<string> GetProjectLabel(SyntaxBuilder b, Var<EditConfigurationPage> clientModel, Var<InfrastructureService> service)
         {
             var projectName = b.WithDefault(b.Const(string.Empty));
             var versionTag = b.WithDefault(b.Const(string.Empty));

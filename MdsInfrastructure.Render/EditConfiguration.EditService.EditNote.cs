@@ -11,13 +11,13 @@ namespace MdsInfrastructure.Render
 {
     public static partial class EditConfiguration
     {
-        public static Var<Func<TIn, TOut>> Def<TIn, TOut>(this BlockBuilder b, System.Linq.Expressions.Expression<Func<TIn, TOut>> getProperty)
+        public static Var<Func<TIn, TOut>> Def<TIn, TOut>(this SyntaxBuilder b, System.Linq.Expressions.Expression<Func<TIn, TOut>> getProperty)
         {
-            return b.DefineFunc<BlockBuilder, TIn, TOut>((BlockBuilder b, Var<TIn> input) => b.Get(input, getProperty));
+            return b.Def<SyntaxBuilder, TIn, TOut>((SyntaxBuilder b, Var<TIn> input) => b.Get(input, getProperty));
         }
 
         public static Var<HyperNode> EditNote(
-            BlockBuilder b,
+            LayoutBuilder b,
             Var<EditConfigurationPage> clientModel)
         {
             var noteId = b.Get(clientModel, x => x.EditServiceNoteId);
@@ -56,13 +56,13 @@ namespace MdsInfrastructure.Render
                 form, 
                 b.BoundDropDown<EditConfigurationPage, InfrastructureServiceNote, NoteType, Guid>(
                     clientModel,
-                    b.DefineFunc<BlockBuilder, EditConfigurationPage, InfrastructureServiceNote>(GetEditedNote),
+                    b.Def<SyntaxBuilder, EditConfigurationPage, InfrastructureServiceNote>(GetEditedNote),
                     x => x.NoteTypeId,
                     b.Def<EditConfigurationPage, List<NoteType>>(x => x.NoteTypes),
                     b.Def<NoteType, Guid>(x => x.Id),
                     b.Def<NoteType, string>(x => x.Description)));
 
-            Metapsi.ChoicesJs.Event.SetOnChoice(b, noteTypeDd, b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> page, Var<Choice> payload) =>
+            Metapsi.ChoicesJs.Event.SetOnChoice(b, noteTypeDd, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<Choice> payload) =>
             {
                 // This is a rather ugly workaround
                 b.Set(b.GetEditedNote(page), x => x.Reference, b.Const(string.Empty));
@@ -79,7 +79,7 @@ namespace MdsInfrastructure.Render
                 b.Add(form, b.Text("Referenced parameter"));
                 
                 var noteParamRefDd = b.Add(form, b.DropDown(b.MapChoices(serviceParams, x => x.Id, x => x.ParameterName, b.ParseId(b.Get(note, x => x.Reference)))));
-                Metapsi.ChoicesJs.Event.SetOnChange(b, noteParamRefDd, b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> page, Var<string> payload) =>
+                Metapsi.ChoicesJs.Event.SetOnChange(b, noteParamRefDd, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> payload) =>
                 {
                     b.Set(b.GetEditedNote(page), x => x.Reference, payload);
                     return b.Clone(page);
@@ -97,7 +97,7 @@ namespace MdsInfrastructure.Render
             return view;
         }
 
-        public static Var<InfrastructureServiceNote> GetEditedNote(this BlockBuilder b, Var<EditConfigurationPage> clientModel)
+        public static Var<InfrastructureServiceNote> GetEditedNote(this SyntaxBuilder b, Var<EditConfigurationPage> clientModel)
         {
             var noteId = b.Get(clientModel, x => x.EditServiceNoteId);
             var note = b.Get(clientModel, noteId, (x, noteid) => x.Configuration.InfrastructureServices.SelectMany(x => x.InfrastructureServiceNotes).Single(x => x.Id == noteid));
@@ -108,11 +108,11 @@ namespace MdsInfrastructure.Render
     public static partial class Controls
     {
         public static Var<HyperNode> OkButton(
-            this BlockBuilder b,
-            Func<BlockBuilder, Var<EditConfigurationPage>, Var<HyperNode>> areaRenderer,
+            this LayoutBuilder b,
+            Func<LayoutBuilder, Var<EditConfigurationPage>, Var<HyperNode>> areaRenderer,
             System.Linq.Expressions.Expression<Func<EditConfigurationPage, Guid>> editedId)
         {
-            var popPage = b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> state) =>
+            var popPage = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> state) =>
             {
                 b.Set(state, editedId, b.EmptyId());
                 return b.EditView<EditConfigurationPage>(state, areaRenderer);

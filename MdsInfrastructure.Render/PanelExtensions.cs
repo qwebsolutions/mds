@@ -13,14 +13,14 @@ namespace MdsInfrastructure.Render
     {
 
         public static Var<HyperNode> RenderNodePanel<TFromPage, TToPage>(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             InfrastructureNode node,
             List<MdsCommon.MachineStatus> healthStatus)
         {
             string nodeName = node.NodeName;
             string nodeUrl = $"http://{node.MachineIp}:{node.UiPort}";
 
-            Func<BlockBuilder, Var<HyperNode>> nodeHeader = (b) =>
+            Func<LayoutBuilder, Var<HyperNode>> nodeHeader = (b) =>
             {
                 var header = b.Span("flex flex-row text-white");
                 var link = b.Add(header, b.Node("a", "hover:underline cursor-pointer font-bold"));
@@ -108,7 +108,7 @@ namespace MdsInfrastructure.Render
         }
 
         public static Var<HyperNode> RenderApplicationPanel<TFromPage, TToPage>(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             MdsInfrastructure.Deployment deployment,
             List<MachineStatus> healthStatus,
             List<InfrastructureEvent> allInfrastructureEvents,
@@ -152,7 +152,7 @@ namespace MdsInfrastructure.Render
         }
 
         public static Var<HyperNode> RenderServicePanel(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             MdsInfrastructure.Deployment deployment,
             List<MachineStatus> healthStatus,
             MdsCommon.ServiceConfigurationSnapshot service,

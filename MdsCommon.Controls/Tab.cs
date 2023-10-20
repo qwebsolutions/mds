@@ -77,7 +77,7 @@ namespace MdsCommon.Controls
                             b => b.AddClass(props, "border-b-2 border-sky-400"),
                             b => b.AddClass(props, "border-white hover:border-sky-400 hover:border-b-2"));
 
-                        b.OnClickAction(props, b.MakeAction((BlockBuilder b, Var<object> state) =>
+                        b.OnClickAction(props, b.MakeAction((SyntaxBuilder b, Var<object> state) =>
                         {
                             b.Set(data, x => x.SelectedTabName, b.Const(name));
                             return b.Clone(state);
@@ -161,7 +161,7 @@ namespace MdsCommon.Controls
         //}
 
         internal static Var<HyperNode> RenderTab<TPage>(
-            this BlockBuilder b, 
+            this LayoutBuilder b, 
             Var<TPage> page, 
             Var<string> tabName,
             Var<HyperNode> toolbar,
@@ -188,7 +188,7 @@ namespace MdsCommon.Controls
 
                     b.SetOnClick<TPage>(
                         tabLabel,
-                        b.MakeAction((BlockBuilder b, Var<TPage> state) =>
+                        b.MakeAction((SyntaxBuilder b, Var<TPage> state) =>
                         {
                             b.SetSelectedTabPage(state, tabName, b.Const(tab.TabPageCode));
                             return b.Clone(state);
@@ -213,7 +213,7 @@ namespace MdsCommon.Controls
             return rootContainer;
         }
 
-        public static void SetSelectedTabPage<TPage>(this BlockBuilder b, Var<TPage> page, Var<string> tabName, Var<string> tabPageCode)
+        public static void SetSelectedTabPage<TPage>(this SyntaxBuilder b, Var<TPage> page, Var<string> tabName, Var<string> tabPageCode)
         {
             b.SetVar(page, FeatureName, tabName, tabPageCode);
         }

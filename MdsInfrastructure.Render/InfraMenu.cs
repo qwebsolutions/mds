@@ -11,7 +11,7 @@ namespace MdsInfrastructure
     public static partial class MdsInfra
     {
         public static Var<HyperNode> InfraMenu(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             string selectedCode,
             bool isSignedIn
             )

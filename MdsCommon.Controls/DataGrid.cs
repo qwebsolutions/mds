@@ -118,10 +118,10 @@ namespace MdsCommon.Controls
             //public bool ShowSearch { get; set; }
         }
 
-        internal static Var<HyperNode> Render<TRow>(BlockBuilder b,
-            List<Func<BlockBuilder, Var<HyperNode>>> buildToolbar,
+        internal static Var<HyperNode> Render<TRow>(LayoutBuilder b,
+            List<Func<LayoutBuilder, Var<HyperNode>>> buildToolbar,
             Action<Modifier<DataTable.Props<TRow>>> buildDataTable,
-            Action<BlockBuilder, Var<ActionBar.Props<TRow>>, Var<TRow>> buildActions = null)
+            Action<LayoutBuilder, Var<ActionBar.Props<TRow>>, Var<TRow>> buildActions = null)
         {
             string flexClass = "flex flex-col w-full bg-white rounded";
 
@@ -129,7 +129,7 @@ namespace MdsCommon.Controls
             {
                 var dataTableProps = b.NewObj<DataTable.Props<TRow>>(buildDataTable);
                 var originalRenderer = b.Get(dataTableProps, x => x.CreateCell);
-                var renderCell = b.Def<BlockBuilder, TRow, DataTable.Column, HyperNode>((b, row, col) =>
+                var renderCell = b.Def<LayoutBuilder, TRow, DataTable.Column, HyperNode>((b, row, col) =>
                 {
                     var currentRenderer = b.Get(dataTableProps, x => x.CreateCell);
                     return b.If(
@@ -186,10 +186,10 @@ namespace MdsCommon.Controls
         //}
 
         public static Var<HyperNode> DataGrid<TRow>(
-            this BlockBuilder b,
-            List<Func<BlockBuilder, Var<HyperNode>>> buildToolbar,
+            this LayoutBuilder b,
+            List<Func<LayoutBuilder, Var<HyperNode>>> buildToolbar,
             Action<Modifier<DataTable.Props<TRow>>> buildDataTable,
-            System.Action<BlockBuilder, Var<ActionBar.Props<TRow>>, Var<TRow>> buildActions = null)
+            System.Action<LayoutBuilder, Var<ActionBar.Props<TRow>>, Var<TRow>> buildActions = null)
         {
             return MdsCommon.Controls.DataGrid.Render<TRow>(b, buildToolbar, buildDataTable, buildActions);
             ////var toolbarProps = b.NewObj(buildToolbar);

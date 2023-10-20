@@ -24,7 +24,7 @@ namespace MdsCommon.Controls
             public bool @checked { get; set; }
         }
 
-        internal static Var<HyperNode> Render<TState>(BlockBuilder b, Var<Props> props, Var<HyperType.Action<TState, bool>> onToggle)
+        internal static Var<HyperNode> Render<TState>(LayoutBuilder b, Var<Props> props, Var<HyperType.Action<TState, bool>> onToggle)
         {
             var isOn = b.Get(props, x => x.IsOn);
             var container = b.Div("flex items-center justify-left");
@@ -37,7 +37,7 @@ namespace MdsCommon.Controls
             b.SetAttr(
                 input,
                 new DynamicProperty<HyperType.Action<TState, DomEvent<ToggleTarget>>>("onclick"),
-                b.MakeAction((BlockBuilder b, Var<TState> state, Var<DomEvent<ToggleTarget>> @event) =>
+                b.MakeAction((SyntaxBuilder b, Var<TState> state, Var<DomEvent<ToggleTarget>> @event) =>
                 {
                     b.StopPropagation(@event);
                     var target = b.Get(@event, x => x.target);
@@ -68,7 +68,7 @@ namespace MdsCommon.Controls
 
     public static partial class Controls
     {
-        public static void Modify<T>(this BlockBuilder b, Var<T> obj, System.Action<Modifier<T>> update)
+        public static void Modify<T>(this SyntaxBuilder b, Var<T> obj, System.Action<Modifier<T>> update)
         {
             if (update != null)
             {
@@ -77,7 +77,7 @@ namespace MdsCommon.Controls
         }
 
         public static void Modify<T, TProp>(
-            this BlockBuilder b,
+            this SyntaxBuilder b,
             Var<T> obj,
             System.Linq.Expressions.Expression<System.Func<T, TProp>> by,
             System.Action<Modifier<TProp>> update)
@@ -91,7 +91,7 @@ namespace MdsCommon.Controls
         }
 
         public static Var<HyperNode> Toggle<TState>(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<bool> isOn,
             Var<HyperType.Action<TState, bool>> onToggle,
             Var<string> onLabel,
@@ -110,7 +110,7 @@ namespace MdsCommon.Controls
         }
 
         public static Var<HyperNode> BoundToggle<TEntity>(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<TEntity> entity,
             System.Linq.Expressions.Expression<System.Func<TEntity, bool>> onProperty,
             Var<string> onLabel,
@@ -121,7 +121,7 @@ namespace MdsCommon.Controls
 
             return b.Toggle(
                 isOn,
-                b.MakeAction((BlockBuilder b, Var<object> state, Var<bool> isOn) =>
+                b.MakeAction((SyntaxBuilder b, Var<object> state, Var<bool> isOn) =>
                 {
                     b.Set(entity, onProperty, isOn);
                     return b.Clone(state);
@@ -130,32 +130,6 @@ namespace MdsCommon.Controls
                 offLabel,
                 optional);
         }
-
-        //public static Var<HyperNode> BoundToggle<TState, TEntity>(
-        //    this BlockBuilder b,
-        //    Var<TState> state,
-        //    System.Linq.Expressions.Expression<System.Func<TState, TEntity>> onEntity,
-        //    System.Linq.Expressions.Expression<System.Func<TEntity, bool>> onProperty,
-        //    Var<string> onLabel,
-        //    Var<string> offLabel,
-        //    System.Action<Modifier<Toggle.Props>> optional = null)
-        //{
-        //    var entity = b.Get(state, onEntity);
-        //    var isOn = b.Get(entity, onProperty);
-
-        //    return b.Toggle(
-        //        isOn,
-        //        b.MakeAction((BlockBuilder b, Var<TState> state, Var<bool> isOn) =>
-        //        {
-        //            var entity = b.Get(state, onEntity);
-        //            b.Set(entity, onProperty, isOn);
-        //            return b.Clone(state);
-        //        }),
-        //        onLabel,
-        //        offLabel,
-        //        optional); ;
-        //}
     }
-
 }
 

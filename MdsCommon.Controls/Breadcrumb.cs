@@ -9,7 +9,7 @@ namespace MdsCommon.Controls
     public static partial class Controls
     {
         public static Var<HyperNode> Breadcrumb(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<List<Breadcrumb.Link>> links,
             Var<string> currentPage,
             System.Action<Modifier<Breadcrumb.Props>> optional = null)
@@ -39,7 +39,7 @@ namespace MdsCommon.Controls
             public string CurrentPageCss { get; set; }
         }
 
-        public static Var<HyperNode> RenderBreadcrumb(this BlockBuilder b, Var<Props> props)
+        public static Var<HyperNode> RenderBreadcrumb(this LayoutBuilder b, Var<Props> props)
         {
             b.SetIfEmpty<Props, string>(props, x => x.LinkCss, b.Const(""));
             b.SetIfEmpty<Props, string>(props, x => x.CurrentPageCss, b.Const(""));

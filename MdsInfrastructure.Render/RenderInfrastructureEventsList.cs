@@ -14,7 +14,7 @@ namespace MdsInfrastructure
             return serverModel;
         }
 
-        public override Var<HyperNode> OnRender(BlockBuilder b, ListInfrastructureEventsPage serverModel, Var<ListInfrastructureEventsPage> clientModel)
+        public override Var<HyperNode> OnRender(LayoutBuilder b, ListInfrastructureEventsPage serverModel, Var<ListInfrastructureEventsPage> clientModel)
         {
             b.AddModuleStylesheet();
 

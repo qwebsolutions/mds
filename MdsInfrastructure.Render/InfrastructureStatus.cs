@@ -17,7 +17,7 @@ namespace MdsInfrastructure.Render
             return serverData;
         }
 
-        public override Var<HyperNode> OnRender(BlockBuilder b, MdsInfrastructure.InfrastructureStatus serverModel, Var<MdsInfrastructure.InfrastructureStatus> clientModel)
+        public override Var<HyperNode> OnRender(LayoutBuilder b, MdsInfrastructure.InfrastructureStatus serverModel, Var<MdsInfrastructure.InfrastructureStatus> clientModel)
         {
             b.AddModuleStylesheet();
 
@@ -33,7 +33,7 @@ namespace MdsInfrastructure.Render
                 Render(b, serverModel));
         }
 
-        public static Var<HyperNode> Render(BlockBuilder b, MdsInfrastructure.InfrastructureStatus dataModel)
+        public static Var<HyperNode> Render(LayoutBuilder b, MdsInfrastructure.InfrastructureStatus dataModel)
         {
 
             if (!string.IsNullOrEmpty(dataModel.SchemaValidationMessage))

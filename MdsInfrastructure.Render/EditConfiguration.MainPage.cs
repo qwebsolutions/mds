@@ -12,7 +12,7 @@ namespace MdsInfrastructure.Render
     public static partial class EditConfiguration
     {
         public static Var<HyperNode> MainPage(
-            BlockBuilder b,
+            LayoutBuilder b,
             Var<EditConfigurationPage> clientModel)
         {
             var isSaved = b.Not(HasChanges(b, clientModel));
@@ -45,7 +45,7 @@ namespace MdsInfrastructure.Render
                     b.Request(
                         Frontend.SaveConfiguration,
                         b.Get(model, x => x.Configuration),
-                        b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> page, Var<Frontend.SaveConfigurationResponse> response) =>
+                        b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<Frontend.SaveConfigurationResponse> response) =>
                         {
                             b.Set(page, x => x.InitialConfiguration, b.Serialize(b.Get(page, x => x.Configuration)));
                             b.Log("InitialConfiguration set", page);
@@ -73,10 +73,9 @@ namespace MdsInfrastructure.Render
                 });
 
             var container = b.Div("flex flex-col w-full bg-white rounded shadow");
-            var layoutBuilder = new LayoutBuilder(b);
             b.Add(
                 container,
-                layoutBuilder.Tabs(
+                b.Tabs(
                     b =>
                     {
                         b.AddTab(
@@ -132,7 +131,7 @@ namespace MdsInfrastructure.Render
             return container;
         }
 
-        private static Var<bool> HasChanges(BlockBuilder b, Var<EditConfigurationPage> model)
+        private static Var<bool> HasChanges(SyntaxBuilder b, Var<EditConfigurationPage> model)
         {
             var current = b.Serialize(b.Get(model, x => x.Configuration));
             var hasChanges = b.Not(b.AreEqual(current, b.Get(model, x => x.InitialConfiguration)));

@@ -10,13 +10,13 @@ namespace MdsInfrastructure.Render
     public static partial class EditConfiguration
     {
         public static Var<HyperNode> TabApplications(
-           BlockBuilder b,
+           LayoutBuilder b,
            Var<EditConfigurationPage> clientModel)
         {
 
             var configId = b.Get(clientModel, x => x.Configuration.Id);
 
-            var addApplication = b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> state) =>
+            var addApplication = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> state) =>
             {
                 var newId = b.NewId();
 
@@ -33,14 +33,14 @@ namespace MdsInfrastructure.Render
 
             var rows = b.Get(clientModel, x => x.Configuration.Applications.OrderBy(x => x.Name).ToList());
 
-            var rc = b.Def((BlockBuilder b, Var<Application> app, Var<DataTable.Column> col) =>
+            var rc = b.Def((LayoutBuilder b, Var<Application> app, Var<DataTable.Column> col) =>
             {
                 var name = b.Get(app, x => x.Name, "(not set)");
                 return b.VPadded4(
                     b.Link(
                         name,
                         b.MakeAction(
-                            (BlockBuilder b, Var<EditConfigurationPage> clientModel) =>
+                            (SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
                             {
                                 b.Set(clientModel, x => x.EditApplicationId, b.Get(app, x => x.Id));
                                 return b.EditView<EditConfigurationPage>(clientModel, EditApplication);
@@ -66,7 +66,7 @@ namespace MdsInfrastructure.Render
                 {
                     var applicationId = b.Get(application, x => x.Id);
 
-                    var onCommand = b.Def((BlockBuilder b, Var<Application> application) =>
+                    var onCommand = b.Def((SyntaxBuilder b, Var<Application> application) =>
                     {
                         var removed = b.Get(clientModel, application, (x, application) => x.Configuration.Applications.Where(x => x != application).ToList());
                         b.Set(b.Get(clientModel, x => x.Configuration), x => x.Applications, removed);

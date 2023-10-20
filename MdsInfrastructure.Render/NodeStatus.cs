@@ -14,7 +14,7 @@ namespace MdsInfrastructure.Render
             return serverData;
         }
 
-        public override Var<HyperNode> OnRender(BlockBuilder b, MdsInfrastructure.NodeStatus serverData, Var<MdsInfrastructure.NodeStatus> clientModel)
+        public override Var<HyperNode> OnRender(LayoutBuilder b, MdsInfrastructure.NodeStatus serverData, Var<MdsInfrastructure.NodeStatus> clientModel)
         {
             b.AddModuleStylesheet();
 
@@ -27,7 +27,7 @@ namespace MdsInfrastructure.Render
         }
 
         public static Var<HyperNode> RenderNodeStatus(
-            BlockBuilder b,
+            LayoutBuilder b,
             MdsInfrastructure.InfrastructureStatus nodesStatusPage,
             string selectedNodeName)
         {

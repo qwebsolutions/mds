@@ -10,12 +10,12 @@ namespace MdsInfrastructure.Render
     public static partial class EditConfiguration
     {
         public static Var<HyperNode> TabVariables(
-           BlockBuilder b,
+           LayoutBuilder b,
            Var<EditConfigurationPage> clientModel)
         {
             var configId = b.Get(clientModel, x => x.Configuration.Id);
 
-            var onAddVariable = b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> clientModel) =>
+            var onAddVariable = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
             {
                 var newId = b.NewId();
                 var newVar = b.NewObj<InfrastructureVariable>(b =>
@@ -36,7 +36,7 @@ namespace MdsInfrastructure.Render
                     b => b.Link(
                         b.GetProperty<string>(row, columnName), 
                         b.MakeAction(
-                            (BlockBuilder b, Var<EditConfigurationPage> clientModel) =>
+                            (SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
                             {
                                 var varId = b.Get(row, x => x.Id);
                                 b.Set(clientModel, x => x.EditVariableId, varId);
@@ -69,7 +69,7 @@ namespace MdsInfrastructure.Render
 
                     var removeIcon = Icon.Remove;
 
-                    var onRemove = b.Def((BlockBuilder b, Var<InfrastructureVariable> variable) =>
+                    var onRemove = b.Def((SyntaxBuilder b, Var<InfrastructureVariable> variable) =>
                     {
                         var typed = variable.As<InfrastructureVariable>();
                         var removed = b.Get(clientModel, typed, (x, typed) => x.Configuration.InfrastructureVariables.Where(x => x != typed).ToList());

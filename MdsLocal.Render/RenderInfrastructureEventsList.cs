@@ -7,7 +7,7 @@ namespace MdsLocal
 {
     public class RenderInfrastructureEventsList : HyperPage<ListInfrastructureEventsPage>
     {
-        public override Var<HyperNode> OnRender(BlockBuilder b, Var<ListInfrastructureEventsPage> clientModel)
+        public override Var<HyperNode> OnRender(LayoutBuilder b, Var<ListInfrastructureEventsPage> clientModel)
         {
             b.AddStylesheet("metapsi.hyperapp.css");
 

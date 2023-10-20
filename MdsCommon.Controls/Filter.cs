@@ -107,7 +107,7 @@ namespace MdsCommon.HtmlControls
             {
                 b.OnInputAction(
                     props,
-                    b.MakeAction((BlockBuilder b, Var<TPageModel> pageModel, Var<string> newValue) =>
+                    b.MakeAction((SyntaxBuilder b, Var<TPageModel> pageModel, Var<string> newValue) =>
                     {
                         var accessData = b.Get(dataContext, x => x.AccessData);
                         var data = b.Call(accessData, pageModel);
@@ -118,7 +118,7 @@ namespace MdsCommon.HtmlControls
 
             b.Control.ClearButton.EditProps((b, props) =>
             {
-                b.OnClickAction(props, b.MakeAction((BlockBuilder b, Var<TPageModel> pageModel) =>
+                b.OnClickAction(props, b.MakeAction((SyntaxBuilder b, Var<TPageModel> pageModel) =>
                 {
                     var accessData = b.Get(dataContext, x => x.AccessData);
                     var data = b.Call(accessData, pageModel);
@@ -131,20 +131,20 @@ namespace MdsCommon.HtmlControls
 
     public static partial class Control
     {
-        public static Var<bool> ContainsValue<T>(this BlockBuilder b, Var<T> item, Var<string> value)
+        public static Var<bool> ContainsValue<T>(this SyntaxBuilder b, Var<T> item, Var<string> value)
         {
             return b.Includes(b.ToLowercase(b.ConcatObjectValues(item)), b.ToLowercase(value));
         }
 
         public static Var<List<TItem>> FilterList<TItem>(
-            this BlockBuilder b,
+            this SyntaxBuilder b,
             Var<List<TItem>> list,
             Var<string> value)
         {
             var filteredItems = b.Get(
                 list,
                 value,
-                b.DefineFunc<BlockBuilder, TItem, string, bool>(ContainsValue),
+                b.Def<SyntaxBuilder, TItem, string, bool>(ContainsValue),
                 (all, value, filterFunc) => all.Where(x => filterFunc(x, value)).ToList());
 
             return filteredItems;

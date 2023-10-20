@@ -13,7 +13,7 @@ namespace MdsLocal
 {
     public class RenderOverviewListProcesses : Metapsi.Hyperapp.HyperPage<OverviewPage>
     {
-        public override Var<HyperNode> OnRender(BlockBuilder b, Var<OverviewPage> model)
+        public override Var<HyperNode> OnRender(LayoutBuilder b, Var<OverviewPage> model)
         {
             b.AddStylesheet("metapsi.hyperapp.css");
 
@@ -53,7 +53,7 @@ namespace MdsLocal
                 b => b.Text(title),
                 b => b.Text(b.Get(model, x => x.OverviewText))));
 
-            var rc = b.Def((BlockBuilder b, Var<ProcessRow> serviceSnapshot, Var<DataTable.Column> col) =>
+            var rc = b.Def((LayoutBuilder b, Var<ProcessRow> serviceSnapshot, Var<DataTable.Column> col) =>
             {
                 Var<string> serviceName = b.Get(serviceSnapshot, x => x.ServiceName);
                 Var<string> columnName = b.Get(col, x => x.Name);
@@ -77,7 +77,7 @@ namespace MdsLocal
                         b.SetRenderCell(rc);
                     });
 
-                    b.Set(props, x => x.CreateRow, b.Def((BlockBuilder b, Var<ProcessRow> row) =>
+                    b.Set(props, x => x.CreateRow, b.Def((LayoutBuilder b, Var<ProcessRow> row) =>
                     {
                         Var<ProcessRow> processRow = row.As<ProcessRow>();
                         return b.If(b.Get(processRow, x => x.HasError), b => b.Node("tr", "bg-red-500"), b => b.Node("tr"));
@@ -93,7 +93,7 @@ namespace MdsLocal
     public static partial class MdsLocalMenu
     {
         public static Var<HyperNode> LocalMenu(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             string selectedCode)
         {
             var menuEntries = new List<Metapsi.Ui.Menu.Entry>() {
@@ -162,7 +162,7 @@ namespace MdsLocal
 
         
 
-        public static Var<HyperNode> RenderListProcesses(BlockBuilder b, Var<OverviewPage> clientModel)
+        public static Var<HyperNode> RenderListProcesses(LayoutBuilder b, Var<OverviewPage> clientModel)
         {
             return b.Text("Render list processes");
 
@@ -273,7 +273,7 @@ namespace MdsLocal
 
     public class RenderSyncHistory : HyperPage<SyncHistory.DataModel>
     {
-        public override Var<HyperNode> OnRender(BlockBuilder b, Var<SyncHistory.DataModel> dataModel)
+        public override Var<HyperNode> OnRender(LayoutBuilder b, Var<SyncHistory.DataModel> dataModel)
         {
 
             b.AddStylesheet("metapsi.hyperapp.css");
@@ -287,17 +287,17 @@ namespace MdsLocal
                 b.Render(headerProps), Render2(b, dataModel));
         }
 
-        public static Var<HyperNode> Render2(BlockBuilder b, Var<SyncHistory.DataModel> dataModel)
+        public static Var<HyperNode> Render2(LayoutBuilder b, Var<SyncHistory.DataModel> dataModel)
         {
             var view = b.Div("flex flex-col");
 
             var clientRows = b.Get(dataModel, x => x.SyncHistory);
 
-            var renderCell = b.Def((BlockBuilder b, Var<SyncResult> serviceSnapshot, Var<DataTable.Column> col) =>
+            var renderCell = b.Def((LayoutBuilder b, Var<SyncResult> serviceSnapshot, Var<DataTable.Column> col) =>
             {
                 Var<string> columnName = b.Get(col, x => x.Name);
 
-                var cell = b.Switch<HyperNode, string>(columnName,
+                var cell = b.Switch(columnName,
                     b => b.Text(b.GetProperty<string>(serviceSnapshot, columnName)),
                     (nameof(SyncResult.Timestamp), b => b.Text(b.ItalianFormat(b.Get(serviceSnapshot, x => x.Timestamp)))));
 

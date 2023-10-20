@@ -16,7 +16,7 @@ namespace MdsInfrastructure.Render
                 return serverModel;
             }
 
-            public override Var<HyperNode> OnRender(BlockBuilder b, ListProjectsPage serverModel, Var<ListProjectsPage> clientModel)
+            public override Var<HyperNode> OnRender(LayoutBuilder b, ListProjectsPage serverModel, Var<ListProjectsPage> clientModel)
             {
                 return b.Layout(
                     b.InfraMenu(nameof(Routes.Project), serverModel.User.IsSignedIn()),
@@ -34,12 +34,12 @@ namespace MdsInfrastructure.Render
         //    return version;
         //}
 
-        public static Var<string> TargetEnvironment(this BlockBuilder b, Var<string> target)
+        public static Var<string> TargetEnvironment(this SyntaxBuilder b, Var<string> target)
         {
             return b.If(b.AreEqual(target, b.Const("linux-x64")), b => b.Const("Linux"), b => b.Const("Windows"));
         }
 
-        public static Var<HyperNode> Render(this BlockBuilder b, Var<ListProjectsPage> clientModel)
+        public static Var<HyperNode> Render(this LayoutBuilder b, Var<ListProjectsPage> clientModel)
         {
             var view = b.Div();
             b.Add(view, b.ValidationPanel(clientModel));
@@ -64,11 +64,11 @@ namespace MdsInfrastructure.Render
                         var isInUse = b.Get(clientModel, versionId, (x, versionId) => x.InfrastructureServices.Any(x => x.ProjectVersionId == versionId));
 
                         var versionBuilds = b.Get(version, x => x.Binaries);
-                        var buildDescriptions = b.Get(versionBuilds, b.Def<BlockBuilder, string, string>(TargetEnvironment), (version, getTarget) => version.Select(x => "Build " + x.BuildNumber + " " + getTarget(x.Target)).ToList());
+                        var buildDescriptions = b.Get(versionBuilds, b.Def<SyntaxBuilder, string, string>(TargetEnvironment), (version, getTarget) => version.Select(x => "Build " + x.BuildNumber + " " + getTarget(x.Target)).ToList());
 
                         var checkboxText = b.Get(
                             version,
-                            b.Def<BlockBuilder, string, System.Collections.Generic.List<string>, string>(Core.JoinStrings),
+                            b.Def<SyntaxBuilder, string, System.Collections.Generic.List<string>, string>(Core.JoinStrings),
                             buildDescriptions,
                             (version, join, buildDescriptions) => version.VersionTag + "(" + join(", ", buildDescriptions) + ")");
 
@@ -77,7 +77,7 @@ namespace MdsInfrastructure.Render
                         b.Add(toggleContainer,
                             b.Toggle(
                                 b.Get(version, x => x.Enabled),
-                                b.MakeAction((BlockBuilder b, Var<ListProjectsPage> state, Var<bool> isChecked) =>
+                                b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> state, Var<bool> isChecked) =>
                                 {
                                     var initialVersion = b.Clone(version);
                                     b.ShowLoading(state);
@@ -87,8 +87,8 @@ namespace MdsInfrastructure.Render
                                         b.CallApi<ListProjectsPage, ProjectVersion>(
                                             Backend.SaveVersionEnabled,
                                             version,
-                                            (BlockBuilder b, Var<ListProjectsPage> state) => b.HideLoading(state),
-                                            (BlockBuilder b, Var<ListProjectsPage> state, Var<ApiError> error) =>
+                                            (SyntaxBuilder b, Var<ListProjectsPage> state) => b.HideLoading(state),
+                                            (SyntaxBuilder b, Var<ListProjectsPage> state, Var<ApiError> error) =>
                                             {
                                                 var allVersions = b.Get(clientModel, projectId, (x, projectId) => x.ProjectsList.SelectMany(x => x.Versions).Where(x => x.ProjectId == projectId).ToList());
                                                 var versionReference = b.Get(allVersions, b.Get(initialVersion, x => x.Id), (allVersions, versionid) => allVersions.Single(x => x.Id == versionid));
@@ -143,7 +143,7 @@ namespace MdsInfrastructure.Render
                 var versions = b.Get(clientModel, projectId, (x, projectId) => x.ProjectsList.SelectMany(x => x.Versions).Where(x => x.ProjectId == projectId).Count());
 
                 return b.VPadded4(b.If(b.AreEqual(b.Get(col, x => x.Name), b.Const(nameof(MdsCommon.Project.Name))),
-                    b => b.Link<ListProjectsPage>(b.Get(row, x => x.Name), b.MakeAction((BlockBuilder b, Var<ListProjectsPage> state) =>
+                    b => b.Link<ListProjectsPage>(b.Get(row, x => x.Name), b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> state) =>
                     {
                         b.Log("show side panel", state);
                         b.Set(state, x => x.SelectedProject, row);

@@ -18,10 +18,10 @@ namespace MdsCommon.Controls
     public static partial class Controls
     {
         public static Var<HyperNode> InfoPanel(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<Panel.Style> style,
-            Func<BlockBuilder, Var<HyperNode>> header,
-            Func<BlockBuilder, Var<HyperNode>> body)
+            Func<LayoutBuilder, Var<HyperNode>> header,
+            Func<LayoutBuilder, Var<HyperNode>> body)
         {
             string basePanelStyle = "flex flex-col rounded-md p-4 shadow-md border border-gray-100 ";
             var infoPanelStyle = b.Const(basePanelStyle + "bg-white text-gray-800");
@@ -49,7 +49,7 @@ namespace MdsCommon.Controls
         }
 
         public static Var<HyperNode> InfoPanel(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Panel.Style style,
             string header,
             string body,
@@ -80,21 +80,21 @@ namespace MdsCommon.Controls
                 b => b.Text(b.Const(body)));
         }
 
-        public static Var<HyperNode> PanelsContainer(this BlockBuilder b, int columns)
+        public static Var<HyperNode> PanelsContainer(this LayoutBuilder b, int columns)
         {
             // tw import
             // lg:grid-cols-4
             return b.Div($"grid grid-cols-1 lg:grid-cols-{columns} gap-4");
         }
 
-        public static Var<HyperNode> Bold(this BlockBuilder b, string text)
+        public static Var<HyperNode> Bold(this LayoutBuilder b, string text)
         {
             var r = b.Text(text);
             b.AddClass(r, "font-bold");
             return r;
         }
 
-        public static Var<HyperNode> Bold(this BlockBuilder b, Var<string> text)
+        public static Var<HyperNode> Bold(this LayoutBuilder b, Var<string> text)
         {
             var r = b.Text(text);
             b.AddClass(r, "font-bold");

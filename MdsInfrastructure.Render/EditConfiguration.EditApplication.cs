@@ -8,7 +8,7 @@ namespace MdsInfrastructure.Render
 {
     public static partial class EditConfiguration
     {
-        public static Var<HyperNode> EditApplication(this BlockBuilder b, Var<EditConfigurationPage> clientModel)
+        public static Var<HyperNode> EditApplication(this LayoutBuilder b, Var<EditConfigurationPage> clientModel)
         {
             var appId = b.Get(clientModel, x => x.EditApplicationId);
             var app = b.Get(clientModel, appId, (x, appId) => x.Configuration.Applications.Single(x => x.Id == appId));

@@ -30,14 +30,14 @@ namespace MdsCommon.Controls
             public Style Style { get; set; } = new Style();
         }
 
-        internal static Var<HyperNode> Render<TRow>(BlockBuilder b, Var<Props<TRow>> props)
+        internal static Var<HyperNode> Render<TRow>(LayoutBuilder b, Var<Props<TRow>> props)
         {
             var style = b.Get(props, x => x.Style);
 
             //Function<HyperNode, object, Column> cellBuilder = b.Get<Function<HyperNode, object, Column>>(props, nameof(Props.CreateCell));
             var customCreateRow = b.Get(props, x => x.CreateRow);
             var createRow = b.If(b.IsEmpty(customCreateRow.As<object>()),
-                b => b.Def((BlockBuilder b, Var<TRow> row) => b.Node("tr")),
+                b => b.Def((LayoutBuilder b, Var<TRow> row) => b.Node("tr")),
                 b => customCreateRow);
 
             var container = b.Div("w-full");
@@ -83,13 +83,13 @@ namespace MdsCommon.Controls
     public static partial class Controls
     {
         public static Var<HyperNode> DataTable<TRow>(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<DataTable.Props<TRow>> props)
         {
             return b.Call(MdsCommon.Controls.DataTable.Render, props);
         }
 
-        public static Var<HyperNode> VPadded4(this BlockBuilder b, Var<HyperNode> content)
+        public static Var<HyperNode> VPadded4(this LayoutBuilder b, Var<HyperNode> content)
         {
             var container = b.Div("py-4");
             b.Add(container, content);
@@ -139,7 +139,7 @@ namespace MdsCommon.Controls
             props.Set(x => x.CreateCell, cellBuilder);
         }
 
-        public static Var<System.Func<TRow, DataTable.Column, HyperNode>> RenderCell<TRow>(this BlockBuilder b, System.Func<BlockBuilder, Var<TRow>, Var<DataTable.Column>, Var<HyperNode>> renderer)
+        public static Var<System.Func<TRow, DataTable.Column, HyperNode>> RenderCell<TRow>(this LayoutBuilder b, System.Func<LayoutBuilder, Var<TRow>, Var<DataTable.Column>, Var<HyperNode>> renderer)
         {
             return b.Def(renderer);
         }

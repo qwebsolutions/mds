@@ -11,7 +11,7 @@ namespace MdsInfrastructure.Render
     public static partial class EditConfiguration
     {
         public static Var<HyperNode> TabService(
-           BlockBuilder b,
+           LayoutBuilder b,
            Var<EditConfigurationPage> clientModel)
         {
             var serviceId = b.Get(clientModel, x => x.EditServiceId);
@@ -31,7 +31,7 @@ namespace MdsInfrastructure.Render
             var versionOptions = b.MapChoices(versions, x => x.Id, x => x.VersionTag, selectedVersionId);
             
             var versionBinaries = b.Get(selectedVersion, x => x.Binaries);
-            var targetEnvironment = b.Def<BlockBuilder, string, string>((b, target) => b.If(b.AreEqual(target, b.Const("linux-x64")), b => b.Const("Linux"), b => b.Const("Windows")));
+            var targetEnvironment = b.Def<SyntaxBuilder, string, string>((b, target) => b.If(b.AreEqual(target, b.Const("linux-x64")), b => b.Const("Linux"), b => b.Const("Windows")));
             var versionTargets = b.Get(versionBinaries, x => x.Select(x => x.Target).Distinct().ToList());
             var versionSystems = b.Get(versionTargets, targetEnvironment, (x, targetEnvironment) => x.Select(x => targetEnvironment(x)));
             var mathingEnvironment = b.Get(clientModel, versionSystems, (clientModel, versionSystems) => clientModel.EnvironmentTypes.Where(x => versionSystems.Contains(x.OsType)));
@@ -55,7 +55,7 @@ namespace MdsInfrastructure.Render
             //        allApplications,
             //        b.Def((BlockBuilder b, Var<Application> app) => b.Get(app, app => new DropDown.Option() { label = app.Name, value = app.Id.ToString() }))));
 
-            var getEditedService = b.Def<BlockBuilder, EditConfigurationPage, InfrastructureService>(EditEntity.EditedService);
+            var getEditedService = b.Def<SyntaxBuilder, EditConfigurationPage, InfrastructureService>(EditEntity.EditedService);
 
             var appChoices = b.MapChoices(allApplications, x => x.Id, x => x.Name);
             b.SetSelectedChoice(appChoices, b.Get(service, x => x.ApplicationId));
@@ -83,7 +83,7 @@ namespace MdsInfrastructure.Render
             //    b.Const("Project")));
 
             var projectDd = b.Add(container, b.DropDown(projectOptions));
-            Metapsi.ChoicesJs.Event.SetOnChange(b, projectDd, b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
+            Metapsi.ChoicesJs.Event.SetOnChange(b, projectDd, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
             {
                 var service = b.Call(getEditedService, page);
                 var selectedId = b.ParseId(value);
@@ -110,7 +110,7 @@ namespace MdsInfrastructure.Render
 
             var versionDd = b.Add(container, b.DropDown(versionOptions));
 
-            Metapsi.ChoicesJs.Event.SetOnChange(b, versionDd, b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
+            Metapsi.ChoicesJs.Event.SetOnChange(b, versionDd, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
             {
                 var service = b.Call(getEditedService, page);
                 var selectedId = b.ParseId(value);
@@ -147,7 +147,7 @@ namespace MdsInfrastructure.Render
 
             var nodeDd = b.Add(container, b.DropDown(nodeChoices));
 
-            Metapsi.ChoicesJs.Event.SetOnChange(b, nodeDd, b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
+            Metapsi.ChoicesJs.Event.SetOnChange(b, nodeDd, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
             {
                 var service = b.Call(getEditedService, page);
                 var selectedId = b.ParseId(value);
@@ -170,7 +170,7 @@ namespace MdsInfrastructure.Render
 
     public static class EditEntity
     {
-        public static Var<InfrastructureService> EditedService(BlockBuilder b, Var<EditConfigurationPage> page)
+        public static Var<InfrastructureService> EditedService(SyntaxBuilder b, Var<EditConfigurationPage> page)
         {
             return b.Get(page, page => page.Configuration.InfrastructureServices.Single(service => service.Id == page.EditServiceId));
         }

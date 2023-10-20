@@ -10,7 +10,7 @@ namespace MdsInfrastructure.Render
     public static partial class EditConfiguration
     {
         public static Var<HyperNode> TabNotes(
-            BlockBuilder b,
+            LayoutBuilder b,
             Var<EditConfigurationPage> clientModel)
         {
             var serviceId = b.Get(clientModel, x => x.EditServiceId);
@@ -18,7 +18,7 @@ namespace MdsInfrastructure.Render
             var service = b.Get(clientModel, serviceId, (x, serviceId) => x.Configuration.InfrastructureServices.Single(x => x.Id == serviceId));
 
             var removeIcon = Icon.Remove;
-            var addCommand = b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> state) =>
+            var addCommand = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> state) =>
             {
                 var newId = b.NewId();
                 var newNote = b.NewObj<InfrastructureServiceNote>(b =>
@@ -60,7 +60,7 @@ namespace MdsInfrastructure.Render
                                 b => b.Link(
                                     noteTypeLabel,
                                     b.MakeAction(
-                                        (BlockBuilder b, Var<EditConfigurationPage> clientModel) =>
+                                        (SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
                                         {
                                             b.Set(clientModel, x => x.EditServiceNoteId, b.Get(row, x => x.Id));
                                             return b.EditView<EditConfigurationPage>(clientModel, EditNote);
@@ -88,7 +88,7 @@ namespace MdsInfrastructure.Render
                 },
                 (b, actions, item) =>
                 {
-                    var onCommand = b.Def((BlockBuilder b, Var<InfrastructureServiceNote> note) =>
+                    var onCommand = b.Def((SyntaxBuilder b, Var<InfrastructureServiceNote> note) =>
                     {
                         var noteId = b.Get(note, x => x.Id);
                         var noteRemoved = b.Get(service, noteId, (x, noteId) => x.InfrastructureServiceNotes.Where(x => x.Id != noteId));

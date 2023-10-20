@@ -25,7 +25,7 @@ namespace MdsCommon.Controls
             }
         }
 
-        public static void AddAlertBadge(this BlockBuilder b, Var<HyperNode> parent, Var<string> currentTag)
+        public static void AddAlertBadge(this LayoutBuilder b, Var<HyperNode> parent, Var<string> currentTag)
         {
             var lowercase = b.ToLowercase(currentTag);
             var isAlert = b.Get(

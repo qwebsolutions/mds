@@ -9,7 +9,7 @@ namespace MdsCommon
 {
     public static partial class HeaderRenderer
     {
-        public static Var<HyperNode> Render(this BlockBuilder b, Var<MdsCommon.Header.Props> props)
+        public static Var<HyperNode> Render(this LayoutBuilder b, Var<MdsCommon.Header.Props> props)
         {
             b.AddModuleStylesheet();
 
