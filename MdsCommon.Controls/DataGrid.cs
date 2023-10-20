@@ -86,14 +86,14 @@ namespace MdsCommon.Controls
             this ControlBuilder<DataGridDefinition<TRow>, DataGridData<TRow>> b,
             Action<ControlBuilder<TableDefinition<TRow>, TableData<TRow>>> action)
         {
-            b.OnControl(x => x.Table, x => x.TableData, action);
+            b.OnChildControl(x => x.Table, x => x.TableData, action);
         }
 
         public static void OnToolbarLeft<TRow>(
             this ControlBuilder<DataGridDefinition<TRow>, DataGridData<TRow>> b,
             Action<ControlBuilder<ControlDefinition<ToolbarData>, ToolbarData>> action)
         {
-            b.OnControl(x => x.Toolbar.Left, x => x.ToolbarData, action);
+            b.OnChildControl(x => x.Toolbar.Left, x => x.ToolbarData, action);
         }
 
         public static void AddToolbarChild<TRow>(
@@ -101,7 +101,7 @@ namespace MdsCommon.Controls
             Func<LayoutBuilder, Var<IVNode>> buildChild,
             HorizontalPlacement placement = HorizontalPlacement.Left)
         {
-            b.OnControl(
+            b.OnChildControl(
                 x => x.Toolbar,
                 x => x.ToolbarData,
                 b => b.AddToolbarChild(buildChild, placement));

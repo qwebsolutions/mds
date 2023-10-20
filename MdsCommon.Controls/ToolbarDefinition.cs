@@ -27,11 +27,11 @@ namespace MdsCommon.Controls
         {
             if (placement == HorizontalPlacement.Left)
             {
-                b.OnControl(x => x.Left, x => x, b => b.AddChild((b, data) => buildChild(b)));
+                b.OnChildControl(x => x.Left, x => x, b => b.AddChild((b, data) => buildChild(b)));
             }
             else
             {
-                b.OnControl(x => x.Right, x => x, b => b.AddChild((b, data) => buildChild(b)));
+                b.OnChildControl(x => x.Right, x => x, b => b.AddChild((b, data) => buildChild(b)));
             }
         }
     }

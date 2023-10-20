@@ -90,22 +90,6 @@ namespace MdsCommon.HtmlControls
             return b.FromDefinition(DefaultFilter, custom);
         }
 
-        //public static Var<IVNode> Filter(
-        //    this LayoutBuilder b,
-        //    Action<ControlBuilder<FilterDefinition, Filter>, FilterDefinition, Var<Filter>> customize)
-        //{
-        //    var data = b.NewObj<Filter>();
-        //    FilterDefinition controlDefinition = new FilterDefinition();
-        //    controlDefinition.DefaultFilter();
-        //    if (customize != null)
-        //    {
-        //        ControlBuilder<FilterDefinition, Filter> blockBuilder = new(b, controlDefinition, data);
-        //        customize(blockBuilder, controlDefinition, data);
-        //    }
-
-        //    return b.Render(controlDefinition.Container, data);
-        //}
-
         public static void BindFilter<TPageModel, TSubmodel>(
             this ControlBuilder<FilterDefinition, MdsCommon.HtmlControls.Filter> b,
             Var<DataContext<TPageModel, TSubmodel>> dataContext,
@@ -142,16 +126,6 @@ namespace MdsCommon.HtmlControls
                     return b.Clone(pageModel);
                 }));
             });
-
-            //b.Set(filter, x => x.SetValue, b.DefineAction<BlockBuilder, object, string>((b, o, s) =>
-            //{
-            //    b.Set(o.As<EditConfigurationPage>(), x => x.ServicesFilter, s);
-            //}));
-
-            //filterBuilder.ClearButton.EditProps((b, data, props) =>
-            //{
-            //    b.AddClass(props, b.Const("text-green-400"));
-            //});
         }
     }
 
