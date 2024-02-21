@@ -10,29 +10,15 @@ using System.Threading.Tasks;
 
 namespace MdsLocal
 {
-    //public static class Overview
-    //{
-    //    public static async Task<OverviewPage> Load(CommandContext commandContext)
-    //    {
-    //        return new OverviewPage()
-    //        {
-    //            LocalSettings = await commandContext.Do(MdsLocalApplication.GetLocalSettings),
-    //            Warnings = await commandContext.Do(MdsLocalApplication.GetWarnings),
-    //            FullLocalStatus = await commandContext.Do(MdsLocalApplication.GetFullLocalStatus),
-    //            ServiceProcesses = await commandContext.Do(MdsLocalApplication.GetRunningProcesses)
-    //        };
-    //    }
-
-    //    public static async Task<IResult> ListProcesses(CommandContext commandContext, HttpContext requestData)
-    //    {
-    //        var dataModel = await Load(commandContext);
-    //        return Page.Result(dataModel);
-    //    }
-    //}
-
     public class ListProcessesHandler : Http.Get<Overview.ListProcesses>
     {
         public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext)
+        {
+            var page = await Load(commandContext, httpContext);
+            return Page.Result(page);
+        }
+
+        public static async Task<OverviewPage> Load(CommandContext commandContext, HttpContext httpContext)
         {
             var page = new OverviewPage()
             {
@@ -65,10 +51,10 @@ namespace MdsLocal
                 {
                     ServiceName = serviceSnapshot.ServiceName,
                     ProjectName = serviceSnapshot.ProjectName,
-                    ProjectVersionTag = serviceSnapshot.ProjectVersionTag,
-                    RunningStatus = runningStatus,
+                    ProjectVersion = serviceSnapshot.ProjectVersionTag,
+                    RunningSince = runningStatus,
                     Pid = pid,
-                    UsedRamMB = usedRamMb,
+                    UsedRam = usedRamMb,
                     HasError = serviceProcess == null
                 });
             }
@@ -86,7 +72,7 @@ namespace MdsLocal
 
             page.OverviewText = overviewText;
 
-            return Page.Result(page);
+            return page;
         }
     }
 }

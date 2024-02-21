@@ -30,12 +30,17 @@
 		<ProjectReference Include="..\MdsInfrastructure.Flow\MdsInfrastructure.Flow.Direct.csproj" />
 		<ProjectReference Include="..\MdsInfrastructure.Render\MdsInfrastructure.Render.Direct.csproj" />
 		<ProjectReference Include="..\MdsLocal.DataModel\MdsLocal.DataModel.Direct.csproj" />
-		<ProjectReference Include="..\MdsLocal.Flow\MdsLocal.Flow.Direct.csproj" />
-		<ProjectReference Include="..\Metapsi.HttpServer\Metapsi.HttpServer.csproj" />
+		<ProjectReference Include="..\Metapsi.HttpServer\Metapsi.HttpServer.Direct.csproj" />
 		<ProjectReference Include="..\Metapsi.Mds\Metapsi.Mds.Direct.csproj" />
-		<ProjectReference Include="..\MdsCommon.Ui\MdsCommon.Ui.Direct.csproj" />
 		<ProjectReference Include="..\MdsInfrastructure.DataModel\MdsInfrastructure.DataModel.Direct.csproj" />
 		<ProjectReference Include="..\MdsInfrastructure.Db\MdsInfrastructure.Db.Direct.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="windows_scripts\curl.exe" LogicalName="curl.exe" />
+		<EmbeddedResource Include="windows_scripts\curl-ca-bundle.crt" LogicalName="curl-ca-bundle.crt" />
+		<EmbeddedResource Include="windows_scripts\check.bat" LogicalName="check.bat" />
+		<EmbeddedResource Include="windows_scripts\upload.bat" LogicalName="upload.bat" />
 	</ItemGroup>
 
 </Project>

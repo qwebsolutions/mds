@@ -14,11 +14,11 @@ namespace MdsCommon.Controls
             public string ActiveCode { get; set; }
         }
 
-        public static Var<HyperNode> Render(this BlockBuilder b, Var<Props> props)
+        public static Var<HyperNode> Render(this LayoutBuilder b, Var<Props> props)
         {
             b.AddModuleStylesheet();
 
-            var isEmptyString = b.Def<string,bool>(Core.IsEmpty);
+            var isEmptyString = b.Def<LayoutBuilder, string,bool>(Core.IsEmpty);
             var missingIcons = b.Get(props, isEmptyString, (props, empty) => props.Entries.Any(x => empty(x.SvgIcon)));
             
             var selectedCode = b.Get(props, x => x.ActiveCode);
@@ -69,7 +69,7 @@ namespace MdsCommon.Controls
 
     public static partial class Controls
     {
-        public static Var<HyperNode> Menu(this BlockBuilder v,Var<Menu.Props> entries)
+        public static Var<HyperNode> Menu(this LayoutBuilder v,Var<Menu.Props> entries)
         {
             return v.Call(MdsCommon.Controls.Menu.Render, entries);
         }

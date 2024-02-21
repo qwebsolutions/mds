@@ -19,7 +19,7 @@ namespace MdsInfrastructure.Render
                 return serverModel;
             }
 
-            public override Var<HyperNode> OnRender(BlockBuilder b, DeploymentHistory serverModel, Var<DeploymentHistory> clientModel)
+            public override Var<IVNode> OnRender(LayoutBuilder b, DeploymentHistory serverModel, Var<DeploymentHistory> clientModel)
             {
                 b.AddModuleStylesheet();
 
@@ -30,11 +30,11 @@ namespace MdsInfrastructure.Render
                         Main = new Header.Title() { Operation = "Deployments" },
                         User = serverModel.User
                     })),
-                Render(b, serverModel));
+                Render(b, serverModel)).As<IVNode>();
             }
 
 
-            public Var<HyperNode> Render(BlockBuilder b, DeploymentHistory serverModel)
+            public Var<HyperNode> Render(LayoutBuilder b, DeploymentHistory serverModel)
             {
                 var rc = b.RenderCell<MdsInfrastructure.Deployment>((b, row, col) =>
                 {
@@ -65,7 +65,7 @@ namespace MdsInfrastructure.Render
                 return serverModel;
             }
 
-            public override Var<HyperNode> OnRender(BlockBuilder b, DeploymentReview serverModel, Var<DeploymentReview> clientModel)
+            public override Var<IVNode> OnRender(LayoutBuilder b, DeploymentReview serverModel, Var<DeploymentReview> clientModel)
             {
                 b.AddModuleStylesheet();
 
@@ -77,7 +77,7 @@ namespace MdsInfrastructure.Render
                     User = serverModel.User
                 })),
                 b.ReviewDeployment(serverModel.ChangesReport));
-                return layout;
+                return layout.As<IVNode>();
             }
         }
 
@@ -88,7 +88,7 @@ namespace MdsInfrastructure.Render
                 return serverModel;
             }
 
-            public override Var<HyperNode> OnRender(BlockBuilder b, DeploymentPreview serverModel, Var<DeploymentPreview> clientModel)
+            public override Var<IVNode> OnRender(LayoutBuilder b, DeploymentPreview serverModel, Var<DeploymentPreview> clientModel)
             {
                 b.AddModuleStylesheet();
 
@@ -103,13 +103,13 @@ namespace MdsInfrastructure.Render
                             User = serverModel.User
                         })),
                         RenderDeploymentReport(b, serverModel.ChangesReport, serverModel.SavedConfiguration));
-                return layout;
+                return layout.As<IVNode>();
             }
         }
 
 
         public static Var<HyperNode> RenderDeploymentReport(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             MdsInfrastructure.ChangesReport serverModel,
             InfrastructureConfiguration infrastructureConfiguration)
         {
@@ -142,19 +142,21 @@ namespace MdsInfrastructure.Render
                     "bg-red-500 rounded px-4 py-2 text-white",
                     b => b.Text("Deploy now"));
 
-                b.SetOnClick(deployNowButton, b.MakeAction((BlockBuilder b, Var<DeploymentPreview> model) =>
+                b.SetOnClick(deployNowButton, b.MakeAction((SyntaxBuilder b, Var<DeploymentPreview> model) =>
                 {
-                    return b.AsyncResult(
+                    return b.MakeStateWithEffects(
                         b.ShowPanel(model),
-                        b.Request(
-                            Frontend.ConfirmDeployment,
-                            b.Get(model, x => x.SavedConfiguration.Id),
-                            b.MakeAction((BlockBuilder b, Var<DeploymentPreview> model, Var<Frontend.ConfirmDeploymentResponse> response) =>
-                            {
-                                b.SetUrl(b.Const("/"));
-                                return model;
-                            }))
-                        );
+                        b.MakeEffect(
+                            b.Def(
+                                b.Request(
+                                    Frontend.ConfirmDeployment,
+                                    b.Get(model, x => x.SavedConfiguration.Id),
+                                    b.MakeAction((SyntaxBuilder b, Var<DeploymentPreview> model, Var<Frontend.ConfirmDeploymentResponse> response) =>
+                                    {
+                                        b.SetUrl(b.Const("/"));
+                                        return model;
+                                    }))
+                                )));
                 }));
 
                 var toolbar = b.Add(view, b.Toolbar(b =>
@@ -181,7 +183,7 @@ namespace MdsInfrastructure.Render
         }
 
 
-        public static Var<HyperNode> ReviewDeployment(this BlockBuilder b, ChangesReport serverModel)
+        public static Var<HyperNode> ReviewDeployment(this LayoutBuilder b, ChangesReport serverModel)
         {
             var view = b.Div("flex flex-col");
             var toolbarContainer = b.Add(view, b.Div("flex flex-row justify-end"));
@@ -202,7 +204,7 @@ namespace MdsInfrastructure.Render
     public static class DeploymentControls
     {
 
-        public static Var<HyperNode> ChangesReport(this BlockBuilder b, System.Collections.Generic.List<ServiceChange> serviceChanges)
+        public static Var<HyperNode> ChangesReport(this LayoutBuilder b, System.Collections.Generic.List<ServiceChange> serviceChanges)
         {
             var container = b.Div("flex flex-col space-y-4 pt-4");
 
@@ -227,7 +229,7 @@ namespace MdsInfrastructure.Render
             return container;
         }
 
-        public static Var<HyperNode> NewService(this BlockBuilder b, ServiceChange serviceChange)
+        public static Var<HyperNode> NewService(this LayoutBuilder b, ServiceChange serviceChange)
         {
             var container = b.Div("flex flex-col bg-green-100 p-4 rounded text-green-800");
 
@@ -244,7 +246,7 @@ namespace MdsInfrastructure.Render
             return container;
         }
 
-        public static Var<HyperNode> RemovedService(this BlockBuilder b, ServiceChange serviceChange)
+        public static Var<HyperNode> RemovedService(this LayoutBuilder b, ServiceChange serviceChange)
         {
             var container = b.Div("flex flex-col bg-red-100 p-4 rounded text-red-800");
             var header = b.Add(container, b.Div("flex flex-row items-center space-x-4"));
@@ -258,7 +260,7 @@ namespace MdsInfrastructure.Render
             return container;
         }
 
-        public static Var<HyperNode> ChangedService(this BlockBuilder b, ServiceChange serviceChange)
+        public static Var<HyperNode> ChangedService(this LayoutBuilder b, ServiceChange serviceChange)
         {
             var container = b.Div("flex flex-col bg-sky-200 p-4 rounded text-sky-800");
             var header = b.Add(container, b.Div("flex flex-row items-center space-x-4"));
@@ -283,7 +285,7 @@ namespace MdsInfrastructure.Render
             return container;
         }
 
-        public static Var<HyperNode> ListParameterChanges(this BlockBuilder b, ServiceChange serviceChange)
+        public static Var<HyperNode> ListParameterChanges(this LayoutBuilder b, ServiceChange serviceChange)
         {
             var l = b.Div("flex flex-col space-y-1 text-sm py-2");
 
@@ -298,7 +300,7 @@ namespace MdsInfrastructure.Render
             return l;
         }
 
-        public static Var<HyperNode> ParameterChange(this BlockBuilder b, ServicePropertyChange parameterChange)
+        public static Var<HyperNode> ParameterChange(this LayoutBuilder b, ServicePropertyChange parameterChange)
         {
             // null is different from string.Empty in this case.
             // null = parameter does not even exist, while string.Empty is valid parameter value

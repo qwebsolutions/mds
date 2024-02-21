@@ -16,7 +16,7 @@ namespace MdsCommon.Controls
             public bool Enabled { get; set; } = true;
         }
 
-        public static Var<HyperNode> Render<TState>(BlockBuilder b, Var<Props<TState>> props)
+        public static Var<HyperNode> Render<TState>(LayoutBuilder b, Var<Props<TState>> props)
         {
             b.AddModuleStylesheet();
 
@@ -48,7 +48,7 @@ namespace MdsCommon.Controls
     public static partial class Controls
     {
         public static Var<HyperNode> Input<TState>(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<string> value,
             Var<HyperType.Action<TState, string>> onInput,
             Var<string> placeholder,
@@ -65,7 +65,7 @@ namespace MdsCommon.Controls
         }
 
         public static Var<HyperNode> BoundInput<TEntity, TProp>(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<TEntity> entity,
             System.Linq.Expressions.Expression<System.Func<TEntity, TProp>> onProperty,
             Var<string> placeholder,
@@ -73,7 +73,7 @@ namespace MdsCommon.Controls
         {
             Var<TProp> value = b.Get(entity, onProperty);
 
-            var setProperty = b.MakeAction<object, string>((BlockBuilder b, Var<object> state, Var<string> inputValue) =>
+            var setProperty = b.MakeAction<object, string>((SyntaxBuilder b, Var<object> state, Var<string> inputValue) =>
             {
                 b.Set(entity, onProperty, inputValue.As<TProp>());
                 return b.Clone(state);
@@ -92,7 +92,7 @@ namespace MdsCommon.Controls
         }
 
         public static Var<HyperNode> BoundInput<TState, TEntity>(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<TState> state,
             System.Linq.Expressions.Expression<System.Func<TState, TEntity>> onEntity,
             System.Linq.Expressions.Expression<System.Func<TEntity, string>> onProperty,
@@ -101,7 +101,7 @@ namespace MdsCommon.Controls
             Var<TEntity> entity = b.Get(state, onEntity);
             Var<string> value = b.Get(entity, onProperty);
 
-            var setProperty = b.MakeAction<TState, string>((BlockBuilder b, Var<TState> state, Var<string> inputValue) =>
+            var setProperty = b.MakeAction<TState, string>((SyntaxBuilder b, Var<TState> state, Var<string> inputValue) =>
             {
                 var entity = b.Get(state, onEntity);
                 b.Set(entity, onProperty, inputValue);
@@ -119,7 +119,7 @@ namespace MdsCommon.Controls
         }
 
         public static Var<HyperNode> BoundInput<TState, TEntity>(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<TState> state,
             System.Linq.Expressions.Expression<System.Func<TState, TEntity>> onEntity,
             System.Linq.Expressions.Expression<System.Func<TEntity, int>> onProperty,
@@ -128,7 +128,7 @@ namespace MdsCommon.Controls
             Var<TEntity> entity = b.Get(state, onEntity);
             Var<int> value = b.Get(entity, onProperty);
 
-            var setProperty = b.MakeAction<TState, string>((BlockBuilder b, Var<TState> state, Var<string> inputValue) =>
+            var setProperty = b.MakeAction<TState, string>((SyntaxBuilder b, Var<TState> state, Var<string> inputValue) =>
             {
                 Var<TEntity> entity = b.Get(state, onEntity);
                 b.Set(entity, onProperty, b.ParseInt(inputValue));
@@ -148,7 +148,7 @@ namespace MdsCommon.Controls
         }
 
         public static Var<HyperNode> BoundInput<TState, TEntity, TId>(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<TState> state,
             Var<TId> id,
             System.Linq.Expressions.Expression<System.Func<TState, TId, TEntity>> onEntity,
@@ -158,7 +158,7 @@ namespace MdsCommon.Controls
             Var<TEntity> entity = b.Get(state, id, onEntity);
             Var<string> value = b.Get(entity, onProperty);
 
-            var setProperty = b.MakeAction<TState, string>((BlockBuilder b, Var<TState> state, Var<string> inputValue) =>
+            var setProperty = b.MakeAction<TState, string>((SyntaxBuilder b, Var<TState> state, Var<string> inputValue) =>
             {
                 var entity = b.Get(state, id, onEntity);
                 b.Set(entity, onProperty, inputValue);
@@ -176,7 +176,7 @@ namespace MdsCommon.Controls
         }
 
         public static Var<HyperNode> BoundInput<TState, TEntity>(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<TState> state,
             System.Linq.Expressions.Expression<System.Func<TState, TEntity>> onEntity,
             System.Linq.Expressions.Expression<System.Func<TEntity, string>> onProperty,

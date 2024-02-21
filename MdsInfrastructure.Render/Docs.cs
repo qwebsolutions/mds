@@ -18,7 +18,7 @@ namespace MdsInfrastructure.Render
                 return serverModel;
             }
 
-            public override Var<HyperNode> OnRender(BlockBuilder b, M.ServicePage serverModel, Var<M.ServicePage> clientModel)
+            public override Var<IVNode> OnRender(LayoutBuilder b, M.ServicePage serverModel, Var<M.ServicePage> clientModel)
             {
                 b.AddModuleStylesheet();
 
@@ -27,7 +27,7 @@ namespace MdsInfrastructure.Render
                 {
                     Main = new Header.Title() { Operation = "Docs", Entity = serverModel.ServiceSummary.ServiceName },
                     User = serverModel.User
-                })), b.Render(serverModel.InfrastructureSummary, serverModel.ServiceSummary));
+                })), b.Render(serverModel.InfrastructureSummary, serverModel.ServiceSummary)).As<IVNode>();
             }
         }
 
@@ -38,7 +38,7 @@ namespace MdsInfrastructure.Render
                 return serverModel;
             }
 
-            public override Var<HyperNode> OnRender(BlockBuilder b, M.RedisMap serverModel, Var<M.RedisMap> clientModel)
+            public override Var<IVNode> OnRender(LayoutBuilder b, M.RedisMap serverModel, Var<M.RedisMap> clientModel)
             {
                 b.AddModuleStylesheet();
 
@@ -49,7 +49,7 @@ namespace MdsInfrastructure.Render
                     {
                         Main = new Header.Title() { Operation = "Docs", Entity = serverModel.ServiceSummary.ServiceName },
                         User = serverModel.User
-                    })), b.RenderRedisMap(serverModel.InfrastructureSummary, serverModel.ServiceSummary));
+                    })), b.RenderRedisMap(serverModel.InfrastructureSummary, serverModel.ServiceSummary)).As<IVNode>();
             }
         }
 
@@ -61,7 +61,7 @@ namespace MdsInfrastructure.Render
             public string ToSide { get; set; } = "left";
         }
 
-        public static void AddConnector(this BlockBuilder b,
+        public static void AddConnector(this LayoutBuilder b,
             string fromId,
             string toId,
             string fromSide = "right",
@@ -71,8 +71,8 @@ namespace MdsInfrastructure.Render
 
             b.AddSubscription(
                 "leaderLineSub",
-                (BlockBuilder b, Var<object> state) =>
-                b.Listen(b.Const("afterRender"), b.MakeAction((BlockBuilder b, Var<object> state, Var<object> _payload) =>
+                (SyntaxBuilder b, Var<object> state) =>
+                b.Listen(b.Const("afterRender"), b.MakeAction((SyntaxBuilder b, Var<object> state, Var<object> _payload) =>
                 {
                     b.CallExternal<object>("connect", "update");
                     return state;
@@ -89,7 +89,7 @@ namespace MdsInfrastructure.Render
             public string ControlId { get; set; }
         }
 
-        public static Var<HyperNode> ServiceLink(this BlockBuilder b,
+        public static Var<HyperNode> ServiceLink(this LayoutBuilder b,
             string serviceName,
             string controlId)
         {
@@ -102,7 +102,7 @@ namespace MdsInfrastructure.Render
         }
 
 
-        public static Var<HyperNode> ExternalApiUrl(this BlockBuilder b,
+        public static Var<HyperNode> ExternalApiUrl(this LayoutBuilder b,
             string url,
             string controlId)
         {
@@ -115,7 +115,7 @@ namespace MdsInfrastructure.Render
         }
 
 
-        public static Var<HyperNode> ApiUrl(this BlockBuilder b,
+        public static Var<HyperNode> ApiUrl(this LayoutBuilder b,
             string serviceName,
             string url,
             string controlId)
@@ -132,7 +132,7 @@ namespace MdsInfrastructure.Render
             return container;
         }
 
-        public static Var<HyperNode> RedisChannel(this BlockBuilder b,
+        public static Var<HyperNode> RedisChannel(this LayoutBuilder b,
             string channelName,
             string controlId)
         {
@@ -144,7 +144,7 @@ namespace MdsInfrastructure.Render
             return container;
         }
 
-        public static Var<HyperNode> RedisQueue(this BlockBuilder b,
+        public static Var<HyperNode> RedisQueue(this LayoutBuilder b,
             string channelName,
             string controlId)
         {
@@ -155,7 +155,7 @@ namespace MdsInfrastructure.Render
             b.SetAttr(container, Html.id, controlId);
             return container;
         }
-        public static Var<HyperNode> Render(this BlockBuilder b, InfrastructureSummary summary, ServiceSummary currentService)
+        public static Var<HyperNode> Render(this LayoutBuilder b, InfrastructureSummary summary, ServiceSummary currentService)
         {
             var view = b.Div("flex flex-col space-y-4 text-gray-800");
             b.Add(view, b.RenderServiceCard(summary, currentService));
@@ -164,7 +164,7 @@ namespace MdsInfrastructure.Render
             return view;
         }
 
-        public static Var<HyperNode> RenderServiceCard(this BlockBuilder b, InfrastructureSummary summary, ServiceSummary currentService)
+        public static Var<HyperNode> RenderServiceCard(this LayoutBuilder b, InfrastructureSummary summary, ServiceSummary currentService)
         {
             var card = b.Div("w-full rounded flex flex-row p-4 space-x-8 text-gray-700 shadow bg-white");
 
@@ -226,7 +226,7 @@ namespace MdsInfrastructure.Render
             return card;
         }
 
-        public static Var<HyperNode> RenderServiceMap(this BlockBuilder b, InfrastructureSummary summary, ServiceSummary currentService)
+        public static Var<HyperNode> RenderServiceMap(this LayoutBuilder b, InfrastructureSummary summary, ServiceSummary currentService)
         {
             List<ControlsMapping> controlsMappings = new List<ControlsMapping>();
 
@@ -476,7 +476,7 @@ namespace MdsInfrastructure.Render
             return serviceMapRoot;
         }
 
-        public static Var<HyperNode> RenderRedisMapCard(this BlockBuilder b, InfrastructureSummary summary, ServiceSummary currentService)
+        public static Var<HyperNode> RenderRedisMapCard(this LayoutBuilder b, InfrastructureSummary summary, ServiceSummary currentService)
         {
             var container = b.Div("h-96 w-full rounded shadow bg-white");
             b.Add(container, b.RenderRedisMap(summary, currentService));
@@ -522,15 +522,15 @@ namespace MdsInfrastructure.Render
         }
 
 
-        public static Var<HyperNode> RenderRedisMap(this BlockBuilder b, InfrastructureSummary summary, ServiceSummary serviceSummary)
+        public static Var<HyperNode> RenderRedisMap(this LayoutBuilder b, InfrastructureSummary summary, ServiceSummary serviceSummary)
         {
             b.AddScript("cytoscape.min.js");
             b.AddSubscription<object>(
                 "initCy",
-                (BlockBuilder b, Var<object> state) =>
+                (SyntaxBuilder b, Var<object> state) =>
                 b.Listen<object, object>(
                     b.Const("afterRender"),
-                    b.MakeAction((BlockBuilder b, Var<object> state, Var<object> _noPayload) =>
+                    b.MakeAction((SyntaxBuilder b, Var<object> state, Var<object> _noPayload) =>
                     {
                         b.CallExternal("cy", "updateCy");
                         return state;
@@ -542,7 +542,6 @@ namespace MdsInfrastructure.Render
 
             b.If(isMaximized, b =>
             {
-                b.Log("render maximized");
                 b.AddClass(container, "fixed w-screen h-screen top-0 left-0 bg-white z-50");
             },
             b =>
@@ -552,9 +551,8 @@ namespace MdsInfrastructure.Render
 
             var microBar = b.Add(container, b.Div("absolute right-1 top-1 z-30 flex flex-row space-x-1 items-stretch opacity-50 hover:opacity-100 transition text-sky-600"));
 
-            var onPlus = b.MakeAction((BlockBuilder b, Var<InfrastructureSummary> state) =>
+            var onPlus = b.MakeAction((SyntaxBuilder b, Var<InfrastructureSummary> state) =>
             {
-                b.Log("+");
                 b.CallExternal("cy", "plusZoom");
                 return b.Clone(state);
             });
@@ -569,9 +567,8 @@ namespace MdsInfrastructure.Render
             b.AddClass(b.Add(microBar, b.CommandButton(plus)), "bg-white");
 
 
-            var onMinus = b.MakeAction((BlockBuilder b, Var<InfrastructureSummary> state) =>
+            var onMinus = b.MakeAction((SyntaxBuilder b, Var<InfrastructureSummary> state) =>
             {
-                b.Log("-");
                 b.CallExternal("cy", "minusZoom");
                 return b.Clone(state);
             });
@@ -587,9 +584,8 @@ namespace MdsInfrastructure.Render
 
             b.If(isMaximized, b =>
             {
-                var onMinimize = b.MakeAction((BlockBuilder b, Var<InfrastructureSummary> state) =>
+                var onMinimize = b.MakeAction((SyntaxBuilder b, Var<InfrastructureSummary> state) =>
                 {
-                    b.Log("minimize");
                     b.CallExternal("cy", "minimize");
                     return b.Clone(state);
                 });
@@ -605,9 +601,8 @@ namespace MdsInfrastructure.Render
             },
             b =>
             {
-                var onMaximize = b.MakeAction((BlockBuilder b, Var<InfrastructureSummary> state) =>
+                var onMaximize = b.MakeAction((SyntaxBuilder b, Var<InfrastructureSummary> state) =>
                 {
-                    b.Log("maximize");
                     b.CallExternal("cy", "maximize");
                     return b.Clone(state);
                 });

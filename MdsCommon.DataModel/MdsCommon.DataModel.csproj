@@ -2,11 +2,13 @@
 
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<TargetFramework>netstandard2.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Metapsi.Runtime" Version="1.6.0" />
+	  <PackageReference Include="Metapsi.Runtime" Version="*" />
+	  <PackageReference Include="Metapsi.Ui" Version="*" />
+	  <PackageReference Include="Metapsi.Web.Contracts" Version="0.1.3" />
 	</ItemGroup>
 </Project>

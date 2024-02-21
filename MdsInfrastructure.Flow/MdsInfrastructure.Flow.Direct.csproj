@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\metapsi\Metapsi.Web.DataModel\Metapsi.Web.DataModel.csproj" />
+    <ProjectReference Include="..\..\metapsi\Metapsi.Web.Contracts\Metapsi.Web.Contracts.csproj" />
     <ProjectReference Include="..\..\metapsi\Metapsi.Web\Metapsi.Web.csproj" />
     <ProjectReference Include="..\MdsInfrastructure.DataModel\MdsInfrastructure.DataModel.Direct.csproj" />
   </ItemGroup>

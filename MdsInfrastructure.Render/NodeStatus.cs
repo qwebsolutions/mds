@@ -14,7 +14,7 @@ namespace MdsInfrastructure.Render
             return serverData;
         }
 
-        public override Var<HyperNode> OnRender(BlockBuilder b, MdsInfrastructure.NodeStatus serverData, Var<MdsInfrastructure.NodeStatus> clientModel)
+        public override Var<IVNode> OnRender(LayoutBuilder b, MdsInfrastructure.NodeStatus serverData, Var<MdsInfrastructure.NodeStatus> clientModel)
         {
             b.AddModuleStylesheet();
 
@@ -23,11 +23,11 @@ namespace MdsInfrastructure.Render
                 {
                     Main = new Header.Title() { Operation = "Node status" },
                     User = serverData.InfrastructureStatus.User,
-                })), RenderNodeStatus(b, serverData.InfrastructureStatus, serverData.NodeName));
+                })), RenderNodeStatus(b, serverData.InfrastructureStatus, serverData.NodeName)).As<IVNode>();
         }
 
         public static Var<HyperNode> RenderNodeStatus(
-            BlockBuilder b,
+            LayoutBuilder b,
             MdsInfrastructure.InfrastructureStatus nodesStatusPage,
             string selectedNodeName)
         {

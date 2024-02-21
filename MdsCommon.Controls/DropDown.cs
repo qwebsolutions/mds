@@ -11,16 +11,16 @@ namespace MdsCommon.Controls
 
     public static partial class Control
     {
-        public static Var<HyperNode> DropDown(this BlockBuilder b, Var<List<Metapsi.ChoicesJs.Choice>> choices)
+        public static Var<HyperNode> DropDown(this LayoutBuilder b, Var<List<Metapsi.ChoicesJs.Choice>> choices)
         {
             b.AddStylesheet("MdsCommon.Controls.Choices.css");
 
             var choicesProps = b.NewObj<Metapsi.ChoicesJs.Props>();
             b.Set(choicesProps, x => x.classNames, b.CustomClassNames());
-            b.Set(choicesProps, x => x.choices, choices);
+            b.Set(choicesProps, x => x.shouldSort, b.Const(false));
 
-            var selectOne = b.ChoicesSelectOne(choicesProps);
-            return selectOne;
+            var selectOne = b.ChoicesSelectOneWebComponent(choicesProps, choices);
+            return selectOne.As<HyperNode>();
         }
 
         //public static Var<HyperNode> DropDown<TState,TItem, TId>(
@@ -45,7 +45,7 @@ namespace MdsCommon.Controls
         //}
 
         public static Var<HyperNode> BoundDropDown<TState,TItem, TOption, TId>(
-            this BlockBuilder b, 
+            this LayoutBuilder b, 
             Var<TState> state,
             Var<Func<TState, TItem>> getBoundItem,
             System.Linq.Expressions.Expression<Func<TItem, TId>> getBoundProperty,
@@ -60,7 +60,7 @@ namespace MdsCommon.Controls
             var choices = b.MapChoices(options, getValue, getLabel, selectedValue);
 
             var dropDown = b.DropDown(choices);
-            Metapsi.ChoicesJs.Event.SetOnChange(b, dropDown, b.MakeAction((BlockBuilder b, Var<TState> state, Var<string> selectedValue) =>
+            Metapsi.ChoicesJs.Event.SetOnChange(b, dropDown, b.MakeAction((SyntaxBuilder b, Var<TState> state, Var<string> selectedValue) =>
             {
                 var item = b.Call(getBoundItem, state);
                 b.Set(item, getBoundProperty, b.ParseScalar<TId>(selectedValue));
@@ -71,7 +71,7 @@ namespace MdsCommon.Controls
             return dropDown;
         }
 
-        private static Var<ClassNames> CustomClassNames(this BlockBuilder b)
+        private static Var<ClassNames> CustomClassNames(this SyntaxBuilder b)
         {
             var customClassNames = new ClassNames()
             {

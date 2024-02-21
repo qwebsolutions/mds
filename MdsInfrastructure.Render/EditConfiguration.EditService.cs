@@ -10,7 +10,7 @@ namespace MdsInfrastructure.Render
     public static partial class EditConfiguration
     {
         public static Var<HyperNode> EditService(
-           this BlockBuilder b,
+           this LayoutBuilder b,
            Var<EditConfigurationPage> clientModel)
         {
             var toolbar = b.Toolbar(b.OkButton(MainPage, x => x.EditServiceId));

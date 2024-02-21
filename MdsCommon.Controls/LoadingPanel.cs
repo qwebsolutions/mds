@@ -7,7 +7,7 @@ namespace MdsCommon.Controls
 {
     public static class LoadingPanelControl
     {
-        public static Var<HyperNode> LoadingPanel<TPage>(this BlockBuilder b, Var<TPage> page)
+        public static Var<HyperNode> LoadingPanel<TPage>(this LayoutBuilder b, Var<TPage> page)
             where TPage : IHasLoadingPanel
         {
             return b.If(
@@ -16,7 +16,7 @@ namespace MdsCommon.Controls
                 b => b.Div("hidden"));
         }
 
-        public static Var<TPage> ShowLoading<TPage>(this BlockBuilder b, Var<TPage> page)
+        public static Var<TPage> ShowLoading<TPage>(this SyntaxBuilder b, Var<TPage> page)
             where TPage: IHasLoadingPanel
         {
             b.Set(page, x => x.IsLoading, b.Const(true));
@@ -27,7 +27,7 @@ namespace MdsCommon.Controls
         /// Obsolete
         /// </summary>
         /// <param name="b"></param>
-        public static Var<TPage> HideLoading<TPage>(this BlockBuilder b, Var<TPage> page)
+        public static Var<TPage> HideLoading<TPage>(this SyntaxBuilder b, Var<TPage> page)
             where TPage : IHasLoadingPanel
         {
             b.Set(page, x => x.IsLoading, b.Const(false));

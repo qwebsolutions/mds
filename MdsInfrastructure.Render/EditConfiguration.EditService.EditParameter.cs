@@ -10,7 +10,7 @@ namespace MdsInfrastructure.Render
     public static partial class EditConfiguration
     {
         public static Var<HyperNode> EditParameter(
-            BlockBuilder b,
+            LayoutBuilder b,
             Var<EditConfigurationPage> clientModel)
         {
             var parameter = b.GetEditedParameter(clientModel);
@@ -54,7 +54,7 @@ namespace MdsInfrastructure.Render
             var parameterTypeChoices = b.MapChoices(b.Get(clientModel, x => x.ParameterTypes), x => x.Id, x => x.Description, b.Get(parameter, x => x.ParameterTypeId));
 
             var parameterTypeDd = b.Add(form, b.DropDown(parameterTypeChoices));
-            Metapsi.ChoicesJs.Event.SetOnChange(b, parameterTypeDd, b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> page, Var<string> payload) =>
+            Metapsi.ChoicesJs.Event.SetOnChange(b, parameterTypeDd, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> payload) =>
             {
                 b.Set(b.GetEditedParameter(page), x => x.ParameterTypeId, b.ParseId(payload));
                 return b.Clone(page);
@@ -66,14 +66,14 @@ namespace MdsInfrastructure.Render
             b.Add(form, b.Toggle(
                 boundToVariable,
                 b.MakeAction<EditConfigurationPage, bool>(
-                    (BlockBuilder b, Var<EditConfigurationPage> state, Var<bool> isOn) => 
+                    (SyntaxBuilder b, Var<EditConfigurationPage> state, Var<bool> isOn) => 
                     b.If(isOn,
                         b =>
                         {
                             var newId = b.NewId();
                             var emptyId = b.EmptyId();
 
-                            var valueRemoved = b.Get(parameter, paramId, (x, paramId) => x.InfrastructureServiceParameterValues.Where(x => x.InfrastructureServiceParameterDeclarationId != paramId));
+                            var valueRemoved = b.Get(parameter, paramId, (x, paramId) => x.InfrastructureServiceParameterValues.Where(x => x.InfrastructureServiceParameterDeclarationId != paramId).ToList());
                             b.Set(parameter, x => x.InfrastructureServiceParameterValues, valueRemoved);
                             b.Modify(parameter, x => x.InfrastructureServiceParameterBindings, b =>
                             {
@@ -101,7 +101,7 @@ namespace MdsInfrastructure.Render
                                 });
                             });
 
-                            var bindingsRemoved = b.Get(parameter, paramId, (x, paramId) => x.InfrastructureServiceParameterBindings.Where(x => x.InfrastructureServiceParameterDeclarationId != paramId));
+                            var bindingsRemoved = b.Get(parameter, paramId, (x, paramId) => x.InfrastructureServiceParameterBindings.Where(x => x.InfrastructureServiceParameterDeclarationId != paramId).ToList());
                             b.Set(parameter, x => x.InfrastructureServiceParameterBindings, bindingsRemoved);
                             return b.Clone(clientModel);
                         })),
@@ -124,7 +124,7 @@ namespace MdsInfrastructure.Render
                         b.Get(binding, x => x.InfrastructureVariableId));
 
                     var ddParamVar = b.Add(form, b.DropDown(variableChoices));
-                    Metapsi.ChoicesJs.Event.SetOnChange(b, ddParamVar, b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> page, Var<string> payload) =>
+                    Metapsi.ChoicesJs.Event.SetOnChange(b, ddParamVar, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> payload) =>
                     {
                         var binding = b.Get(parameter, paramId, (x, paramId) => x.InfrastructureServiceParameterBindings.Single(x => x.InfrastructureServiceParameterDeclarationId == paramId));
                         b.Set(binding, x => x.InfrastructureVariableId, b.ParseId(payload));
@@ -134,7 +134,6 @@ namespace MdsInfrastructure.Render
                 b =>
                 {
                     b.Add(form, b.Text("Value"));
-                    b.Log("paramId", paramId);
                     var value = b.Get(parameter, x=> x.InfrastructureServiceParameterValues.Single());
                     b.Add(form, b.BoundInput(value, x => x.ParameterValue, b.Const("Value")));
                 });
@@ -142,7 +141,7 @@ namespace MdsInfrastructure.Render
             return view;
         }
 
-        public static Var<InfrastructureServiceParameterDeclaration> GetEditedParameter(this BlockBuilder b, Var<EditConfigurationPage> clientModel)
+        public static Var<InfrastructureServiceParameterDeclaration> GetEditedParameter(this SyntaxBuilder b, Var<EditConfigurationPage> clientModel)
         {
             var paramId = b.Get(clientModel, x => x.EditParameterId);
             var parameter = b.Get(clientModel, paramId, (x, paramId) => x.Configuration.InfrastructureServices.SelectMany(x => x.InfrastructureServiceParameterDeclarations).Single(x => x.Id == paramId));

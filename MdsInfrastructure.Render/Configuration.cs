@@ -19,7 +19,7 @@ namespace MdsInfrastructure.Render
                 return serverData.ConfigurationHeadersList;
             }
 
-            public override Var<HyperNode> OnRender(BlockBuilder b, ListConfigurationsPage serverModel, Var<ConfigurationHeadersList> clientModel)
+            public override Var<IVNode> OnRender(LayoutBuilder b, ListConfigurationsPage serverModel, Var<ConfigurationHeadersList> clientModel)
             {
                 b.AddModuleStylesheet();
 
@@ -31,10 +31,10 @@ namespace MdsInfrastructure.Render
                             Main = new Header.Title() { Operation = "Configurations" },
                             User = serverModel.User,
                         })),
-                        Render(b, clientModel));
+                        Render(b, clientModel)).As<IVNode>();
             }
 
-            private static Var<HyperNode> Render(BlockBuilder b, Var<ConfigurationHeadersList> clientModel)
+            private static Var<HyperNode> Render(LayoutBuilder b, Var<ConfigurationHeadersList> clientModel)
             {
                 var addConfigurationUrl = Route.Path<Routes.Configuration.Add>();
                 var rows = b.Get(clientModel, x => x.ConfigurationHeaders.OrderBy(x => x.Name).ToList());
@@ -91,7 +91,7 @@ namespace MdsInfrastructure.Render
                 return serverModel;
             }
 
-            public override Var<HyperNode> OnRender(BlockBuilder b, EditConfigurationPage serverModel, Var<EditConfigurationPage> clientModel)
+            public override Var<IVNode> OnRender(LayoutBuilder b, EditConfigurationPage serverModel, Var<EditConfigurationPage> clientModel)
             {
                 b.AddModuleStylesheet();
 
@@ -103,18 +103,18 @@ namespace MdsInfrastructure.Render
                             Main = new Header.Title() { Operation = "Edit configuration" },
                             User = serverModel.User,
                         })),
-                        Render(b, clientModel));
+                        Render(b, clientModel)).As<IVNode>();
                 //Render(b, clientModel));
             }
 
-            public override Var<HyperType.StateWithEffects> OnInit(BlockBuilder b, Var<EditConfigurationPage> model)
+            public override Var<HyperType.StateWithEffects> OnInit(SyntaxBuilder b, Var<EditConfigurationPage> model)
             {
                 var serializedConfiguration = b.Serialize(b.Get(model, x => x.Configuration));
                 b.Set(model, x => x.InitialConfiguration, serializedConfiguration);
                 return b.MakeStateWithEffects(model);
             }
 
-            private Var<HyperNode> Render(BlockBuilder b, Var<EditConfigurationPage> clientModel)
+            private Var<HyperNode> Render(LayoutBuilder b, Var<EditConfigurationPage> clientModel)
             {
                 return b.View(
                     clientModel,
@@ -135,7 +135,7 @@ namespace MdsInfrastructure.Render
                 return serverModel;
             }
 
-            public override Var<HyperNode> OnRender(BlockBuilder b, ReviewConfigurationPage serverModel, Var<ReviewConfigurationPage> clientModel)
+            public override Var<IVNode> OnRender(LayoutBuilder b, ReviewConfigurationPage serverModel, Var<ReviewConfigurationPage> clientModel)
             {
                 b.AddModuleStylesheet();
 
@@ -148,7 +148,7 @@ namespace MdsInfrastructure.Render
                             Main = new Header.Title() { Operation = "Review configuration" },
                             User = serverModel.User
                         })),
-                    RenderDeploymentConfiguration(b, serverModel.Snapshot, serverModel.SavedConfiguration));
+                    RenderDeploymentConfiguration(b, serverModel.Snapshot, serverModel.SavedConfiguration)).As<IVNode>();
             }
 
             public class ConfigurationRow
@@ -159,7 +159,7 @@ namespace MdsInfrastructure.Render
             }
 
             public Var<HyperNode> RenderDeploymentConfiguration(
-                BlockBuilder b,
+                LayoutBuilder b,
                 System.Collections.Generic.List<MdsCommon.ServiceConfigurationSnapshot> infrastructureSnapshot,
                 InfrastructureConfiguration infrastructureConfiguration)
             {
@@ -175,19 +175,21 @@ namespace MdsInfrastructure.Render
                     "bg-red-500 rounded px-4 py-2 text-white",
                     b => b.Text("Deploy now"));
 
-                b.SetOnClick(deployNowButton, b.MakeAction((BlockBuilder b, Var<ReviewConfigurationPage> model) =>
+                b.SetOnClick(deployNowButton, b.MakeAction((SyntaxBuilder b, Var<ReviewConfigurationPage> model) =>
                 {
-                    return b.AsyncResult(
+                    return b.MakeStateWithEffects(
                         b.ShowPanel(model),
-                        b.Request(
-                            Frontend.ConfirmDeployment,
-                            b.Get(model, x => x.SavedConfiguration.Id),
-                            b.MakeAction((BlockBuilder b, Var<ReviewConfigurationPage> model, Var<Frontend.ConfirmDeploymentResponse> response) =>
-                            {
-                                b.SetUrl(b.Const("/"));
-                                return model;
-                            }))
-                        );
+                        b.MakeEffect(
+                            b.Def(
+                                b.Request(
+                                Frontend.ConfirmDeployment,
+                                b.Get(model, x => x.SavedConfiguration.Id),
+                                b.MakeAction((SyntaxBuilder b, Var<ReviewConfigurationPage> model, Var<Frontend.ConfirmDeploymentResponse> response) =>
+                                {
+                                    b.SetUrl(b.Const("/"));
+                                    return model;
+                                })))
+                        ));
                 }));
 
                 var toolbar = b.Add(view,
@@ -214,7 +216,7 @@ namespace MdsInfrastructure.Render
                     }
                 }
 
-                var rc = b.Def((BlockBuilder b, Var<ConfigurationRow> row, Var<DataTable.Column> column) =>
+                var rc = b.Def((LayoutBuilder b, Var<ConfigurationRow> row, Var<DataTable.Column> column) =>
                 {
                     return b.VPadded4(b.Text(b.GetProperty<string>(row, b.Get(column, x => x.Name))));
                 });
@@ -240,13 +242,13 @@ namespace MdsInfrastructure.Render
     {
         public const string AreaName = nameof(EditConfigurationViews);
 
-        public static Var<EditConfigurationPage> EditView(this BlockBuilder b, Var<EditConfigurationPage> page, Var<string> viewName)
+        public static Var<EditConfigurationPage> EditView(this SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> viewName)
         {
             b.SwapView(page, b.Const(AreaName), viewName);
             return b.Clone(page);
         }
 
-        public static Var<EditConfigurationPage> EditView<TModel>(this BlockBuilder b, Var<EditConfigurationPage> page, Func<BlockBuilder, Var<TModel>, Var<HyperNode>> viewRenderer)
+        public static Var<EditConfigurationPage> EditView<TModel>(this SyntaxBuilder b, Var<EditConfigurationPage> page, Func<LayoutBuilder, Var<TModel>, Var<HyperNode>> viewRenderer)
         {
             b.SwapView(page, b.Const(AreaName), b.GetViewName(viewRenderer));
             return b.Clone(page);

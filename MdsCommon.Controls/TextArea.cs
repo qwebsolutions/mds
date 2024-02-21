@@ -16,7 +16,7 @@ namespace MdsCommon.Controls
             public string Placeholder { get; set; } = "";
         }
 
-        public static Var<HyperNode> Render(this BlockBuilder b, Var<TextArea.Props> props)
+        public static Var<HyperNode> Render(this LayoutBuilder b, Var<TextArea.Props> props)
         {
             var textArea = b.Node("textarea", b.Get(props, x => x.CssClass));
             b.SetAttr(textArea, new DynamicProperty<int>("rows"), b.Get(props, x => x.Rows));
@@ -35,12 +35,12 @@ namespace MdsCommon.Controls
 
 
 
-        public static Var<HyperNode> TextArea(this BlockBuilder b, Var<TextArea.Props> props)
+        public static Var<HyperNode> TextArea(this LayoutBuilder b, Var<TextArea.Props> props)
         {
             return MdsCommon.Controls.TextArea.Render(b,props);
         }
         public static Var<HyperNode> TextArea(
-            this BlockBuilder b, 
+            this LayoutBuilder b, 
             Var<string> text,
             System.Action<Modifier<TextArea.Props>> optional = null)
         {

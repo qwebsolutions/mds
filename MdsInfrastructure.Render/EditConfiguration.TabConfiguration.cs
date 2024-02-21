@@ -7,8 +7,8 @@ namespace MdsInfrastructure.Render
 {
     public static partial class EditConfiguration
     {
-        public static Var<HyperNode> TabConfiguration(
-            BlockBuilder b,
+        public static Var<IVNode> TabConfiguration(
+            LayoutBuilder b,
             Var<EditConfigurationPage> clientModel)
         {
             var configName = b.Get(clientModel, x => x.Configuration.Name);
@@ -19,7 +19,7 @@ namespace MdsInfrastructure.Render
             b.Add(configuratioNameRow, b.BoundInput(clientModel, x => x.Configuration, x => x.Name));
             b.Add(content, b.Text(b.Get(clientModel, x => x.LastDeployed)));
 
-            return content;
+            return content.As<IVNode>();
         }
     }
 }

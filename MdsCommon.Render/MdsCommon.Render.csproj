@@ -1,9 +1,22 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Metapsi.Hyperapp" Version="*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MdsCommon.Controls\MdsCommon.Controls.csproj" />
+    <ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.csproj" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="embedded\form.js" LogicalName="form.js" />
+		<EmbeddedResource Include="embedded\Poppins-Regular.ttf" LogicalName="Poppins-Regular.ttf"></EmbeddedResource>
+		<EmbeddedResource Include="embedded\MdsCommon.Render.css" LogicalName="MdsCommon.Render.css"></EmbeddedResource>
+	</ItemGroup>
 
 </Project>

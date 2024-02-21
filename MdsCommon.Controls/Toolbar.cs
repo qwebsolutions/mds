@@ -16,12 +16,12 @@ namespace MdsCommon.Controls
     public static partial class Controls
     {
 
-        public static Var<HyperNode> Toolbar(this BlockBuilder b, params System.Func<BlockBuilder, Var<HyperNode>>[] children)
+        public static Var<HyperNode> Toolbar(this LayoutBuilder b, params System.Func<LayoutBuilder, Var<HyperNode>>[] children)
         {
             return b.Div("flex flex-row space-x-4 items-center p-4", children);
         }
 
-        public static Var<HyperNode> Toolbar(this BlockBuilder b, params Var<HyperNode>[] children)
+        public static Var<HyperNode> Toolbar(this LayoutBuilder b, params Var<HyperNode>[] children)
         {
             return b.Div("flex flex-row space-x-4 items-center p-4", b.List(children));
         }

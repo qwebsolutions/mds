@@ -10,3 +10,5 @@ Scripts/nugets/*
 parameters.json
 infraargs.json
 localargs.json
+dev_kratos
+publish.metapsi.dev.sh

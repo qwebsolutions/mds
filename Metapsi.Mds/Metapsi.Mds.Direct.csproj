@@ -9,14 +9,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Dapper" Version="2.0.35" />
+		<PackageReference Include="Dapper" Version="2.1.15" />
 		<PackageReference Include="sqlite" Version="3.13.0" />
-		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.113.7" />
+		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\metapsi\Metapsi.Runtime\Metapsi.Runtime.csproj" />
 		<ProjectReference Include="..\..\metapsi\Metapsi.SQLite\Metapsi.Sqlite.csproj" />
-		<ProjectReference Include="..\..\metapsi\Metapsi.Timer\Metapsi.Timer.csproj" />
+		<ProjectReference Include="..\Metapsi.Timer\Metapsi.Timer.Direct.csproj" />
 	</ItemGroup>
 </Project>

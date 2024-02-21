@@ -14,7 +14,7 @@ namespace MdsCommon.Controls
     public static partial class Control
     {
         public static Var<HyperNode> Badge(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<string> label)
         {
             var badge = b.Text(label);
@@ -24,7 +24,7 @@ namespace MdsCommon.Controls
 
 
         public static Var<HyperNode> Tabs<TPage>(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<TPage> page,
             Var<string> tabName,
             Var<HyperNode> toolbar,
@@ -38,8 +38,8 @@ namespace MdsCommon.Controls
     public class TabRenderer
     {
         public string TabPageCode { get; set; } = string.Empty;
-        public System.Func<BlockBuilder, Var<HyperNode>> TabHeader { get; set; }
-        public System.Func<BlockBuilder, Var<HyperNode>> TabContent { get; set; }
+        public System.Func<LayoutBuilder, Var<HyperNode>> TabHeader { get; set; }
+        public System.Func<LayoutBuilder, Var<HyperNode>> TabContent { get; set; }
     }
 }
 

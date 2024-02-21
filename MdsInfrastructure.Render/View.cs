@@ -13,25 +13,14 @@ namespace MdsInfrastructure
         private const string FeatureName = "views";
 
         public static Var<HyperNode> Render<TModel>(
-            BlockBuilder b,
+            LayoutBuilder b,
             Var<TModel> clientModel,
             string areaName,
             string defaultViewName,
-            params Func<BlockBuilder, Var<TModel>, Var<HyperNode>>[] renderers)
+            params Func<LayoutBuilder, Var<TModel>, Var<HyperNode>>[] renderers)
         {
 
             var currentViewName = b.GetVar<TModel>(clientModel, FeatureName, b.Const(areaName), b.Const(defaultViewName));
-            b.Log("current view name", currentViewName);
-
-            //var viewEntry = b.Get(
-            //    clientModel,
-            //    b.Const(areaName),
-            //    (clientModel, areaName) => clientModel.Views.SingleOrDefault(x => x.AreaName == areaName));
-
-            //var currentViewName = b.If(
-            //    b.HasObject(viewEntry),
-            //    b => b.Get(viewEntry, x => x.ViewRendererName),
-            //    b => b.Const(defaultViewName));
 
             var outNode = b.Ref<HyperNode>(b.TextNode("View error"));
 
@@ -47,23 +36,21 @@ namespace MdsInfrastructure
                     });
             }
 
-            b.Log(clientModel);
-
             return b.GetRef(outNode);
         }
 
-        public static void SwapView<TModel>(this BlockBuilder b, Var<TModel> model, Var<string> areaName, Var<string> viewRenderer)
+        public static void SwapView<TModel>(this SyntaxBuilder b, Var<TModel> model, Var<string> areaName, Var<string> viewRenderer)
         {
             b.Log("viewRenderer", viewRenderer);
             b.SetVar<TModel>(model, FeatureName, areaName, viewRenderer);
         }
 
-        public static Var<string> GetViewName<TModel>(this BlockBuilder b, Func<BlockBuilder, Var<TModel>, Var<HyperNode>> renderer)
+        public static Var<string> GetViewName<TModel>(this SyntaxBuilder b, Func<LayoutBuilder, Var<TModel>, Var<HyperNode>> renderer)
         {
             return b.Const(renderer.Method.Name);
         }
 
-        public static string GetName<TModel>(Func<BlockBuilder, Var<TModel>, Var<HyperNode>> renderer)
+        public static string GetName<TModel>(Func<LayoutBuilder, Var<TModel>, Var<HyperNode>> renderer)
         {
             return renderer.Method.Name;
         }
@@ -82,11 +69,11 @@ namespace MdsInfrastructure
         /// <param name="renderers"></param>
         /// <returns></returns>
         public static Var<HyperNode> View<TModel>(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<TModel> clientModel,
             string areaName,
             string defaultViewName,
-            params Func<BlockBuilder, Var<TModel>, Var<HyperNode>>[] renderers)
+            params Func<LayoutBuilder, Var<TModel>, Var<HyperNode>>[] renderers)
         {
             return MdsInfrastructure.View.Render(b, clientModel, areaName, defaultViewName, renderers);
         }
@@ -101,10 +88,10 @@ namespace MdsInfrastructure
         /// <param name="renderers"></param>
         /// <returns></returns>
         public static Var<HyperNode> View<TModel>(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<TModel> clientModel,
             string areaName,
-            params Func<BlockBuilder, Var<TModel>, Var<HyperNode>>[] renderers)
+            params Func<LayoutBuilder, Var<TModel>, Var<HyperNode>>[] renderers)
         {
             return MdsInfrastructure.View.Render(
                 b, 

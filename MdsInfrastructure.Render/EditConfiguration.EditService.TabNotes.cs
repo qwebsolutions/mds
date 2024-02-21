@@ -10,15 +10,14 @@ namespace MdsInfrastructure.Render
     public static partial class EditConfiguration
     {
         public static Var<HyperNode> TabNotes(
-            BlockBuilder b,
+            LayoutBuilder b,
             Var<EditConfigurationPage> clientModel)
         {
             var serviceId = b.Get(clientModel, x => x.EditServiceId);
-            b.Log("serviceId", serviceId);
             var service = b.Get(clientModel, serviceId, (x, serviceId) => x.Configuration.InfrastructureServices.Single(x => x.Id == serviceId));
 
             var removeIcon = Icon.Remove;
-            var addCommand = b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> state) =>
+            var addCommand = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> state) =>
             {
                 var newId = b.NewId();
                 var newNote = b.NewObj<InfrastructureServiceNote>(b =>
@@ -46,7 +45,7 @@ namespace MdsInfrastructure.Render
                             var noteTypeCode = b.ToLowercase(b.Get(noteType, x => x.Code));
                             var refAsId = b.Get(row, x => x.Reference).As<System.Guid>();
 
-                            var reference = b.If<string>(
+                            var reference = b.If(
                                 b.AreEqual(noteTypeCode, b.Const("parameter")),
                                 b => b.Get(service, refAsId, (x, refAsId) => x.InfrastructureServiceParameterDeclarations.SingleOrDefault(
                                     x => x.Id == refAsId,
@@ -60,7 +59,7 @@ namespace MdsInfrastructure.Render
                                 b => b.Link(
                                     noteTypeLabel,
                                     b.MakeAction(
-                                        (BlockBuilder b, Var<EditConfigurationPage> clientModel) =>
+                                        (SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
                                         {
                                             b.Set(clientModel, x => x.EditServiceNoteId, b.Get(row, x => x.Id));
                                             return b.EditView<EditConfigurationPage>(clientModel, EditNote);
@@ -88,10 +87,10 @@ namespace MdsInfrastructure.Render
                 },
                 (b, actions, item) =>
                 {
-                    var onCommand = b.Def((BlockBuilder b, Var<InfrastructureServiceNote> note) =>
+                    var onCommand = b.Def((SyntaxBuilder b, Var<InfrastructureServiceNote> note) =>
                     {
                         var noteId = b.Get(note, x => x.Id);
-                        var noteRemoved = b.Get(service, noteId, (x, noteId) => x.InfrastructureServiceNotes.Where(x => x.Id != noteId));
+                        var noteRemoved = b.Get(service, noteId, (x, noteId) => x.InfrastructureServiceNotes.Where(x => x.Id != noteId).ToList());
                         b.Set(service, x => x.InfrastructureServiceNotes, noteRemoved);
                     });
 

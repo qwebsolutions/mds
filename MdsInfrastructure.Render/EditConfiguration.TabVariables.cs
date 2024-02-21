@@ -4,90 +4,128 @@ using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using System.Linq;
 using MdsCommon.Controls;
+using MdsCommon.HtmlControls;
+using static MdsCommon.Controls.DataTable;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MdsInfrastructure.Render
 {
     public static partial class EditConfiguration
     {
         public static Var<HyperNode> TabVariables(
-           BlockBuilder b,
+           LayoutBuilder b,
            Var<EditConfigurationPage> clientModel)
         {
+            var container = b.Div("w-full h-full");
+
             var configId = b.Get(clientModel, x => x.Configuration.Id);
 
-            var onAddVariable = b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> clientModel) =>
+            var onRemove = (SyntaxBuilder b, Var<EditConfigurationPage> clientModel, Var<InfrastructureVariable> variable) =>
             {
-                var newId = b.NewId();
-                var newVar = b.NewObj<InfrastructureVariable>(b =>
+                var typed = variable.As<InfrastructureVariable>();
+                var removed = b.Get(clientModel, typed, (x, typed) => x.Configuration.InfrastructureVariables.Where(x => x != typed).ToList());
+                b.Set(b.Get(clientModel, x => x.Configuration), x => x.InfrastructureVariables, removed);
+                return b.Clone(clientModel);
+            };
+
+            var allVariables = b.Get(clientModel, x => x.Configuration.InfrastructureVariables.OrderBy(x => x.VariableName).ToList());
+            var filteredVariables = b.FilterList<InfrastructureVariable>(allVariables, b.Get(clientModel, x => x.VariablesFilter));
+
+            b.OnModel(
+                clientModel,
+                (bParent, context) =>
                 {
-                    b.Set(x => x.ConfigurationHeaderId, configId);
-                    b.Set(x => x.Id, newId);
-                });
-                b.Push(b.Get(clientModel, x => x.Configuration.InfrastructureVariables), newVar);
-                b.Set(clientModel, x => x.EditVariableId, newId);
-                return b.EditView(clientModel, b.GetViewName<EditConfigurationPage>(EditConfiguration.EditVariable));
-            });
+                    var b = new LayoutBuilder(bParent);
 
-            var rows = b.Get(clientModel, x => x.Configuration.InfrastructureVariables.OrderBy(x => x.VariableName).ToList());
-            var rc = b.RenderCell<InfrastructureVariable>((b, row, column) =>
-            {
-                var columnName = b.Get(column, x => x.Name);
-                return b.VPadded4(b.Switch(columnName,
-                    b => b.Link(
-                        b.GetProperty<string>(row, columnName), 
-                        b.MakeAction(
-                            (BlockBuilder b, Var<EditConfigurationPage> clientModel) =>
-                            {
-                                var varId = b.Get(row, x => x.Id);
-                                b.Set(clientModel, x => x.EditVariableId, varId);
-                                return b.EditView<EditConfigurationPage>(clientModel, EditVariable);
-                            })),
-                    (nameof(InfrastructureVariable.VariableValue), b => b.Text(b.Get(row, x => x.VariableValue)))));
-            });
-
-            return b.DataGrid<InfrastructureVariable>(
-                new()
-                {
-                    b=> b.AddClass(b.CommandButton<EditConfigurationPage>(b=>
-                    {
-                        b.Set(x => x.Label, "Add variable");
-                        b.Set(x => x.OnClick, onAddVariable);
-                    }), "text-white")
-                },
-                b =>
-                {
-                    b.AddColumn(nameof(InfrastructureVariable.VariableName), "Name");
-                    b.AddColumn(nameof(InfrastructureVariable.VariableValue), "Value");
-                    b.SetRows(rows);
-                    b.SetRenderCell<InfrastructureVariable>(rc);
-                },
-                (b, actions, row) =>
-                {
-                    var variableId = b.Get(row.As<InfrastructureVariable>(), x => x.Id);
-                    b.Comment("isInUse");
-                    var isInUse = b.Get(clientModel, variableId, (x, variableId) => x.Configuration.InfrastructureServices.SelectMany(x => x.InfrastructureServiceParameterDeclarations.SelectMany(x => x.InfrastructureServiceParameterBindings)).Any(x => x.InfrastructureVariableId == variableId));
-
-                    var removeIcon = Icon.Remove;
-
-                    var onRemove = b.Def((BlockBuilder b, Var<InfrastructureVariable> variable) =>
-                    {
-                        var typed = variable.As<InfrastructureVariable>();
-                        var removed = b.Get(clientModel, typed, (x, typed) => x.Configuration.InfrastructureVariables.Where(x => x != typed).ToList());
-                        b.Set(b.Get(clientModel, x => x.Configuration), x => x.InfrastructureVariables, removed);
-                    });
-
-                    b.If(b.Not(isInUse), b =>
-                    {
-                        b.Modify(actions, x => x.Commands, b =>
+                    b.Add(container, b.DataGrid<InfrastructureVariable>(
+                        b =>
                         {
-                            b.Add(b =>
+                            b.OnTable(b =>
+                            {
+                                b.FillFrom(filteredVariables, exceptColumns: new()
                                 {
-                                    b.Set(x => x.IconHtml, removeIcon);
-                                    b.Set(x => x.OnCommand, onRemove);
+                                    nameof(InfrastructureVariable.Id),
+                                    nameof(InfrastructureVariable.ConfigurationHeaderId),
                                 });
-                        });
-                    });
+
+                                b.SetCommonStyle();
+
+                                b.OverrideColumnCell(
+                                    nameof(InfrastructureVariable.VariableName),
+                                    (b, data) => b.RenderVariableNameCell(b.Get(data, x => x.Row)));
+                            });
+
+                            b.AddHoverRowAction(onRemove, Icon.Remove, (b, data, props) =>
+                            {
+                                b.AddClass(props, "text-red-500");
+                            },
+                            visible: (b, row) =>
+                            {
+                                var isInUse = b.Get(
+                                    clientModel,
+                                    b.Get(row, x => x.Id),
+                                    (x, variableId) => x.Configuration.InfrastructureServices.SelectMany(x => x.InfrastructureServiceParameterDeclarations.SelectMany(x => x.InfrastructureServiceParameterBindings)).Any(x => x.InfrastructureVariableId == variableId));
+
+                                return b.Not(isInUse);
+                            });
+
+                            b.AddToolbarChild(AddVariableButton);
+
+                            b.AddToolbarChild(
+                                b => b.Filter(
+                                    b =>
+                                    {
+                                        b.BindFilter(context, x => x.VariablesFilter);
+                                    }),
+                                HorizontalPlacement.Right);
+
+                        }).As<HyperNode>());
                 });
+
+            return container;
+        }
+
+        public static Var<IVNode> RenderVariableNameCell(this LayoutBuilder b, Var<InfrastructureVariable> row)
+        {
+            var variableName = b.Get(row, x => x.VariableName);
+
+            var goToVariable = (SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
+            {
+                b.Set(clientModel, x => x.EditVariableId, b.Get(row, x => x.Id));
+                return b.EditView<EditConfigurationPage>(clientModel, EditVariable);
+            };
+
+            var container = b.Span();
+            b.Add(container, b.Link<EditConfigurationPage>(b.WithDefault(variableName), b.MakeAction<EditConfigurationPage>(goToVariable)));
+            return container.As<IVNode>();
+        }
+
+        public static Var<EditConfigurationPage> OnAddVariable(SyntaxBuilder b, Var<EditConfigurationPage> clientModel)
+        {
+            var configHeaderId = b.Get(clientModel, x => x.Configuration.Id);
+            var newId = b.NewId();
+            var newVar = b.NewObj<InfrastructureVariable>(b =>
+            {
+                b.Set(x => x.ConfigurationHeaderId, configHeaderId);
+                b.Set(x => x.Id, newId);
+            });
+            b.Push(b.Get(clientModel, x => x.Configuration.InfrastructureVariables), newVar);
+            b.Set(clientModel, x => x.EditVariableId, newId);
+            return b.EditView(clientModel, b.GetViewName<EditConfigurationPage>(EditConfiguration.EditVariable));
+        }
+
+        public static Var<IVNode> AddVariableButton(this LayoutBuilder b)
+        {
+            return b.Render(ControlDefinition.New<object>(
+                "button",
+                (b, data, props) =>
+                {
+                    b.AddPrimaryButtonStyle(props);
+                    b.OnClickAction<EditConfigurationPage>(props, OnAddVariable);
+                },
+                (b, data) => b.T("Add variable")),
+                b.Const(new object()));
+
         }
     }
 }

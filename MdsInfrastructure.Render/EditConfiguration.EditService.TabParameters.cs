@@ -10,12 +10,12 @@ namespace MdsInfrastructure.Render
     public static partial class EditConfiguration
     {
         public static Var<HyperNode> TabParameters(
-            BlockBuilder b,
+            LayoutBuilder b,
             Var<EditConfigurationPage> clientModel)
         {
             var serviceId = b.Get(clientModel, x => x.EditServiceId);
 
-            var onAddParameter = b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> clientModel) =>
+            var onAddParameter = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
             {
                 var service = b.Get(clientModel, serviceId, (x, id) => x.Configuration.InfrastructureServices.Single(x => x.Id == id));
                 var parameters = b.Get(service, x => x.InfrastructureServiceParameterDeclarations);
@@ -86,7 +86,7 @@ namespace MdsInfrastructure.Render
                 {
                     var removeIcon = Icon.Remove;
 
-                    var onRemove = b.Def((BlockBuilder b, Var<InfrastructureServiceParameterDeclaration> parameter) =>
+                    var onRemove = b.Def((SyntaxBuilder b, Var<InfrastructureServiceParameterDeclaration> parameter) =>
                     {
                         var paramId = b.Get(parameter, x => x.Id);
                         var parameterRemoved = b.Get(service, paramId, (x, paramId) => x.InfrastructureServiceParameterDeclarations.Where(x => x.Id != paramId).ToList());
@@ -110,11 +110,11 @@ namespace MdsInfrastructure.Render
                 });
         }
 
-        public static Var<string> GetParameterValue(this BlockBuilder b, Var<EditConfigurationPage> page, Var<InfrastructureServiceParameterDeclaration> parameter)
+        public static Var<string> GetParameterValue(this SyntaxBuilder b, Var<EditConfigurationPage> page, Var<InfrastructureServiceParameterDeclaration> parameter)
         {
             var parameterId = b.Get(parameter, x => x.Id);
             var parameterValue = b.Get(parameter, parameterId, (x, parameterId) => x.InfrastructureServiceParameterValues.SingleOrDefault(x => x.InfrastructureServiceParameterDeclarationId == parameterId));
-            return b.If<string>(
+            return b.If(
                 b.HasObject(parameterValue),
                 b => b.Get(parameterValue, x => x.ParameterValue),
                 b =>

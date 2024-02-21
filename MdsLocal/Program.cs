@@ -6,6 +6,10 @@ using System.Collections.Generic;
 using System.Text;
 using Metapsi.Syntax;
 using MdsCommon;
+using static Metapsi.Hyperapp.HyperType;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Metapsi.Ui;
 
 namespace MdsLocal
 {
@@ -60,11 +64,6 @@ namespace MdsLocal
 
             Metapsi.Sqlite.IdConverter.Register();
 
-#if DEBUG
-            WebServer.WebRootPaths.Add("D:\\qweb\\mes\\Mds\\MdsInfrastructure\\inline");
-            WebServer.WebRootPaths.Add("D:\\qweb\\mes\\Metapsi.Hyperapp\\inline");
-#endif
-
             var localReferences = MdsLocalApplication.Setup(arguments, start);
 
             WebServer.References webServer = null;
@@ -91,15 +90,50 @@ namespace MdsLocal
 
             webServer.WebApplication.RegisterGetHandler<ListProcessesHandler, Overview.ListProcesses>();
             webServer.WebApplication.RegisterGetHandler<SyncHistoryHandler, SyncHistory.List>();
+            webServer.WebApplication.RegisterGetHandler<MdsCommon.EventsLogHandler, MdsCommon.Routes.EventsLog.List>();
             webServer.RegisterPageBuilder<OverviewPage>(new RenderOverviewListProcesses().Render);
             webServer.RegisterPageBuilder<ListInfrastructureEventsPage>(new RenderInfrastructureEventsList().Render);
             webServer.RegisterPageBuilder<SyncHistory.DataModel>(new RenderSyncHistory().Render);
-            webServer.RegisterStaticFiles(typeof(BlockBuilder).Assembly);
+            webServer.RegisterStaticFiles(typeof(MdsLocal.RenderSyncHistory).Assembly);
+            webServer.RegisterStaticFiles(typeof(MdsCommon.Render).Assembly);
+            webServer.RegisterStaticFiles(typeof(MdsCommon.Controls.Controls).Assembly);
+            webServer.RegisterStaticFiles(typeof(SyntaxBuilder).Assembly);
             webServer.RegisterStaticFiles(typeof(HyperNode).Assembly);
+            webServer.RegisterStaticFiles(typeof(Metapsi.Dom.DomElement).Assembly);
 
-            //var h = webServer.AddHyperapp(Overview.ListProcesses);
-            //h.RegisterModule(typeof(SyncHistory));
-            //h.RegisterModule(typeof(EventsLog));
+            webServer.WebApplication.MapGet("/", () => Results.Redirect(WebServer.Url<Overview.ListProcesses>())).AllowAnonymous().ExcludeFromDescription();
+
+            var api = webServer.WebApplication.MapGroup("api");
+            api.MapRequest(Frontend.KillProcessByPid, async (CommandContext commandContext, HttpContext httpContext, string pid) =>
+            {
+                try
+                {
+                    var intPid = Convert.ToInt32(pid);
+                    var process = System.Diagnostics.Process.GetProcessById(intPid);
+                    process.Kill();
+                    process.WaitForExit(5000);
+                    await Task.Delay(5000);
+
+                    return new ApiResponse();
+                }
+                catch (Exception ex)
+                {
+                    return new ApiResponse()
+                    {
+                        ErrorMessage = ex.Message,
+                        ResultCode = ApiResultCode.Error
+                    };
+                }
+            }, WebServer.Authorization.Public);
+
+            api.MapRequest(Frontend.ReloadProcesses, async (CommandContext commandContext, HttpContext httpContext) =>
+            {
+                var reloadedModel = await ListProcessesHandler.Load(commandContext, httpContext);
+                return new ReloadedOverviewModel()
+                {
+                    Model = reloadedModel,
+                };
+            }, WebServer.Authorization.Public);
 
             var application = localReferences.ApplicationSetup.Revive();
             //h.State.WebApplication.Lifetime.ApplicationStopped.Register(async () =>

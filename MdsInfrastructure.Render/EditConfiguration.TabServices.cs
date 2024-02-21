@@ -6,116 +6,167 @@ using System;
 using System.Collections.Generic;
 using MdsCommon;
 using MdsCommon.Controls;
+using System.Xml.Serialization;
+using Metapsi.ChoicesJs;
+using MdsCommon.HtmlControls;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Metapsi.Dom;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MdsInfrastructure.Render
 {
+    //public class Filter
+    //{
+    //    public string Value { get; set; }
+    //}
+
+    public class InfrastructureServiceRow
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public string Project { get; set; }
+        public string Application { get; set; }
+        public string Node { get; set; }
+        public List<string> Tags { get; set; } = new();
+    }
+
     public static partial class EditConfiguration
     {
-        public static Var<HyperNode> TabServices(
-           BlockBuilder b,
-           Var<EditConfigurationPage> clientModel)
+        public static Var<EditConfigurationPage> OnAddService(SyntaxBuilder b, Var<EditConfigurationPage> clientModel)
         {
-            var rows = b.Get(clientModel, x => x.Configuration.InfrastructureServices.OrderBy(x => x.ServiceName).ToList());
+            var configHeaderId = b.Get(clientModel, x => x.Configuration.Id);
+            var services = b.Get(clientModel, x => x.Configuration.InfrastructureServices);
+            var newId = b.NewId();
 
-            var onAddService = b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> clientModel) =>
+            var newService = b.NewObj<InfrastructureService>(b =>
             {
-                var configHeaderId = b.Get(clientModel, x => x.Configuration.Id);
-                var services = b.Get(clientModel, x => x.Configuration.InfrastructureServices);
-                var newId = b.NewId();
-
-                var newService = b.NewObj<InfrastructureService>(b =>
-                {
-                    b.Set(x => x.Id, newId);
-                    b.Set(x => x.ConfigurationHeaderId, configHeaderId);
-                    b.Set(x => x.Enabled, true);
-                });
-                b.Comment("onAddService");
-                b.Push(b.Get(clientModel, x => x.Configuration.InfrastructureServices), newService);
-
-                b.Set(clientModel, x => x.EditServiceId, newId);
-                b.Log("EditServiceId", newId);
-                return b.EditView<EditConfigurationPage>(clientModel, EditService);
+                b.Set(x => x.Id, newId);
+                b.Set(x => x.ConfigurationHeaderId, configHeaderId);
+                b.Set(x => x.Enabled, true);
             });
+            b.Push(b.Get(clientModel, x => x.Configuration.InfrastructureServices), newService);
 
-            var rc = b.RenderCell((BlockBuilder b, Var<InfrastructureService> row, Var<DataTable.Column> col) =>
-            {
-                var columnName = b.Get(col, x => x.Name);
-                Var<InfrastructureService> service = row.As<InfrastructureService>();
-                Var<Guid> applicationId = b.Get(service, x => x.ApplicationId);
-                Var<Guid> nodeId = b.Get(service, x => x.InfrastructureNodeId);
-                Var<string> serviceName = b.Get(service, x => x.ServiceName);
-                Var<bool> serviceDisabled = b.Get(service, service => !service.Enabled);
-
-                var goToEditService = (BlockBuilder b, Var<EditConfigurationPage> clientModel) =>
-                {
-                    b.Set(clientModel, x => x.EditServiceId, b.Get(row, x => x.Id));
-                    b.Log("EditServiceId", b.Get(row, x => x.Id));
-                    return b.EditView<EditConfigurationPage>(clientModel, EditService);
-                };
-
-                var serviceNameCellBuilder = (BlockBuilder b) =>
-                {
-                    var container = b.Span();
-                    b.Add(container, b.Link<EditConfigurationPage>(b.WithDefault(serviceName), b.MakeAction<EditConfigurationPage>(goToEditService)));
-                    b.If(serviceDisabled, (BlockBuilder b) =>
-                    {
-                        var badge = b.Add(container, b.Badge(b.Const("disabled")));
-                        b.AddClass(badge, "bg-gray-400");
-                    });
-                    return container;
-                };
-
-                return b.VPadded4(b.Switch(columnName,
-                    x => b.Text("not supported"),
-                    (nameof(InfrastructureService.ServiceName), serviceNameCellBuilder),
-                    (nameof(InfrastructureService.ProjectId), b => b.Text(b.Call(GetProjectLabel, clientModel, service))),
-                    (nameof(InfrastructureService.ApplicationId), b => b.Text(b.Get(clientModel, applicationId, (x, applicationId) => x.Configuration.Applications.SingleOrDefault(y => y.Id == applicationId, new Application() { Name = "(not set)" }).Name))),
-                    (nameof(InfrastructureService.InfrastructureNodeId), b => b.Text(b.Get(clientModel, nodeId, (x, nodeId) => x.InfrastructureNodes.SingleOrDefault(y => y.Id == nodeId, new InfrastructureNode() { NodeName = "(not set)" }).NodeName)))
-                    ));
-            });
-
-            return b.DataGrid<InfrastructureService>(
-                new()
-                {
-                    b=> b.AddClass(b.CommandButton<EditConfigurationPage>(b=>
-                    {
-                        b.Set(x=>x.Label, "Add service");
-                        b.Set(x => x.OnClick, onAddService);
-                    }), "text-white")
-                },
-                b =>
-                {
-                    b.AddColumn(nameof(InfrastructureService.ServiceName), "Name");
-                    b.AddColumn(nameof(InfrastructureService.ProjectId), "Project");
-                    b.AddColumn(nameof(InfrastructureService.ApplicationId), "Application");
-                    b.AddColumn(nameof(InfrastructureService.InfrastructureNodeId), "Node");
-                    b.SetRows(rows);
-                    b.SetRenderCell(rc);
-                },
-                (b, actions, item) =>
-                {
-                    var removeIcon = Icon.Remove;
-
-                    var onRemove = b.Def((BlockBuilder b, Var<InfrastructureService> item) =>
-                        {
-                            var serviceId = b.Get(item, x => x.Id);
-                            var serviceRemoved = b.Get(clientModel, serviceId, (x, serviceId) => x.Configuration.InfrastructureServices.Where(x => x.Id != serviceId).ToList());
-                            b.Log(serviceRemoved);
-                            b.Set(b.Get(clientModel, x => x.Configuration), x => x.InfrastructureServices, serviceRemoved);
-                        });
-
-                    b.Modify(actions, b => b.Commands, b =>
-                    {
-                        b.Add(b =>
-                        {
-                            b.Set(x => x.IconHtml, removeIcon);
-                            b.Set(x => x.OnCommand, onRemove);
-                        });
-                    });
-                });
+            b.Set(clientModel, x => x.EditServiceId, newId);
+            return b.EditView<EditConfigurationPage>(clientModel, EditService);
         }
 
-        public static Var<string> GetProjectLabel(BlockBuilder b, Var<EditConfigurationPage> clientModel, Var<InfrastructureService> service)
+        public static Var<EditConfigurationPage> OnRemoveService(SyntaxBuilder b, Var<EditConfigurationPage> page, Var<InfrastructureServiceRow> row)
+        {
+            var serviceId = b.Get(row, x => x.Id);
+            var serviceRemoved = b.Get(page, serviceId, (x, serviceId) => x.Configuration.InfrastructureServices.Where(x => x.Id != serviceId).ToList());
+            b.Set(b.Get(page, x => x.Configuration), x => x.InfrastructureServices, serviceRemoved);
+            return b.Clone(page);
+        }
+
+        public static Var<string> GetApplicationLabel(this SyntaxBuilder b, Var<EditConfigurationPage> model, Var<Guid> applicationId)
+        {
+            return b.Get(model, applicationId, (x, applicationId) => x.Configuration.Applications.SingleOrDefault(y => y.Id == applicationId, new Application() { Name = "(not set)" }).Name);
+        }
+
+        public static Var<string> GetNodeLabel(this SyntaxBuilder b, Var<EditConfigurationPage> model, Var<Guid> nodeId)
+        {
+            return b.Get(model, nodeId, (x, nodeId) => x.InfrastructureNodes.SingleOrDefault(y => y.Id == nodeId, new InfrastructureNode() { NodeName = "(not set)" }).NodeName);
+        }
+
+        public static Var<InfrastructureServiceRow> ServiceRow(
+            this LayoutBuilder b,
+            Var<EditConfigurationPage> model,
+            Var<InfrastructureService> service)
+        {
+            var configuration = b.Get(model, x => x.Configuration);
+            var row = b.NewObj<InfrastructureServiceRow>();
+            b.Set(row, x => x.Id, b.Get(service, x => x.Id));
+            b.Set(row, x => x.Name, b.Get(service, x => x.ServiceName));
+            b.Set(row, x => x.Project, GetProjectLabel(b, model, service));
+            b.Set(row, x => x.Application, b.GetApplicationLabel(model, b.Get(service, x => x.ApplicationId)));
+            b.Set(row, x => x.Node, b.GetNodeLabel(model, b.Get(service, x => x.InfrastructureNodeId)));
+
+            b.If(
+                b.Get(service, x => x.Enabled),
+                b => b.Push(b.Get(row, x => x.Tags), b.Const("enabled")),
+                b => b.Push(b.Get(row, x => x.Tags), b.Const("disabled")));
+
+            return row;
+        }
+
+        public static Var<IVNode> RenderServiceNameCell(this LayoutBuilder b, Var<InfrastructureServiceRow> row)
+        {
+            var serviceName = b.Get(row, x => x.Name);
+            var serviceDisabled = b.Includes(b.Get(row, x => x.Tags), b.Const("disabled"));
+
+            var goToEditService = (SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
+            {
+                b.Set(clientModel, x => x.EditServiceId, b.Get(row, x => x.Id));
+                return b.EditView<EditConfigurationPage>(clientModel, EditService);
+            };
+
+            var container = b.Span();
+            b.Add(container, b.Link<EditConfigurationPage>(b.WithDefault(serviceName), b.MakeAction<EditConfigurationPage>(goToEditService)));
+            b.If(serviceDisabled, (LayoutBuilder b) =>
+            {
+                var badge = b.Add(container, b.Badge(b.Const("disabled")));
+                b.AddClass(badge, "bg-gray-400");
+            });
+            return container.As<IVNode>();
+        }
+
+        public static Var<HyperNode> TabServices(
+           LayoutBuilder b,
+           Var<EditConfigurationPage> clientModel)
+        {
+            var container = b.Div("w-full h-full");
+
+            var allServices = b.Get(clientModel, x => x.Configuration.InfrastructureServices.OrderBy(x => x.ServiceName).ToList());
+            var serviceRows = b.Map(allServices, (b, service) => b.ServiceRow(clientModel, service));
+            var filteredServices = b.FilterList(serviceRows, b.Get(clientModel, x => x.ServicesFilter));
+
+            b.OnModel(
+                clientModel,
+                (bParent, context) =>
+                {
+                    var b = new LayoutBuilder(bParent);
+
+                    b.Add(container, b.DataGrid<InfrastructureServiceRow>(
+                        b =>
+                        {
+                            b.OnTable(b =>
+                            {
+                                b.FillFrom(filteredServices, exceptColumns: new()
+                                {
+                                    nameof(InfrastructureServiceRow.Id),
+                                    nameof(InfrastructureServiceRow.Tags)
+                                });
+
+                                b.SetCommonStyle();
+
+                                b.OverrideColumnCell(
+                                    nameof(InfrastructureServiceRow.Name),
+                                    (b, data) => b.RenderServiceNameCell(b.Get(data, x => x.Row)));
+
+                            });
+
+                            b.AddHoverRowAction<EditConfigurationPage, InfrastructureServiceRow>(OnRemoveService, Icon.Remove, (b, data, props)=>
+                            {
+                                b.AddClass(props, "text-red-500");
+                            });
+
+                            b.AddToolbarChild(AddServiceButton);
+
+                            b.AddToolbarChild(
+                                b => b.Filter(
+                                    b =>
+                                    {
+                                        b.BindFilter(context, x => x.ServicesFilter);
+                                    }),
+                                HorizontalPlacement.Right);
+
+                        }).As<HyperNode>());
+                });
+
+            return container;
+        }
+
+        public static Var<string> GetProjectLabel(SyntaxBuilder b, Var<EditConfigurationPage> clientModel, Var<InfrastructureService> service)
         {
             var projectName = b.WithDefault(b.Const(string.Empty));
             var versionTag = b.WithDefault(b.Const(string.Empty));
@@ -142,6 +193,20 @@ namespace MdsInfrastructure.Render
             });
 
             return b.GetRef(projectLabelRef);
+        }
+
+        public static Var<IVNode> AddServiceButton(this LayoutBuilder b)
+        {
+            return b.Render(ControlDefinition.New<object>(
+                "button",
+                (b, data, props) =>
+                {
+                    b.OnClickAction<EditConfigurationPage>(props, OnAddService);
+                    b.SetClass(props, "rounded py-2 px-4 shadow bg-sky-500 text-white");
+                },
+                (b, data) => b.T("Add service")), 
+                b.Const(new object()));
+
         }
     }
 }

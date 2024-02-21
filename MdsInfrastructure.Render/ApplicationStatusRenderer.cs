@@ -14,7 +14,7 @@ namespace MdsInfrastructure.Render
             return serverData;
         }
 
-        public override Var<HyperNode> OnRender(BlockBuilder b, MdsInfrastructure.ApplicationStatus serverData, Var<MdsInfrastructure.ApplicationStatus> clientModel)
+        public override Var<IVNode> OnRender(LayoutBuilder b, MdsInfrastructure.ApplicationStatus serverData, Var<MdsInfrastructure.ApplicationStatus> clientModel)
         {
             b.AddModuleStylesheet();
 
@@ -32,12 +32,12 @@ namespace MdsInfrastructure.Render
                 Render(
                     b,
                     serverData.InfrastructureStatus,
-                    serverData.ApplicationName));
+                    serverData.ApplicationName)).As<IVNode>();
         }
 
 
         public Var<HyperNode> Render(
-            BlockBuilder b,
+            LayoutBuilder b,
             MdsInfrastructure.InfrastructureStatus applicationStatusPage,
             string selectedApplicationName)
         {

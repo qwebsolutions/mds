@@ -3,17 +3,8 @@
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<isPackable>false</isPackable>
+		<AssemblyName>MdsLocal</AssemblyName>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<Content Remove="localargs.json" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Include="localargs.json">
-			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
-		</None>
-	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\metapsi\Metapsi.Redis\Metapsi.Redis.csproj" />
@@ -24,7 +15,6 @@
 		<ProjectReference Include="..\Metapsi.Mds\Metapsi.Mds.Direct.csproj" />
 		<ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.Direct.csproj" />
 		<ProjectReference Include="..\MdsCommon.Db\MdsCommon.Db.Direct.csproj" />
-		<ProjectReference Include="..\MdsCommon.Ui\MdsCommon.Ui.Direct.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

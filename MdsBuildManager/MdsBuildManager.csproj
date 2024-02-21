@@ -9,8 +9,8 @@
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.35" />
     <PackageReference Include="Google.Protobuf" Version="3.6.0" />
-    <PackageReference Include="Metapsi.Redis" Version="1.6.0" />
-    <PackageReference Include="Metapsi.Runtime" Version="1.6.0" />
+    <PackageReference Include="Metapsi.Redis" Version="*" />
+    <PackageReference Include="Metapsi.Runtime" Version="*" />
     <PackageReference Include="Microsoft.AspNet.WebHooks.Receivers.VSTS" Version="1.2.2" />
     <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="5.0.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="5.0.1" />

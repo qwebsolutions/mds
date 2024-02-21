@@ -2,8 +2,24 @@
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Metapsi.Heroicons" Version="*" />
+		<PackageReference Include="Metapsi.Hyperapp" Version="*" />
+		<PackageReference Include="Metapsi.JavaScript" Version="*" />
+		<PackageReference Include="Metapsi.Module" Version="*" />
+		<PackageReference Include="Metapsi.Shoelace" Version="*" />
+	</ItemGroup>
+	
+	<ItemGroup>
+	  <ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.csproj" />
+	  <ProjectReference Include="..\MdsCommon.Render\MdsCommon.Render.csproj" />
+	  <ProjectReference Include="..\MdsLocal.DataModel\MdsLocal.DataModel.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="embedded\MdsLocal.Render.css" LogicalName="MdsLocal.Render.css" />
+	</ItemGroup>
 
 </Project>

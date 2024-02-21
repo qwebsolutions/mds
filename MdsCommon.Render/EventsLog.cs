@@ -11,7 +11,7 @@ namespace MdsCommon
 
     public static partial class Render
     {
-        public static Var<HyperNode> RenderListInfrastructureEventsPage(this BlockBuilder b, Var<ListInfrastructureEventsPage> clientModel)
+        public static Var<HyperNode> RenderListInfrastructureEventsPage(this LayoutBuilder b, Var<ListInfrastructureEventsPage> clientModel)
         {
             b.AddModuleStylesheet();
 
@@ -25,7 +25,7 @@ namespace MdsCommon
 
             b.Comment("After side panel");
 
-            var renderCell = b.Def((BlockBuilder b, Var<InfrastructureEvent> row, Var<DataTable.Column> col) =>
+            var renderCell = b.Def((LayoutBuilder b, Var<InfrastructureEvent> row, Var<DataTable.Column> col) =>
             {
                 var date = b.Get(row, x => x.Timestamp);
                 var dateStringLocale = b.ItalianFormat(date);
@@ -35,8 +35,6 @@ namespace MdsCommon
                     b => b.Link(dateStringLocale, b.MakeAction<ListInfrastructureEventsPage>(
                         (b, clientModel) =>
                         {
-                            b.Log("Show side panel");
-                            b.Log(clientModel);
                             b.Set(clientModel, x => x.SelectedEvent, row);
                             return b.ShowSidePanel(clientModel);
                         })),
@@ -69,7 +67,7 @@ namespace MdsCommon
             return container;
         }
 
-        public static Var<HyperNode> EventPanel(this BlockBuilder b, Var<MdsCommon.InfrastructureEvent> e)
+        public static Var<HyperNode> EventPanel(this LayoutBuilder b, Var<MdsCommon.InfrastructureEvent> e)
         {
             var panel = b.Div();
             var gridLayout = b.Add(panel, b.Div("grid grid-cols-2 gap-4"));

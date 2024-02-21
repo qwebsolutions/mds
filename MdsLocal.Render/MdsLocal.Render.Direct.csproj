@@ -1,15 +1,22 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<AssemblyName>MdsLocal.Render</AssemblyName>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\metapsi\Metapsi.Hyperapp\Metapsi.Hyperapp.csproj" />
-    <ProjectReference Include="..\..\metapsi\Metapsi.JavaScript\Metapsi.JavaScript.csproj" />
-    <ProjectReference Include="..\..\metapsi\Metapsi.Module\Metapsi.Module.csproj" />
-    <ProjectReference Include="..\MdsCommon.Render\MdsCommon.Render.Direct.csproj" />
-    <ProjectReference Include="..\MdsLocal.DataModel\MdsLocal.DataModel.Direct.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\metapsi\Metapsi.Heroicons\Metapsi.Heroicons.csproj" />
+		<ProjectReference Include="..\..\metapsi\Metapsi.Hyperapp\Metapsi.Hyperapp.csproj" />
+		<ProjectReference Include="..\..\metapsi\Metapsi.JavaScript\Metapsi.JavaScript.csproj" />
+		<ProjectReference Include="..\..\metapsi\Metapsi.Module\Metapsi.Module.csproj" />
+		<ProjectReference Include="..\..\metapsi\Metapsi.Shoelace\Metapsi.Shoelace.csproj" />
+		<ProjectReference Include="..\MdsCommon.Render\MdsCommon.Render.Direct.csproj" />
+		<ProjectReference Include="..\MdsLocal.DataModel\MdsLocal.DataModel.Direct.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="embedded\MdsLocal.Render.css" LogicalName="MdsLocal.Render.css" />
+	</ItemGroup>
 
 </Project>

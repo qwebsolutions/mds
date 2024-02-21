@@ -1,7 +1,5 @@
 ﻿using Metapsi.Syntax;
 using System.Collections.Generic;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Xml.Linq;
 using System;
 using Metapsi.Hyperapp;
 
@@ -32,7 +30,7 @@ namespace MdsCommon.Controls
             public string LabelClass { get; set; } = "button-label";
         }
 
-        public static Var<HyperNode> Render<TPayload>(this BlockBuilder b, Var<Props<TPayload>> props)
+        public static Var<HyperNode> Render<TPayload>(this LayoutBuilder b, Var<Props<TPayload>> props)
             //where TPayload: new()
         {
             var form = b.Node("form", "inline");
@@ -104,34 +102,34 @@ namespace MdsCommon.Controls
 
     public static partial class Controls
     {
-        public static Var<HyperNode> NavigateButton(this BlockBuilder b, Var<MdsCommon.Controls.NavigateButton.Props> props)
+        public static Var<HyperNode> NavigateButton(this LayoutBuilder b, Var<MdsCommon.Controls.NavigateButton.Props> props)
         {
             return b.Call(MdsCommon.Controls.NavigateButton.Render, props);
         }
 
-        public static Var<HyperNode> NavigateButton(this BlockBuilder b, Action<Modifier<NavigateButton.Props>> updateDefaults)
+        public static Var<HyperNode> NavigateButton(this LayoutBuilder b, Action<Modifier<NavigateButton.Props>> updateDefaults)
         {
             return b.FromDefault(MdsCommon.Controls.NavigateButton.Render, updateDefaults);
         }
 
-        public static Var<HyperNode> SubmitButton<TPayload>(this BlockBuilder b, Var<MdsCommon.Controls.SubmitButton.Props<TPayload>> props)
+        public static Var<HyperNode> SubmitButton<TPayload>(this LayoutBuilder b, Var<MdsCommon.Controls.SubmitButton.Props<TPayload>> props)
         {
             return b.Call(MdsCommon.Controls.SubmitButton.Render, props);
         }
 
-        public static Var<HyperNode> SubmitButton<TPayload>(this BlockBuilder b, Action<Modifier<SubmitButton.Props<TPayload>>> updateDefaults)
+        public static Var<HyperNode> SubmitButton<TPayload>(this LayoutBuilder b, Action<Modifier<SubmitButton.Props<TPayload>>> updateDefaults)
         {
             return b.SubmitButton(b.NewObj(updateDefaults));
         }
 
-        public static Var<HyperNode> FromDefault<TProps>(this BlockBuilder b, Func<BlockBuilder, Var<TProps>, Var<HyperNode>> control, Action<Modifier<TProps>> updateDefaults)
+        public static Var<HyperNode> FromDefault<TProps>(this LayoutBuilder b, Func<LayoutBuilder, Var<TProps>, Var<HyperNode>> control, Action<Modifier<TProps>> updateDefaults)
             where TProps : new()
         {
             var modifiedProps = b.NewObj<TProps>(updateDefaults);
             return b.Call(control, modifiedProps);
         }
 
-        public static Var<HyperNode> FromProps<TProps>(this BlockBuilder b, Func<BlockBuilder, Var<TProps>, Var<HyperNode>> control, TProps props)
+        public static Var<HyperNode> FromProps<TProps>(this LayoutBuilder b, Func<LayoutBuilder, Var<TProps>, Var<HyperNode>> control, TProps props)
             where TProps : new()
         {
             return b.Call(control, b.NewObj(props));

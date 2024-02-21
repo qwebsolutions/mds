@@ -7,19 +7,19 @@ namespace MdsLocal
 {
     public class RenderInfrastructureEventsList : HyperPage<ListInfrastructureEventsPage>
     {
-        public override Var<HyperNode> OnRender(BlockBuilder b, Var<ListInfrastructureEventsPage> clientModel)
+        public override Var<IVNode> OnRender(LayoutBuilder b, Var<ListInfrastructureEventsPage> clientModel)
         {
-            b.AddStylesheet("metapsi.hyperapp.css");
-
+            b.AddModuleStylesheet();
             var headerProps = b.NewObj<Header.Props>();
             b.Set(headerProps, x => x.Main, b.Const(new Header.Title() { Operation = "Infrastructure events" }));
             b.Set(headerProps, x => x.User, b.Get(clientModel, x => x.User));
+            b.Set(headerProps, x => x.UseSignIn, b.Const(false));
 
             return b.Call(
                 MdsCommon.Common.Layout,
                 b.LocalMenu(nameof(MdsCommon.Routes.EventsLog)),
                 b.Render(headerProps),
-                b.RenderListInfrastructureEventsPage(clientModel));
+                b.RenderListInfrastructureEventsPage(clientModel)).As<IVNode>();
         }
     }
 }

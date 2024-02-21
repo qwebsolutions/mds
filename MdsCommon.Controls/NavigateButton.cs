@@ -14,7 +14,7 @@ namespace MdsCommon.Controls
             public string SvgIcon { get; set; }
         }
 
-        public static Var<HyperNode> Render(this BlockBuilder b, Var<Props> props)
+        public static Var<HyperNode> Render(this LayoutBuilder b, Var<Props> props)
         {
             var link = b.Node("a");
             var button = b.Add(link, b.Node("button", "rounded"));

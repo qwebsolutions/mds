@@ -5,33 +5,36 @@ using System;
 using System.Linq;
 using MdsCommon.Controls;
 using Metapsi.ChoicesJs;
+using System.Collections.Generic;
 
 namespace MdsInfrastructure.Render
 {
     public static partial class EditConfiguration
     {
         public static Var<HyperNode> TabService(
-           BlockBuilder b,
+           LayoutBuilder b,
            Var<EditConfigurationPage> clientModel)
         {
             var serviceId = b.Get(clientModel, x => x.EditServiceId);
 
             var service = b.Get(clientModel, serviceId, (x, id) => x.Configuration.InfrastructureServices.Single(x => x.Id == id));
-            var allApplications = b.Get(clientModel, x => x.Configuration.Applications.ToList());
+            var allApplications = b.Get(clientModel, x => x.Configuration.Applications.OrderBy(x => x.Name).ToList());
             var activeProjects = b.Get(clientModel, x => x.AllProjects.Where(x => x.Enabled).ToList());
             var selectedProjectId = b.Get(service, x => x.ProjectId);
-            //var projectOptions = b.Get(activeProjects, selectedProjectId, (x, selectedProjectId) => x.Select(y => new DropDown.Option() { label = y.Name, value = y.Id.ToString(), selected = y.Id == selectedProjectId }).ToList());
-            var projectOptions = b.MapChoices<MdsCommon.Project, Guid>(activeProjects, x => x.Id, x => x.Name);
-            b.SetSelectedChoice(projectOptions, b.AsString(selectedProjectId));
+            var projectOptions = b.Get(
+                b.MapChoices<MdsCommon.Project, Guid>(
+                    activeProjects, 
+                    x => x.Id, 
+                    x => x.Name,
+                    selectedProjectId), 
+                x => x.OrderBy(x => x.label).ToList());
 
-            var versions = b.Get(activeProjects, selectedProjectId, (x, selectedProjectId) => x.SelectMany(x => x.Versions).Where(x => x.Enabled && x.ProjectId == selectedProjectId).ToList());
+            var versions = b.Get(activeProjects, selectedProjectId, (x, selectedProjectId) => x.SelectMany(x => x.Versions).Where(x => x.Enabled && x.ProjectId == selectedProjectId).OrderByDescending(x => x.Binaries.First().BuildNumber).ToList());
             var selectedVersionId = b.Get(service, x => x.ProjectVersionId);
             var selectedVersion = b.Get(versions, selectedVersionId, (x, selectedVersionId) => x.SingleOrDefault(x => x.Id == selectedVersionId, new ProjectVersion() { VersionTag = "(not selected)" }));
-            //var versionOptions = b.Get(versions, selectedVersionId,  (x, selectedVersionId) => x.Select(y => new DropDown.Option() { label = y.VersionTag, value = y.Id.ToString(), selected = selectedVersionId == y.Id }).ToList());
             var versionOptions = b.MapChoices(versions, x => x.Id, x => x.VersionTag, selectedVersionId);
-            
             var versionBinaries = b.Get(selectedVersion, x => x.Binaries);
-            var targetEnvironment = b.Def<string, string>((b, target) => b.If(b.AreEqual(target, b.Const("linux-x64")), b => b.Const("Linux"), b => b.Const("Windows")));
+            var targetEnvironment = b.Def<SyntaxBuilder, string, string>((b, target) => b.If(b.AreEqual(target, b.Const("linux-x64")), b => b.Const("Linux"), b => b.Const("Windows")));
             var versionTargets = b.Get(versionBinaries, x => x.Select(x => x.Target).Distinct().ToList());
             var versionSystems = b.Get(versionTargets, targetEnvironment, (x, targetEnvironment) => x.Select(x => targetEnvironment(x)));
             var mathingEnvironment = b.Get(clientModel, versionSystems, (clientModel, versionSystems) => clientModel.EnvironmentTypes.Where(x => versionSystems.Contains(x.OsType)));
@@ -47,43 +50,28 @@ namespace MdsInfrastructure.Render
 
             var applicationNameLabel = b.Add(container, b.Text("Application"));
             b.AddClass(applicationNameLabel, "w-full");
-            //var applicationDd = b.Add(container,
-            //    b.BoundDropDown(
-            //        b.Const("ddServiceApplication"),
-            //        service,
-            //        x => x.ApplicationId,
-            //        allApplications,
-            //        b.Def((BlockBuilder b, Var<Application> app) => b.Get(app, app => new DropDown.Option() { label = app.Name, value = app.Id.ToString() }))));
+            var getEditedService = b.Def<SyntaxBuilder, EditConfigurationPage, InfrastructureService>(EditEntity.EditedService);
 
-            var getEditedService = b.Def<EditConfigurationPage, InfrastructureService>(EditEntity.EditedService);
-
-            var appChoices = b.MapChoices(allApplications, x => x.Id, x => x.Name);
-            b.SetSelectedChoice(appChoices, b.Get(service, x => x.ApplicationId));
+            var appChoices = b.MapChoices(
+                allApplications, 
+                x => x.Id, 
+                x => x.Name,
+                b.Get(service, x => x.ApplicationId));
             var applicationDd = b.Add(container, b.DropDown(appChoices));
-            b.SingleBindTo<EditConfigurationPage, InfrastructureService, Guid>(
-                applicationDd,
-                getEditedService,
-                x => x.ApplicationId);
+            Metapsi.ChoicesJs.Event.SetOnChange(b, applicationDd, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
+            {
+                var service = b.Call(getEditedService, page);
+                var selectedId = b.ParseId(value);
+                b.Set(service, x => x.ApplicationId, selectedId);
+                return b.Clone(page);
+            }));
 
             b.AddClass(applicationDd, "w-full");
 
             var projectLabel = b.Add(container, b.Text("Project")); b.AddClass(projectLabel, "w-full");
 
-            //var projectDd = b.Add(container, b.DropDown(b.Const("projectDd"),
-            //    selectedProjectId.As<string>(),
-            //    projectOptions,
-            //    b.Def((BlockBuilder b, Var<string> inputValue) =>
-            //    {
-            //        Var<System.Guid> newId = b.ToId(inputValue);
-            //        b.Set(service,x=> x.ProjectId, newId);
-            //        // Clear project version, it's from the previous project
-            //        b.Set(service, x => x.ProjectVersionId, b.EmptyId());
-            //        b.Set(service, x=> x.InfrastructureNodeId, b.EmptyId());
-            //    }),
-            //    b.Const("Project")));
-
             var projectDd = b.Add(container, b.DropDown(projectOptions));
-            Metapsi.ChoicesJs.Event.SetOnChange(b, projectDd, b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
+            Metapsi.ChoicesJs.Event.SetOnChange(b, projectDd, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
             {
                 var service = b.Call(getEditedService, page);
                 var selectedId = b.ParseId(value);
@@ -97,57 +85,88 @@ namespace MdsInfrastructure.Render
 
             var versionLabel = b.Add(container, b.Text("Version")); b.AddClass(versionLabel, "w-full");
 
-            //var versionDd = b.Add(container, b.DropDown(b.Const("versionDd"),
-            //    selectedVersionId.As<string>(),
-            //    versionOptions,
-            //    b.Def((BlockBuilder b, Var<string> value) =>
-            //    {
-            //        Var<System.Guid> newId = b.ToId(value);
-            //        b.Set(service,  x=> x.ProjectVersionId, newId);
-            //        b.Set(service,  x=> x.InfrastructureNodeId, b.EmptyId());
-            //    }),
-            //    b.Const("Version")));
 
             var versionDd = b.Add(container, b.DropDown(versionOptions));
 
-            Metapsi.ChoicesJs.Event.SetOnChange(b, versionDd, b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
+            Metapsi.ChoicesJs.Event.SetOnChange(b, versionDd, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
             {
                 var service = b.Call(getEditedService, page);
-                var selectedId = b.ParseId(value);
-                b.Set(service, x => x.ProjectVersionId, selectedId);
-                b.Set(service, x => x.InfrastructureNodeId, b.EmptyId());
+                var newVersionId = b.ParseId(value);
+                b.Set(service, x => x.ProjectVersionId, newVersionId);
+
+                var selectedNode = b.Get(
+                    b.Get(page, x => x.InfrastructureNodes),
+                    b.Get(service, x => x.InfrastructureNodeId),
+                    (nodes, selectedNodeId) => nodes.SingleOrDefault(x => x.Id == selectedNodeId));
+
+                b.If(
+                    b.Not(b.HasObject(selectedNode)),
+                    b =>
+                    {
+                        b.Set(service, x => x.InfrastructureNodeId, b.EmptyId());
+                    },
+                    b =>
+                    {
+                        var serviceProject = b.Get(activeProjects, b.Get(service, x => x.ProjectId), (projects, projectId) => projects.SingleOrDefault(x => x.Id == projectId));
+                        b.If(b.Not(b.HasObject(serviceProject)),
+                            b =>
+                            {
+                                b.Set(service, x => x.InfrastructureNodeId, b.EmptyId());
+                            },
+                            b =>
+                            {
+                                var selectedProjectVersion = b.Get(serviceProject, newVersionId, (project, versionId) => project.Versions.SingleOrDefault(x => x.Enabled && x.Id == versionId));
+                                b.If(b.Not(b.HasObject(selectedProjectVersion)),
+                                    b =>
+                                    {
+                                        b.Set(service, x => x.InfrastructureNodeId, b.EmptyId());
+                                    },
+                                    b =>
+                                    {
+                                        var selectedNodeEnvironment = b.Get(
+                                            b.Get(page, x => x.EnvironmentTypes),
+                                            b.Get(selectedNode, x => x.EnvironmentTypeId),
+                                            (environmentTypes, environmentTypeId) => environmentTypes.SingleOrDefault(x => x.Id == environmentTypeId));
+
+                                        var versionEnvironmentCodes = b.Map(
+                                            b.Get(selectedProjectVersion, x => x.Binaries.Select(x => x.Target).ToList()),
+                                            (b, s) => b.ToLowercase(s));
+
+                                        var nodeEnvironmentCode = b.ToLowercase(b.Get(selectedNodeEnvironment, x => x.OsType));
+
+                                        var binariesMatches = b.Filter(
+                                            b.Get(selectedProjectVersion, x => x.Binaries),
+                                            (b, binaries) => TargetMatches(b, selectedNodeEnvironment, binaries));
+
+                                        b.Log(nameof(binariesMatches), binariesMatches);
+
+                                        b.If(b.Not(b.Get(binariesMatches, x => x.Any())),
+                                            b =>
+                                            {
+                                                b.Set(service, x => x.InfrastructureNodeId, b.EmptyId());
+                                            });
+                                    });
+                            });
+                    });
+
                 return b.Clone(page);
             }));
 
             b.AddClass(versionDd, "w-full");
 
-            //var transform = (BlockBuilder b, Var<InfrastructureNode> node) =>
-            //{
-            //    var nodeName = b.Get(node, x => x.NodeName);
-            //    var nodeId = b.Get(node, x => x.Id.ToString());
-
-            //    return b.NewObj<DropDown.Option>(b =>
-            //    {
-            //        b.Set(x => x.label, nodeName);
-            //        b.Set(x => x.value, nodeId);
-            //    });
-            //};
 
             var nodeLabel = b.Add(container, b.Text("Deployed on node"));
             b.AddClass(nodeLabel, "w-full");
-            //var nodeDd = b.Add(container, b.BoundDropDown(
-            //    b.Const("ddServiceNode"),
-            //    service,
-            //    x => x.InfrastructureNodeId,
-            //    matchingNodes,
-            //    b.Def(transform)));
 
-            var nodeChoices = b.MapChoices(matchingNodes, x => x.Id, x => x.NodeName);
-            b.SetSelectedChoice(nodeChoices, b.Get(service, x => x.InfrastructureNodeId));
+            var nodeChoices = b.MapChoices(
+                matchingNodes, 
+                x => x.Id, 
+                x => x.NodeName,
+                b.Get(service, x => x.InfrastructureNodeId));
 
             var nodeDd = b.Add(container, b.DropDown(nodeChoices));
 
-            Metapsi.ChoicesJs.Event.SetOnChange(b, nodeDd, b.MakeAction((BlockBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
+            Metapsi.ChoicesJs.Event.SetOnChange(b, nodeDd, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
             {
                 var service = b.Call(getEditedService, page);
                 var selectedId = b.ParseId(value);
@@ -166,11 +185,30 @@ namespace MdsInfrastructure.Render
 
             return container;
         }
+
+        private static Var<bool> TargetMatches(this SyntaxBuilder b, Var<EnvironmentType> environmentType, Var<ProjectVersionBinaries> projectVersionBinaries)
+        {
+            var linuxTargets = b.Const(new List<string>()
+            {
+                "linux-x64"
+            });
+
+            var windowsTargets = b.Const(new List<string>()
+            {
+                "win10-x64",
+                "win-x64"
+            });
+
+            return b.If(
+                b.AreEqual(b.ToLowercase(b.Get(environmentType, x => x.OsType)), b.Const("linux")),
+                b => b.Includes(linuxTargets, b.Get(projectVersionBinaries, x => x.Target)),
+                b => b.Includes(windowsTargets, b.Get(projectVersionBinaries, x => x.Target)));
+        }
     }
 
     public static class EditEntity
     {
-        public static Var<InfrastructureService> EditedService(BlockBuilder b, Var<EditConfigurationPage> page)
+        public static Var<InfrastructureService> EditedService(SyntaxBuilder b, Var<EditConfigurationPage> page)
         {
             return b.Get(page, page => page.Configuration.InfrastructureServices.Single(service => service.Id == page.EditServiceId));
         }

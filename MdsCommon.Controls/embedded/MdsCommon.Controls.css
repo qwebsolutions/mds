@@ -641,6 +641,14 @@ video {
   right: 0px;
 }
 
+.right-1 {
+  right: 0.25rem;
+}
+
+.right-3 {
+  right: 0.75rem;
+}
+
 .top-0 {
   top: 0px;
 }
@@ -651,6 +659,11 @@ video {
 
 .z-50 {
   z-index: 50;
+}
+
+.-mx-10 {
+  margin-left: -2.5rem;
+  margin-right: -2.5rem;
 }
 
 .mx-4 {
@@ -818,8 +831,16 @@ video {
   justify-content: space-between;
 }
 
+.gap-2 {
+  gap: 0.5rem;
+}
+
 .gap-4 {
   gap: 1rem;
+}
+
+.gap-8 {
+  gap: 2rem;
 }
 
 .space-x-2 > :not([hidden]) ~ :not([hidden]) {
@@ -5063,6 +5084,11 @@ video {
   padding: 2rem;
 }
 
+.px-2 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
 .px-4 {
   padding-left: 1rem;
   padding-right: 1rem;
@@ -9273,6 +9299,10 @@ video {
   filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
 }
 
+.filter {
+  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);
+}
+
 .transition-all {
   transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -9347,6 +9377,10 @@ body{
 
 .group:hover .group-hover\:visible {
   visibility: visible;
+}
+
+.group:hover .group-hover\:flex {
+  display: flex;
 }
 
 .group:hover .group-hover\:w-48 {

@@ -10,7 +10,7 @@ namespace MdsInfrastructure.Render
     {
         public class Credentials : HyperPage<SignInPage>
         {
-            public override Var<HyperNode> OnRender(BlockBuilder b, Var<SignInPage> clientModel)
+            public override Var<IVNode> OnRender(LayoutBuilder b, Var<SignInPage> clientModel)
             {
                 b.AddModuleStylesheet();
 
@@ -39,17 +39,16 @@ namespace MdsInfrastructure.Render
                 })));
                 b.SetAttr(submit, Html.id, "credentials-form");
 
-                b.SetOnEnter(password, b.MakeAction((BlockBuilder b, Var<SignInPage> state) =>
+                b.SetOnEnter(password, b.MakeAction((SyntaxBuilder b, Var<SignInPage> state) =>
                 {
-                    return b.MakeStateWithEffects(state, b.MakeEffect(b.MakeEffecter<SignInPage>((b, dispatcher) =>
+                    return b.MakeStateWithEffects(state, b.MakeEffect(b.Def((SyntaxBuilder b, Var<HyperType.Dispatcher<SignInPage>> dispatcher) =>
                     {
                         var form = b.GetElementById(b.Const("credentials-form"));
-                        b.Log("form", form);
                         b.CallExternal("form", "Submit", form);
                     })));
                 }));
 
-                return page;
+                return page.As<IVNode>();
             }
         }
     }

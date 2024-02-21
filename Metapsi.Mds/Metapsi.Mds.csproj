@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>netstandard2.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 		<LangVersion>8.0</LangVersion>
 		<DebugType>embedded</DebugType>
 		<DebugSymbols>true</DebugSymbols>
@@ -9,10 +9,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Dapper" Version="2.0.35" />
-		<PackageReference Include="Metapsi.SQLite" Version="1.6.0" />
-		<PackageReference Include="Metapsi.Timer" Version="1.6.0" />
-		<PackageReference Include="sqlite" Version="3.13.0" />
-		<PackageReference Include="System.Data.SQLite.Core" Version="1.0.113.7" />
+		<PackageReference Include="Metapsi.Runtime" Version="*" />
+		<PackageReference Include="Metapsi.SQLite" Version="*" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Metapsi.Timer\Metapsi.Timer.csproj" />
 	</ItemGroup>
 </Project>

@@ -1,4 +1,5 @@
-﻿using Metapsi.Hyperapp;
+﻿using Metapsi;
+using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using System;
 using System.Collections.Generic;
@@ -27,21 +28,21 @@ namespace MdsCommon.Controls
             public TPayload Payload { get; set; }
         }
 
-        public static Var<HyperNode> Render<TState, TPayload>(this BlockBuilder b, Var<Props<TState, TPayload>> props)
+        public static Var<HyperNode> Render<TState, TPayload>(this LayoutBuilder b, Var<Props<TState, TPayload>> props)
         {
             var button = b.RenderBase(props.As<Props>());
             b.SetOnClick<TState,TPayload>(button, b.Get(props, x => x.OnClick), b.Get(props, x => x.Payload));
             return button;
         }
 
-        public static Var<HyperNode> Render<TState>(this BlockBuilder b, Var<Props<TState>> props)
+        public static Var<HyperNode> Render<TState>(this LayoutBuilder b, Var<Props<TState>> props)
         {
             var button = b.RenderBase(props.As<Props>());
             b.SetOnClick<TState>(button, b.Get(props, x => x.OnClick));
             return button;
         }
 
-        private static Var<HyperNode> RenderBase(this BlockBuilder b, Var<Props> props)
+        private static Var<HyperNode> RenderBase(this LayoutBuilder b, Var<Props> props)
         {
             var button = b.Node("button", "rounded");
             var buttonContent = b.Add(button, b.Div("flex flex-row space-x-2 items-center"));
@@ -85,26 +86,37 @@ namespace MdsCommon.Controls
 
             return button;
         }
+
+        public static void AddButtonStyle(this PropsBuilder b, Var<DynamicObject> props)
+        {
+            b.AddClass(props, "rounded flex flex-row items-center py-2 px-4 shadow text-white");
+        }
+
+        public static void AddPrimaryButtonStyle(this PropsBuilder b, Var<DynamicObject> props)
+        {
+            b.AddButtonStyle(props);
+            b.AddClass(props, "bg-sky-500");
+        }
     }
 
     public static partial class Controls
     {
-        public static Var<HyperNode> CommandButton<TState>(this BlockBuilder b, Var<MdsCommon.Controls.CommandButton.Props<TState>> props)
+        public static Var<HyperNode> CommandButton<TState>(this LayoutBuilder b, Var<MdsCommon.Controls.CommandButton.Props<TState>> props)
         {
             return b.Call(MdsCommon.Controls.CommandButton.Render, props);
         }
 
-        public static Var<HyperNode> CommandButton<TState>(this BlockBuilder b, Action<Modifier<CommandButton.Props<TState>>> updateDefaults)
+        public static Var<HyperNode> CommandButton<TState>(this LayoutBuilder b, Action<Modifier<CommandButton.Props<TState>>> updateDefaults)
         {
             return b.CommandButton(b.NewObj(updateDefaults));
         }
 
-        public static Var<HyperNode> CommandButton<TState, TPayload>(this BlockBuilder b, Var<MdsCommon.Controls.CommandButton.Props<TState, TPayload>> props)
+        public static Var<HyperNode> CommandButton<TState, TPayload>(this LayoutBuilder b, Var<MdsCommon.Controls.CommandButton.Props<TState, TPayload>> props)
         {
             return b.Call(MdsCommon.Controls.CommandButton.Render, props);
         }
 
-        public static Var<HyperNode> CommandButton<TState, TPayload>(this BlockBuilder b, Action<Modifier<CommandButton.Props<TState, TPayload>>> updateDefaults)
+        public static Var<HyperNode> CommandButton<TState, TPayload>(this LayoutBuilder b, Action<Modifier<CommandButton.Props<TState, TPayload>>> updateDefaults)
         {
             return b.CommandButton(b.NewObj(updateDefaults));
         }

@@ -94,7 +94,7 @@ namespace MdsInfrastructure
 //            }
 //        }
 
-        public static Var<HyperNode> ChangesReport(this BlockBuilder b, System.Collections.Generic.List<ServiceChange> serviceChanges)
+        public static Var<HyperNode> ChangesReport(this LayoutBuilder b, System.Collections.Generic.List<ServiceChange> serviceChanges)
         {
             var container = b.Div("flex flex-col space-y-4 pt-4");
 
@@ -119,7 +119,7 @@ namespace MdsInfrastructure
             return container;
         }
 
-        public static Var<HyperNode> NewService(this BlockBuilder b, ServiceChange serviceChange)
+        public static Var<HyperNode> NewService(this LayoutBuilder b, ServiceChange serviceChange)
         {
             var container = b.Div("flex flex-col bg-green-100 p-4 rounded text-green-800");
 
@@ -136,7 +136,7 @@ namespace MdsInfrastructure
             return container;
         }
 
-        public static Var<HyperNode> RemovedService(this BlockBuilder b, ServiceChange serviceChange)
+        public static Var<HyperNode> RemovedService(this LayoutBuilder b, ServiceChange serviceChange)
         {
             var container = b.Div("flex flex-col bg-red-100 p-4 rounded text-red-800");
             var header = b.Add(container, b.Div("flex flex-row items-center space-x-4"));
@@ -150,7 +150,7 @@ namespace MdsInfrastructure
             return container;
         }
 
-        public static Var<HyperNode> ChangedService(this BlockBuilder b, ServiceChange serviceChange)
+        public static Var<HyperNode> ChangedService(this LayoutBuilder b, ServiceChange serviceChange)
         {
             var container = b.Div("flex flex-col bg-sky-200 p-4 rounded text-sky-800");
             var header = b.Add(container, b.Div("flex flex-row items-center space-x-4"));
@@ -175,7 +175,7 @@ namespace MdsInfrastructure
             return container;
         }
 
-        public static Var<HyperNode> ListParameterChanges(this BlockBuilder b, ServiceChange serviceChange)
+        public static Var<HyperNode> ListParameterChanges(this LayoutBuilder b, ServiceChange serviceChange)
         {
             var l = b.Div("flex flex-col space-y-1 text-sm py-2");
 
@@ -190,7 +190,7 @@ namespace MdsInfrastructure
             return l;
         }
 
-        public static Var<HyperNode> ParameterChange(this BlockBuilder b, ServicePropertyChange parameterChange)
+        public static Var<HyperNode> ParameterChange(this LayoutBuilder b, ServicePropertyChange parameterChange)
         {
             // null is different from string.Empty in this case.
             // null = parameter does not even exist, while string.Empty is valid parameter value

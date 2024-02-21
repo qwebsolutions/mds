@@ -14,7 +14,7 @@ namespace MdsInfrastructure
             return serverModel;
         }
 
-        public override Var<HyperNode> OnRender(BlockBuilder b, ListInfrastructureEventsPage serverModel, Var<ListInfrastructureEventsPage> clientModel)
+        public override Var<IVNode> OnRender(LayoutBuilder b, ListInfrastructureEventsPage serverModel, Var<ListInfrastructureEventsPage> clientModel)
         {
             b.AddModuleStylesheet();
 
@@ -26,7 +26,7 @@ namespace MdsInfrastructure
                 MdsCommon.Common.Layout,
                 b.InfraMenu(nameof(MdsCommon.Routes.EventsLog), serverModel.User.IsSignedIn()),
                 b.Render(headerProps),
-                b.RenderListInfrastructureEventsPage(clientModel));
+                b.RenderListInfrastructureEventsPage(clientModel)).As<IVNode>();
         }
     }
 }

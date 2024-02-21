@@ -1,9 +1,18 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net7.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Metapsi.Hyperapp" Version="*" />
+    <PackageReference Include="Metapsi.Runtime" Version="*" />
+    <PackageReference Include="Metapsi.Ui" Version="*" />
+    <PackageReference Include="Metapsi.Web.Contracts" Version="*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.csproj" />
+  </ItemGroup>
 
 </Project>

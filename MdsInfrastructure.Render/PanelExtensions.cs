@@ -12,15 +12,17 @@ namespace MdsInfrastructure.Render
     public static class PanelExtensions
     {
 
+        public const string RestartIcon = "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" >\r\n  <path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99\" />\r\n</svg>\r\n";
+
         public static Var<HyperNode> RenderNodePanel<TFromPage, TToPage>(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             InfrastructureNode node,
             List<MdsCommon.MachineStatus> healthStatus)
         {
             string nodeName = node.NodeName;
             string nodeUrl = $"http://{node.MachineIp}:{node.UiPort}";
 
-            Func<BlockBuilder, Var<HyperNode>> nodeHeader = (b) =>
+            Func<LayoutBuilder, Var<HyperNode>> nodeHeader = (b) =>
             {
                 var header = b.Span("flex flex-row text-white");
                 var link = b.Add(header, b.Node("a", "hover:underline cursor-pointer font-bold"));
@@ -108,7 +110,7 @@ namespace MdsInfrastructure.Render
         }
 
         public static Var<HyperNode> RenderApplicationPanel<TFromPage, TToPage>(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             MdsInfrastructure.Deployment deployment,
             List<MachineStatus> healthStatus,
             List<InfrastructureEvent> allInfrastructureEvents,
@@ -152,7 +154,7 @@ namespace MdsInfrastructure.Render
         }
 
         public static Var<HyperNode> RenderServicePanel(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             MdsInfrastructure.Deployment deployment,
             List<MachineStatus> healthStatus,
             MdsCommon.ServiceConfigurationSnapshot service,
@@ -238,6 +240,18 @@ namespace MdsInfrastructure.Render
                 var headerDiv = b.Div("flex flex-row");
                 var serviceNameSpan = b.Add(headerDiv, b.Bold(service.ServiceName));
                 b.AddClass(serviceNameSpan, "w-full");
+
+                //b.Add(serviceNameSpan, b.H(
+                //    "button",
+                //    (b, props) =>
+                //    {
+                //        b.OnClickAction(props, (SyntaxBuilder b, Var<object> notUsed) =>
+                //        {
+                //            return notUsed;
+                //        });
+                //    },
+                //    b.SvgNew("", RestartIcon)).As<HyperNode>());
+
 
                 var a = b.Add(headerDiv, b.Node("a", "flex flex-row justify-end text-gray-100 w-6 h-6 hover:text-white"));
                 b.SetAttr(a, Html.href, b.Const(Route.Path<Routes.Docs.Service, string>(service.ServiceName)));

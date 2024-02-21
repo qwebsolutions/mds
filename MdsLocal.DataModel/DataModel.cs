@@ -24,14 +24,14 @@ namespace MdsLocal
     {
         public string ServiceName { get; set; }
         public string ProjectName { get; set; }
-        public string ProjectVersionTag { get; set; }
+        public string ProjectVersion { get; set; }
         public string Pid { get; set; }
-        public string UsedRamMB { get; set; }
-        public string RunningStatus { get; set; }
+        public string UsedRam { get; set; }
+        public string RunningSince { get; set; }
         public bool HasError { get; set; } = false;
     }
 
-    public partial class OverviewPage
+    public partial class OverviewPage : Metapsi.Hyperapp.ApiSupportModel
     {
         public LocalSettings LocalSettings { get; set; } = new();
         public FullLocalStatus FullLocalStatus { get; set; } = new();
@@ -39,6 +39,7 @@ namespace MdsLocal
         public List<string> Warnings { get; set; } = new List<string>();
         public List<ProcessRow> Processes { get; set; } = new();
         public string OverviewText { get; set; } = string.Empty;
+        public ProcessRow RestartProcess { get; set; } = new();
     }
 
     public static class SyncStatusCodes

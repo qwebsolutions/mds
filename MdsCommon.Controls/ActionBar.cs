@@ -19,7 +19,7 @@ namespace MdsCommon.Controls
             public List<Command<TItem>> Commands { get; set; } = new();
         }
 
-        public static Var<HyperNode> Render<TItem>(BlockBuilder b, Var<Props<TItem>> props, Var<TItem> entity)
+        public static Var<HyperNode> Render<TItem>(LayoutBuilder b, Var<Props<TItem>> props, Var<TItem> entity)
         {
             b.AddModuleStylesheet();
 
@@ -32,7 +32,7 @@ namespace MdsCommon.Controls
                 var action = b.Div("flex rounded bg-gray-200 w-10 h-10 p-1 cursor-pointer justify-center items-center opacity-50 hover:opacity-100 text-red-500");
                 b.SetInnerHtml(action, b.Get(command, x => x.IconHtml));
 
-                var onClick = b.Def<object, object>((b, state) =>
+                var onClick = b.Def<SyntaxBuilder, object, object>((b, state) =>
                 {
                     var onCommand = b.Get(command, x => x.OnCommand);
                     b.Call(onCommand, entity);
@@ -51,7 +51,7 @@ namespace MdsCommon.Controls
     {
 
         public static Var<HyperNode> ActionBar<TItem>(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<ActionBar.Props<TItem>> props,
             Var<TItem> entity)
         {

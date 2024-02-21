@@ -8,7 +8,7 @@ namespace MdsCommon
     public static class SignIn
     {
         public static Var<HyperNode> Render(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<SignInPage> clientModel)
         {
             b.AddModuleStylesheet();
@@ -38,9 +38,9 @@ namespace MdsCommon
             })));
             b.SetAttr(submit, Html.id, "credentials-form");
 
-            b.SetOnEnter(password, b.MakeAction((BlockBuilder b, Var<SignInPage> state) =>
+            b.SetOnEnter(password, b.MakeAction((SyntaxBuilder b, Var<SignInPage> state) =>
             {
-                return b.MakeStateWithEffects(state, b.MakeEffect(b.MakeEffecter<SignInPage>((b, dispatcher) =>
+                return b.MakeStateWithEffects(state, b.MakeEffect(b.Def((SyntaxBuilder b, Var<HyperType.Dispatcher<SignInPage>> dispatcher) =>
                 {
                     var form = b.GetElementById(b.Const("credentials-form"));
                     b.CallExternal("form", "Submit", form);
@@ -55,7 +55,7 @@ namespace MdsCommon
     public static partial class Common
     {
         public static Var<HyperNode> Layout(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<HyperNode> menu,
             Var<HyperNode> header,
             Var<HyperNode> page)

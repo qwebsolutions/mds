@@ -8,7 +8,16 @@ namespace MdsInfrastructure
     // TODO: Remove explicit API support
     public class EditConfigurationPage : IApiSupportState //: IEditPage<EditConfigurationPage>, IHasTabs, IHasValidationPanel
     {
+        public string CurrentConfigurationSimplifiedJson { get; set; } = string.Empty;
+
+        public SaveConfigurationResponse SaveConfigurationResponse { get; set; }= new ();
+        public MergeConfigurationResponse MergeConfigurationResponse { get; set; } = new();
+
         public Metapsi.Ui.User User { get; set; }
+
+        public string ServicesFilter { get; set; } = string.Empty;
+        public string ApplicationsFilter { get; set; } = string.Empty;
+        public string VariablesFilter { get; set; } = string.Empty;
 
         public InfrastructureConfiguration Configuration { get; set; }
         public List<MdsCommon.Project> AllProjects { get; set; }

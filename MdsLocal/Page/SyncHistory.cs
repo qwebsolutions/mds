@@ -14,14 +14,10 @@ namespace MdsLocal
     {
         public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext requestData)
         {
-            var inputJson = await System.IO.File.ReadAllTextAsync("D:\\qwebsolutions\\metapsi\\MetapsiEditor\\input.txt");
-
-            var dataModel = Metapsi.Serialize.FromJson<SyncHistory.DataModel>(inputJson);
-
-            //var dataModel = new SyncHistory.DataModel()
-            //{
-            //    SyncHistory = (await commandContext.Do(MdsLocalApplication.GetSyncHistory)).OrderByDescending(x => x.Timestamp).ToList()
-            //};
+            var dataModel = new SyncHistory.DataModel()
+            {
+                SyncHistory = (await commandContext.Do(MdsLocalApplication.GetSyncHistory)).OrderByDescending(x => x.Timestamp).ToList()
+            };
 
             return Page.Result(dataModel);
         }

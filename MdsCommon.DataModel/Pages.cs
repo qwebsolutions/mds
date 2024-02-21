@@ -45,6 +45,7 @@ namespace MdsCommon
             public Title Main { get; set; }
             public List<Title> Secondary { get; set; } = new List<Title>();
             public User User { get; set; }
+            public bool UseSignIn { get; set; } = true;
         }
     }
 

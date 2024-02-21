@@ -19,7 +19,7 @@ namespace MdsInfrastructure.Render
                 return serverModel;
             }
 
-            public override Var<HyperNode> OnRender(BlockBuilder b, M.List serverModel, Var<M.List> clientModel)
+            public override Var<IVNode> OnRender(LayoutBuilder b, M.List serverModel, Var<M.List> clientModel)
             {
                 b.AddModuleStylesheet();
                 return b.Layout(
@@ -31,7 +31,7 @@ namespace MdsInfrastructure.Render
                                 Main = new Header.Title() { Operation = "Nodes" },
                                 User = serverModel.User,
                             })),
-                    b.RenderNodesList(clientModel));
+                    b.RenderNodesList(clientModel)).As<IVNode>();
             }
         }
 
@@ -42,7 +42,7 @@ namespace MdsInfrastructure.Render
                 return serverModel;
             }
 
-            public override Var<HyperNode> OnRender(BlockBuilder b, M.EditPage serverModel, Var<M.EditPage> clientModel)
+            public override Var<IVNode> OnRender(LayoutBuilder b, M.EditPage serverModel, Var<M.EditPage> clientModel)
             {
                 var nodeName = b.Get(clientModel, x => x.InfrastructureNode.NodeName);
 
@@ -60,18 +60,18 @@ namespace MdsInfrastructure.Render
 
                 b.AddModuleStylesheet();
 
-                return layout;
+                return layout.As<IVNode>();
             }
         }
 
-        public static Var<HyperNode> RenderNodesList(this BlockBuilder b, Var<M.List> clientModel)
+        public static Var<HyperNode> RenderNodesList(this LayoutBuilder b, Var<M.List> clientModel)
         {
             var addUrl = b.Const("Not implemented");
 
 
             var rows = b.Get(clientModel, x => x.InfrastructureNodes.ToList());
 
-            var rc = b.RenderCell((BlockBuilder b, Var<InfrastructureNode> node, Var<DataTable.Column> col) =>
+            var rc = b.RenderCell((LayoutBuilder b, Var<InfrastructureNode> node, Var<DataTable.Column> col) =>
             {
                 var envTypes = b.Get(clientModel, x => x.EnvironmentTypes);
                 var nodeNameRef = b.Ref(b.Get(node, x => x.NodeName));
@@ -124,7 +124,7 @@ namespace MdsInfrastructure.Render
 
 
         public static Var<HyperNode> RenderEditNodePage(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<M.EditPage> clientModel)
         {
             var node = b.Get(clientModel, x => x.InfrastructureNode);
@@ -135,7 +135,7 @@ namespace MdsInfrastructure.Render
         }
 
         public static Var<HyperNode> RenderEditNodeForm(
-            this BlockBuilder b,
+            this LayoutBuilder b,
             Var<M.EditPage> clientModel)
         {
             var node = b.Get(clientModel, x => x.InfrastructureNode);
@@ -168,7 +168,7 @@ namespace MdsInfrastructure.Render
             return form;
         }
 
-        public static Var<HyperNode> Form(this BlockBuilder b, Var<HyperNode> toolbar)
+        public static Var<HyperNode> Form(this LayoutBuilder b, Var<HyperNode> toolbar)
         {
             //var container = b.Div("flex flex-col p-4 gap-4");
             //var top = b.Add(container, b.Div("flex flex-row justify-end"));
@@ -184,13 +184,13 @@ namespace MdsInfrastructure.Render
             return grid;
         }
 
-        public static void FormField(this BlockBuilder b, Var<HyperNode> form, string label, Var<HyperNode> fieldControl)
+        public static void FormField(this LayoutBuilder b, Var<HyperNode> form, string label, Var<HyperNode> fieldControl)
         {
             b.Add(form, b.Text(label));
             b.Add(form, fieldControl);
         }
 
-        public static Var<string> WithDefault(this BlockBuilder b, Var<string> value)
+        public static Var<string> WithDefault(this SyntaxBuilder b, Var<string> value)
         {
             return b.If(b.HasValue(value), b => value, b => b.Const("(not set)"));
         }

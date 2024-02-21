@@ -17,17 +17,26 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Metapsi.Redis" Version="1.6.0" />
+		<PackageReference Include="Metapsi.Redis" Version="*" />
+		<PackageReference Include="Metapsi.Web" Version="*" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="7.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Metapsi.HttpServer\Metapsi.HttpServer.csproj" />
-		<ProjectReference Include="..\MdsCommon.Ui\MdsCommon.Ui.csproj" />
+		<ProjectReference Include="..\MdsCommon\MdsCommon.csproj" />
 		<ProjectReference Include="..\MdsInfrastructure.DataModel\MdsInfrastructure.DataModel.csproj" />
 		<ProjectReference Include="..\MdsInfrastructure.Db\MdsInfrastructure.Db.csproj" />
-		<ProjectReference Include="..\MdsInfrastructure.Ui\MdsInfrastructure.Ui.csproj" />
+		<ProjectReference Include="..\MdsInfrastructure.Flow\MdsInfrastructure.Flow.csproj" />
+		<ProjectReference Include="..\MdsInfrastructure.Render\MdsInfrastructure.Render.csproj" />
+		<ProjectReference Include="..\Metapsi.HttpServer\Metapsi.HttpServer.csproj" />
 		<ProjectReference Include="..\Metapsi.Mds\Metapsi.Mds.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Include="windows_scripts\curl.exe" LogicalName="curl.exe" />
+		<EmbeddedResource Include="windows_scripts\curl-ca-bundle.crt" LogicalName="curl-ca-bundle.crt" />
+		<EmbeddedResource Include="windows_scripts\check.bat" LogicalName="check.bat" />
+		<EmbeddedResource Include="windows_scripts\upload.bat" LogicalName="upload.bat" />
 	</ItemGroup>
 
 </Project>
