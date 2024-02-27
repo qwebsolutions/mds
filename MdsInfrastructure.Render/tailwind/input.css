@@ -2,3 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+
+:not(:defined) {
+  visibility: hidden;
+}
+
+sl-dialog:not(:defined) {
+  display: none;
+}
+
+sl-menu:not(:defined) {
+  display: none;
+}

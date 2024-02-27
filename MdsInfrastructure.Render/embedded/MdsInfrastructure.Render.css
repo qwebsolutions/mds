@@ -556,6 +556,10 @@ video {
   }
 }
 
+.visible {
+  visibility: visible;
+}
+
 .static {
   position: static;
 }
@@ -626,10 +630,6 @@ video {
 
 .grid {
   display: grid;
-}
-
-.hidden {
-  display: none;
 }
 
 .h-3 {
@@ -5006,6 +5006,10 @@ video {
   padding-top: 2rem;
 }
 
+.text-left {
+  text-align: left;
+}
+
 .text-lg {
   font-size: 1.125rem;
   line-height: 1.75rem;
@@ -8543,6 +8547,11 @@ video {
   color: rgb(127 29 29 / 0.95);
 }
 
+.text-sky-500 {
+  --tw-text-opacity: 1;
+  color: rgb(14 165 233 / var(--tw-text-opacity));
+}
+
 .text-sky-600 {
   --tw-text-opacity: 1;
   color: rgb(2 132 199 / var(--tw-text-opacity));
@@ -9170,6 +9179,18 @@ video {
   transition-duration: 150ms;
 }
 
+:not(:defined) {
+  visibility: hidden;
+}
+
+sl-dialog:not(:defined) {
+  display: none;
+}
+
+sl-menu:not(:defined) {
+  display: none;
+}
+
 .hover\:text-white:hover {
   --tw-text-opacity: 1;
   color: rgb(255 255 255 / var(--tw-text-opacity));
@@ -9182,4 +9203,3 @@ video {
 .hover\:opacity-100:hover {
   opacity: 1;
 }
-

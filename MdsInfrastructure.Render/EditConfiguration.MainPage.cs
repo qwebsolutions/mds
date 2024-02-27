@@ -27,33 +27,22 @@ namespace MdsInfrastructure.Render
             var isSaved = b.Not(HasChanges(b, clientModel));
             var configId = b.Get(clientModel, x => x.Configuration.Id);
             var configuration = b.Get(clientModel, x => x.Configuration);
-
-            var menuDropdown = b.SlNode(
-                "sl-dropdown",
-                (b, props) =>
+            var menuDropdown = b.SlDropdown(
+                b => { },
+                b.SlIconButton(b =>
                 {
-
-                },
-                b.SlNode(
-                    "sl-icon-button",
-                    (b, props) =>
+                    b.SetSlot(SlDropdown.Slot.Trigger);
+                    b.SetName("gear");
+                    b.SetLabel("merge-options");
+                }),
+                b.SlMenu(
+                    b =>
                     {
-                        b.SetDynamic(props, DynamicProperty.String("slot"), b.Const("trigger"));
-                        b.SetDynamic(props, DynamicProperty.String("name"), b.Const("gear"));
-                        b.SetDynamic(props, DynamicProperty.String("label"), b.Const("merge-options"));
-                    }),
-                b.SlNode(
-                    "sl-menu",
-                    (b, props) =>
-                    {
-
-                    },
-                    b.SlNode(
-                        "sl-menu-item",
-                        (b, props) =>
+                        b.OnSlSelect(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<SlMenuSelectArgs> args) =>
                         {
-                            b.SetDynamic(props, DynamicProperty.String("value"), b.Const("show-current-json"));
-                            b.OnSlClickAction(props, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
+                            var selectedValue = b.Get(args, x => x.detail.item.value);
+
+                            var showCurrentJson = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
                             {
                                 return b.MakeStateWithEffects(
                                     b.ShowPanel(clientModel),
@@ -68,23 +57,9 @@ namespace MdsInfrastructure.Render
                                                     b.ShowDialog(b.Const(IdCurrentJsonPopup));
                                                     return b.Clone(page);
                                                 })))));
-                            }));
+                            });
 
-                        },
-                        b.SlNode(
-                            "sl-icon",
-                            (b, props) =>
-                            {
-                                b.SetDynamic(props, DynamicProperty.String("name"), b.Const("clipboard-check"));
-                                b.SetDynamic(props, DynamicProperty.String("slot"), b.Const("prefix"));
-                            }),
-                        b.T("Local configuration")),
-                    b.SlNode(
-                        "sl-menu-item",
-                        (b, props) =>
-                        {
-                            b.SetDynamic(props, DynamicProperty.String("value"), b.Const("downlad-windows-scripts"));
-                            b.OnSlClickAction(props, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
+                            var downloadWindowsScripts = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
                             {
                                 var fetchOptions = b.NewObj<FetchOptions>();
                                 b.Set(fetchOptions, x => x.method, b.Const("POST"));
@@ -97,23 +72,42 @@ namespace MdsInfrastructure.Render
                                             b.CallExternal("fetch", "DownloadFile",
                                                 b.Const("/api/windows-scripts"),
                                                 fetchOptions,
-                                                b.Def((SyntaxBuilder b, Var<object> file) => {
+                                                b.Def((SyntaxBuilder b, Var<object> file) =>
+                                                {
                                                     b.CallExternal("fetch", "DownloadBlob", file, b.Concat(b.Get(clientModel, x => x.Configuration.Name), b.Const(".zip")));
                                                 }),
                                                 b.Def((SyntaxBuilder b, Var<ApiError> not_used) => { b.Log("Error"); b.Log(not_used); })))));
-                            }));
+                            });
+
+                            return b.Switch(selectedValue,
+                                b => showCurrentJson,
+                                ("download-windows-scripts", b => downloadWindowsScripts));
+                        }));
+                    },
+                    b.SlMenuItem(
+                        b =>
+                        {
+                            b.SetValue("show-current-json");                   
                         },
-                        b.SlNode(
-                            "sl-icon",
-                            (b, props)=>
+                        b.SlIcon(
+                            b =>
                             {
-                                b.SetDynamic(props, DynamicProperty.String("name"), b.Const("box-arrow-down"));
-                                b.SetDynamic(props, DynamicProperty.String("slot"), b.Const("prefix"));
+                                b.SetSlot(SlMenuItem.Slot.Prefix);
+                                b.SetName(b.Const("clipboard-check"));
+                            }),
+                        b.T("Local configuration")),
+                    b.SlMenuItem(
+                        b =>
+                        {
+                            b.SetValue("download-windows-scripts");
+                        },
+                        b.SlIcon(
+                            b =>
+                            {
+                                b.SetSlot(SlMenuItem.Slot.Prefix);
+                                b.SetName("box-arrow-down");
                             }),
                         b.T("Merge tools"))));
-
-
-            //<sl-icon-button name="gear" label="Settings"></sl-icon-button>);
 
             var deploymentReportUrl = b.Url<Routes.Deployment.ConfigurationPreview, Guid>(configId);
 
@@ -186,74 +180,7 @@ namespace MdsInfrastructure.Render
             var container = b.Div("flex flex-col w-full bg-white rounded shadow");
             b.Add(
                 container,
-            //    b.SlNode(
-            //        "sl-tab-group",
-            //        (b, props) =>
-            //        {
-
-            //        },
-            //        b.H(
-            //            "sl-tab",
-            //            (b, props) =>
-            //            {
-            //                b.SetDynamic(props, DynamicProperty.String("slot"), b.Const("nav"));
-            //                b.SetDynamic(props, DynamicProperty.String("panel"), b.Const("configuration"));
-            //            },
-            //            b.T("Configuration")),
-            //        b.H(
-            //            "sl-tab",
-            //            (b, props) =>
-            //            {
-            //                b.SetDynamic(props, DynamicProperty.String("slot"), b.Const("nav"));
-            //                b.SetDynamic(props, DynamicProperty.String("panel"), b.Const("services"));
-            //            },
-            //            b.T("Services")),
-            //        b.H(
-            //            "sl-tab",
-            //            (b, props) =>
-            //            {
-            //                b.SetDynamic(props, DynamicProperty.String("slot"), b.Const("nav"));
-            //                b.SetDynamic(props, DynamicProperty.String("panel"), b.Const("applications"));
-            //            },
-            //            b.T("Applications")),
-            //        b.H(
-            //            "sl-tab",
-            //            (b, props) =>
-            //            {
-            //                b.SetDynamic(props, DynamicProperty.String("slot"), b.Const("nav"));
-            //                b.SetDynamic(props, DynamicProperty.String("panel"), b.Const("variables"));
-            //            },
-            //            b.T("Variables")),
-            //        b.H(
-            //            "sl-tab-panel",
-            //            (b, props) =>
-            //            {
-            //                b.SetDynamic(props, DynamicProperty.String("name"), b.Const("configuration"));
-            //            },
-            //            b.Call(EditConfiguration.TabConfiguration, clientModel)),
-            //        b.H(
-            //            "sl-tab-panel",
-            //            (b, props) =>
-            //            {
-            //                b.SetDynamic(props, DynamicProperty.String("name"), b.Const("services"));
-            //            },
-            //            b.Call(EditConfiguration.TabServices, clientModel).As<IVNode>()),
-            //        b.H(
-            //            "sl-tab-panel",
-            //            (b, props) =>
-            //            {
-            //                b.SetDynamic(props, DynamicProperty.String("name"), b.Const("applications"));
-            //            },
-            //            b.Call(EditConfiguration.TabApplications, clientModel).As<IVNode>()),
-            //        b.H(
-            //            "sl-tab-panel",
-            //            (b, props) =>
-            //            {
-            //                b.SetDynamic(props, DynamicProperty.String("name"), b.Const("variables"));
-            //            },
-            //            b.Call(EditConfiguration.TabVariables, clientModel).As<IVNode>())).As<HyperNode>());
-
-            b.Tabs(
+                b.Tabs(
                     b =>
                     {
                         b.AddTab(
