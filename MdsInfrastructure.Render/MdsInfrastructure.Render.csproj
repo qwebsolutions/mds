@@ -39,7 +39,7 @@
 		<EmbeddedResource Include="embedded\connect.js" LogicalName="connect.js" />
 		<EmbeddedResource Include="embedded\cy.js" LogicalName="cy.js" />
 		<EmbeddedResource Include="embedded\leader-line.min.js" LogicalName="leader-line.min.js" />
-		<EmbeddedResource Include="embedded\MdsInfrastructure.Render.css" LogicalName="MdsInfrastructure.Render.Direct.css" />
+		<EmbeddedResource Include="embedded\MdsInfrastructure.Render.css" LogicalName="MdsInfrastructure.Render.css" />
 		<EmbeddedResource Include="embedded\nowork.png" LogicalName="nowork.png" />
 		<EmbeddedResource Include="embedded\server-icon.png" LogicalName="server-icon.png" />
 	</ItemGroup>	
