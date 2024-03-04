@@ -23,6 +23,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\metapsi\Metapsi.Hyperapp\Metapsi.Hyperapp.csproj" />
+		<ProjectReference Include="..\..\metapsi\Metapsi.Mds\Metapsi.Mds.csproj" />
 		<ProjectReference Include="..\..\metapsi\Metapsi.Redis\Metapsi.Redis.csproj" />
 		<ProjectReference Include="..\..\metapsi\Metapsi.Runtime\Metapsi.Runtime.csproj" />
 		<ProjectReference Include="..\..\metapsi\Metapsi.Web\Metapsi.Web.csproj" />
@@ -31,7 +32,6 @@
 		<ProjectReference Include="..\MdsInfrastructure.Render\MdsInfrastructure.Render.Direct.csproj" />
 		<ProjectReference Include="..\MdsLocal.DataModel\MdsLocal.DataModel.Direct.csproj" />
 		<ProjectReference Include="..\Metapsi.HttpServer\Metapsi.HttpServer.Direct.csproj" />
-		<ProjectReference Include="..\Metapsi.Mds\Metapsi.Mds.Direct.csproj" />
 		<ProjectReference Include="..\MdsInfrastructure.DataModel\MdsInfrastructure.DataModel.Direct.csproj" />
 		<ProjectReference Include="..\MdsInfrastructure.Db\MdsInfrastructure.Db.Direct.csproj" />
 	</ItemGroup>

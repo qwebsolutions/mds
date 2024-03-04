@@ -20,6 +20,7 @@
 		<PackageReference Include="Metapsi.Redis" Version="*" />
 		<PackageReference Include="Metapsi.Web" Version="*" />
 		<PackageReference Include="Metapsi.Ui" Version="*" />
+		<PackageReference Include="Metapsi.Mds" Version="*" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="7.0.0" />
 	</ItemGroup>
 
@@ -30,7 +31,6 @@
 		<ProjectReference Include="..\MdsInfrastructure.Flow\MdsInfrastructure.Flow.csproj" />
 		<ProjectReference Include="..\MdsInfrastructure.Render\MdsInfrastructure.Render.csproj" />
 		<ProjectReference Include="..\Metapsi.HttpServer\Metapsi.HttpServer.csproj" />
-		<ProjectReference Include="..\Metapsi.Mds\Metapsi.Mds.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

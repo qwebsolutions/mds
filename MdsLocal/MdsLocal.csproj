@@ -6,31 +6,31 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <Content Remove="localargs.json" />
+		<Content Remove="localargs.json" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <None Include="localargs.json">
-	    <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-	  </None>
+		<None Include="localargs.json">
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Metapsi.Hyperapp" Version="*" />
-	  <PackageReference Include="Metapsi.Redis" Version="*" />
-	  <PackageReference Include="Metapsi.Web" Version="*" />
+		<PackageReference Include="Metapsi.Hyperapp" Version="*" />
+		<PackageReference Include="Metapsi.Redis" Version="*" />
+		<PackageReference Include="Metapsi.Web" Version="*" />
+		<PackageReference Include="Metapsi.Mds" Version="*" />
+		<PackageReference Include="Metapsi.Timer" Version="*" />
 	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\MdsCommon.Controls\MdsCommon.Controls.csproj" />
-    <ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.csproj" />
-    <ProjectReference Include="..\MdsCommon.Db\MdsCommon.Db.csproj" />
-    <ProjectReference Include="..\MdsCommon.Render\MdsCommon.Render.csproj" />
-    <ProjectReference Include="..\MdsCommon\MdsCommon.csproj" />
-    <ProjectReference Include="..\MdsLocal.DataModel\MdsLocal.DataModel.csproj" />
-    <ProjectReference Include="..\MdsLocal.Render\MdsLocal.Render.csproj" />
-    <ProjectReference Include="..\Metapsi.Mds\Metapsi.Mds.csproj" />
-    <ProjectReference Include="..\Metapsi.Timer\Metapsi.Timer.csproj" />
-  </ItemGroup>
-  
+	<ItemGroup>
+		<ProjectReference Include="..\MdsCommon.Controls\MdsCommon.Controls.csproj" />
+		<ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.csproj" />
+		<ProjectReference Include="..\MdsCommon.Db\MdsCommon.Db.csproj" />
+		<ProjectReference Include="..\MdsCommon.Render\MdsCommon.Render.csproj" />
+		<ProjectReference Include="..\MdsCommon\MdsCommon.csproj" />
+		<ProjectReference Include="..\MdsLocal.DataModel\MdsLocal.DataModel.csproj" />
+		<ProjectReference Include="..\MdsLocal.Render\MdsLocal.Render.csproj" />
+	</ItemGroup>
+
 </Project>

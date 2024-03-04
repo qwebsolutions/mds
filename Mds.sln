@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsBuildManager", "MdsBuild
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsCommon", "MdsCommon\MdsCommon.csproj", "{C406A1C6-AA64-4A89-943F-23B3E30859A2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Mds", "Metapsi.Mds\Metapsi.Mds.csproj", "{AC846EF5-08C4-45E0-9858-1A122245277B}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsCommon.DataModel", "MdsCommon.DataModel\MdsCommon.DataModel.csproj", "{67BD9244-ADB8-44C0-B829-59CB928C5A9B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsCommon.Db", "MdsCommon.Db\MdsCommon.Db.csproj", "{B1DFF264-3527-4926-AB46-450C1C24AEE9}"
@@ -33,8 +31,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsCommon.Controls", "MdsCo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsLocal.Render", "MdsLocal.Render\MdsLocal.Render.csproj", "{F5465563-F188-43BC-8BA1-B0898415683E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Timer", "Metapsi.Timer\Metapsi.Timer.csproj", "{FE71297E-BB76-49C5-B7A8-EB178A06CAFA}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.HttpServer", "Metapsi.HttpServer\Metapsi.HttpServer.csproj", "{20BF69E9-FC81-4FFD-9B64-53C72AA46C09}"
 EndProject
 Global
@@ -51,10 +47,6 @@ Global
 		{C406A1C6-AA64-4A89-943F-23B3E30859A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C406A1C6-AA64-4A89-943F-23B3E30859A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C406A1C6-AA64-4A89-943F-23B3E30859A2}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AC846EF5-08C4-45E0-9858-1A122245277B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AC846EF5-08C4-45E0-9858-1A122245277B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AC846EF5-08C4-45E0-9858-1A122245277B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AC846EF5-08C4-45E0-9858-1A122245277B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{67BD9244-ADB8-44C0-B829-59CB928C5A9B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{67BD9244-ADB8-44C0-B829-59CB928C5A9B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{67BD9244-ADB8-44C0-B829-59CB928C5A9B}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -103,10 +95,6 @@ Global
 		{F5465563-F188-43BC-8BA1-B0898415683E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F5465563-F188-43BC-8BA1-B0898415683E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F5465563-F188-43BC-8BA1-B0898415683E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FE71297E-BB76-49C5-B7A8-EB178A06CAFA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FE71297E-BB76-49C5-B7A8-EB178A06CAFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FE71297E-BB76-49C5-B7A8-EB178A06CAFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FE71297E-BB76-49C5-B7A8-EB178A06CAFA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{20BF69E9-FC81-4FFD-9B64-53C72AA46C09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{20BF69E9-FC81-4FFD-9B64-53C72AA46C09}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{20BF69E9-FC81-4FFD-9B64-53C72AA46C09}.Release|Any CPU.ActiveCfg = Release|Any CPU

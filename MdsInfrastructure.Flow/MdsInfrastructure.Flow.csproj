@@ -1,18 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Metapsi.Runtime" Version="*" />
-    <PackageReference Include="Metapsi.Web" Version="*" />
-    <PackageReference Include="Metapsi.Web.Contracts" Version="*" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Metapsi.Runtime" Version="*" />
+		<PackageReference Include="Metapsi.Web" Version="*" />
+		<PackageReference Include="Metapsi.Web.Contracts" Version="*" />
+		<PackageReference Include="Metapsi.Mds" Version="*" />
+		<PackageReference Include="Metapsi.Sqlite" Version="*" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\MdsInfrastructure.DataModel\MdsInfrastructure.DataModel.csproj" />
-    <ProjectReference Include="..\Metapsi.Mds\Metapsi.Mds.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\MdsInfrastructure.DataModel\MdsInfrastructure.DataModel.csproj" />
+	</ItemGroup>
 
 </Project>

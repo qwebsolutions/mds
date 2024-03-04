@@ -9,7 +9,6 @@
 		<ProjectReference Include="..\..\metapsi\Metapsi.Web\Metapsi.Web.csproj" />
 		<ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.Direct.csproj" />
 		<ProjectReference Include="..\MdsCommon.Db\MdsCommon.Db.Direct.csproj" />
-		<ProjectReference Include="..\Metapsi.Mds\Metapsi.Mds.Direct.csproj" />
 		<ProjectReference Include="..\..\metapsi\Metapsi.Redis\Metapsi.Redis.csproj" />
 	</ItemGroup>
 </Project>
