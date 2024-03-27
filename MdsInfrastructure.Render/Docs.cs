@@ -148,7 +148,8 @@ namespace MdsInfrastructure.Render
                             b.SetHref(b.Url<Routes.Docs.Service, string>(b.Const(serviceName)));
                             b.UnderlineBlue();
                         },
-                        b.T(serviceName))));
+                        b.T(serviceName))),
+                b.TextSpan(url));
         }
 
         public static Var<IVNode> RedisChannel(this LayoutBuilder b,
@@ -221,7 +222,7 @@ namespace MdsInfrastructure.Render
                             b.StyledSpan(
                                 "font-semibold",
                                 b.T(parameter.ParameterName)),
-                            b.T(parameter.DeployedValue)),
+                            b.StyledSpan("", b.T(parameter.DeployedValue))),
                         b.StyledSpan(
                             "text-gray-500",
                             !string.IsNullOrEmpty(parameter.ParameterComment)
@@ -234,11 +235,11 @@ namespace MdsInfrastructure.Render
                 b.StyledDiv(
                     "flex flex-row space-x-2 items-center font-semibold",
                     b.Svg(Icon.Computer, "w-3 h-3 text-gray-400"),
-                    b.T(currentService.NodeName)),
+                    b.StyledSpan("", b.T(currentService.NodeName))),
                 b.StyledDiv(
                     "flex flex-row space-x-2 items-center font-semibold",
                     b.Svg(Icon.DocumentText, "w-3 h-3 text-gray-400"),
-                    b.T(currentService.ProjectLabel())));
+                    b.StyledSpan("", b.T(currentService.ProjectLabel()))));
 
             return b.HtmlDiv(
                 b =>

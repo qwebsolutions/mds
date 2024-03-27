@@ -177,20 +177,17 @@ namespace MdsInfrastructure.Render
             return form;
         }
 
-        public static Var<IVNode> Form(this LayoutBuilder b, Action<PropsBuilder<HtmlDiv>> setProps, Var<IVNode> toolbar, params (string, Var<IVNode>)[] forms)
+        public static Var<IVNode> Form(
+            this LayoutBuilder b,
+            Action<PropsBuilder<HtmlDiv>> setProps, Var<IVNode> toolbar, Var<System.Collections.Generic.List<IVNode>> formFieldControls)
         {
-            System.Collections.Generic.List<Var<IVNode>> formFieldControls = new();
-
-            formFieldControls.Add(
+            var nodes = b.NewCollection<IVNode>();
+            b.Push(
+                nodes,
                 b.StyledDiv(
                     "col-span-2 flex flex-row justify-end items-center",
                     toolbar));
-
-            foreach (var formField in forms)
-            {
-                formFieldControls.Add(b.T(formField.Item1));
-                formFieldControls.Add(formField.Item2);
-            }
+            b.PushRange(nodes, formFieldControls);
 
             return b.HtmlDiv(
                 b =>
@@ -198,7 +195,26 @@ namespace MdsInfrastructure.Render
                     b.SetClass("grid grid-cols-2 gap-4 items-center p-4");
                     setProps(b);
                 },
-                formFieldControls.ToArray());
+                formFieldControls);
+        }
+
+        public static Var<IVNode> Form(this LayoutBuilder b, Action<PropsBuilder<HtmlDiv>> setProps, Var<IVNode> toolbar, params (string, Var<IVNode>)[] forms)
+        {
+            var formFieldControls = b.NewCollection<IVNode>();
+
+            foreach (var formField in forms)
+            {
+                b.Push(formFieldControls, b.T(formField.Item1));
+                b.Push(formFieldControls, formField.Item2);
+            }
+
+            return b.Form(setProps, toolbar, formFieldControls);
+        }
+
+        public static void AddFormField(this LayoutBuilder b, Var<System.Collections.Generic.List<IVNode>> nodes, string label, Var<IVNode> fieldControl)
+        {
+            b.Push(nodes, b.T(label));
+            b.Push(nodes, fieldControl);
         }
 
         //public static (Var<IVNode>, Var<IVNode>) FormField(this LayoutBuilder b, string label, Var<IVNode> fieldControl)

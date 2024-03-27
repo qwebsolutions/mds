@@ -7,6 +7,7 @@ using System.Linq;
 using MdsCommon.Controls;
 using Metapsi.ChoicesJs;
 using System.Collections.Generic;
+using Metapsi.Html;
 
 namespace MdsInfrastructure.Render
 {
@@ -38,56 +39,44 @@ namespace MdsInfrastructure.Render
 
             if (!string.IsNullOrEmpty(dataModel.SchemaValidationMessage))
             {
-                var container = b.Div("text-red-500");
-                b.Add(container, b.Bold(dataModel.SchemaValidationMessage));
-                return container;
+                return b.StyledDiv("text-red-500", b.Bold(dataModel.SchemaValidationMessage));
             }
 
             if (dataModel.Deployment == null)
             {
                 return b.T("No deployment yet! The infrastructure is not running any service!");
             }
-            
-            var page = b.Div("flex flex-col space-y-4");
 
             int totalServices = dataModel.Deployment.GetDeployedServices().Count();
             int totalNodes = dataModel.Deployment.GetDeployedServices().Select(x => x.NodeName).Distinct().Count();
 
-
-            b.Add(
-                page,
+            return b.HtmlDiv(
+                b =>
+                {
+                    b.SetClass("flex flex-col space-y-4");
+                },
                 b.InfoPanel(
                     Panel.Style.Info,
                     $"Last deployment: {dataModel.Deployment.ConfigurationName}",
-                    $"{dataModel.Deployment.Timestamp.ItalianFormat()}, total services {totalServices}, total infrastructure nodes {totalNodes}"));
-
-            var nodesContainer = b.Add(page, b.PanelsContainer(4));
-
-            foreach (var nodeName in dataModel.Deployment.GetDeployedServices().Select(x => x.NodeName).Distinct())
-            {
-                var node = dataModel.InfrastructureNodes.Single(x => x.NodeName == nodeName);
-                var nodePanel = b.RenderNodePanel<MdsInfrastructure.InfrastructureStatus, MdsInfrastructure.InfrastructureStatus>(node, dataModel.HealthStatus);
-                b.Add(nodesContainer, nodePanel);
-            }
-
-            Var<IVNode> appsContainer = b.Add(page, b.PanelsContainer(4));
-
-            foreach (var applicationName in dataModel.Deployment.GetDeployedServices().Select(x => x.ApplicationName).Distinct())
-            {
-                var appPanel = b.Add(appsContainer, b.RenderApplicationPanel<MdsInfrastructure.InfrastructureStatus, MdsInfrastructure.InfrastructureStatus>(
-                    dataModel.Deployment,
-                    dataModel.HealthStatus,
-                    dataModel.InfrastructureEvents,
-                    applicationName));
-            }
-
-            // TODO: Not displayed
-            //var events = dataModel.InfrastructureEvents.GetRecentEvents();
-
-            //var fatalEvents = events.Where(x => x.Criticality == MdsCommon.InfrastructureEventCriticality.Fatal);
-            //var criticalEvents = events.Where(x => x.Criticality == MdsCommon.InfrastructureEventCriticality.Critical);
-
-            return page;
+                    $"{dataModel.Deployment.Timestamp.ItalianFormat()}, total services {totalServices}, total infrastructure nodes {totalNodes}"),
+                b.PanelsContainer(
+                    4,
+                    dataModel.Deployment.GetDeployedServices().Select(x => x.NodeName).Distinct().Select(nodeName =>
+                    {
+                        var node = dataModel.InfrastructureNodes.Single(x => x.NodeName == nodeName);
+                        var nodePanel = b.RenderNodePanel<MdsInfrastructure.InfrastructureStatus, MdsInfrastructure.InfrastructureStatus>(node, dataModel.HealthStatus);
+                        return nodePanel;
+                    })),
+                b.PanelsContainer(
+                    4,
+                    dataModel.Deployment.GetDeployedServices().Select(x => x.ApplicationName).Distinct().Select(applicationName =>
+                    {
+                        return b.RenderApplicationPanel<MdsInfrastructure.InfrastructureStatus, MdsInfrastructure.InfrastructureStatus>(
+                            dataModel.Deployment,
+                            dataModel.HealthStatus,
+                            dataModel.InfrastructureEvents,
+                            applicationName);
+                    })));
         }
     }
 }

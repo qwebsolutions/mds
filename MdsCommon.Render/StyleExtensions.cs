@@ -29,4 +29,14 @@ public static class StyleExtensions
     {
         return b.HtmlSpanText(b => b.SetClass("font-bold"), text);
     }
+
+    public static Var<IVNode> TextSpan(this LayoutBuilder b, Var<string> text)
+    {
+        return b.StyledSpan("", b.T(text));
+    }
+
+    public static Var<IVNode> TextSpan(this LayoutBuilder b, string text)
+    {
+        return b.TextSpan(b.Const(text));
+    }
 }

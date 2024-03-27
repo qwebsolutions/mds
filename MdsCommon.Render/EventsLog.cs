@@ -23,58 +23,60 @@ namespace MdsCommon
 
             b.Comment("After side panel");
 
-            var renderCell = b.Def((LayoutBuilder b, Var<InfrastructureEvent> row, Var<DataTable.Column> col) =>
-            {
-                var date = b.Get(row, x => x.Timestamp);
-                var dateStringLocale = b.ItalianFormat(date);
+            throw new System.NotImplementedException();
 
-                return b.VPadded4(b.Switch<LayoutBuilder, IVNode, string>(
-                    b.Get(col, x => x.Name),
-                    b => b.Link(dateStringLocale, b.MakeAction<ListInfrastructureEventsPage>(
-                        (b, clientModel) =>
-                        {
-                            b.Set(clientModel, x => x.SelectedEvent, row);
-                            return b.ShowSidePanel(clientModel);
-                        })),
+            //var renderCell = b.Def((LayoutBuilder b, Var<InfrastructureEvent> row, Var<DataTable.Column> col) =>
+            //{
+            //    var date = b.Get(row, x => x.Timestamp);
+            //    var dateStringLocale = b.ItalianFormat(date);
 
-                    (nameof(InfrastructureEvent.Criticality), b =>
-                    {
-                        var criticality = b.Get(row, x => x.Criticality);
+            //    return b.VPadded4(b.Switch<LayoutBuilder, IVNode, string>(
+            //        b.Get(col, x => x.Name),
+            //        b => b.Link(dateStringLocale, b.MakeAction<ListInfrastructureEventsPage>(
+            //            (b, clientModel) =>
+            //            {
+            //                b.Set(clientModel, x => x.SelectedEvent, row);
+            //                return b.ShowSidePanel(clientModel);
+            //            })),
 
-                        return b.HtmlSpan(
-                            b =>
-                            {
+            //        (nameof(InfrastructureEvent.Criticality), b =>
+            //        {
+            //            var criticality = b.Get(row, x => x.Criticality);
 
-                            },
-                            b.T(criticality),
-                            b.AlertBadge(criticality));
-                    }),
-                    (nameof(InfrastructureEvent.Source), b => b.T(b.Get(row, x => x.Source))),
-                    (nameof(InfrastructureEvent.ShortDescription), b => b.T(b.Get(row, x => x.ShortDescription)))));
-            });
+            //            return b.HtmlSpan(
+            //                b =>
+            //                {
 
-            var rows = b.Get(clientModel, x => x.InfrastructureEvents);
+            //                },
+            //                b.T(criticality),
+            //                b.AlertBadge(criticality));
+            //        }),
+            //        (nameof(InfrastructureEvent.Source), b => b.T(b.Get(row, x => x.Source))),
+            //        (nameof(InfrastructureEvent.ShortDescription), b => b.T(b.Get(row, x => x.ShortDescription)))));
+            //});
 
-            var props = b.NewObj<DataTable.Props<InfrastructureEvent>>(b =>
-            {
-                b.AddColumn(nameof(InfrastructureEvent.Timestamp), "Timestamp");
-                b.AddColumn(nameof(InfrastructureEvent.Criticality));
-                b.AddColumn(nameof(InfrastructureEvent.Source));
-                b.AddColumn(nameof(InfrastructureEvent.ShortDescription), "Description");
-                b.SetRows(rows);
-                b.SetRenderCell<InfrastructureEvent>(renderCell);
-            });
-            var dt = b.DataTable(props, b=>
-            {
-                b.AddClass("drop-shadow");
-            });
-            return b.HtmlDiv(
-                b =>
-                {
+            //var rows = b.Get(clientModel, x => x.InfrastructureEvents);
 
-                },
-                sidePanel,
-                dt);
+            //var props = b.NewObj<DataTable.Props<InfrastructureEvent>>(b =>
+            //{
+            //    b.AddColumn(nameof(InfrastructureEvent.Timestamp), "Timestamp");
+            //    b.AddColumn(nameof(InfrastructureEvent.Criticality));
+            //    b.AddColumn(nameof(InfrastructureEvent.Source));
+            //    b.AddColumn(nameof(InfrastructureEvent.ShortDescription), "Description");
+            //    b.SetRows(rows);
+            //    b.SetRenderCell<InfrastructureEvent>(renderCell);
+            //});
+            //var dt = b.DataTable(props, b=>
+            //{
+            //    b.AddClass("drop-shadow");
+            //});
+            //return b.HtmlDiv(
+            //    b =>
+            //    {
+
+            //    },
+            //    sidePanel,
+            //    dt);
         }
 
         public static Var<IVNode> EventPanel(this LayoutBuilder b, Var<MdsCommon.InfrastructureEvent> e)

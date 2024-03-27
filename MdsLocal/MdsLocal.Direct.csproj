@@ -12,7 +12,6 @@
 		<ProjectReference Include="..\..\metapsi\Metapsi.Web\Metapsi.Web.csproj" />
 		<ProjectReference Include="..\MdsCommon\MdsCommon.Direct.csproj" />
 		<ProjectReference Include="..\MdsLocal.DataModel\MdsLocal.DataModel.Direct.csproj" />
-		<ProjectReference Include="..\MdsLocal.Render\MdsLocal.Render.Direct.csproj" />
 		<ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.Direct.csproj" />
 		<ProjectReference Include="..\MdsCommon.Db\MdsCommon.Db.Direct.csproj" />
 	</ItemGroup>

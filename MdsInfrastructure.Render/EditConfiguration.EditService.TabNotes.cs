@@ -36,73 +36,75 @@ namespace MdsInfrastructure.Render
             var notes = b.Get(service, x => x.InfrastructureServiceNotes.ToList());
             var noteTypes = b.Get(clientModel, x => x.NoteTypes);
 
-            var rc = b.RenderCell<InfrastructureServiceNote>(
-                        (b, row, col) =>
-                        {
-                            var noteTypeId = b.Get(row, x => x.NoteTypeId);
-                            var noteType = b.Get(noteTypes, noteTypeId, (x, noteTypeId) => x.SingleOrDefault(x => x.Id == noteTypeId, new NoteType() { Description = "", Code = "" }));
-                            var noteTypeLabel = b.Get(noteType, x => x.Description, "(not set)");
-                            var noteTypeCode = b.ToLowercase(b.Get(noteType, x => x.Code));
-                            var refAsId = b.Get(row, x => x.Reference).As<System.Guid>();
+            throw new NotImplementedException();
 
-                            var reference = b.If(
-                                b.AreEqual(noteTypeCode, b.Const("parameter")),
-                                b => b.Get(service, refAsId, (x, refAsId) => x.InfrastructureServiceParameterDeclarations.SingleOrDefault(
-                                    x => x.Id == refAsId,
-                                    new InfrastructureServiceParameterDeclaration()
-                                    {
-                                        ParameterName = "(not set)"
-                                    }).ParameterName),
-                                b => b.Get(row, x => x.Reference));
+            //var rc = b.RenderCell<InfrastructureServiceNote>(
+            //            (b, row, col) =>
+            //            {
+            //                var noteTypeId = b.Get(row, x => x.NoteTypeId);
+            //                var noteType = b.Get(noteTypes, noteTypeId, (x, noteTypeId) => x.SingleOrDefault(x => x.Id == noteTypeId, new NoteType() { Description = "", Code = "" }));
+            //                var noteTypeLabel = b.Get(noteType, x => x.Description, "(not set)");
+            //                var noteTypeCode = b.ToLowercase(b.Get(noteType, x => x.Code));
+            //                var refAsId = b.Get(row, x => x.Reference).As<System.Guid>();
 
-                            return b.VPadded4(b.Switch(b.Get(col, x => x.Name),
-                                b => b.Link(
-                                    noteTypeLabel,
-                                    b.MakeAction(
-                                        (SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
-                                        {
-                                            b.Set(clientModel, x => x.EditServiceNoteId, b.Get(row, x => x.Id));
-                                            return b.EditView<EditConfigurationPage>(clientModel, EditNote);
-                                        })),
-                                ("Reference", b => b.Text(reference)),
-                                ("Note", b => b.Text(b.Get(row, x => x.Note)))));
-                        });
+            //                var reference = b.If(
+            //                    b.AreEqual(noteTypeCode, b.Const("parameter")),
+            //                    b => b.Get(service, refAsId, (x, refAsId) => x.InfrastructureServiceParameterDeclarations.SingleOrDefault(
+            //                        x => x.Id == refAsId,
+            //                        new InfrastructureServiceParameterDeclaration()
+            //                        {
+            //                            ParameterName = "(not set)"
+            //                        }).ParameterName),
+            //                    b => b.Get(row, x => x.Reference));
 
-            return b.DataGrid<InfrastructureServiceNote>(
-                new()
-                {
-                    b=> b.AddClass(b.CommandButton<EditConfigurationPage>(b=>
-                    {
-                        b.Set(x=>x.Label, "Add note");
-                        b.Set(x => x.OnClick, addCommand);
-                    }),"text-white")
-                },
-                b =>
-                {
-                    b.SetRows(notes);
-                    b.AddColumn("NoteType", "Note type", b => b.Set(x => x.Class, b.Const("w-1/6")));
-                    b.AddColumn("Reference", b => b.Set(x => x.Class, b.Const("w-1/6")));
-                    b.AddColumn("Note");
-                    b.SetRenderCell(rc);
-                },
-                (b, actions, item) =>
-                {
-                    var onCommand = b.Def((SyntaxBuilder b, Var<InfrastructureServiceNote> note) =>
-                    {
-                        var noteId = b.Get(note, x => x.Id);
-                        var noteRemoved = b.Get(service, noteId, (x, noteId) => x.InfrastructureServiceNotes.Where(x => x.Id != noteId).ToList());
-                        b.Set(service, x => x.InfrastructureServiceNotes, noteRemoved);
-                    });
+            //                return b.VPadded4(b.Switch(b.Get(col, x => x.Name),
+            //                    b => b.Link(
+            //                        noteTypeLabel,
+            //                        b.MakeAction(
+            //                            (SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
+            //                            {
+            //                                b.Set(clientModel, x => x.EditServiceNoteId, b.Get(row, x => x.Id));
+            //                                return b.EditView<EditConfigurationPage>(clientModel, EditNote);
+            //                            })),
+            //                    ("Reference", b => b.Text(reference)),
+            //                    ("Note", b => b.Text(b.Get(row, x => x.Note)))));
+            //            });
 
-                    b.Modify(actions, x => x.Commands, b =>
-                    {
-                        b.Add(b =>
-                        {
-                            b.Set(x => x.IconHtml, removeIcon);
-                            b.Set(x => x.OnCommand, onCommand);
-                        });
-                    });
-                });
+            //return b.DataGrid<InfrastructureServiceNote>(
+            //    new()
+            //    {
+            //        b=> b.AddClass(b.CommandButton<EditConfigurationPage>(b=>
+            //        {
+            //            b.Set(x=>x.Label, "Add note");
+            //            b.Set(x => x.OnClick, addCommand);
+            //        }),"text-white")
+            //    },
+            //    b =>
+            //    {
+            //        b.SetRows(notes);
+            //        b.AddColumn("NoteType", "Note type", b => b.Set(x => x.Class, b.Const("w-1/6")));
+            //        b.AddColumn("Reference", b => b.Set(x => x.Class, b.Const("w-1/6")));
+            //        b.AddColumn("Note");
+            //        b.SetRenderCell(rc);
+            //    },
+            //    (b, actions, item) =>
+            //    {
+            //        var onCommand = b.Def((SyntaxBuilder b, Var<InfrastructureServiceNote> note) =>
+            //        {
+            //            var noteId = b.Get(note, x => x.Id);
+            //            var noteRemoved = b.Get(service, noteId, (x, noteId) => x.InfrastructureServiceNotes.Where(x => x.Id != noteId).ToList());
+            //            b.Set(service, x => x.InfrastructureServiceNotes, noteRemoved);
+            //        });
+
+            //        b.Modify(actions, x => x.Commands, b =>
+            //        {
+            //            b.Add(b =>
+            //            {
+            //                b.Set(x => x.IconHtml, removeIcon);
+            //                b.Set(x => x.OnCommand, onCommand);
+            //            });
+            //        });
+            //    });
         }
     }
 }

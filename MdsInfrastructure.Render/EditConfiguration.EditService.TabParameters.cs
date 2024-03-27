@@ -44,70 +44,72 @@ namespace MdsInfrastructure.Render
             var service = b.Get(clientModel, serviceId, (x, id) => x.Configuration.InfrastructureServices.Single(x => x.Id == id));
             var parameters = b.Get(service, x => x.InfrastructureServiceParameterDeclarations);
 
-            var rc= b.RenderCell<InfrastructureServiceParameterDeclaration>(
-                        (b, row, col) =>
-                        {
-                            var typeId = b.Get(row, x => x.ParameterTypeId);
+            throw new NotImplementedException();
 
-                            var typeLabel = b.Get(clientModel, typeId, (x, typeId) => x.ParameterTypes.SingleOrDefault(x => x.Id == typeId, new ParameterType() { Description = "(not selected)" }).Description);
+            //var rc= b.RenderCell<InfrastructureServiceParameterDeclaration>(
+            //            (b, row, col) =>
+            //            {
+            //                var typeId = b.Get(row, x => x.ParameterTypeId);
 
-                            return b.VPadded4(b.Switch(
-                                b.Get(col, x => x.Name),
-                                b => b.Link(
-                                    b.Get(row, x => x.ParameterName, "(not set)"), 
-                                    b.MakeAction<EditConfigurationPage>(
-                                        (b, clientModel) =>
-                                        {
-                                            b.Set(clientModel, x => x.EditParameterId, b.Get(row, x => x.Id));
-                                            return b.EditView<EditConfigurationPage>(clientModel, EditParameter);
-                                        })),
-                                ("Type", b => b.Text(typeLabel)),
-                                ("Value", b => b.Text(b.Call(GetParameterValue, clientModel, row)))));
-                        });
+            //                var typeLabel = b.Get(clientModel, typeId, (x, typeId) => x.ParameterTypes.SingleOrDefault(x => x.Id == typeId, new ParameterType() { Description = "(not selected)" }).Description);
 
-            return b.DataGrid<InfrastructureServiceParameterDeclaration>(
-                new()
-                {
-                    b=>b.AddClass(b.CommandButton<EditConfigurationPage>(b=>
-                    {
-                        b.Set(x=>x.Label, "Add parameter");
-                        b.Set(x => x.OnClick, onAddParameter);
-                    }), "text-white")
-                },
-                b =>
-                {
-                    b.SetRows(parameters);
-                    b.AddColumn("Parameter");
-                    b.AddColumn("Type");
-                    b.AddColumn("Value");
-                    b.SetRenderCell<InfrastructureServiceParameterDeclaration>(rc);
-                },
-                (b, actions, item) =>
-                {
-                    var removeIcon = Icon.Remove;
+            //                return b.VPadded4(b.Switch(
+            //                    b.Get(col, x => x.Name),
+            //                    b => b.Link(
+            //                        b.Get(row, x => x.ParameterName, "(not set)"), 
+            //                        b.MakeAction<EditConfigurationPage>(
+            //                            (b, clientModel) =>
+            //                            {
+            //                                b.Set(clientModel, x => x.EditParameterId, b.Get(row, x => x.Id));
+            //                                return b.EditView<EditConfigurationPage>(clientModel, EditParameter);
+            //                            })),
+            //                    ("Type", b => b.Text(typeLabel)),
+            //                    ("Value", b => b.Text(b.Call(GetParameterValue, clientModel, row)))));
+            //            });
 
-                    var onRemove = b.Def((SyntaxBuilder b, Var<InfrastructureServiceParameterDeclaration> parameter) =>
-                    {
-                        var paramId = b.Get(parameter, x => x.Id);
-                        var parameterRemoved = b.Get(service, paramId, (x, paramId) => x.InfrastructureServiceParameterDeclarations.Where(x => x.Id != paramId).ToList());
-                        b.Set(service, x => x.InfrastructureServiceParameterDeclarations, parameterRemoved);
-                        var bindingRemoved = b.Get(parameter, paramId, (x, paramId) => x.InfrastructureServiceParameterBindings.Where(x => x.InfrastructureServiceParameterDeclarationId != paramId).ToList());
-                        b.Set(parameter, x => x.InfrastructureServiceParameterBindings, bindingRemoved);
-                        var valueRemoved = b.Get(parameter, paramId, (x, paramId) => x.InfrastructureServiceParameterValues.Where(x => x.InfrastructureServiceParameterDeclarationId != paramId).ToList());
-                        b.Set(parameter, x => x.InfrastructureServiceParameterValues, valueRemoved);
-                        var notesRemoved = b.Get(service, x => x.InfrastructureServiceNotes.Where(x => x.Reference != paramId.ToString()).ToList());
-                        b.Set(service, x => x.InfrastructureServiceNotes, notesRemoved);
-                    });
+            //return b.DataGrid<InfrastructureServiceParameterDeclaration>(
+            //    new()
+            //    {
+            //        b=>b.AddClass(b.CommandButton<EditConfigurationPage>(b=>
+            //        {
+            //            b.Set(x=>x.Label, "Add parameter");
+            //            b.Set(x => x.OnClick, onAddParameter);
+            //        }), "text-white")
+            //    },
+            //    b =>
+            //    {
+            //        b.SetRows(parameters);
+            //        b.AddColumn("Parameter");
+            //        b.AddColumn("Type");
+            //        b.AddColumn("Value");
+            //        b.SetRenderCell<InfrastructureServiceParameterDeclaration>(rc);
+            //    },
+            //    (b, actions, item) =>
+            //    {
+            //        var removeIcon = Icon.Remove;
 
-                    b.Modify(actions, x => x.Commands, b =>
-                    {
-                        b.Add(b =>
-                        {
-                            b.Set(x => x.IconHtml, removeIcon);
-                            b.Set(x => x.OnCommand, onRemove);
-                        });
-                    });
-                });
+            //        var onRemove = b.Def((SyntaxBuilder b, Var<InfrastructureServiceParameterDeclaration> parameter) =>
+            //        {
+            //            var paramId = b.Get(parameter, x => x.Id);
+            //            var parameterRemoved = b.Get(service, paramId, (x, paramId) => x.InfrastructureServiceParameterDeclarations.Where(x => x.Id != paramId).ToList());
+            //            b.Set(service, x => x.InfrastructureServiceParameterDeclarations, parameterRemoved);
+            //            var bindingRemoved = b.Get(parameter, paramId, (x, paramId) => x.InfrastructureServiceParameterBindings.Where(x => x.InfrastructureServiceParameterDeclarationId != paramId).ToList());
+            //            b.Set(parameter, x => x.InfrastructureServiceParameterBindings, bindingRemoved);
+            //            var valueRemoved = b.Get(parameter, paramId, (x, paramId) => x.InfrastructureServiceParameterValues.Where(x => x.InfrastructureServiceParameterDeclarationId != paramId).ToList());
+            //            b.Set(parameter, x => x.InfrastructureServiceParameterValues, valueRemoved);
+            //            var notesRemoved = b.Get(service, x => x.InfrastructureServiceNotes.Where(x => x.Reference != paramId.ToString()).ToList());
+            //            b.Set(service, x => x.InfrastructureServiceNotes, notesRemoved);
+            //        });
+
+            //        b.Modify(actions, x => x.Commands, b =>
+            //        {
+            //            b.Add(b =>
+            //            {
+            //                b.Set(x => x.IconHtml, removeIcon);
+            //                b.Set(x => x.OnCommand, onRemove);
+            //            });
+            //        });
+            //    });
         }
 
         public static Var<string> GetParameterValue(this SyntaxBuilder b, Var<EditConfigurationPage> page, Var<InfrastructureServiceParameterDeclaration> parameter)

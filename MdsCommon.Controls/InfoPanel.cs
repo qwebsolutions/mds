@@ -3,6 +3,7 @@ using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MdsCommon.Controls
 {
@@ -38,10 +39,10 @@ namespace MdsCommon.Controls
             return b.HtmlDiv(
                 b =>
                 {
+                    b.SetClass(infoPanelStyle);
                     b.If(isOk, b => b.SetClass(okPanelStyle));
                     b.If(isError, b => b.SetClass(errorPanelStyle));
                     b.If(isWarning, b => b.SetClass(warningPanelStyle));
-                    b.AddClass(infoPanelStyle);
                 },
                 b.HtmlDiv(
                     b =>
@@ -102,7 +103,8 @@ namespace MdsCommon.Controls
                 b =>
                 {
                     b.SetClass($"grid grid-cols-1 lg:grid-cols-{columns} gap-4");
-                });
+                },
+                panels.ToArray());
         }
     }
 }

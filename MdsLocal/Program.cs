@@ -94,7 +94,7 @@ namespace MdsLocal
             webServer.RegisterPageBuilder<OverviewPage>(new RenderOverviewListProcesses().Render);
             webServer.RegisterPageBuilder<ListInfrastructureEventsPage>(new RenderInfrastructureEventsList().Render);
             webServer.RegisterPageBuilder<SyncHistory.DataModel>(new RenderSyncHistory().Render);
-            webServer.RegisterStaticFiles(typeof(MdsLocal.RenderSyncHistory).Assembly);
+            //webServer.RegisterStaticFiles(typeof(MdsLocal.RenderSyncHistory).Assembly);
             webServer.RegisterStaticFiles(typeof(MdsCommon.Render).Assembly);
             webServer.RegisterStaticFiles(typeof(MdsCommon.Controls.Controls).Assembly);
             webServer.RegisterStaticFiles(typeof(SyntaxBuilder).Assembly);

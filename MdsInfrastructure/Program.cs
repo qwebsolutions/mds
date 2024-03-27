@@ -473,7 +473,7 @@ namespace MdsInfrastructure
             webServerRefs.WebApplication.AddInfraApi(arguments);
             webServerRefs.RegisterStaticFiles(typeof(MdsInfrastructure.MdsInfra).Assembly);
             webServerRefs.RegisterStaticFiles(typeof(MdsCommon.Header).Assembly);
-            webServerRefs.RegisterStaticFiles(typeof(Metapsi.Hyperapp.HyperNode).Assembly);
+            webServerRefs.RegisterStaticFiles(typeof(Metapsi.Hyperapp.Browser).Assembly);
             webServerRefs.RegisterStaticFiles(typeof(Metapsi.Syntax.SyntaxBuilder).Assembly);
             webServerRefs.RegisterStaticFiles(typeof(MdsCommon.HeaderRenderer).Assembly);
             webServerRefs.RegisterStaticFiles(typeof(MdsCommon.Controls.Control).Assembly);

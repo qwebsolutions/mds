@@ -261,7 +261,7 @@ namespace MdsInfrastructure.Render
                     {
                         b.SetClass("flex flex-row");
                     },
-                    b.HtmlSpanText(b => b.SetClass("font-bold"), service.ServiceName),
+                    b.HtmlSpanText(b => b.SetClass("font-bold w-full"), service.ServiceName),
                     b.HtmlA(
                         b =>
                         {

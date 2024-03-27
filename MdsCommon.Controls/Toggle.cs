@@ -13,11 +13,11 @@ namespace MdsCommon.Controls
             public bool IsOn { get; set; }
             public string OnLabel { get; set; }
             public string OffLabel { get; set; }
-            //public Command OnChange { get; set; }
             public bool Enabled { get; set; } = true;
             public string PillClass { get; set; } = "toggle-pill";
             public string DotClass { get; set; } = "toggle-dot";
             public string LabelClass { get; set; } = string.Empty;
+            public string ExtraRootCss { get; set; } = string.Empty;
         }
 
         public class ToggleTarget
@@ -34,6 +34,7 @@ namespace MdsCommon.Controls
                 b =>
                 {
                     b.SetClass("flex items-center justify-left");
+                    b.AddClass(b.Get(props, x => x.ExtraRootCss));
                 },
                 b.HtmlLabel(
                     b =>

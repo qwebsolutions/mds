@@ -41,6 +41,7 @@ namespace MdsCommon
                 b.Get(props, x => x.UseSignIn),
                 b =>
                 {
+                    b.Log("Header props", props);
                     var userName = b.Get(props, x => x.User.Name);
                     return b.If(b.HasValue(userName), b =>
                     {
@@ -63,6 +64,7 @@ namespace MdsCommon
                                         b =>
                                         {
                                             b.AddClass("font-thin text-xs");
+                                            b.UnderlineBlue();
                                             b.SetHref(b.Concat(b.RootPath(), b.Const("/signout")));
                                         },
                                         b.T("Sign out"));
@@ -74,6 +76,7 @@ namespace MdsCommon
                         return b.HtmlA(b =>
                         {
                             b.AddClass("font-thin text-sm");
+                            b.UnderlineBlue();
                             b.SetHref(b.Concat(b.RootPath(), b.Const("/signin-redirect")));
                         },
                         b.T("Sign in"));

@@ -76,7 +76,8 @@ namespace MdsCommon
                                 {
                                     b.SetId("credentials-form");
                                     b.SetAttribute("method", "POST");
-                                    b.SetAttribute("action", b.Get(clientModel, x => x.ReturnUrl));
+                                    b.SetAttribute("action", b.Concat(b.Const("/signin/credentials"), b.Const("?ReturnUrl="), b.Get(clientModel, x => x.ReturnUrl)));
+                                    //b.SetAttribute("action", b.Get(clientModel, x => x.ReturnUrl));
                                 },
                                 b.HtmlButton(
                                     b =>
@@ -119,8 +120,8 @@ namespace MdsCommon
                         b =>
                         {
                             b.SetClass("bg-gray-50 w-full h-4");
-                        },
-                        page)));
+                        }),
+                    page));
 
             return b.HtmlDiv(
                 b =>
