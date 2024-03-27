@@ -36,6 +36,26 @@ namespace MdsLocal
 
             if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
+                var alternativeTarget = string.Empty;
+                if (state.BuildTarget == "win10-x64")
+                {
+                    alternativeTarget = "win-x64";
+                }
+
+                if (state.BuildTarget == "win-x64")
+                {
+                    alternativeTarget = "win10-x64";
+                }
+
+                var alternativeUri = new System.Uri(
+                    new System.Uri(state.BinariesApiUrl),
+                    $"GetBinaries/{alternativeTarget}/{projectName}/{projectVersion}");
+
+                response = await httpClient.GetAsync(alternativeUri, System.Net.Http.HttpCompletionOption.ResponseHeadersRead);
+            }
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
                 string errorMessage = $"Could not retrieve binaries from {fullUri.AbsoluteUri}";
 
                 throw new System.Exception(errorMessage);
