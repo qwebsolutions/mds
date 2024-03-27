@@ -1,4 +1,5 @@
-﻿using Metapsi.Hyperapp;
+﻿using Metapsi.Html;
+using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using System.Collections.Generic;
 
@@ -16,38 +17,37 @@ namespace MdsCommon.Controls
             public bool Enabled { get; set; } = true;
         }
 
-        public static Var<HyperNode> Render<TState>(LayoutBuilder b, Var<Props<TState>> props)
+        public static Var<IVNode> Render<TState>(LayoutBuilder b, Var<Props<TState>> props)
         {
             b.AddModuleStylesheet();
 
-            var input = b.Node("input", b.Concat(b.Get(props, x => x.CssClass), b.Const(" w-full")));
-            var isPassword = b.Get(props, x => x.IsPassword);
-            b.If(isPassword, b =>
-            {
-                b.SetAttr(input, Html.type, "password");
-            },
-            b =>
-            {
-                b.SetAttr(input, Html.type, "text");
-            });
+            return b.HtmlInput(
+                b =>
+                {
+                    b.SetClass(b.Concat(b.Get(props, x => x.CssClass), b.Const(" w-full")));
+                    var isPassword = b.Get(props, x => x.IsPassword);
+                    b.If(isPassword, b =>
+                    {
+                        b.SetType("password");
+                    },
+                    b =>
+                    {
+                        b.SetType("text");
+                    });
 
-            var placeholder = b.Get(props, x => x.Placeholder);
-            b.If(b.HasValue(placeholder), b => b.SetAttr(input, Html.placeholder, b.Get(props, x => x.Placeholder)));
+                    var placeholder = b.Get(props, x => x.Placeholder);
+                    b.If(b.HasValue(placeholder), b => b.SetPlaceholder(placeholder));
 
-            b.SetAttr(input, Html.value, b.Get(props, x => x.Value));
-            b.SetOnInput(input, b.Get(props, x => x.OnInput));
-
-            var enabled = b.Get(props, x => x.Enabled);
-            b.If(b.Not(enabled), b => b.SetAttr(input, Html.disabled, true));
-            //b.SetAttr(input, new DynamicProperty<System.Func<object, InputEvent, object>>("oninput"), onInput);
-
-            return input;
+                    b.SetValue(b.Get(props, x => x.Value));
+                    b.OnInputAction(b.Get(props, x => x.OnInput));
+                    b.SetDisabled(b.Not(b.Get(props, x => x.Enabled)));
+                });
         }
     }
 
     public static partial class Controls
     {
-        public static Var<HyperNode> Input<TState>(
+        public static Var<IVNode> Input<TState>(
             this LayoutBuilder b,
             Var<string> value,
             Var<HyperType.Action<TState, string>> onInput,
@@ -64,7 +64,7 @@ namespace MdsCommon.Controls
             return b.Call(MdsCommon.Controls.Input.Render, props);
         }
 
-        public static Var<HyperNode> BoundInput<TEntity, TProp>(
+        public static Var<IVNode> BoundInput<TEntity, TProp>(
             this LayoutBuilder b,
             Var<TEntity> entity,
             System.Linq.Expressions.Expression<System.Func<TEntity, TProp>> onProperty,
@@ -91,7 +91,7 @@ namespace MdsCommon.Controls
             return b.Call(MdsCommon.Controls.Input.Render, props);
         }
 
-        public static Var<HyperNode> BoundInput<TState, TEntity>(
+        public static Var<IVNode> BoundInput<TState, TEntity>(
             this LayoutBuilder b,
             Var<TState> state,
             System.Linq.Expressions.Expression<System.Func<TState, TEntity>> onEntity,
@@ -118,7 +118,7 @@ namespace MdsCommon.Controls
             return b.Call(MdsCommon.Controls.Input.Render, props);
         }
 
-        public static Var<HyperNode> BoundInput<TState, TEntity>(
+        public static Var<IVNode> BoundInput<TState, TEntity>(
             this LayoutBuilder b,
             Var<TState> state,
             System.Linq.Expressions.Expression<System.Func<TState, TEntity>> onEntity,
@@ -147,7 +147,7 @@ namespace MdsCommon.Controls
             return b.Call(MdsCommon.Controls.Input.Render, props);
         }
 
-        public static Var<HyperNode> BoundInput<TState, TEntity, TId>(
+        public static Var<IVNode> BoundInput<TState, TEntity, TId>(
             this LayoutBuilder b,
             Var<TState> state,
             Var<TId> id,
@@ -175,7 +175,7 @@ namespace MdsCommon.Controls
             return b.Call(MdsCommon.Controls.Input.Render, props);
         }
 
-        public static Var<HyperNode> BoundInput<TState, TEntity>(
+        public static Var<IVNode> BoundInput<TState, TEntity>(
             this LayoutBuilder b,
             Var<TState> state,
             System.Linq.Expressions.Expression<System.Func<TState, TEntity>> onEntity,
@@ -183,6 +183,26 @@ namespace MdsCommon.Controls
             string placeholder = "")
         {
             return b.BoundInput(state, onEntity, onProperty, b.Const(placeholder));
+        }
+
+        public static void BindTo<TControl, TState, TEntity>(this PropsBuilder<TControl> b,
+            Var<TState> state,
+            System.Linq.Expressions.Expression<System.Func<TState, TEntity>> onEntity,
+            System.Linq.Expressions.Expression<System.Func<TEntity, string>> onProperty)
+            where TControl : IHasInputTextEvent, IHasValueAttribute, new()
+        {
+            Var<TEntity> entity = b.Get(state, onEntity);
+            Var<string> value = b.Get(entity, onProperty);
+
+            var setProperty = b.MakeAction<TState, string>((SyntaxBuilder b, Var<TState> state, Var<string> inputValue) =>
+            {
+                Var<TEntity> entity = b.Get(state, onEntity);
+                b.Set(entity, onProperty, inputValue);
+                return b.Clone(state);
+            });
+
+            b.SetValue(value);
+            b.OnInputAction(setProperty);
         }
     }
 }

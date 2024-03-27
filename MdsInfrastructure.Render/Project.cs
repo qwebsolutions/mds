@@ -4,6 +4,7 @@ using MdsCommon;
 using Metapsi.Ui;
 using System.Linq;
 using MdsCommon.Controls;
+using Metapsi.Html;
 
 namespace MdsInfrastructure.Render
 {
@@ -24,7 +25,8 @@ namespace MdsInfrastructure.Render
                     {
                         Main = new Header.Title() { Operation = "Projects" },
                         User = serverModel.User
-                    })), b.Render(clientModel)).As<IVNode>();
+                    })), 
+                    b.Render(clientModel)).As<IVNode>();
             }
         }
 
@@ -39,12 +41,9 @@ namespace MdsInfrastructure.Render
             return b.If(b.AreEqual(target, b.Const("linux-x64")), b => b.Const("Linux"), b => b.Const("Windows"));
         }
 
-        public static Var<HyperNode> Render(this LayoutBuilder b, Var<ListProjectsPage> clientModel)
+        public static Var<IVNode> Render(this LayoutBuilder b, Var<ListProjectsPage> clientModel)
         {
-            var view = b.Div();
-            b.Add(view, b.ValidationPanel(clientModel));
-
-            b.Add(view, b.SidePanel<ListProjectsPage>(
+            var sidePanel = b.SidePanel<ListProjectsPage>(
                 clientModel,
                 b =>
                 {
@@ -52,118 +51,122 @@ namespace MdsInfrastructure.Render
                     var projectId = b.Get(project, x => x.Id);
                     var versions = b.Get(clientModel, projectId, (x, projectId) => x.ProjectsList.SelectMany(x => x.Versions).Where(x => x.ProjectId == projectId).OrderByDescending(x => x.VersionTag).ToList());
 
-                    var container = b.Div("flex flex-col space-y-4");
+                    return b.HtmlDiv(
+                        b =>
+                        {
+                            b.SetClass("flex flex-col space-y-4");
+                        },
+                        b.T(b.Get(project, x => x.Name)),
+                        b.HtmlDiv(
+                            b => { },
+                            b.Map(versions, (b, version) =>
+                            {
+                                var versionId = b.Get(version, x => x.Id);
+                                var isInUse = b.Get(clientModel, versionId, (x, versionId) => x.InfrastructureServices.Any(x => x.ProjectVersionId == versionId));
 
-                    b.Add(container, b.Text((b.Get(project, x => x.Name))));
+                                var versionBuilds = b.Get(version, x => x.Binaries);
+                                var buildDescriptions = b.Get(versionBuilds, b.Def<SyntaxBuilder, string, string>(TargetEnvironment), (version, getTarget) => version.Select(x => "Build " + x.BuildNumber + " " + getTarget(x.Target)).ToList());
 
-                    b.Foreach(versions, (b, version) =>
-                    {
-                        var versionId = b.Get(version, x => x.Id);
-                        var isInUse = b.Get(clientModel, versionId, (x, versionId) => x.InfrastructureServices.Any(x => x.ProjectVersionId == versionId));
+                                var checkboxText = b.Get(
+                                    version,
+                                    b.Def<SyntaxBuilder, string, System.Collections.Generic.List<string>, string>(Core.JoinStrings),
+                                    buildDescriptions,
+                                    (version, join, buildDescriptions) => version.VersionTag + "(" + join(", ", buildDescriptions) + ")");
 
-                        var versionBuilds = b.Get(version, x => x.Binaries);
-                        var buildDescriptions = b.Get(versionBuilds, b.Def<SyntaxBuilder, string, string>(TargetEnvironment), (version, getTarget) => version.Select(x => "Build " + x.BuildNumber + " " + getTarget(x.Target)).ToList());
-
-                        var checkboxText = b.Get(
-                            version,
-                            b.Def<SyntaxBuilder, string, System.Collections.Generic.List<string>, string>(Core.JoinStrings),
-                            buildDescriptions,
-                            (version, join, buildDescriptions) => version.VersionTag + "(" + join(", ", buildDescriptions) + ")");
-
-                        var toggleContainer = b.Add(container, b.Div("flex flex-row"));
-
-                        b.Add(toggleContainer,
-                            b.Toggle(
-                                b.Get(version, x => x.Enabled),
-                                b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> state, Var<bool> isChecked) =>
-                                {
-                                    var initialVersion = b.Clone(version);
-                                    b.ShowLoading(state);
-                                    b.Set(version, x => x.Enabled, isChecked);
-                                    return b.MakeStateWithEffects(
-                                        b.Clone(state),
-                                        b.MakeEffect(
-                                            b.Def(
-                                                b.CallApi<ListProjectsPage, ProjectVersion>(
-                                                    Backend.SaveVersionEnabled,
-                                                    version,
-                                                    (SyntaxBuilder b, Var<ListProjectsPage> state) => b.HideLoading(state),
-                                                    (SyntaxBuilder b, Var<ListProjectsPage> state, Var<ApiError> error) =>
-                                                    {
-                                                        var allVersions = b.Get(clientModel, projectId, (x, projectId) => x.ProjectsList.SelectMany(x => x.Versions).Where(x => x.ProjectId == projectId).ToList());
-                                                        var versionReference = b.Get(allVersions, b.Get(initialVersion, x => x.Id), (allVersions, versionid) => allVersions.Single(x => x.Id == versionid));
-                                                        b.Set(versionReference, x => x.Enabled, b.Get(initialVersion, x => x.Enabled));
-                                                        b.HideLoading(state);
-                                                        return b.Clone(state);
-                                                    }))));
-
-                                }),
-                                    //b.AsyncCommand<ListProjectsPage, bool, ProjectVersion>(
-                                    //    b.Def((BlockBuilder b, Var<ListProjectsPage> clientModel, Var<bool> isChecked) =>
-                                    //    {
-                                    //        b.ShowLoading();
-                                    //        b.Set(version, x => x.Enabled, isChecked);
-                                    //        return clientModel;
-                                    //    }),
-                                    //    b.Def((BlockBuilder b, Var<ListProjectsPage> clientModel, Var<bool> isChecked, Var<System.Action<ProjectVersion>> onDone) =>
-                                    //    {
-                                    //        b.CallApi(Api.SaveVersionEnabled, version, b.Def(b => { b.Call(onDone, version); }));
-                                    //        //throw new System.NotImplementedException("API calls are different now");
-                                    //        //b.PostData(b.Url(SaveVersionEnabled), version, onDone, b.Def((BlockBuilder b, Var<object> error) =>
-                                    //        //{
-                                    //        //    b.HideLoading();
-                                    //        //    b.SetValidationMessage(b.AsString(error));
-                                    //        //    b.Call(onDone, version);
-                                    //        //}));
-                                    //    }),
-                                    //    b.Def((BlockBuilder b, Var<ListProjectsPage> clientModel, Var<ProjectVersion> newData) =>
-                                    //    {
-                                    //        b.HideLoading();
-                                    //        return b.Clone(clientModel);
-                                    //    })),
-                                    checkboxText,
-                                    checkboxText,
+                                return b.HtmlDiv(
                                     b =>
                                     {
-                                        b.Set(x => x.Enabled, b.Not(isInUse));
-                                    }));
+                                        b.SetClass("flex flex-row");
+                                    },
+                                    b.Toggle(
+                                        b.Get(version, x => x.Enabled),
+                                        b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> state, Var<bool> isChecked) =>
+                                        {
+                                            var initialVersion = b.Clone(version);
+                                            b.ShowLoading(state);
+                                            b.Set(version, x => x.Enabled, isChecked);
+                                            return b.MakeStateWithEffects(
+                                                b.Clone(state),
+                                                b.MakeEffect(
+                                                    b.Def(
+                                                        b.CallApi<ListProjectsPage, ProjectVersion>(
+                                                            Backend.SaveVersionEnabled,
+                                                            version,
+                                                            (SyntaxBuilder b, Var<ListProjectsPage> state) => b.HideLoading(state),
+                                                            (SyntaxBuilder b, Var<ListProjectsPage> state, Var<ApiError> error) =>
+                                                            {
+                                                                var allVersions = b.Get(clientModel, projectId, (x, projectId) => x.ProjectsList.SelectMany(x => x.Versions).Where(x => x.ProjectId == projectId).ToList());
+                                                                var versionReference = b.Get(allVersions, b.Get(initialVersion, x => x.Id), (allVersions, versionid) => allVersions.Single(x => x.Id == versionid));
+                                                                b.Set(versionReference, x => x.Enabled, b.Get(initialVersion, x => x.Enabled));
+                                                                b.HideLoading(state);
+                                                                return b.Clone(state);
+                                                            }))));
 
-                        b.If(isInUse, b =>
-                        {
-                            b.Add(toggleContainer, b.AddClass(b.Badge(b.Const("in use")), "bg-green-500"));
-                        });
-                    });
+                                        }),
+                                            checkboxText,
+                                            checkboxText,
+                                            b =>
+                                            {
+                                                b.Set(x => x.Enabled, b.Not(isInUse));
+                                            }),
+                                    b.Optional(
+                                        isInUse,
+                                        b =>
+                                        {
+                                            return b.Badge(b.Const("in use"), b.Const("bg-green-500"));
+                                        })
+                                    );
+                            })));
+                });
 
-                    return container;
-                }));
+            throw new System.NotImplementedException();
 
-            var renderCell = b.RenderCell<MdsCommon.Project>((b, row, col) =>
-            {
-                var projectId = b.Get(row, x => x.Id);
-                var versions = b.Get(clientModel, projectId, (x, projectId) => x.ProjectsList.SelectMany(x => x.Versions).Where(x => x.ProjectId == projectId).Count());
+            //var renderCell = b.RenderCell<MdsCommon.Project>((b, row, col) =>
+            //{
+            //    var projectId = b.Get(row, x => x.Id);
+            //    var versions = b.Get(clientModel, projectId, (x, projectId) => x.ProjectsList.SelectMany(x => x.Versions).Where(x => x.ProjectId == projectId).Count());
 
-                return b.VPadded4(b.If(b.AreEqual(b.Get(col, x => x.Name), b.Const(nameof(MdsCommon.Project.Name))),
-                    b => b.Link<ListProjectsPage>(b.Get(row, x => x.Name), b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> state) =>
-                    {
-                        b.Set(state, x => x.SelectedProject, row);
-                        return b.ShowSidePanel(state);
-                    })),
-                    b => b.Text(b.AsString(versions))));
-            });
+            //    return b.VPadded4(
+            //        b.If(
+            //            b.AreEqual(
+            //                b.Get(col, x => x.Name),
+            //                b.Const(nameof(MdsCommon.Project.Name))),
+            //            b =>
+            //            b.HtmlA(
+            //                b =>
+            //                {
+            //                    b.SetClass("underline text-sky-500");
+            //                    b.SetHref(b.Const("javascript:void(0);"));
+            //                    b.OnClickAction((SyntaxBuilder b, Var<ListProjectsPage> state) =>
+            //                    {
+            //                        b.Set(state, x => x.SelectedProject, row);
+            //                        return b.ShowSidePanel(state);
+            //                    });
+            //                },
+            //                b.T(b.Get(row, x => x.Name))),
+            //            b => b.T(b.AsString(versions))));
+            //});
 
-            var projectRows = b.Get(clientModel, x => x.ProjectsList.OrderBy(x => x.Name).ToList());
+            //var projectRows = b.Get(clientModel, x => x.ProjectsList.OrderBy(x => x.Name).ToList());
 
-            var props = b.NewObj<DataTable.Props<MdsCommon.Project>>(b =>
-            {
+            //var props = b.NewObj<DataTable.Props<MdsCommon.Project>>(b =>
+            //{
 
-                b.AddColumn(nameof(MdsCommon.Project.Name), "Project");
-                b.AddColumn("versions", "Versions");
-                b.SetRows(projectRows);
-                b.SetRenderCell<MdsCommon.Project>(renderCell);
-            });
-            var dataTable = b.Add(view, b.DataTable(props));
-            b.AddClass(dataTable, "drop-shadow");
-            return view;
+            //    b.AddColumn(nameof(MdsCommon.Project.Name), "Project");
+            //    b.AddColumn("versions", "Versions");
+            //    b.SetRows(projectRows);
+            //    b.SetRenderCell<MdsCommon.Project>(renderCell);
+            //});
+
+            //return b.HtmlDiv(
+            //    b => { },
+            //    b.ValidationPanel(clientModel),
+            //    sidePanel,
+            //    b.DataTable(props, b =>
+            //    {
+            //        b.AddClass("drop-shadow");
+            //    }));
+
         }
     }
 }

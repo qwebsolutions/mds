@@ -1,4 +1,5 @@
-﻿using Metapsi.Hyperapp;
+﻿using Metapsi.Html;
+using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using Microsoft.AspNetCore.Razor.TagHelpers;
 using System;
@@ -160,57 +161,91 @@ namespace MdsCommon.Controls
         //    return $"{FeatureName}.{tabName}";
         //}
 
-        internal static Var<HyperNode> RenderTab<TPage>(
-            this LayoutBuilder b, 
-            Var<TPage> page, 
+        internal static Var<IVNode> RenderTab<TPage>(
+            this LayoutBuilder b,
+            Var<TPage> page,
             Var<string> tabName,
-            Var<HyperNode> toolbar,
+            Var<IVNode> toolbar,
             params TabRenderer[] tabPages)
         {
-            var rootContainer = b.Div("bg-white rounded drop-shadow");
 
-            if (tabPages.Any())
+            if (!tabPages.Any())
             {
-                var selectedTabPageCode = b.GetVar(page, FeatureName, tabName, b.Const(tabPages.First().TabPageCode));
+                return b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("bg-white rounded drop-shadow");
+                    });
+            }
 
-                var topArea = b.Add(rootContainer, b.Div("flex flex-row justify-between p-4"));
+            var selectedTabPageCode = b.GetVar(page, FeatureName, tabName, b.Const(tabPages.First().TabPageCode));
 
-                var labels = b.Add(topArea, b.Div("flex flex-row gap-4"));
+            List<Var<IVNode>> tabLabels = new();
 
-                var commands = b.Add(topArea, toolbar);
+            var selectedTabContent = b.Ref(b.HtmlDiv(b => { }));
 
-                var contentContainer = b.Add(rootContainer, b.Div("flex flex-column p-8"));
+            foreach (var tab in tabPages)
+            {
+                var tabCode = b.Const(tab.TabPageCode);
+                var isSelected = b.AreEqual(tabCode, selectedTabPageCode);
 
-                foreach (var tab in tabPages)
-                {
-                    var tabLabel = b.Div("p-4 cursor-pointer border-b rounded-t bg-white");
-                    var tabCode = b.Const(tab.TabPageCode);
+                var tabLabel = b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("p-4 cursor-pointer border-b rounded-t bg-white");
 
-                    b.SetOnClick<TPage>(
-                        tabLabel,
-                        b.MakeAction((SyntaxBuilder b, Var<TPage> state) =>
+                        b.If(
+                            isSelected, b =>
+                            {
+                                b.AddClass("border-b-2 border-sky-400");
+                            },
+                            b =>
+                            {
+                                b.AddClass("border-white hover:border-sky-400 hover:border-b-2");
+                            });
+
+                        b.OnClickAction((SyntaxBuilder b, Var<TPage> state) =>
                         {
                             b.SetSelectedTabPage(state, tabName, b.Const(tab.TabPageCode));
                             return b.Clone(state);
-                        }));
+                        });
+                    },
+                    b.Call(tab.TabHeader));
 
-                    b.Add(tabLabel, b.Call(tab.TabHeader));
+                tabLabels.Add(tabLabel);
 
-                    b.Add(labels, tabLabel);
-
-                    var isSelected = b.AreEqual<string>(tabCode, selectedTabPageCode);
-
-                    b.If(isSelected, b =>
+                b.If(
+                    isSelected,
+                    b =>
                     {
-                        b.AddClass(tabLabel, "border-b-2 border-sky-400");
-                        b.Add(contentContainer, b.Call(tab.TabContent));
-                    }, b =>
-                    {
-                        b.AddClass(tabLabel, "border-white hover:border-sky-400 hover:border-b-2");
+                        b.SetRef(selectedTabContent, b.Call(tab.TabContent));
                     });
-                }
             }
-            return rootContainer;
+
+            var topArea = b.HtmlDiv(
+                b =>
+                b.SetClass("flex flex-row justify-between p-4"),
+                b.HtmlDiv(
+                    b =>
+                    {
+                        // labels
+                        b.SetClass("flex flex-row gap-4");
+                    },
+                    tabLabels.ToArray()),
+                toolbar);
+
+            return b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("bg-white rounded drop-shadow");
+                    },
+                    topArea,
+                    b.HtmlDiv(
+                        b =>
+                        {
+                            b.SetClass("flex flex-column p-8");
+                        },
+                        b.GetRef(selectedTabContent)));
         }
 
         public static void SetSelectedTabPage<TPage>(this SyntaxBuilder b, Var<TPage> page, Var<string> tabName, Var<string> tabPageCode)

@@ -11,15 +11,15 @@ namespace MdsInfrastructure.Render
             LayoutBuilder b,
             Var<EditConfigurationPage> clientModel)
         {
-            var configName = b.Get(clientModel, x => x.Configuration.Name);
-
-            var content = b.Div("flex flex-col space-y-4 w-full");
-            var configuratioNameRow = b.Add(content, b.Div("flex flex-row justify-between items-center gap-8"));
-            b.Add(configuratioNameRow, b.Text("Configuration name", "whitespace-nowrap"));
-            b.Add(configuratioNameRow, b.BoundInput(clientModel, x => x.Configuration, x => x.Name));
-            b.Add(content, b.Text(b.Get(clientModel, x => x.LastDeployed)));
-
-            return content.As<IVNode>();
+            return b.StyledDiv(
+                "flex flex-col space-y-4 w-full",
+                b.StyledDiv(
+                    "flex flex-row justify-between items-center gap-8",
+                    b.StyledSpan(
+                        "whitespace-nowrap",
+                        b.T("Configuration name")),
+                    b.BoundInput(clientModel, x => x.Configuration, x => x.Name)),
+                b.T(b.Get(clientModel, x => x.LastDeployed)));
         }
     }
 }

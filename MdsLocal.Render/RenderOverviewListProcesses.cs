@@ -83,7 +83,7 @@ namespace MdsLocal
                             {
                                 return b.Get(row, x => x.Pid != "Not running");
                             });
-                        }).As<HyperNode>();
+                        });
 
                     b.Add(view, b.AddClass(dataGrid, "p-4 bg-white"));
                 });
@@ -122,7 +122,7 @@ namespace MdsLocal
             //    });
 
 
-            b.Add(view, KillProcessPopup(b, model).As<HyperNode>());
+            b.Add(view, KillProcessPopup(b, model));
 
             return b.Layout(
                 b.LocalMenu(nameof(Overview)),

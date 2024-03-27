@@ -33,7 +33,7 @@ namespace MdsInfrastructure.Render
                 Render(b, serverModel)).As<IVNode>();
         }
 
-        public static Var<HyperNode> Render(LayoutBuilder b, MdsInfrastructure.InfrastructureStatus dataModel)
+        public static Var<IVNode> Render(LayoutBuilder b, MdsInfrastructure.InfrastructureStatus dataModel)
         {
 
             if (!string.IsNullOrEmpty(dataModel.SchemaValidationMessage))
@@ -45,7 +45,7 @@ namespace MdsInfrastructure.Render
 
             if (dataModel.Deployment == null)
             {
-                return b.Text("No deployment yet! The infrastructure is not running any service!").As<HyperNode>();
+                return b.T("No deployment yet! The infrastructure is not running any service!");
             }
             
             var page = b.Div("flex flex-col space-y-4");
@@ -70,7 +70,7 @@ namespace MdsInfrastructure.Render
                 b.Add(nodesContainer, nodePanel);
             }
 
-            Var<HyperNode> appsContainer = b.Add(page, b.PanelsContainer(4));
+            Var<IVNode> appsContainer = b.Add(page, b.PanelsContainer(4));
 
             foreach (var applicationName in dataModel.Deployment.GetDeployedServices().Select(x => x.ApplicationName).Distinct())
             {

@@ -4,55 +4,89 @@ using Metapsi.Syntax;
 using System.Collections.Generic;
 using System.Web;
 using MdsCommon.Controls;
+using Metapsi.Html;
 
 namespace MdsCommon
 {
     public static partial class HeaderRenderer
     {
-        public static Var<HyperNode> Render(this LayoutBuilder b, Var<MdsCommon.Header.Props> props)
+        public static Var<IVNode> Render(this LayoutBuilder b, Var<MdsCommon.Header.Props> props)
         {
             b.AddModuleStylesheet();
 
-            var container = b.Div("flex flex-row justify-between items-center");
             var mainOperation =  b.Get(props, x => x.Main.Operation);
             var mainEntity = b.Get(props, x => x.Main.Entity);
 
-            var titleArea = b.Add(container, b.Div());
+            var titleArea = b.HtmlDiv(
+                b =>
+                {
 
-            var mainTitle = b.Add(titleArea, b.Text(mainOperation));
-            b.AddClass(mainTitle, "font-bold text-gray-800 px-2");
+                },
+                b.HtmlSpan(
+                    b =>
+                    {
+                        b.AddClass("font-bold text-gray-800 px-2");
+                    },
+                    b.T(mainOperation)),
+                b.Optional(
+                    b.HasValue(mainEntity),
+                    b => b.HtmlSpan(
+                        b =>
+                        {
+                            b.SetClass("font-medium text-gray-500 px-2");
+                        },
+                        b.T(mainEntity))));
 
-            b.If(b.HasValue(mainEntity), b =>
-            {
-                var entityLabel = b.Add(titleArea, b.Text(mainEntity));
-                b.AddClass(entityLabel, "font-medium text-gray-500 px-2");
-            });
-
-            b.If(
+            var signInArea = b.Optional(
                 b.Get(props, x => x.UseSignIn),
                 b =>
                 {
                     var userName = b.Get(props, x => x.User.Name);
-                    b.If(b.HasValue(userName), b =>
+                    return b.If(b.HasValue(userName), b =>
                     {
-                        var rightDiv = b.Add(container, b.Div("flex flex-col items-end"));
-                        var name = b.Add(rightDiv, b.Text(userName));
-                        b.AddClass(name, "font-semibold text-sm text-gray-800");
+                        return b.HtmlDiv(
+                            b =>
+                            {
+                                b.SetClass("flex flex-col items-end");
+                            },
+                            b.HtmlSpan(
+                                b =>
+                                {
+                                    b.SetClass("font-semibold text-sm text-gray-800");
+                                },
+                                b.T(userName)),
+                            b.Optional(
+                                b.Get(props, x => x.User.AuthType == Metapsi.Ui.AuthType.Oidc),
+                                b =>
+                                {
+                                    return b.HtmlA(
+                                        b =>
+                                        {
+                                            b.AddClass("font-thin text-xs");
+                                            b.SetHref(b.Concat(b.RootPath(), b.Const("/signout")));
+                                        },
+                                        b.T("Sign out"));
+                                }));
 
-                        b.If(b.Get(props, x => x.User.AuthType == Metapsi.Ui.AuthType.Oidc), b =>
-                        {
-                            var signout = b.Add(rightDiv, b.Link(b.Const("Sign out"), b.Concat(b.RootPath(), b.Const("/signout"))));
-                            b.AddClass(signout, "font-thin text-xs");
-                        });
                     },
                     b =>
                     {
-                        var signin = b.Add(container, b.Link(b.Const("Sign in"), b.Concat(b.RootPath(), b.Const("/signin-redirect"))));
-                        b.AddClass(signin, "font-thin text-sm");
+                        return b.HtmlA(b =>
+                        {
+                            b.AddClass("font-thin text-sm");
+                            b.SetHref(b.Concat(b.RootPath(), b.Const("/signin-redirect")));
+                        },
+                        b.T("Sign in"));
                     });
                 });
 
-            return container;
+            return b.HtmlDiv(
+                b =>
+                {
+                    b.SetClass("flex flex-row justify-between items-center");
+                },
+                titleArea,
+                signInArea);
         }
     }
 }

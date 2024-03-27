@@ -1,5 +1,6 @@
 ﻿using MdsCommon.Controls;
 using Metapsi;
+using Metapsi.Html;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using System.Collections.Generic;
@@ -11,17 +12,14 @@ namespace MdsCommon
 
     public static partial class Render
     {
-        public static Var<HyperNode> RenderListInfrastructureEventsPage(this LayoutBuilder b, Var<ListInfrastructureEventsPage> clientModel)
+        public static Var<IVNode> RenderListInfrastructureEventsPage(this LayoutBuilder b, Var<ListInfrastructureEventsPage> clientModel)
         {
             b.AddModuleStylesheet();
 
-            var container = b.Div();
-            b.Comment("Created container");
-            b.Comment("Client model consted");
-            b.Add(container, b.SidePanel(
-                clientModel,
-                b => b.EventPanel(
-                    b.Get(clientModel, x => x.SelectedEvent))));
+            var sidePanel = b.SidePanel(
+            clientModel,
+            b => b.EventPanel(
+                b.Get(clientModel, x => x.SelectedEvent)));
 
             b.Comment("After side panel");
 
@@ -30,7 +28,7 @@ namespace MdsCommon
                 var date = b.Get(row, x => x.Timestamp);
                 var dateStringLocale = b.ItalianFormat(date);
 
-                return b.VPadded4(b.Switch(
+                return b.VPadded4(b.Switch<LayoutBuilder, IVNode, string>(
                     b.Get(col, x => x.Name),
                     b => b.Link(dateStringLocale, b.MakeAction<ListInfrastructureEventsPage>(
                         (b, clientModel) =>
@@ -38,17 +36,21 @@ namespace MdsCommon
                             b.Set(clientModel, x => x.SelectedEvent, row);
                             return b.ShowSidePanel(clientModel);
                         })),
+
                     (nameof(InfrastructureEvent.Criticality), b =>
                     {
                         var criticality = b.Get(row, x => x.Criticality);
-                        var container = b.Span();
-                        b.Add(container, b.Text(criticality));
-                        b.AddAlertBadge(container, criticality);
-                        return container;
-                    }
-                ),
-                    (nameof(InfrastructureEvent.Source), b => b.Text(b.Get(row, x => x.Source))),
-                    (nameof(InfrastructureEvent.ShortDescription), b => b.Text(b.Get(row, x => x.ShortDescription)))));
+
+                        return b.HtmlSpan(
+                            b =>
+                            {
+
+                            },
+                            b.T(criticality),
+                            b.AlertBadge(criticality));
+                    }),
+                    (nameof(InfrastructureEvent.Source), b => b.T(b.Get(row, x => x.Source))),
+                    (nameof(InfrastructureEvent.ShortDescription), b => b.T(b.Get(row, x => x.ShortDescription)))));
             });
 
             var rows = b.Get(clientModel, x => x.InfrastructureEvents);
@@ -62,33 +64,46 @@ namespace MdsCommon
                 b.SetRows(rows);
                 b.SetRenderCell<InfrastructureEvent>(renderCell);
             });
-            var dt = b.Add(container, b.DataTable(props));
-            b.AddClass(dt, "drop-shadow");
-            return container;
+            var dt = b.DataTable(props, b=>
+            {
+                b.AddClass("drop-shadow");
+            });
+            return b.HtmlDiv(
+                b =>
+                {
+
+                },
+                sidePanel,
+                dt);
         }
 
-        public static Var<HyperNode> EventPanel(this LayoutBuilder b, Var<MdsCommon.InfrastructureEvent> e)
+        public static Var<IVNode> EventPanel(this LayoutBuilder b, Var<MdsCommon.InfrastructureEvent> e)
         {
-            var panel = b.Div();
-            var gridLayout = b.Add(panel, b.Div("grid grid-cols-2 gap-4"));
-            b.Add(gridLayout, b.Text("Event timestamp"));
-            b.Add(gridLayout, b.Text(b.ItalianFormat(b.Get(e, e => e.Timestamp))));
+            var gridLayout = b.HtmlDiv(
+                b =>
+                {
+                    b.SetClass("grid grid-cols-2 gap-4");
+                },
+                b.T("Event timestamp"),
+                b.T(b.ItalianFormat(b.Get(e, e => e.Timestamp))),
+                b.T("Event description"),
+                b.T(b.Get(e, e => e.ShortDescription)),
+                b.T("Event source"),
+                b.T(b.Get(e, e => e.Source)),
+                b.T("Details"),
+                b.T(""));
 
-            b.Add(gridLayout, b.Text("Event description"));
-            b.Add(gridLayout, b.Text(b.Get(e, e => e.ShortDescription)));
+            var details = b.HtmlDiv(
+                b =>
+                {
+                    b.SetClass("overflow-auto");// Doesn't work
+                },
+                b.HtmlPre(b => { },
+                    b.T(b.Get(e, e => e.FullDescription))));
 
-            b.Add(gridLayout, b.Text("Event source"));
-            b.Add(gridLayout, b.Text(b.Get(e, e => e.Source)));
-
-            b.Add(gridLayout, b.Text("Details"));
-            b.Add(gridLayout, b.Text(""));
-
-            var details = b.Add(panel, b.Div("overflow-auto"));// Doesn't work
-
-            var pre = b.Add(details, b.Node("pre"));
-            b.Add(pre, b.TextNode(b.Get(e, e => e.FullDescription)));
-
-            return panel;
+            return b.HtmlDiv(b => { },
+                gridLayout,
+                details);
         }
     }
 }

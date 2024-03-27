@@ -1,5 +1,6 @@
 ﻿using MdsCommon.Controls;
 using Metapsi.ChoicesJs;
+using Metapsi.Html;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using System;
@@ -16,7 +17,7 @@ namespace MdsInfrastructure.Render
             return b.Def<SyntaxBuilder, TIn, TOut>((SyntaxBuilder b, Var<TIn> input) => b.Get(input, getProperty));
         }
 
-        public static Var<HyperNode> EditNote(
+        public static Var<IVNode> EditNote(
             LayoutBuilder b,
             Var<EditConfigurationPage> clientModel)
         {
@@ -32,7 +33,7 @@ namespace MdsInfrastructure.Render
             //var noteOptions = b.Get(noteTypes, x => x.Select(x => new DropDown.Option() { value = x.Id.ToString(), label = x.Description }).ToList());
             var noteOptions = b.MapChoices(noteTypes, x => x.Id, x => x.Description, b.Get(note, x => x.NoteTypeId));
 
-            var toolbar = b.Toolbar(b.OkButton(EditService, x => x.EditServiceNoteId));
+            var toolbar = b.Toolbar(b => { }, b.OkButton(EditService, x => x.EditServiceNoteId));
 
             var form = b.Add(view, b.Form(toolbar));
             b.AddClass(form, "bg-white rounded");
@@ -52,8 +53,20 @@ namespace MdsInfrastructure.Render
             //    }),
             //    b.Const("Note type")));
 
-            var noteTypeDd = b.Add(
-                form, 
+            b.Choices(b =>
+            {
+                b.SetChoices(noteTypes, x => x.Id, x => x.Description, noteTypeId);
+                b.OnChange(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel, Var<string> value) =>
+                {
+                    var editedNote = b.GetEditedNote(clientModel);
+                    b.Set(editedNote, x => x.NoteTypeId, b.ParseId(value));
+                    // This is a rather ugly workaround
+                    b.Set(editedNote, x => x.Reference, b.Const(string.Empty));
+                    return b.Clone(clientModel);
+                }));
+            });
+
+            var noteTypeDd = 
                 b.BoundDropDown<EditConfigurationPage, InfrastructureServiceNote, NoteType, Guid>(
                     clientModel,
                     b.Def<SyntaxBuilder, EditConfigurationPage, InfrastructureServiceNote>(GetEditedNote),
@@ -93,6 +106,19 @@ namespace MdsInfrastructure.Render
             b.Add(form, b.Text("Note"));
             b.Add(form, b.BoundInput(clientModel, noteId, (x, noteid) => x.Configuration.InfrastructureServices.SelectMany(x => x.InfrastructureServiceNotes).Single(x => x.Id == noteid), x => x.Note, b.Const("Note")));
 
+            b.HtmlDiv(b=>
+            {
+
+            },
+            b.Form(b =>
+            {
+                b.SetClass("bg-white rounded")
+            },
+            toolbar,
+            ("Note type", )
+
+
+
             return view;
         }
 
@@ -106,9 +132,9 @@ namespace MdsInfrastructure.Render
 
     public static partial class Controls
     {
-        public static Var<HyperNode> OkButton(
+        public static Var<IVNode> OkButton(
             this LayoutBuilder b,
-            Func<LayoutBuilder, Var<EditConfigurationPage>, Var<HyperNode>> areaRenderer,
+            Func<LayoutBuilder, Var<EditConfigurationPage>, Var<IVNode>> areaRenderer,
             System.Linq.Expressions.Expression<Func<EditConfigurationPage, Guid>> editedId)
         {
             var popPage = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> state) =>

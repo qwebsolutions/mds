@@ -1,5 +1,6 @@
 ﻿using Metapsi;
 using Metapsi.Dom;
+using Metapsi.Html;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 
@@ -24,45 +25,70 @@ namespace MdsCommon.Controls
             public bool @checked { get; set; }
         }
 
-        internal static Var<HyperNode> Render<TState>(LayoutBuilder b, Var<Props> props, Var<HyperType.Action<TState, bool>> onToggle)
+        internal static Var<IVNode> Render<TState>(LayoutBuilder b, Var<Props> props, Var<HyperType.Action<TState, bool>> onToggle)
         {
             var isOn = b.Get(props, x => x.IsOn);
-            var container = b.Div("flex items-center justify-left");
-            var label = b.Add(container, b.Node("label", "flex items-center"));
-            var div = b.Add(label, b.Div("relative"));
-            var input = b.Add(div, b.Node("input", "sr-only peer"));
-            b.SetAttr(input,  Html.type, "checkbox");
-            b.SetAttr(input, Html.@checked, isOn);
+            var enabled = b.Get(props, x => x.Enabled);
 
-            b.SetAttr(
-                input,
-                new DynamicProperty<HyperType.Action<TState, DomEvent<ToggleTarget>>>("onclick"),
-                b.MakeAction((SyntaxBuilder b, Var<TState> state, Var<DomEvent<ToggleTarget>> @event) =>
+            return b.HtmlDiv(
+                b =>
                 {
-                    b.StopPropagation(@event);
-                    var target = b.Get(@event, x => x.target);
-                    var value = b.Get(target, x => x.@checked);
-                    return b.MakeActionDescriptor(onToggle, value);
-                }));
+                    b.SetClass("flex items-center justify-left");
+                },
+                b.HtmlLabel(
+                    b =>
+                    {
+                        b.SetClass("flex items-center");
+                        b.If(enabled, b => b.AddClass(" cursor-pointer"));
+                    },
+                    b.HtmlDiv(
+                        b =>
+                        {
+                            b.SetClass("relative");
+                        },
+                        b.HtmlInput(
+                            b =>
+                            {
+                                b.SetDisabled(b.Not(enabled));
+                                b.SetClass("sr-only peer");
+                                b.SetAttribute("type", "checkbox");
+                                b.SetAttribute("checked", isOn);
+                                b.OnEventAction(
+                                    "click",
+                                     b.MakeAction((SyntaxBuilder b, Var<TState> state, Var<DomEvent<ToggleTarget>> @event) =>
+                                     {
+                                         b.StopPropagation(@event);
+                                         var target = b.Get(@event, x => x.target);
+                                         var value = b.Get(target, x => x.@checked);
+                                         return b.MakeActionDescriptor(onToggle, value);
+                                     }));
 
-            b.If(b.Get(props, x => x.Enabled), b =>
-            {
-                b.AddClass(label, " cursor-pointer");
-            },
-            b =>
-            {
-                b.SetAttr(input, Html.disabled, true);
-                //b.AddClass(label, "cursor-not-allowed");
-            });
-            var pill = b.Add(div, b.Div("block "));
-            b.AddClass(pill, b.Get(props, x => x.PillClass));
-            
-            var dot = b.Add(div, b.Div("dot absolute "));
-            b.AddClass(dot, b.Get(props, x => x.DotClass));
-            var lc = b.Add(label, b.Div("ml-3"));
-            var labelText = b.Add(lc, b.Text(b.Get(props, isOn, (props, isOn) => isOn ? props.OnLabel : props.OffLabel)));
-            b.AddClass(labelText, b.Get(props, x => x.LabelClass));
-            return container;
+                            }),
+                        b.HtmlDiv(
+                            b =>
+                            {
+                                b.SetClass("block");
+                                b.AddClass(b.Get(props, x => x.PillClass));
+                            }),
+                        b.HtmlDiv(
+                            b =>
+                            {
+                                b.SetClass("dot absolute");
+                                b.AddClass(b.Get(props, x => x.DotClass));
+                            })),
+                    b.HtmlDiv(
+                        b =>
+                        {
+                            b.SetClass("ml-3");
+                        },
+                        b.HtmlSpanText(
+                            b =>
+                            {
+                                b.SetClass(b.Get(props, x => x.LabelClass));
+                            },
+                            b.Get(props, isOn, (props, isOn) => isOn ? props.OnLabel : props.OffLabel))
+                        )
+                    ));
         }
     }
 
@@ -90,7 +116,7 @@ namespace MdsCommon.Controls
             }
         }
 
-        public static Var<HyperNode> Toggle<TState>(
+        public static Var<IVNode> Toggle<TState>(
             this LayoutBuilder b,
             Var<bool> isOn,
             Var<HyperType.Action<TState, bool>> onToggle,
@@ -109,7 +135,7 @@ namespace MdsCommon.Controls
             return b.Call(MdsCommon.Controls.Toggle.Render, props, onToggle);
         }
 
-        public static Var<HyperNode> BoundToggle<TEntity>(
+        public static Var<IVNode> BoundToggle<TEntity>(
             this LayoutBuilder b,
             Var<TEntity> entity,
             System.Linq.Expressions.Expression<System.Func<TEntity, bool>> onProperty,

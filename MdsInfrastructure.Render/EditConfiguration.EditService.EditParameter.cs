@@ -9,7 +9,7 @@ namespace MdsInfrastructure.Render
 {
     public static partial class EditConfiguration
     {
-        public static Var<HyperNode> EditParameter(
+        public static Var<IVNode> EditParameter(
             LayoutBuilder b,
             Var<EditConfigurationPage> clientModel)
         {

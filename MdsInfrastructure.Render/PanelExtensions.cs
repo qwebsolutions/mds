@@ -6,6 +6,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System;
 using MdsCommon.Controls;
+using Metapsi.Html;
 
 namespace MdsInfrastructure.Render
 {
@@ -14,7 +15,7 @@ namespace MdsInfrastructure.Render
 
         public const string RestartIcon = "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" >\r\n  <path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99\" />\r\n</svg>\r\n";
 
-        public static Var<HyperNode> RenderNodePanel<TFromPage, TToPage>(
+        public static Var<IVNode> RenderNodePanel<TFromPage, TToPage>(
             this LayoutBuilder b,
             InfrastructureNode node,
             List<MdsCommon.MachineStatus> healthStatus)
@@ -22,20 +23,27 @@ namespace MdsInfrastructure.Render
             string nodeName = node.NodeName;
             string nodeUrl = $"http://{node.MachineIp}:{node.UiPort}";
 
-            Func<LayoutBuilder, Var<HyperNode>> nodeHeader = (b) =>
+            Func<LayoutBuilder, Var<IVNode>> nodeHeader = (b) =>
             {
-                var header = b.Span("flex flex-row text-white");
-                var link = b.Add(header, b.Node("a", "hover:underline cursor-pointer font-bold"));
-                b.SetAttr(link, Html.href, b.Const(nodeUrl));
-                b.Add(link, b.Text(nodeName));
-
-                var img = b.Add(header, b.Node("img", "w-8 h-9 pl-2"));
-                b.SetAttr(img, Html.src, "/server-icon.png");
-                return header;
+                return b.HtmlSpan(
+                    b =>
+                    {
+                        b.SetClass("flex flex-row text-white");
+                    },
+                    b.HtmlA(
+                        b =>
+                        {
+                            b.SetClass("hover:underline cursor-pointer font-bold");
+                            b.SetHref(nodeUrl);
+                        },
+                        b.T(nodeName)),
+                    b.HtmlImg(
+                        b =>
+                        {
+                            b.SetClass("w-8 h-9 pl-2");
+                            b.SetSrc("/server-icon.png");
+                        }));
             };
-
-            //string nodeLabel = $"<a href='{nodeUrl}' style='color:white'>{nodeName}</a> <img src=\"/server-icon.png\" style=\"width:1.5em;height:2em;padding-left:10px;\"/>";
-            //nodeName = $"{nodeName} <object data=\"ServerIcon.svg\" type=\"image / svg + xml\" style=\"width:1.5em;height:2em;padding-left:10px;\">";
 
             FullStatus<string> status = StatusExtensions.GetNodeStatus(healthStatus, nodeName);
 
@@ -44,7 +52,7 @@ namespace MdsInfrastructure.Render
                 return b.InfoPanel(
                     b.Const(Panel.Style.Error),
                     nodeHeader,
-                    (b) => b.Text("Could not retrieve status"));
+                    (b) => b.T("Could not retrieve status"));
             }
             else if (Math.Abs((healthStatus.Where(x => x.NodeName == nodeName).Max(x => x.TimestampUtc) - DateTime.Now).TotalMinutes) > 1)
             {
@@ -52,42 +60,43 @@ namespace MdsInfrastructure.Render
                 return b.InfoPanel(
                     b.Const(Panel.Style.Error),
                     nodeHeader,
-                    b => b.Text($"Status not received for {Convert.ToInt32(Math.Abs(timespan.TotalMinutes))} minutes!"));
+                    b => b.T($"Status not received for {Convert.ToInt32(Math.Abs(timespan.TotalMinutes))} minutes!"));
             }
             else if (status.StatusValues.Any(x => x.GeneralStatus == GeneralStatus.NoData))
             {
                 return b.InfoPanel(
                     b.Const(Panel.Style.Error),
                     nodeHeader,
-                    b => b.Text("Data not available!"));
+                    b => b.T("Data not available!"));
             }
             else
             {
-                var infoPanelContent = b.Div("flex flex-col");
-
                 var availableHddGb = status.StatusValues.Single(x => x.Name == StatusExtensions.AvailableHddGb);
                 var availableHddPercent = status.StatusValues.Single(x => x.Name == StatusExtensions.AvailableHddPercent);
 
-                var hddInfo = b.Add(infoPanelContent, b.Div());
-                b.Add(hddInfo, b.Text($"Available HDD: {availableHddGb.CurrentValue} GB ({availableHddPercent.CurrentValue}%)"));
+                var hddInfo = b.HtmlDiv(
+                    b =>
+                    {
+                        if (availableHddGb.GeneralStatus == GeneralStatus.Danger || availableHddPercent.GeneralStatus == GeneralStatus.Danger)
+                        {
+                            b.AddClass(b.Const("font-bold"));
+                        }
+                    }, 
+                    b.T($"Available HDD: {availableHddGb.CurrentValue} GB ({availableHddPercent.CurrentValue}%)"));
 
-                if (availableHddGb.GeneralStatus == GeneralStatus.Danger || availableHddPercent.GeneralStatus == GeneralStatus.Danger)
-                {
-                    b.AddClass(hddInfo, b.Const("font-bold"));
-                }
 
                 var availableRamGb = status.StatusValues.Single(x => x.Name == StatusExtensions.AvailableRamGb);
                 var availableRamPercent = status.StatusValues.Single(x => x.Name == StatusExtensions.AvailableRamPercent);
 
-                var ramInfo = b.Add(infoPanelContent, b.Div());
-                b.Add(ramInfo, b.Text($"Available RAM: {availableRamGb.CurrentValue} GB ({availableRamPercent.CurrentValue}%)"));
-
-                if (availableRamGb.GeneralStatus == GeneralStatus.Danger || availableRamPercent.GeneralStatus == GeneralStatus.Danger)
-                {
-                    b.AddClass(ramInfo, b.Const("font-bold"));
-                }
-
-                //string nodeInfo = string.Join("<br>", panelData);
+                var ramInfo =b.HtmlDiv(
+                    b=>
+                    {
+                        if (availableRamGb.GeneralStatus == GeneralStatus.Danger || availableRamPercent.GeneralStatus == GeneralStatus.Danger)
+                        {
+                            b.AddClass(b.Const("font-bold"));
+                        }
+                    },
+                    b.T($"Available RAM: {availableRamGb.CurrentValue} GB ({availableRamPercent.CurrentValue}%)"));
 
                 Panel.Style panelStyling = Panel.Style.Ok;
 
@@ -96,20 +105,27 @@ namespace MdsInfrastructure.Render
                     panelStyling = Panel.Style.Error;
                 }
 
-                var asLink = b.Node("a");
-                b.SetAttr(asLink, Html.href, b.Const(Route.Path<Routes.Status.Node, string>(node.NodeName)));
+                var infoPanelContent = b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("flex flex-col");
+                    },
+                    hddInfo,
+                    ramInfo);
 
-                b.Add(asLink,
+                return b.HtmlA(
+                    b =>
+                    {
+                        b.SetHref(b.Const(Route.Path<Routes.Status.Node, string>(node.NodeName)));
+                    },
                     b.InfoPanel(
                         b.Const(panelStyling),
                         nodeHeader,
                         b => infoPanelContent));
-
-                return asLink;
             }
         }
 
-        public static Var<HyperNode> RenderApplicationPanel<TFromPage, TToPage>(
+        public static Var<IVNode> RenderApplicationPanel<TFromPage, TToPage>(
             this LayoutBuilder b,
             MdsInfrastructure.Deployment deployment,
             List<MachineStatus> healthStatus,
@@ -131,29 +147,31 @@ namespace MdsInfrastructure.Render
                 }
             }
 
-            Var<HyperNode> statusLabel = b.Text($"{applicationServices.Count()} services (all ok)");
+            Var<IVNode> statusLabel = b.T($"{applicationServices.Count()} services (all ok)");
 
             if (dangerServicesCount > 0)
             {
-                statusLabel = b.Div("font-bold");
-                b.Add(statusLabel, b.Text($"{applicationServices.Count()} services ({dangerServicesCount} in error)"));
+                statusLabel = b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("font-bold");
+                    },
+                    b.T($"{applicationServices.Count()} services ({dangerServicesCount} in error)"));
                 panelStyling = Panel.Style.Error;
             }
-
-            var asLink = b.Node("a");
-            b.SetAttr(asLink, Html.href, b.Const(Route.Path<Routes.Status.Application, string>(applicationName)));
-
-            b.Add(asLink,
+           
+            return b.HtmlA(
+                b=>
+                {
+                    b.SetHref(b.Const(Route.Path<Routes.Status.Application, string>(applicationName)));
+                },
                 b.InfoPanel(
                 b.Const(panelStyling),
-                b => b.Text(applicationName),
+                b => b.T(applicationName),
                 b => statusLabel));
-
-
-            return asLink;
         }
 
-        public static Var<HyperNode> RenderServicePanel(
+        public static Var<IVNode> RenderServicePanel(
             this LayoutBuilder b,
             MdsInfrastructure.Deployment deployment,
             List<MachineStatus> healthStatus,
@@ -174,7 +192,7 @@ namespace MdsInfrastructure.Render
             {
                 Panel.Style panelStyle = Panel.Style.Ok;
 
-                var statusRows = b.Div("flex flex-col");
+                var statusRows = b.NewCollection<IVNode>();
 
                 var runningSince = serviceStatus.StatusValues.SingleOrDefault(x => x.Name == StatusExtensions.ServiceRunningSince);
 
@@ -186,9 +204,10 @@ namespace MdsInfrastructure.Render
                 {
                     if (serviceStatus.StatusValues.Any(x => x.GeneralStatus == GeneralStatus.Danger && x.Name == StatusExtensions.HasErrors))
                     {
-                        b.Add(statusRows, b.Bold($"SERVICE STATUS: ERROR"));
+                        b.Push(statusRows, b.HtmlSpanText(b => b.AddClass("font-bold"), $"SERVICE STATUS: ERROR"));
                     }
-                    b.Add(statusRows, b.Text($"Started {runningSince.CurrentValue} ({serviceStatus.StatusValues.Single(x => x.Name == StatusExtensions.ServiceRunningFor).CurrentValue})"));
+
+                    b.Push(statusRows, b.T($"Started {runningSince.CurrentValue} ({serviceStatus.StatusValues.Single(x => x.Name == StatusExtensions.ServiceRunningFor).CurrentValue})"));
 
                     var lastChecked = serviceStatus.StatusValues.Single(x => x.Name == StatusExtensions.ServiceSyncAgo);
                     string lastCheckedLabel = $"({lastChecked.CurrentValue} seconds ago)";
@@ -203,7 +222,7 @@ namespace MdsInfrastructure.Render
                         panelStyle = Panel.Style.Warning;
                     }
 
-                    b.Add(statusRows, b.Text($"{usedRamLabel} {lastCheckedLabel}"));
+                    b.Push(statusRows, b.T($"{usedRamLabel} {lastCheckedLabel}"));
                 }
 
                 var startCount = serviceStatus.StatusValues.SingleOrDefault(x => x.Name == StatusExtensions.StartCount);
@@ -215,7 +234,7 @@ namespace MdsInfrastructure.Render
                         panelStyle = Panel.Style.Warning;
                         //startedLabel = $"<b>{startedLabel}</b>";
                     }
-                    b.Add(statusRows, b.Text(startedLabel));
+                    b.Push(statusRows, b.T(startedLabel));
                 }
                 else
                 {
@@ -228,7 +247,7 @@ namespace MdsInfrastructure.Render
                             panelStyle = Panel.Style.Warning;
                         }
 
-                        b.Add(statusRows, b.Text(crashLabel));
+                        b.Push(statusRows, b.T(crashLabel));
                     }
                 }
 
@@ -237,32 +256,24 @@ namespace MdsInfrastructure.Render
                     panelStyle = Panel.Style.Error;
                 }
 
-                var headerDiv = b.Div("flex flex-row");
-                var serviceNameSpan = b.Add(headerDiv, b.Bold(service.ServiceName));
-                b.AddClass(serviceNameSpan, "w-full");
-
-                //b.Add(serviceNameSpan, b.H(
-                //    "button",
-                //    (b, props) =>
-                //    {
-                //        b.OnClickAction(props, (SyntaxBuilder b, Var<object> notUsed) =>
-                //        {
-                //            return notUsed;
-                //        });
-                //    },
-                //    b.SvgNew("", RestartIcon)).As<HyperNode>());
-
-
-                var a = b.Add(headerDiv, b.Node("a", "flex flex-row justify-end text-gray-100 w-6 h-6 hover:text-white"));
-                b.SetAttr(a, Html.href, b.Const(Route.Path<Routes.Docs.Service, string>(service.ServiceName)));
-
-                // TODO: Add back
-                b.Add(a, b.Svg(Icon.Info, "w-full h-full"));
+                var headerDiv = b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("flex flex-row");
+                    },
+                    b.HtmlSpanText(b => b.SetClass("font-bold"), service.ServiceName),
+                    b.HtmlA(
+                        b =>
+                        {
+                            b.SetClass("flex flex-row justify-end text-gray-100 w-6 h-6 hover:text-white");
+                            b.SetHref(b.Const(Route.Path<Routes.Docs.Service, string>(service.ServiceName)));
+                        },
+                        b.Svg(Icon.Info, "w-full h-full")));
 
                 return b.InfoPanel(
                     b.Const(panelStyle),
                     b => headerDiv,
-                    b => statusRows);
+                    b => b.HtmlDiv(b => b.SetClass("flex flex-col w-full"), statusRows));
             }
         }
     }

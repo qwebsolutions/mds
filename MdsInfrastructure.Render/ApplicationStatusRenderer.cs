@@ -4,6 +4,7 @@ using Metapsi.Ui;
 using MdsCommon;
 using System.Linq;
 using MdsCommon.Controls;
+using Metapsi.Html;
 
 namespace MdsInfrastructure.Render
 {
@@ -36,32 +37,46 @@ namespace MdsInfrastructure.Render
         }
 
 
-        public Var<HyperNode> Render(
+        public Var<IVNode> Render(
             LayoutBuilder b,
             MdsInfrastructure.InfrastructureStatus applicationStatusPage,
             string selectedApplicationName)
         {
-            var page = b.Div("flex flex-col space-y-4");
             var selectedApplication = applicationStatusPage.InfrastructureConfiguration.Applications.Single(x => x.Name == selectedApplicationName);
 
-            b.RenderApplicationPanel<MdsInfrastructure.InfrastructureStatus, MdsInfrastructure.InfrastructureStatus>(
-                applicationStatusPage.Deployment,
-                applicationStatusPage.HealthStatus,
-                applicationStatusPage.InfrastructureEvents,
-                selectedApplication.Name);
+            //var applicationPanel = b.RenderApplicationPanel<MdsInfrastructure.InfrastructureStatus, MdsInfrastructure.InfrastructureStatus>(
+            //    applicationStatusPage.Deployment,
+            //    applicationStatusPage.HealthStatus,
+            //    applicationStatusPage.InfrastructureEvents,
+            //    selectedApplication.Name);
 
-            var servicesGroup = b.Add(page, b.PanelsContainer(4));
+            //var servicesGroup = b.Add(page, b.PanelsContainer(4));
 
-            foreach (var service in applicationStatusPage.Deployment.GetDeployedServices().Where(x => x.ApplicationName == selectedApplication.Name))
-            {
-                b.Add(servicesGroup, b.RenderServicePanel(
-                    applicationStatusPage.Deployment,
-                    applicationStatusPage.HealthStatus,
-                    service,
-                    applicationStatusPage.InfrastructureEvents));
-            }
+            //foreach (var service in applicationStatusPage.Deployment.GetDeployedServices().Where(x => x.ApplicationName == selectedApplication.Name))
+            //{
+            //    b.Add(servicesGroup, b.RenderServicePanel(
+            //        applicationStatusPage.Deployment,
+            //        applicationStatusPage.HealthStatus,
+            //        service,
+            //        applicationStatusPage.InfrastructureEvents));
+            //}
 
-            return page;
+            return b.HtmlDiv(
+                b =>
+                {
+                    b.AddClass("flex flex-col space-y-4");
+                },
+                b.PanelsContainer(
+                    4,
+                    applicationStatusPage.Deployment.GetDeployedServices().Where(x => x.ApplicationName == selectedApplication.Name).Select(
+                        service => b.RenderServicePanel(
+                            applicationStatusPage.Deployment,
+                            applicationStatusPage.HealthStatus,
+                            service,
+                            applicationStatusPage.InfrastructureEvents))
+                    ));
+
+
         }
     }
 }

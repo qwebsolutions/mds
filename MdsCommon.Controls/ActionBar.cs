@@ -1,4 +1,5 @@
 ﻿using Metapsi;
+using Metapsi.Html;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using System.Collections.Generic;
@@ -19,38 +20,39 @@ namespace MdsCommon.Controls
             public List<Command<TItem>> Commands { get; set; } = new();
         }
 
-        public static Var<HyperNode> Render<TItem>(LayoutBuilder b, Var<Props<TItem>> props, Var<TItem> entity)
+        public static Var<IVNode> Render<TItem>(LayoutBuilder b, Var<Props<TItem>> props, Var<TItem> entity)
         {
             b.AddModuleStylesheet();
 
             var commands = b.Get(props, x => x.Commands);
 
-            var rootContainer = b.Div("flex flex-row space-x-2 justify-end");
-
-            b.Foreach(commands, (b, command) =>
-            {
-                var action = b.Div("flex rounded bg-gray-200 w-10 h-10 p-1 cursor-pointer justify-center items-center opacity-50 hover:opacity-100 text-red-500");
-                b.SetInnerHtml(action, b.Get(command, x => x.IconHtml));
-
-                var onClick = b.Def<SyntaxBuilder, object, object>((b, state) =>
+            return b.HtmlDiv(
+                b =>
                 {
-                    var onCommand = b.Get(command, x => x.OnCommand);
-                    b.Call(onCommand, entity);
-                    return b.Clone(state);
-                });
-
-                b.SetAttr(action, new DynamicProperty<System.Func<object, object>>("onclick"), onClick);
-                b.Add(rootContainer, action);
-            });
-
-            return rootContainer;
+                    b.SetClass("flex flex-row space-x-2 justify-end");
+                },
+                b.Map(
+                    commands,
+                    (b, command) => b.HtmlDiv(
+                        b =>
+                        {
+                            b.SetClass("flex rounded bg-gray-200 w-10 h-10 p-1 cursor-pointer justify-center items-center opacity-50 hover:opacity-100 text-red-500");
+                            b.SetInnerHtml(b.Get(command, x => x.IconHtml));
+                            b.OnClickAction((SyntaxBuilder b, Var<object> state) =>
+                            {
+                                var onCommand = b.Get(command, x => x.OnCommand);
+                                b.Call(onCommand, entity);
+                                return b.Clone(state);
+                            });
+                        })
+                    ));
         }
     }
 
     public static partial class Controls
     {
 
-        public static Var<HyperNode> ActionBar<TItem>(
+        public static Var<IVNode> ActionBar<TItem>(
             this LayoutBuilder b,
             Var<ActionBar.Props<TItem>> props,
             Var<TItem> entity)

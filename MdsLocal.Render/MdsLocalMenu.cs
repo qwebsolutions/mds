@@ -9,7 +9,7 @@ namespace MdsLocal
 {
     public static partial class MdsLocalMenu
     {
-        public static Var<HyperNode> LocalMenu(
+        public static Var<IVNode> LocalMenu(
             this LayoutBuilder b,
             string selectedCode)
         {

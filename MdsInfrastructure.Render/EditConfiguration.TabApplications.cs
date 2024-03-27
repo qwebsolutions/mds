@@ -2,6 +2,7 @@
 using MdsCommon.Controls;
 using MdsCommon.HtmlControls;
 using Metapsi;
+using Metapsi.Html;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using System;
@@ -12,11 +13,11 @@ namespace MdsInfrastructure.Render
 {
     public static partial class EditConfiguration
     {
-        public static Var<HyperNode> TabApplications(
+        public static Var<IVNode> TabApplications(
            LayoutBuilder b,
            Var<EditConfigurationPage> clientModel)
         {
-            var container = b.Div("w-full h-full");
+            //var container = b.Div("w-full h-full");
 
             var configId = b.Get(clientModel, x => x.Configuration.Id);
 
@@ -30,59 +31,101 @@ namespace MdsInfrastructure.Render
             var allApplications = b.Get(clientModel, x => x.Configuration.Applications.OrderBy(x => x.Name).ToList());
             var filteredApplications = b.FilterList<Application>(allApplications, b.Get(clientModel, x => x.ApplicationsFilter));
 
-            b.OnModel(
-                clientModel,
-                (bParent, context) =>
+            var defaultBuilder = MdsDefaultBuilder.DataGrid<Application>();
+            var gridBuilder = MdsDefaultBuilder.DataGrid<Application>();
+
+            gridBuilder.DataTableBuilder.CreateDataCell = (b, application, column) =>
+            {
+                return b.If(
+                    b.AreEqual(
+                        column,
+                        b.Const(nameof(Application.Name))),
+                    b =>
+                    {
+                        return b.RenderApplicationNameCell(application);
+                    },
+                    b =>
+                    {
+                        return defaultBuilder.DataTableBuilder.CreateDataCell(b, application, column);
+                    });
+            };
+
+            gridBuilder.CreateRowActions = (b, row) =>
+            {
+                return b.HtmlButton(
+                    b =>
+                    {
+                        b.SetClass("flex rounded bg-gray-200 w-10 h-10 p-1 cursor-pointer justify-center items-center opacity-50 hover:opacity-100");
+                        b.SetInnerHtml(b.Const(Icon.Remove));
+                        b.OnClickAction(
+                            b.MakeActionDescriptor(
+                                b.MakeAction(onRemoveCommand),
+                                row));
+                    });
+            };
+
+            return b.HtmlDiv(
+                b =>
                 {
-                    var b = new LayoutBuilder(bParent);
+                    b.SetClass("w-full h-full");
+                },
+                b.DataGrid(
+                    gridBuilder,
+                    filteredApplications));
 
-                    b.Add(container, b.DataGrid<Application>(
-                        b =>
-                        {
-                            b.OnTable(b =>
-                            {
-                                b.FillFrom(filteredApplications, exceptColumns: new()
-                                {
-                                    nameof(Application.Id),
-                                    nameof(Application.ConfigurationHeaderId),
-                                });
+            //b.OnModel(
+            //    clientModel,
+            //    (bParent, context) =>
+            //    {
+            //        var b = new LayoutBuilder(bParent);
 
-                                b.SetCommonStyle();
+            //        b.Add(container, b.DataGrid<Application>(
+            //            b =>
+            //            {
+            //                b.OnTable(b =>
+            //                {
+            //                    b.FillFrom(filteredApplications, exceptColumns: new()
+            //                    {
+            //                        nameof(Application.Id),
+            //                        nameof(Application.ConfigurationHeaderId),
+            //                    });
 
-                                b.OverrideColumnCell(
-                                    nameof(Application.Name),
-                                    (b, data) => b.RenderApplicationNameCell(b.Get(data, x => x.Row)));
+            //                    b.SetCommonStyle();
 
-                            });
+            //                    b.OverrideColumnCell(
+            //                        nameof(Application.Name),
+            //                        (b, data) => b.RenderApplicationNameCell(b.Get(data, x => x.Row)));
 
-                            b.AddHoverRowAction(onRemoveCommand, Icon.Remove, (b, data, props) =>
-                            {
-                                b.AddClass(props, "text-red-500");
-                            },
-                            visible: (b, row) =>
-                            {
-                                var isInUse = b.Get(
-                                    clientModel,
-                                    b.Get(row, x => x.Id),
-                                    (x, applicationId) =>
-                                    x.Configuration.InfrastructureServices.Any(x => x.ApplicationId == applicationId));
-                                return b.Not(isInUse);
-                            });
+            //                });
 
-                            b.AddToolbarChild(AddApplicationButton);
+            //                b.AddHoverRowAction(onRemoveCommand, Icon.Remove, (b, data, props) =>
+            //                {
+            //                    b.AddClass(props, "text-red-500");
+            //                },
+            //                visible: (b, row) =>
+            //                {
+            //                    var isInUse = b.Get(
+            //                        clientModel,
+            //                        b.Get(row, x => x.Id),
+            //                        (x, applicationId) =>
+            //                        x.Configuration.InfrastructureServices.Any(x => x.ApplicationId == applicationId));
+            //                    return b.Not(isInUse);
+            //                });
 
-                            b.AddToolbarChild(
-                                b => b.Filter(
-                                    b =>
-                                    {
-                                        b.BindFilter(context, x => x.ApplicationsFilter);
-                                    }),
-                                HorizontalPlacement.Right);
+            //                b.AddToolbarChild(AddApplicationButton);
 
-                        }).As<HyperNode>());
-                });
+            //                b.AddToolbarChild(
+            //                    b => b.Filter(
+            //                        b =>
+            //                        {
+            //                            b.BindFilter(context, x => x.ApplicationsFilter);
+            //                        }),
+            //                    HorizontalPlacement.Right);
 
-            return container;
+            //            }));
+            //    });
+
+            //return container;
         }
 
         public static Var<IVNode> RenderApplicationNameCell(this LayoutBuilder b, Var<Application> row)
@@ -95,9 +138,12 @@ namespace MdsInfrastructure.Render
                 return b.EditView<EditConfigurationPage>(clientModel, EditApplication);
             };
 
-            var container = b.Span();
-            b.Add(container, b.Link<EditConfigurationPage>(b.WithDefault(applicationName), b.MakeAction<EditConfigurationPage>(goToApplication)));
-            return container.As<IVNode>();
+            return b.HtmlSpan(
+                b =>
+                {
+
+                },
+                b.Link<EditConfigurationPage>(b.WithDefault(applicationName), b.MakeAction<EditConfigurationPage>(goToApplication)));
         }
 
         public static Var<EditConfigurationPage> OnAddApplication(SyntaxBuilder b, Var<EditConfigurationPage> clientModel)

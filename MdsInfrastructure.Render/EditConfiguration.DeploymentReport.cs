@@ -7,190 +7,103 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using MdsCommon.Controls;
+using System.Collections.Generic;
+using Metapsi.Html;
 
 namespace MdsInfrastructure
 {
     public static partial class EditConfiguration
     {
-
-//        public static async Task<IResponse> DeploymentReport(CommandContext commandContext, HttpContext requestData, Guid entityId)
-//        {
-//#if DEBUG
-//            WebServer.WebRootPaths.Add("D:\\qweb\\mes\\Mds\\MdsInfrastructure\\inline");
-//#endif
-
-//            var savedConfiguration = await commandContext.Do(Api.LoadConfiguration, entityId);
-//            var serverModel = await MdsInfrastructureFunctions.InitializeEditConfiguration(commandContext, savedConfiguration);
-
-//            var currentDeployment = await commandContext.Do(Api.LoadCurrentDeployment);
-//            if (currentDeployment == null)
-//                currentDeployment = new Deployment();
-
-//            var snapshot = await MdsInfrastructureFunctions.TakeConfigurationSnapshot(
-//                commandContext,
-//                savedConfiguration,
-//                serverModel.AllProjects,
-//                serverModel.InfrastructureNodes);
-
-//            var changesReport = MdsInfrastructure.ChangesReport.Get(currentDeployment.GetDeployedServices().ToList(), snapshot);
-//            return Page.Response(changesReport, (b, clientModel) =>
-//            {
-//                var layout = b.Layout(b.InfraMenu(nameof(Configuration), requestData.User().IsSignedIn()),
-//                    b.Render(b.Const(new Header.Props()
-//                    {
-//                        Main = new Header.Title() { Operation = "Review deployment", Entity = currentDeployment.Timestamp.ItalianFormat() },
-//                        User = requestData.User()
-//                    })), RenderDeploymentReport(b, changesReport, savedConfiguration));
-//                return layout;
-//            });
-//        }
-
-//        public static Var<HyperNode> RenderDeploymentReport(
-//            this BlockBuilder b,
-//            MdsInfrastructure.ChangesReport serverModel,
-//            InfrastructureConfiguration infrastructureConfiguration)
-//        {
-//            var serviceChanges = serverModel.ServiceChanges;
-//            if (!serviceChanges.Any() || serviceChanges.All(x => x.ServiceChangeType == ChangeType.None))
-//            {
-//                var view = b.Div("flex flex-col w-full h-full items-center justify-center");
-
-//                var img = b.Node("img");
-//                b.SetAttr(img, Html.src, "/nowork.png");
-//                b.Add(view, img);
-
-//                var messageLine = b.Add(view, b.Div("flex flex-row space-x-2"));
-//                b.Add(messageLine, b.Text("There are no changes to deploy."));
-//                b.Add(messageLine, b.Link(b.Const("Edit"), EditConfiguration.Edit, b.Const(infrastructureConfiguration.Id.ToString())));
-
-//                return view;
-//            }
-//            else
-//            {
-//                var view = b.Div();
-
-//                var reviewConfigurationUrl = b.Url(ReviewConfiguration, b.Const(infrastructureConfiguration.Id));
-//                var confirmDeploymentUrl = b.Url(ConfirmDeployment, b.Const(infrastructureConfiguration.Id));
-//                var swapIcon = Icon.Swap;
-
-//                var toolbar = b.Add(view, b.Toolbar(b =>
-//                    b.NavigateButton(b =>
-//                    {
-//                        b.Set(x => x.Label, "Review configuration");
-//                        b.Set(x => x.Href, reviewConfigurationUrl);
-//                        b.Set(x => x.SvgIcon, swapIcon);
-//                    }),
-//                    b => b.NavigateButton(b =>
-//                    {
-//                        b.Set(x => x.Label, "Deploy now");
-//                        b.Set(x => x.Href, confirmDeploymentUrl);
-//                        b.Set(x => x.Style, Button.Style.Danger);
-//                    })));
-//                b.AddClass(toolbar, "justify-end");
-
-//                b.Add(view, b.ChangesReport(serviceChanges));
-
-//                return view;
-//            }
-//        }
-
-        public static Var<HyperNode> ChangesReport(this LayoutBuilder b, System.Collections.Generic.List<ServiceChange> serviceChanges)
+        public static Var<IVNode> ChangesReport(this LayoutBuilder b, System.Collections.Generic.List<ServiceChange> serviceChanges)
         {
-            var container = b.Div("flex flex-col space-y-4 pt-4");
-
-            //var serviceNames = serviceChanges.Select(x => x.ServiceName).Distinct();
+            List<Var<IVNode>> childNodes = new();
 
             foreach (var service in serviceChanges)
             {
                 switch (service.ServiceChangeType)
                 {
                     case ChangeType.Added:
-                        b.Add(container, b.NewService(service));
+                        childNodes.Add(b.NewService(service));
                         break;
                     case ChangeType.Changed:
-                        b.Add(container, b.ChangedService(service));
+                        childNodes.Add(b.ChangedService(service));
                         break;
                     case ChangeType.Removed:
-                        b.Add(container, b.RemovedService(service));
+                        childNodes.Add(b.RemovedService(service));
                         break;
                 }
             }
 
-            return container;
+            return b.HtmlDiv(
+                b =>
+                {
+                    b.SetClass("flex flex-col space-y-4 pt-4");
+                },
+                childNodes.ToArray());
         }
 
-        public static Var<HyperNode> NewService(this LayoutBuilder b, ServiceChange serviceChange)
+        public static Var<IVNode> NewService(this LayoutBuilder b, ServiceChange serviceChange)
         {
-            var container = b.Div("flex flex-col bg-green-100 p-4 rounded text-green-800");
-
-            var header = b.Add(container, b.Div("flex flex-row items-center  space-x-4"));
-            b.Add(header, b.Bold(b.Const(serviceChange.ServiceName)));
-            var icon = b.Add(header, b.Div());
-            b.SetInnerHtml(icon, Icon.Enter);
-
-            var operationSummary = b.Add(header, b.Text($"Install {serviceChange.ProjectName.NewValue} {serviceChange.ProjectVersionTag.NewValue} on {serviceChange.NodeName.NewValue}"));
-            b.AddClass(operationSummary, "grid w-full justify-end");
-
-            b.Add(container, b.ListParameterChanges(serviceChange));
-
-            return container;
+            return b.StyledDiv(
+                "flex flex-col bg-green-100 p-4 rounded text-green-800",
+                b.StyledDiv(
+                    "flex flex-row items-center  space-x-4",
+                    b.Bold(serviceChange.ServiceName),
+                    b.Svg(Icon.Enter),
+                    b.StyledSpan(
+                        "grid w-full justify-end",
+                        b.T($"Install {serviceChange.ProjectName.NewValue} {serviceChange.ProjectVersionTag.NewValue} on {serviceChange.NodeName.NewValue}"))),
+                b.ListParameterChanges(serviceChange));
         }
 
-        public static Var<HyperNode> RemovedService(this LayoutBuilder b, ServiceChange serviceChange)
+        public static Var<IVNode> RemovedService(this LayoutBuilder b, ServiceChange serviceChange)
         {
-            var container = b.Div("flex flex-col bg-red-100 p-4 rounded text-red-800");
-            var header = b.Add(container, b.Div("flex flex-row items-center space-x-4"));
-            b.Add(header, b.Bold(serviceChange.ServiceName));
-            var icon = b.Add(header, b.Div());
-            b.SetInnerHtml(icon, Icon.Remove);
-            var operationSummary = b.Add(header, b.Text($"Uninstall {serviceChange.ProjectName.OldValue} {serviceChange.ProjectVersionTag.OldValue} from {serviceChange.NodeName.OldValue}"));
-            b.AddClass(operationSummary, "grid w-full justify-end");
-
-            b.Add(container, b.ListParameterChanges(serviceChange));
-            return container;
+            return b.StyledDiv(
+                "flex flex-col bg-red-100 p-4 rounded text-red-800",
+                b.StyledDiv(
+                    "flex flex-row items-center space-x-4",
+                    b.Bold(serviceChange.ServiceName),
+                    b.Svg(Icon.Remove),
+                    b.StyledSpan("grid w-full justify-end", b.T($"Uninstall {serviceChange.ProjectName.OldValue} {serviceChange.ProjectVersionTag.OldValue} from {serviceChange.NodeName.OldValue}"))),
+                b.ListParameterChanges(serviceChange));
         }
 
-        public static Var<HyperNode> ChangedService(this LayoutBuilder b, ServiceChange serviceChange)
+        public static Var<IVNode> ChangedService(this LayoutBuilder b, ServiceChange serviceChange)
         {
-            var container = b.Div("flex flex-col bg-sky-200 p-4 rounded text-sky-800");
-            var header = b.Add(container, b.Div("flex flex-row items-center space-x-4"));
-            b.Add(header, b.Bold(serviceChange.ServiceName));
-            var icon = b.Add(header, b.Div());
-            b.SetInnerHtml(icon, Icon.Changed);
+            var sameVersion =
+                serviceChange.ProjectName.OldValue == serviceChange.ProjectName.NewValue &&
+                serviceChange.ProjectVersionTag.OldValue == serviceChange.ProjectVersionTag.NewValue;
 
-            // There are no changes in project version, so probably just in parameters
-            if (serviceChange.ProjectName.OldValue == serviceChange.ProjectName.NewValue && serviceChange.ProjectVersionTag.OldValue == serviceChange.ProjectVersionTag.NewValue)
-            {
-                var operationSummary = b.Add(header, b.Text($"Restart {serviceChange.ProjectName.NewValue} {serviceChange.ProjectVersionTag.NewValue} on {serviceChange.NodeName.NewValue}"));
-                b.AddClass(operationSummary, "grid w-full justify-end");
-            }
-            else
-            {
-                var operationSummary = b.Add(header, b.Text($"Upgrade {serviceChange.ProjectName.NewValue} from {serviceChange.ProjectVersionTag.OldValue} to {serviceChange.ProjectVersionTag.NewValue} on {serviceChange.NodeName.NewValue}"));
-                b.AddClass(operationSummary, "grid w-full justify-end");
-            }
-
-            b.Add(container, b.ListParameterChanges(serviceChange));
-
-            return container;
+            return b.StyledDiv(
+                "flex flex-col bg-sky-200 p-4 rounded text-sky-800",
+                b.StyledDiv(
+                    "flex flex-row items-center space-x-4",
+                    b.Bold(serviceChange.ServiceName),
+                    b.Svg(Icon.Changed),
+                    b.StyledSpan(
+                        "grid w-full justify-end",
+                        sameVersion ?
+                        b.T($"Restart {serviceChange.ProjectName.NewValue} {serviceChange.ProjectVersionTag.NewValue} on {serviceChange.NodeName.NewValue}") :
+                        b.T($"Upgrade {serviceChange.ProjectName.NewValue} from {serviceChange.ProjectVersionTag.OldValue} to {serviceChange.ProjectVersionTag.NewValue} on {serviceChange.NodeName.NewValue}"))),
+                b.ListParameterChanges(serviceChange));
         }
 
-        public static Var<HyperNode> ListParameterChanges(this LayoutBuilder b, ServiceChange serviceChange)
+        public static Var<IVNode> ListParameterChanges(this LayoutBuilder b, ServiceChange serviceChange)
         {
-            var l = b.Div("flex flex-col space-y-1 text-sm py-2");
+            List<Var<IVNode>> nodes = new();
 
             foreach (var parameterChange in serviceChange.ServiceParameterChanges)
             {
                 if(parameterChange.OldValue != parameterChange.NewValue)
                 {
-                    b.Add(l, b.ParameterChange(parameterChange));
+                    nodes.Add(b.ParameterChange(parameterChange));
                 }
             }
 
-            return l;
+            return b.StyledDiv("flex flex-col space-y-1 text-sm py-2", nodes.ToArray());
         }
 
-        public static Var<HyperNode> ParameterChange(this LayoutBuilder b, ServicePropertyChange parameterChange)
+        public static Var<IVNode> ParameterChange(this LayoutBuilder b, ServicePropertyChange parameterChange)
         {
             // null is different from string.Empty in this case.
             // null = parameter does not even exist, while string.Empty is valid parameter value
@@ -198,29 +111,29 @@ namespace MdsInfrastructure
             // removed, no new value
             if (parameterChange.NewValue == null)
             {
-                var paramSpan = b.Span("text-red-800 line-through flex flex-row space-x-4");
-                b.Add(paramSpan, b.Bold(parameterChange.PropertyName));
-                b.Add(paramSpan, b.Text(parameterChange.OldValue));
-                return paramSpan;
+                return b.StyledSpan(
+                    "text-red-800 line-through flex flex-row space-x-4",
+                    b.Bold(parameterChange.PropertyName),
+                    b.T(parameterChange.OldValue));
             }
 
             // added, no old value
-            if(parameterChange.OldValue == null)
+            if (parameterChange.OldValue == null)
             {
-                var paramSpan = b.Span("text-green-800 flex flex-row space-x-4");
-                b.Add(paramSpan, b.Bold(parameterChange.PropertyName));
-                b.Add(paramSpan, b.Text(parameterChange.NewValue));
-                return paramSpan;
+                return b.StyledSpan(
+                    "text-green-800 flex flex-row space-x-4",
+                    b.Bold(parameterChange.PropertyName),
+                    b.T(parameterChange.NewValue));
             }
 
             // value changed
             {
-                var paramSpan = b.Span("text-sky-800 flex flex-row space-x-4");
-                b.Add(paramSpan, b.Bold(parameterChange.PropertyName));
-                b.Add(paramSpan, b.Text(parameterChange.OldValue));
-                b.Add(paramSpan, b.Text("➔"));
-                b.Add(paramSpan, b.Text(parameterChange.NewValue));
-                return paramSpan;
+                return b.StyledSpan(
+                    "text-sky-800 flex flex-row space-x-4",
+                    b.Bold(parameterChange.PropertyName),
+                    b.T(parameterChange.OldValue),
+                    b.T("➔"),
+                    b.T(parameterChange.NewValue));
             }
         }
     }

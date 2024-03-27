@@ -12,17 +12,17 @@ namespace MdsInfrastructure
     {
         private const string FeatureName = "views";
 
-        public static Var<HyperNode> Render<TModel>(
+        public static Var<IVNode> Render<TModel>(
             LayoutBuilder b,
             Var<TModel> clientModel,
             string areaName,
             string defaultViewName,
-            params Func<LayoutBuilder, Var<TModel>, Var<HyperNode>>[] renderers)
+            params Func<LayoutBuilder, Var<TModel>, Var<IVNode>>[] renderers)
         {
 
             var currentViewName = b.GetVar<TModel>(clientModel, FeatureName, b.Const(areaName), b.Const(defaultViewName));
 
-            var outNode = b.Ref<HyperNode>(b.TextNode("View error"));
+            var outNode = b.Ref<IVNode>(b.T("View error"));
 
             foreach (var renderer in renderers)
             {
@@ -45,12 +45,12 @@ namespace MdsInfrastructure
             b.SetVar<TModel>(model, FeatureName, areaName, viewRenderer);
         }
 
-        public static Var<string> GetViewName<TModel>(this SyntaxBuilder b, Func<LayoutBuilder, Var<TModel>, Var<HyperNode>> renderer)
+        public static Var<string> GetViewName<TModel>(this SyntaxBuilder b, Func<LayoutBuilder, Var<TModel>, Var<IVNode>> renderer)
         {
             return b.Const(renderer.Method.Name);
         }
 
-        public static string GetName<TModel>(Func<LayoutBuilder, Var<TModel>, Var<HyperNode>> renderer)
+        public static string GetName<TModel>(Func<LayoutBuilder, Var<TModel>, Var<IVNode>> renderer)
         {
             return renderer.Method.Name;
         }
@@ -68,12 +68,12 @@ namespace MdsInfrastructure
         /// <param name="defaultViewName"></param>
         /// <param name="renderers"></param>
         /// <returns></returns>
-        public static Var<HyperNode> View<TModel>(
+        public static Var<IVNode> View<TModel>(
             this LayoutBuilder b,
             Var<TModel> clientModel,
             string areaName,
             string defaultViewName,
-            params Func<LayoutBuilder, Var<TModel>, Var<HyperNode>>[] renderers)
+            params Func<LayoutBuilder, Var<TModel>, Var<IVNode>>[] renderers)
         {
             return MdsInfrastructure.View.Render(b, clientModel, areaName, defaultViewName, renderers);
         }
@@ -87,11 +87,11 @@ namespace MdsInfrastructure
         /// <param name="areaName"></param>
         /// <param name="renderers"></param>
         /// <returns></returns>
-        public static Var<HyperNode> View<TModel>(
+        public static Var<IVNode> View<TModel>(
             this LayoutBuilder b,
             Var<TModel> clientModel,
             string areaName,
-            params Func<LayoutBuilder, Var<TModel>, Var<HyperNode>>[] renderers)
+            params Func<LayoutBuilder, Var<TModel>, Var<IVNode>>[] renderers)
         {
             return MdsInfrastructure.View.Render(
                 b, 

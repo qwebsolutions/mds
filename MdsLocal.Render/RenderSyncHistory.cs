@@ -25,7 +25,7 @@ namespace MdsLocal
                 b.Render(headerProps), Render2(b, dataModel)).As<IVNode>();
         }
 
-        public static Var<HyperNode> Render2(LayoutBuilder b, Var<SyncHistory.DataModel> dataModel)
+        public static Var<IVNode> Render2(LayoutBuilder b, Var<SyncHistory.DataModel> dataModel)
         {
             var view = b.Div("flex flex-col");
 

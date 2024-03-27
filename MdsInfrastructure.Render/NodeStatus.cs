@@ -26,7 +26,7 @@ namespace MdsInfrastructure.Render
                 })), RenderNodeStatus(b, serverData.InfrastructureStatus, serverData.NodeName)).As<IVNode>();
         }
 
-        public static Var<HyperNode> RenderNodeStatus(
+        public static Var<IVNode> RenderNodeStatus(
             LayoutBuilder b,
             MdsInfrastructure.InfrastructureStatus nodesStatusPage,
             string selectedNodeName)
@@ -35,33 +35,25 @@ namespace MdsInfrastructure.Render
 
             if (selectedNode == null)
             {
-                return b.Text("Node not found");
+                return b.T("Node not found");
             }
-
-            //var headerBuilder = viewBuilder.CreatePageHeader($"Deployment: {nodesStatusPage.GetLastDeployment().Timestamp.ItalianFormat()}, configuration name: {nodesStatusPage.GetLastDeployment().ConfigurationName}");
-            //var backButton = headerBuilder.AddHeaderCommand<NodeStatusPage, StatusPage>(MdsCommon.MdsCommonFunctions.BackLabel, (context, model, id) => Status(context), Guid.Empty, true);
-            //backButton.Styling = "Secondary";
-
-            //var nodesGroup = viewBuilder.Group("grpNodes", Guid.Empty, UI.Svelte.ViewBuilder.RootGroupId, "Horizontal");
-
-            var page = b.Div("flex flex-col space-y-4");
-
-            b.Add(page, b.RenderNodePanel<InfrastructureStatus, InfrastructureStatus>(selectedNode, nodesStatusPage.HealthStatus));
 
             var nodeServices = nodesStatusPage.Deployment.GetDeployedServices().Where(x => x.NodeName == selectedNode.NodeName);
 
-            var servicesGroup = b.Add(page, b.PanelsContainer(4));
+            var servicesGroup = b.PanelsContainer(4,
+                nodeServices.Select(service =>
+                {
+                    return b.RenderServicePanel(
+                        nodesStatusPage.Deployment,
+                        nodesStatusPage.HealthStatus,
+                        service,
+                        nodesStatusPage.InfrastructureEvents);
+                }));
 
-            foreach (var service in nodeServices)
-            {
-                var serviceCard = b.Add(servicesGroup, b.RenderServicePanel(
-                    nodesStatusPage.Deployment,
-                    nodesStatusPage.HealthStatus,
-                    service,
-                    nodesStatusPage.InfrastructureEvents));
-            }
-
-            return page;
+            return b.StyledDiv(
+                "flex flex-col space-y-4",
+                b.RenderNodePanel<InfrastructureStatus, InfrastructureStatus>(selectedNode, nodesStatusPage.HealthStatus),
+                servicesGroup);
         }
     }
 }

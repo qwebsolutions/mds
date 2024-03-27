@@ -7,82 +7,84 @@ using MdsCommon.Controls;
 using MdsCommon.HtmlControls;
 using static MdsCommon.Controls.DataTable;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Metapsi.Html;
 
 namespace MdsInfrastructure.Render
 {
     public static partial class EditConfiguration
     {
-        public static Var<HyperNode> TabVariables(
+        public static Var<IVNode> TabVariables(
            LayoutBuilder b,
            Var<EditConfigurationPage> clientModel)
         {
-            var container = b.Div("w-full h-full");
+            throw new System.NotImplementedException();
+            //var container = b.Div("w-full h-full");
 
-            var configId = b.Get(clientModel, x => x.Configuration.Id);
+            //var configId = b.Get(clientModel, x => x.Configuration.Id);
 
-            var onRemove = (SyntaxBuilder b, Var<EditConfigurationPage> clientModel, Var<InfrastructureVariable> variable) =>
-            {
-                var typed = variable.As<InfrastructureVariable>();
-                var removed = b.Get(clientModel, typed, (x, typed) => x.Configuration.InfrastructureVariables.Where(x => x != typed).ToList());
-                b.Set(b.Get(clientModel, x => x.Configuration), x => x.InfrastructureVariables, removed);
-                return b.Clone(clientModel);
-            };
+            //var onRemove = (SyntaxBuilder b, Var<EditConfigurationPage> clientModel, Var<InfrastructureVariable> variable) =>
+            //{
+            //    var typed = variable.As<InfrastructureVariable>();
+            //    var removed = b.Get(clientModel, typed, (x, typed) => x.Configuration.InfrastructureVariables.Where(x => x != typed).ToList());
+            //    b.Set(b.Get(clientModel, x => x.Configuration), x => x.InfrastructureVariables, removed);
+            //    return b.Clone(clientModel);
+            //};
 
-            var allVariables = b.Get(clientModel, x => x.Configuration.InfrastructureVariables.OrderBy(x => x.VariableName).ToList());
-            var filteredVariables = b.FilterList<InfrastructureVariable>(allVariables, b.Get(clientModel, x => x.VariablesFilter));
+            //var allVariables = b.Get(clientModel, x => x.Configuration.InfrastructureVariables.OrderBy(x => x.VariableName).ToList());
+            //var filteredVariables = b.FilterList<InfrastructureVariable>(allVariables, b.Get(clientModel, x => x.VariablesFilter));
 
-            b.OnModel(
-                clientModel,
-                (bParent, context) =>
-                {
-                    var b = new LayoutBuilder(bParent);
+            //b.OnModel(
+            //    clientModel,
+            //    (bParent, context) =>
+            //    {
+            //        var b = new LayoutBuilder(bParent);
 
-                    b.Add(container, b.DataGrid<InfrastructureVariable>(
-                        b =>
-                        {
-                            b.OnTable(b =>
-                            {
-                                b.FillFrom(filteredVariables, exceptColumns: new()
-                                {
-                                    nameof(InfrastructureVariable.Id),
-                                    nameof(InfrastructureVariable.ConfigurationHeaderId),
-                                });
+            //        b.Add(container, b.DataGrid<InfrastructureVariable>(
+            //            b =>
+            //            {
+            //                b.OnTable(b =>
+            //                {
+            //                    b.FillFrom(filteredVariables, exceptColumns: new()
+            //                    {
+            //                        nameof(InfrastructureVariable.Id),
+            //                        nameof(InfrastructureVariable.ConfigurationHeaderId),
+            //                    });
 
-                                b.SetCommonStyle();
+            //                    b.SetCommonStyle();
 
-                                b.OverrideColumnCell(
-                                    nameof(InfrastructureVariable.VariableName),
-                                    (b, data) => b.RenderVariableNameCell(b.Get(data, x => x.Row)));
-                            });
+            //                    b.OverrideColumnCell(
+            //                        nameof(InfrastructureVariable.VariableName),
+            //                        (b, data) => b.RenderVariableNameCell(b.Get(data, x => x.Row)));
+            //                });
 
-                            b.AddHoverRowAction(onRemove, Icon.Remove, (b, data, props) =>
-                            {
-                                b.AddClass(props, "text-red-500");
-                            },
-                            visible: (b, row) =>
-                            {
-                                var isInUse = b.Get(
-                                    clientModel,
-                                    b.Get(row, x => x.Id),
-                                    (x, variableId) => x.Configuration.InfrastructureServices.SelectMany(x => x.InfrastructureServiceParameterDeclarations.SelectMany(x => x.InfrastructureServiceParameterBindings)).Any(x => x.InfrastructureVariableId == variableId));
+            //                b.AddHoverRowAction(onRemove, Icon.Remove, (b, data, props) =>
+            //                {
+            //                    b.AddClass(props, "text-red-500");
+            //                },
+            //                visible: (b, row) =>
+            //                {
+            //                    var isInUse = b.Get(
+            //                        clientModel,
+            //                        b.Get(row, x => x.Id),
+            //                        (x, variableId) => x.Configuration.InfrastructureServices.SelectMany(x => x.InfrastructureServiceParameterDeclarations.SelectMany(x => x.InfrastructureServiceParameterBindings)).Any(x => x.InfrastructureVariableId == variableId));
 
-                                return b.Not(isInUse);
-                            });
+            //                    return b.Not(isInUse);
+            //                });
 
-                            b.AddToolbarChild(AddVariableButton);
+            //                b.AddToolbarChild(AddVariableButton);
 
-                            b.AddToolbarChild(
-                                b => b.Filter(
-                                    b =>
-                                    {
-                                        b.BindFilter(context, x => x.VariablesFilter);
-                                    }),
-                                HorizontalPlacement.Right);
+            //                b.AddToolbarChild(
+            //                    b => b.Filter(
+            //                        b =>
+            //                        {
+            //                            b.BindFilter(context, x => x.VariablesFilter);
+            //                        }),
+            //                    HorizontalPlacement.Right);
 
-                        }).As<HyperNode>());
-                });
+            //            }));
+            //    });
 
-            return container;
+            //return container;
         }
 
         public static Var<IVNode> RenderVariableNameCell(this LayoutBuilder b, Var<InfrastructureVariable> row)
@@ -95,9 +97,12 @@ namespace MdsInfrastructure.Render
                 return b.EditView<EditConfigurationPage>(clientModel, EditVariable);
             };
 
-            var container = b.Span();
-            b.Add(container, b.Link<EditConfigurationPage>(b.WithDefault(variableName), b.MakeAction<EditConfigurationPage>(goToVariable)));
-            return container.As<IVNode>();
+            return b.HtmlSpan(
+                b =>
+                {
+
+                },
+                b.Link<EditConfigurationPage>(b.WithDefault(variableName), b.MakeAction<EditConfigurationPage>(goToVariable)));
         }
 
         public static Var<EditConfigurationPage> OnAddVariable(SyntaxBuilder b, Var<EditConfigurationPage> clientModel)

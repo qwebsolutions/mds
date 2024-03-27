@@ -1,4 +1,5 @@
 ﻿using Metapsi;
+using Metapsi.Html;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using System.Linq;
@@ -16,30 +17,26 @@ namespace MdsCommon.Controls
             public string Placeholder { get; set; } = "";
         }
 
-        public static Var<HyperNode> Render(this LayoutBuilder b, Var<TextArea.Props> props)
+        public static Var<IVNode> Render(this LayoutBuilder b, Var<TextArea.Props> props)
         {
-            var textArea = b.Node("textarea", b.Get(props, x => x.CssClass));
-            b.SetAttr(textArea, new DynamicProperty<int>("rows"), b.Get(props, x => x.Rows));
-            b.SetAttr(textArea, Html.placeholder, b.Get(props, x => x.Placeholder));
-
-            var isEnabled = b.Get(props, x => x.Enabled);
-            b.If(b.Not(isEnabled), b => b.SetAttr(textArea, Html.disabled, true));
-
-            b.Add(textArea, b.TextNode(b.Get(props, x => x.Text)));
-
-            return textArea;
+            return b.HtmlTextarea(
+                b =>
+                {
+                    b.SetClass(b.Get(props, x => x.CssClass));
+                    b.SetAttribute("rows", b.Get(props, x => x.Rows));
+                    b.SetAttribute("placeholder", b.Get(props, x => x.Placeholder));
+                    b.SetDisabled(b.Not(b.Get(props, x => x.Enabled)));
+                },
+                b.T(b.Get(props, x => x.Text)));
         }
     }
     public static partial class Controls
     {
-
-
-
-        public static Var<HyperNode> TextArea(this LayoutBuilder b, Var<TextArea.Props> props)
+        public static Var<IVNode> TextArea(this LayoutBuilder b, Var<TextArea.Props> props)
         {
             return MdsCommon.Controls.TextArea.Render(b,props);
         }
-        public static Var<HyperNode> TextArea(
+        public static Var<IVNode> TextArea(
             this LayoutBuilder b, 
             Var<string> text,
             System.Action<Modifier<TextArea.Props>> optional = null)

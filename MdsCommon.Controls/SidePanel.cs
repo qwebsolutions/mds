@@ -1,4 +1,5 @@
 ﻿using Metapsi;
+using Metapsi.Html;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using System.Linq;
@@ -15,26 +16,40 @@ namespace MdsCommon.Controls
 
         public const string X = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"currentColor\">\r\n\t<path fill-rule=\"evenodd\" d=\"M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z\" clip-rule=\"evenodd\" />\r\n</svg>\r\n";
 
-        public static Var<HyperNode> Render(LayoutBuilder b, Var<HyperNode> content)
+        public static Var<IVNode> Render(LayoutBuilder b, Var<IVNode> content)
         {
-            var panel = b.Div("fixed top-0 right-0 bottom-0 w-1/3 bg-gray-50 h-screen transition-all duration-500 z-50");
-            var verticalLayout = b.Add(panel, b.Div("flex flex-col p-4 items-start space-y-4 h-full"));
-
-            var close = b.Add(verticalLayout, b.Node("button", "rounded text-white bg-rose-600 p-1 shadow"));
-            b.Add(close, b.Svg(X, "w-4 h-4"));
-
-            var container = b.Add(verticalLayout, b.Div("w-full h-full overflow-auto"));
-            b.Add(container, content);
-
-            var onClick = b.Def<SyntaxBuilder, Metapsi.Ui.IHasSidePanel, Metapsi.Ui.IHasSidePanel>((b, state) =>
+            var onClick = b.MakeAction((SyntaxBuilder b, Var<Metapsi.Ui.IHasSidePanel> state) =>
             {
                 b.Set(state, x => x.ShowSidePanel, b.Const(false));
                 return b.Clone(state);
             });
 
-            b.SetAttr(close, new DynamicProperty<System.Func<Metapsi.Ui.IHasSidePanel, Metapsi.Ui.IHasSidePanel>>("onclick"), onClick);
+            var close = b.HtmlButton(
+                b =>
+                {
+                    b.SetClass("rounded text-white bg-rose-600 p-1 shadow");
+                    b.OnClickAction(onClick);
+                },
+                b.Svg(X, "w-4 h-4"));
 
-            return panel;
+            var verticalLayout = b.HtmlDiv(
+                b =>
+                {
+                    b.SetClass("flex flex-col p-4 items-start space-y-4 h-full");
+                },
+                b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("w-full h-full overflow-auto");
+                    },
+                    content));
+
+            return b.HtmlDiv(
+                b =>
+                {
+                    b.SetClass("fixed top-0 right-0 bottom-0 w-1/3 bg-gray-50 h-screen transition-all duration-500 z-50");
+                },
+                verticalLayout);
         }
 
         public static Var<TPage> ShowSidePanel<TPage>(this SyntaxBuilder b, Var<TPage> page)
@@ -57,10 +72,10 @@ namespace MdsCommon.Controls
 
     public static partial class Controls
     {
-        public static Var<HyperNode> SidePanel<TPage>(
+        public static Var<IVNode> SidePanel<TPage>(
             this LayoutBuilder b,
             Var<TPage> page,
-            System.Func<LayoutBuilder, Var<HyperNode>> renderContent)
+            System.Func<LayoutBuilder, Var<IVNode>> renderContent)
              where TPage : Metapsi.Ui.IHasSidePanel
         {
             return b.If(
@@ -70,7 +85,11 @@ namespace MdsCommon.Controls
                     var content = b.Call(renderContent);
                     return b.Call(MdsCommon.Controls.SidePanel.Render, content);
                 },
-                b => b.Div("fixed top-0 right-0 bottom-0 w-0 transition-all bg-gray-50 h-screen duration-500"));
+                b => b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("fixed top-0 right-0 bottom-0 w-0 transition-all bg-gray-50 h-screen duration-500");
+                    }));
         }
     }
 }

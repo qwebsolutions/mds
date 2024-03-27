@@ -11,7 +11,7 @@ namespace MdsInfrastructure.Render
 {
     public static partial class EditConfiguration
     {
-        public static Var<HyperNode> TabService(
+        public static Var<IVNode> TabService(
            LayoutBuilder b,
            Var<EditConfigurationPage> clientModel)
         {

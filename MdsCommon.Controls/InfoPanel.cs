@@ -1,6 +1,8 @@
-﻿using Metapsi.Hyperapp;
+﻿using Metapsi.Html;
+using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using System;
+using System.Collections.Generic;
 
 namespace MdsCommon.Controls
 {
@@ -17,11 +19,11 @@ namespace MdsCommon.Controls
 
     public static partial class Controls
     {
-        public static Var<HyperNode> InfoPanel(
+        public static Var<IVNode> InfoPanel(
             this LayoutBuilder b,
             Var<Panel.Style> style,
-            Func<LayoutBuilder, Var<HyperNode>> header,
-            Func<LayoutBuilder, Var<HyperNode>> body)
+            Func<LayoutBuilder, Var<IVNode>> header,
+            Func<LayoutBuilder, Var<IVNode>> body)
         {
             string basePanelStyle = "flex flex-col rounded-md p-4 shadow-md border border-gray-100 ";
             var infoPanelStyle = b.Const(basePanelStyle + "bg-white text-gray-800");
@@ -33,22 +35,29 @@ namespace MdsCommon.Controls
             Var<bool> isError = b.AreEqual(style, b.Const(Panel.Style.Error));
             Var<bool> isWarning = b.AreEqual(style, b.Const(Panel.Style.Warning));
 
-            var panel = b.Div(infoPanelStyle);
-
-            b.If(isOk, b => b.SetAttr(panel, Html.@class, okPanelStyle));
-            b.If(isError, b => b.SetAttr(panel, Html.@class, errorPanelStyle));
-            b.If(isWarning, b => b.SetAttr(panel, Html.@class, warningPanelStyle));
-
-            var headerDiv = b.Add(panel, b.Div("pb-2"));
-            b.Add(headerDiv, header(b));
-
-            var contentDiv = b.Add(panel, b.Div("justify-self-end"));
-            b.Add(contentDiv, body(b));
-
-            return panel;
+            return b.HtmlDiv(
+                b =>
+                {
+                    b.If(isOk, b => b.SetClass(okPanelStyle));
+                    b.If(isError, b => b.SetClass(errorPanelStyle));
+                    b.If(isWarning, b => b.SetClass(warningPanelStyle));
+                    b.AddClass(infoPanelStyle);
+                },
+                b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("pb-2");
+                    },
+                    header(b)),
+                b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("justify-self-end");
+                    },
+                    body(b)));
         }
 
-        public static Var<HyperNode> InfoPanel(
+        public static Var<IVNode> InfoPanel(
             this LayoutBuilder b,
             Panel.Style style,
             string header,
@@ -63,42 +72,37 @@ namespace MdsCommon.Controls
                 {
                     if (infoLink == null)
                     {
-                        return b.Bold(header);
+                        return b.HtmlSpanText(b => b.AddClass("font-bold"), header);
                     }
                     else
                     {
-                        var headerDiv = b.Div("flex flex-row");
-                        var serviceNameSpan = b.Add(headerDiv, b.Bold(header));
-                        b.AddClass(serviceNameSpan, "w-full");
-
-                        var a = b.Add(headerDiv, b.Node("a", "flex flex-row justify-end text-gray-100 w-6 h-6 hover:text-white"));
-                        b.SetAttr(a, Html.href, infoLink);
-                        b.Add(a, b.Svg(info, "w-full h-full"));
-                        return headerDiv;
+                        return b.HtmlDiv(
+                            b =>
+                            {
+                                b.SetClass("flex flex-row");
+                            },
+                            b.HtmlSpanText(b => b.AddClass("font-bold w-full"), header),
+                            b.HtmlA(
+                                b =>
+                                {
+                                    b.SetClass("flex flex-row justify-end text-gray-100 w-6 h-6 hover:text-white");
+                                    b.SetHref(infoLink);
+                                },
+                                b.Svg(info, "w-full h-full")));
                     }
                 },
-                b => b.Text(b.Const(body)));
+                b => b.T(b.Const(body)));
         }
 
-        public static Var<HyperNode> PanelsContainer(this LayoutBuilder b, int columns)
+        public static Var<IVNode> PanelsContainer(this LayoutBuilder b, int columns, IEnumerable<Var<IVNode>> panels)
         {
             // tw import
             // lg:grid-cols-4
-            return b.Div($"grid grid-cols-1 lg:grid-cols-{columns} gap-4");
-        }
-
-        public static Var<HyperNode> Bold(this LayoutBuilder b, string text)
-        {
-            var r = b.Text(text);
-            b.AddClass(r, "font-bold");
-            return r;
-        }
-
-        public static Var<HyperNode> Bold(this LayoutBuilder b, Var<string> text)
-        {
-            var r = b.Text(text);
-            b.AddClass(r, "font-bold");
-            return r;
+            return b.HtmlDiv(
+                b =>
+                {
+                    b.SetClass($"grid grid-cols-1 lg:grid-cols-{columns} gap-4");
+                });
         }
     }
 }

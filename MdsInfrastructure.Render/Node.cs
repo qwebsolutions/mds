@@ -7,6 +7,8 @@ using System.Linq;
 using System;
 using MdsCommon.Controls;
 using Metapsi.ChoicesJs;
+using System.Diagnostics.Contracts;
+using Metapsi.Html;
 
 namespace MdsInfrastructure.Render
 {
@@ -64,77 +66,79 @@ namespace MdsInfrastructure.Render
             }
         }
 
-        public static Var<HyperNode> RenderNodesList(this LayoutBuilder b, Var<M.List> clientModel)
+        public static Var<IVNode> RenderNodesList(this LayoutBuilder b, Var<M.List> clientModel)
         {
-            var addUrl = b.Const("Not implemented");
+            throw new NotImplementedException();
+
+            //var addUrl = b.Const("Not implemented");
 
 
-            var rows = b.Get(clientModel, x => x.InfrastructureNodes.ToList());
+            //var rows = b.Get(clientModel, x => x.InfrastructureNodes.ToList());
 
-            var rc = b.RenderCell((LayoutBuilder b, Var<InfrastructureNode> node, Var<DataTable.Column> col) =>
-            {
-                var envTypes = b.Get(clientModel, x => x.EnvironmentTypes);
-                var nodeNameRef = b.Ref(b.Get(node, x => x.NodeName));
+            //var rc = b.RenderCell((LayoutBuilder b, Var<InfrastructureNode> node, Var<DataTable.Column> col) =>
+            //{
+            //    var envTypes = b.Get(clientModel, x => x.EnvironmentTypes);
+            //    var nodeNameRef = b.Ref(b.Get(node, x => x.NodeName));
 
-                b.If(b.IsEmpty(b.GetRef(nodeNameRef)), b => b.SetRef(nodeNameRef, b.Const("(not set)")));
+            //    b.If(b.IsEmpty(b.GetRef(nodeNameRef)), b => b.SetRef(nodeNameRef, b.Const("(not set)")));
 
-                var columnName = b.Get(col, x => x.Name);
+            //    var columnName = b.Get(col, x => x.Name);
 
-                var machineIp = b.Get(node, x => x.MachineIp);
-                var uiPort = b.Get(node, x => x.UiPort);
-                var uiUrl = b.Concat(b.Const("http://"), machineIp, b.Const(":"), uiPort.As<string>());
-                var envTypeId = b.Get(node, x => x.EnvironmentTypeId);
-                var envType = b.Get(envTypes, envTypeId, (envTypes, envTypeId) => envTypes.SingleOrDefault(y => y.Id == envTypeId));
+            //    var machineIp = b.Get(node, x => x.MachineIp);
+            //    var uiPort = b.Get(node, x => x.UiPort);
+            //    var uiUrl = b.Concat(b.Const("http://"), machineIp, b.Const(":"), uiPort.As<string>());
+            //    var envTypeId = b.Get(node, x => x.EnvironmentTypeId);
+            //    var envType = b.Get(envTypes, envTypeId, (envTypes, envTypeId) => envTypes.SingleOrDefault(y => y.Id == envTypeId));
 
-                var envTypeLabel = b.If(b.HasObject(envType),
-                    b => b.Get(envType, x => x.Name),
-                    b => b.Const("(not selected)"));
+            //    var envTypeLabel = b.If(b.HasObject(envType),
+            //        b => b.Get(envType, x => x.Name),
+            //        b => b.Const("(not selected)"));
 
-                var nameLink = b.Link(b.GetRef(nodeNameRef), b.Url<Routes.Node.Edit, Guid>(b.Get(node, x => x.Id)));
+            //    var nameLink = b.Link(b.GetRef(nodeNameRef), b.Url<Routes.Node.Edit, Guid>(b.Get(node, x => x.Id)));
 
-                return b.VPadded4(b.Switch(
-                    columnName, b => b.Text("Not supported"),
-                    (nameof(InfrastructureNode.MachineIp), b => b.Text(machineIp)),
-                    (nameof(InfrastructureNode.NodeName), b => nameLink),
-                    (nameof(InfrastructureNode.UiPort), b => b.Text(uiUrl)),
-                    (nameof(InfrastructureNode.EnvironmentTypeId), b => b.Text(envTypeLabel))));
-            });
+            //    return b.VPadded4(b.Switch(
+            //        columnName, b => b.Text("Not supported"),
+            //        (nameof(InfrastructureNode.MachineIp), b => b.Text(machineIp)),
+            //        (nameof(InfrastructureNode.NodeName), b => nameLink),
+            //        (nameof(InfrastructureNode.UiPort), b => b.Text(uiUrl)),
+            //        (nameof(InfrastructureNode.EnvironmentTypeId), b => b.Text(envTypeLabel))));
+            //});
 
-            var dg = b.DataGrid<InfrastructureNode>(
-                new()
-                {
-                    b=> b.AddClass(b.NavigateButton(b=>
-                    {
-                        b.Set(x=>x.Label, "Add node");
-                        b.Set(x => x.Href, addUrl);
-                    }), "text-white")
-                },
-                b =>
-                {
-                    b.AddColumn(nameof(InfrastructureNode.NodeName), "Name");
-                    b.AddColumn(nameof(InfrastructureNode.MachineIp), "IP");
-                    b.AddColumn(nameof(InfrastructureNode.UiPort), "Controller UI");
-                    b.AddColumn(nameof(InfrastructureNode.EnvironmentTypeId), "Type");
-                    b.SetRows(rows);
-                    b.SetRenderCell(rc);
-                });
-            b.AddClass(dg, "drop-shadow");
-            return dg;
+            //var dg = b.DataGrid<InfrastructureNode>(
+            //    new()
+            //    {
+            //        b=> b.AddClass(b.NavigateButton(b=>
+            //        {
+            //            b.Set(x=>x.Label, "Add node");
+            //            b.Set(x => x.Href, addUrl);
+            //        }), "text-white")
+            //    },
+            //    b =>
+            //    {
+            //        b.AddColumn(nameof(InfrastructureNode.NodeName), "Name");
+            //        b.AddColumn(nameof(InfrastructureNode.MachineIp), "IP");
+            //        b.AddColumn(nameof(InfrastructureNode.UiPort), "Controller UI");
+            //        b.AddColumn(nameof(InfrastructureNode.EnvironmentTypeId), "Type");
+            //        b.SetRows(rows);
+            //        b.SetRenderCell(rc);
+            //    });
+            //b.AddClass(dg, "drop-shadow");
+            //return dg;
         }
 
 
-        public static Var<HyperNode> RenderEditNodePage(
+        public static Var<IVNode> RenderEditNodePage(
             this LayoutBuilder b,
             Var<M.EditPage> clientModel)
         {
             var node = b.Get(clientModel, x => x.InfrastructureNode);
-            var container = b.Div("flex flex-col w-full");
-            b.Add(container, b.ValidationPanel(clientModel));
-            b.Add(container, b.RenderEditNodeForm(clientModel));
-            return container;
+            return b.StyledDiv(
+                "flex flex-col w-full",
+                b.ValidationPanel(clientModel),
+                b.RenderEditNodeForm(clientModel));
         }
 
-        public static Var<HyperNode> RenderEditNodeForm(
+        public static Var<IVNode> RenderEditNodeForm(
             this LayoutBuilder b,
             Var<M.EditPage> clientModel)
         {
@@ -142,7 +146,7 @@ namespace MdsInfrastructure.Render
             var envId = b.Get(node, x => x.EnvironmentTypeId);
             var envTypes = b.Get(clientModel, m => m.EnvironmentTypes.ToList());
             var saveUrl = b.Const("Not implemented");
-            var toolbar = b.Toolbar(
+            var toolbar = b.Toolbar(b => { },
                 b => b.SubmitButton<InfrastructureNode>(b =>
                 {
                     b.Set(x => x.Label, "Save");
@@ -151,44 +155,56 @@ namespace MdsInfrastructure.Render
                     b.Set(x => x.ButtonClass, "rounded text-white py-2 px-4 shadow bg-sky-500");
                 }));
 
-            var form = b.Form(toolbar);
-            b.AddClass(form, "p-4");
-            b.AddClass(form, "bg-white rounded drop-shadow");
-            b.FormField(form, "Node name", b.BoundInput(clientModel, x => x.InfrastructureNode, x => x.NodeName));
-            b.FormField(form, "Machine address", b.BoundInput(clientModel, x => x.InfrastructureNode, x => x.MachineIp));
-            b.FormField(form, "Node UI port", b.BoundInput(clientModel, x => x.InfrastructureNode, x => x.UiPort, b.Const(string.Empty)));
+            var form = b.Form(
+                b =>
+                {
+                    b.AddClass("p-4 bg-white rounded drop-shadow");
+                },
+                toolbar,
+                ("Node name", b.BoundInput(clientModel, x => x.InfrastructureNode, x => x.NodeName)),
+                ("Machine address", b.BoundInput(clientModel, x => x.InfrastructureNode, x => x.MachineIp)),
+                ("Node UI port", b.BoundInput(clientModel, x => x.InfrastructureNode, x => x.UiPort, b.Const(string.Empty))));
 
-            var osChoicesDd = b.DropDown(b.MapChoices(envTypes, x => x.Id, x => x.Name, b.Get(node, x => x.EnvironmentTypeId)));
-            b.SetOnChoiceSelected<M.EditPage, Guid>(osChoicesDd, (b, state, value) =>
-            {
-                var node = b.Get(clientModel, x => x.InfrastructureNode);
-                b.Set(node, x => x.EnvironmentTypeId, value);
-            });
+            // TODO: Node env type?!
+
+            //var osChoicesDd = b.DropDown(b.MapChoices(envTypes, x => x.Id, x => x.Name, b.Get(node, x => x.EnvironmentTypeId)));
+            //b.SetOnChoiceSelected<M.EditPage, Guid>(osChoicesDd, (b, state, value) =>
+            //{
+            //    var node = b.Get(clientModel, x => x.InfrastructureNode);
+            //    b.Set(node, x => x.EnvironmentTypeId, value);
+            //});
 
             return form;
         }
 
-        public static Var<HyperNode> Form(this LayoutBuilder b, Var<HyperNode> toolbar)
+        public static Var<IVNode> Form(this LayoutBuilder b, Action<PropsBuilder<HtmlDiv>> setProps, Var<IVNode> toolbar, params (string, Var<IVNode>)[] forms)
         {
-            //var container = b.Div("flex flex-col p-4 gap-4");
-            //var top = b.Add(container, b.Div("flex flex-row justify-end"));
-            //b.Add(top, toolbar);
-            //var grid = b.Add(container, b.Div("grid grid-cols-2 gap-4 items-center"));
-            //return grid;
+            System.Collections.Generic.List<Var<IVNode>> formFieldControls = new();
 
-            var grid = b.Div("grid grid-cols-2 gap-4 items-center p-4");
+            formFieldControls.Add(
+                b.StyledDiv(
+                    "col-span-2 flex flex-row justify-end items-center",
+                    toolbar));
 
-            var toolbarRow = b.Add(grid, b.Div("col-span-2 flex flex-row justify-end items-center"));
-            b.Add(toolbarRow, toolbar);
+            foreach (var formField in forms)
+            {
+                formFieldControls.Add(b.T(formField.Item1));
+                formFieldControls.Add(formField.Item2);
+            }
 
-            return grid;
+            return b.HtmlDiv(
+                b =>
+                {
+                    b.SetClass("grid grid-cols-2 gap-4 items-center p-4");
+                    setProps(b);
+                },
+                formFieldControls.ToArray());
         }
 
-        public static void FormField(this LayoutBuilder b, Var<HyperNode> form, string label, Var<HyperNode> fieldControl)
-        {
-            b.Add(form, b.Text(label));
-            b.Add(form, fieldControl);
-        }
+        //public static (Var<IVNode>, Var<IVNode>) FormField(this LayoutBuilder b, string label, Var<IVNode> fieldControl)
+        //{
+        //    return (b.T(label), fieldControl);
+        //}
 
         public static Var<string> WithDefault(this SyntaxBuilder b, Var<string> value)
         {

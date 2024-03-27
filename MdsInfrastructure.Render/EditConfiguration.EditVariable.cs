@@ -8,10 +8,10 @@ namespace MdsInfrastructure.Render
 {
     public static partial class EditConfiguration
     {
-        public static Var<HyperNode> EditVariable(LayoutBuilder b, Var<EditConfigurationPage> clientModel)
+        public static Var<IVNode> EditVariable(LayoutBuilder b, Var<EditConfigurationPage> clientModel)
         {
             var varId = b.Get(clientModel, x => x.EditVariableId);
-            var toolbar = b.Toolbar(b.OkButton(MainPage, x=>x.EditVariableId));
+            var toolbar = b.Toolbar(b => { }, b.OkButton(MainPage, x => x.EditVariableId));
 
             var form = b.Form(toolbar);
             b.AddClass(form, "rounded bg-white drop-shadow");

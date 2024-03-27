@@ -11,40 +11,20 @@ namespace MdsCommon.Controls
 
     public static partial class Control
     {
-        public static Var<HyperNode> DropDown(this LayoutBuilder b, Var<List<Metapsi.ChoicesJs.Choice>> choices)
-        {
-            b.AddStylesheet("MdsCommon.Controls.Choices.css");
-
-            var choicesProps = b.NewObj<Metapsi.ChoicesJs.Props>();
-            b.Set(choicesProps, x => x.classNames, b.CustomClassNames());
-            b.Set(choicesProps, x => x.shouldSort, b.Const(false));
-
-            var selectOne = b.ChoicesSelectOneWebComponent(choicesProps, choices);
-            return selectOne.As<HyperNode>();
-        }
-
-        //public static Var<HyperNode> DropDown<TState,TItem, TId>(
-        //    this BlockBuilder b, 
-        //    Var<List<TItem>> items,
-        //    Var<System.Func<TItem, TId>> valueProp,
-        //    Var<System.Func<TItem, string>> labelProp,
-        //    Var<TId> selectedId,
-        //    System.Action<BlockBuilder, Var<TState>, Var<TId>> onSelected)
+        //public static Var<IVNode> DropDown(this LayoutBuilder b, Var<List<Metapsi.ChoicesJs.Choice>> choices)
         //{
-        //    var options = b.MapChoices(items, valueProp, labelProp, selectedId);
-        //    var dropDown = b.DropDown(options);
+        //    b.AddStylesheet("MdsCommon.Controls.Choices.css");
 
-        //    Metapsi.ChoicesJs.Event.SetOnChange(b, dropDown, b.MakeAction((BlockBuilder b, Var<TState> state, Var<string> selectedValue) =>
+        //    return b.Choices(b =>
         //    {
-        //        var selectedId = b.ParseScalar<TId>(selectedValue);
-        //        b.Call(onSelected, state, selectedId);
-        //        return b.Clone(state);
-        //    }));
-
-        //    return dropDown;
+        //        b.Configure(x => x.classNames, b.CustomClassNames());
+        //        b.Configure(x => x.shouldSort, false);
+        //        b.Configure(x => x.choices, choices);
+        //    });
         //}
 
-        public static Var<HyperNode> BoundDropDown<TState,TItem, TOption, TId>(
+
+        public static Var<IVNode> BoundDropDown<TState,TItem, TOption, TId>(
             this LayoutBuilder b, 
             Var<TState> state,
             Var<Func<TState, TItem>> getBoundItem,
@@ -59,16 +39,17 @@ namespace MdsCommon.Controls
 
             var choices = b.MapChoices(options, getValue, getLabel, selectedValue);
 
-            var dropDown = b.DropDown(choices);
-            Metapsi.ChoicesJs.Event.SetOnChange(b, dropDown, b.MakeAction((SyntaxBuilder b, Var<TState> state, Var<string> selectedValue) =>
+            return b.Choices(b =>
             {
-                var item = b.Call(getBoundItem, state);
-                b.Set(item, getBoundProperty, b.ParseScalar<TId>(selectedValue));
+                b.Configure(x => x.choices, choices);
+                b.OnChange(b.MakeAction((SyntaxBuilder b, Var<TState> model, Var<string> choice) =>
+                {
+                    var item = b.Call(getBoundItem, state);
+                    b.Set(item, getBoundProperty, b.ParseScalar<TId>(choice));
 
-                return b.Clone(state);
-            }));
-
-            return dropDown;
+                    return b.Clone(state);
+                }));
+            });
         }
 
         private static Var<ClassNames> CustomClassNames(this SyntaxBuilder b)

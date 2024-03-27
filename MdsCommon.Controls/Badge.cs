@@ -25,7 +25,7 @@ namespace MdsCommon.Controls
             }
         }
 
-        public static void AddAlertBadge(this LayoutBuilder b, Var<HyperNode> parent, Var<string> currentTag)
+        public static Var<IVNode> AlertBadge(this LayoutBuilder b, Var<string> currentTag)
         {
             var lowercase = b.ToLowercase(currentTag);
             var isAlert = b.Get(
@@ -33,11 +33,12 @@ namespace MdsCommon.Controls
                 lowercase,
                 (alertTags, lowercase) => alertTags.Select(x => x).Contains(lowercase));
 
-            b.If(isAlert, b =>
-            {
-                var badge = b.Add(parent, b.Badge(b.Const("ALERT")));
-                b.AddClass(badge, "bg-rose-600");
-            });
+            return b.Optional(
+                isAlert,
+                b =>
+                {
+                    return b.Badge(b.Const("ALERT"), b.Const("bg-rose-600"));
+                });
         }
     }
 }

@@ -6,6 +6,9 @@ using Metapsi.Ui;
 using System.Collections.Generic;
 using System.Linq;
 using MdsCommon.Controls;
+using Metapsi.Html;
+using System.ComponentModel;
+using System;
 
 namespace MdsInfrastructure.Render
 {
@@ -89,94 +92,114 @@ namespace MdsInfrastructure.Render
             public string ControlId { get; set; }
         }
 
-        public static Var<HyperNode> ServiceLink(this LayoutBuilder b,
+        public static Var<IVNode> ServiceLink(this LayoutBuilder b,
             string serviceName,
             string controlId)
         {
-            var container = b.Div("py-8 px-4 font-semibold");
-            var control = b.Add(container, b.Link(
-                b.Url<Routes.Docs.Service, string>(b.Const(serviceName)),
-                b.TextNode(b.Const(serviceName))));
-            b.SetAttr(control, Html.id, controlId);
-            return container;
+            return b.HtmlDiv(
+                b =>
+                {
+                    b.SetClass("py-8 px-4 font-semibold");
+                },
+                b.HtmlA(
+                    b =>
+                    {
+                        b.SetId(controlId);
+                        b.SetClass("underline text-sky-500");
+                        b.SetHref(b.Url<Routes.Docs.Service, string>(b.Const(serviceName)));
+                    },
+                    b.T(serviceName)));
         }
 
 
-        public static Var<HyperNode> ExternalApiUrl(this LayoutBuilder b,
+        public static Var<IVNode> ExternalApiUrl(this LayoutBuilder b,
             string url,
             string controlId)
         {
-            var container = b.Div("flex flex-col px-4");
-            //var icon = b.Add(container, b.Div("text-yellow-300"));
-            //b.SetInnerHtml(icon, b.FromFile("inline/antenna.svg"));
-            b.Add(container, b.Text(url));
-            b.SetAttr(container, Html.id, controlId);
-            return container;
+            return b.HtmlDiv(
+                b =>
+                {
+                    b.SetId(controlId);
+                    b.SetClass("flex flex-col px-4");
+                },
+                b.T(url));
         }
 
 
-        public static Var<HyperNode> ApiUrl(this LayoutBuilder b,
+        public static Var<IVNode> ApiUrl(this LayoutBuilder b,
             string serviceName,
             string url,
             string controlId)
         {
-            var container = b.Div("flex flex-col px-4");
-            //var icon = b.Add(container, b.Div("text-yellow-300"));
-            //b.SetInnerHtml(icon, b.FromFile("inline/antenna.svg"));
-            var semiBold = b.Add(container, b.Div("font-semibold"));
-            b.Add(semiBold, b.Link(
-                b.Url<Routes.Docs.Service, string>(b.Const(serviceName)),
-                b.TextNode(b.Const(serviceName))));
-            b.Add(container, b.Text(url));
-            b.SetAttr(container, Html.id, controlId);
-            return container;
+            return b.HtmlDiv(
+                b =>
+                {
+                    b.SetId(controlId);
+                    b.SetClass("flex flex-col px-4");
+                },
+                b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("font-semibold");
+                    },
+                    b.HtmlA(
+                        b =>
+                        {
+                            b.SetHref(b.Url<Routes.Docs.Service, string>(b.Const(serviceName)));
+                            b.UnderlineBlue();
+                        },
+                        b.T(serviceName))));
         }
 
-        public static Var<HyperNode> RedisChannel(this LayoutBuilder b,
+        public static Var<IVNode> RedisChannel(this LayoutBuilder b,
             string channelName,
             string controlId)
         {
-            var container = b.Div("rounded shadow p-2 relative");
-            //var icon = b.Add(container, b.Div("text-red-200 absolute right-0 -top-6"));
-            //b.SetInnerHtml(icon, b.FromFile("inline/antenna.svg"));
-            var control = b.Add(container, b.Text(channelName));
-            b.SetAttr(container, Html.id, controlId);
-            return container;
+            return b.HtmlDiv(
+                b =>
+                {
+                    b.SetId(controlId);
+                    b.SetClass("rounded shadow p-2 relative");
+                },
+                b.T(channelName));
         }
 
-        public static Var<HyperNode> RedisQueue(this LayoutBuilder b,
+        public static Var<IVNode> RedisQueue(this LayoutBuilder b,
             string channelName,
             string controlId)
         {
-            var container = b.Div("rounded shadow p-2 relative");
-            //var icon = b.Add(container, b.Div("text-red-200 absolute right-0 -top-6"));
-            //b.SetInnerHtml(icon, b.FromFile("inline/queue.svg"));
-            var control = b.Add(container, b.Text(channelName));
-            b.SetAttr(container, Html.id, controlId);
-            return container;
-        }
-        public static Var<HyperNode> Render(this LayoutBuilder b, InfrastructureSummary summary, ServiceSummary currentService)
-        {
-            var view = b.Div("flex flex-col space-y-4 text-gray-800");
-            b.Add(view, b.RenderServiceCard(summary, currentService));
-            b.Add(view, b.RenderServiceMap(summary, currentService));
-            b.Add(view, b.RenderRedisMapCard(summary, currentService));
-            return view;
+            return b.HtmlDiv(
+                b =>
+                {
+                    b.SetId(controlId);
+                    b.SetClass("rounded shadow p-2 relative");
+                },
+                b.T(channelName));
         }
 
-        public static Var<HyperNode> RenderServiceCard(this LayoutBuilder b, InfrastructureSummary summary, ServiceSummary currentService)
+        public static Var<IVNode> Render(this LayoutBuilder b, InfrastructureSummary summary, ServiceSummary currentService)
         {
-            var card = b.Div("w-full rounded flex flex-row p-4 space-x-8 text-gray-700 shadow bg-white");
+            return b.HtmlDiv(
+                b =>
+                {
+                    b.SetClass("flex flex-col space-y-4 text-gray-800");
+                },
+                b.RenderServiceCard(summary, currentService),
+                b.RenderServiceMap(summary, currentService),
+                b.RenderRedisMapCard(summary, currentService));
+        }
 
-            var left = b.Add(card, b.Div("flex flex-col flex-1"));
+        public static Var<IVNode> RenderServiceCard(this LayoutBuilder b, InfrastructureSummary summary, ServiceSummary currentService)
+        {
+            List<Var<IVNode>> leftNodes = new();
 
-            b.Add(left, b.Bold(currentService.ServiceName));
             var summaryNote = currentService.ServiceDescription;
             if (!string.IsNullOrEmpty(summaryNote))
             {
-                var summaryNoteText = b.Add(left, b.Text(summaryNote));
-                b.AddClass(summaryNoteText, "font-thin text-gray-500");
+                leftNodes.Add(b.StyledSpan("font-thin text-gray-500", b.T(summaryNote)));
             }
+
+            leftNodes.Add(b.Bold(currentService.ServiceName));
 
             foreach (var parameter in currentService.ServiceParameters)
             {
@@ -190,81 +213,57 @@ namespace MdsInfrastructure.Render
                     parameter.DeployedValue = "*****";
                 }
 
-                var paramContainer = b.Add(left, b.Div("flex flex-col pt-2 text-gray-700 text-sm"));
-                var paramLine = b.Add(paramContainer, b.Div("flex flex-row space-x-2"));
-                var paramName = b.Add(paramLine, b.Text(parameter.ParameterName));
-                b.AddClass(paramName, "font-semibold");
-                b.Add(paramLine, b.Text(parameter.DeployedValue));
-
-                //var paramComment = currentService.Notes.SingleOrDefault(x => x.Code.ToLower() == "parameter" && x.Reference == parameter.ParameterName);
-
-                if (!string.IsNullOrEmpty(parameter.ParameterComment))
-                {
-                    var doc = b.Add(paramContainer, b.Text(parameter.ParameterComment));
-                    b.AddClass(doc, "text-gray-500");
-                }
-                else
-                {
-                    var doc = b.Add(paramContainer, b.Text(parameter.ParameterTypeDescription));
-                    b.AddClass(doc, "text-gray-500");
-
-                }
+                leftNodes.Add(
+                    b.StyledDiv(
+                        "flex flex-col pt-2 text-gray-700 text-sm",
+                        b.StyledDiv(
+                            "flex flex-row space-x-2",
+                            b.StyledSpan(
+                                "font-semibold",
+                                b.T(parameter.ParameterName)),
+                            b.T(parameter.DeployedValue)),
+                        b.StyledSpan(
+                            "text-gray-500",
+                            !string.IsNullOrEmpty(parameter.ParameterComment)
+                            ? b.T(parameter.ParameterComment)
+                            : b.T(parameter.ParameterTypeDescription))));
             }
 
-            var divToIgnoreSize = b.Add(card, b.Div());
+            var right = b.StyledDiv(
+                "flex flex-col items-start space-y-2 bg-gray-50 rounded flex-initial px-8 py-4 text-sm text-gray-500",
+                b.StyledDiv(
+                    "flex flex-row space-x-2 items-center font-semibold",
+                    b.Svg(Icon.Computer, "w-3 h-3 text-gray-400"),
+                    b.T(currentService.NodeName)),
+                b.StyledDiv(
+                    "flex flex-row space-x-2 items-center font-semibold",
+                    b.Svg(Icon.DocumentText, "w-3 h-3 text-gray-400"),
+                    b.T(currentService.ProjectLabel())));
 
-            var right = b.Add(divToIgnoreSize, b.Div("flex flex-col items-start space-y-2 bg-gray-50 rounded flex-initial px-8 py-4 text-sm text-gray-500"));
-
-            var nodeLine = b.Add(right, b.Div("flex flex-row space-x-2 items-center font-semibold"));
-            b.Add(nodeLine, b.Svg(Icon.Computer, "w-3 h-3 text-gray-400"));
-            b.Add(nodeLine, b.Text(currentService.NodeName));
-
-            var projectLine = b.Add(right, b.Div("flex flex-row space-x-2 items-center font-semibold"));
-            b.Add(projectLine, b.Svg(Icon.DocumentText, "w-3 h-3 text-gray-400"));
-            b.Add(projectLine, b.Text($"{currentService.ProjectLabel()}"));
-
-            return card;
+            return b.HtmlDiv(
+                b =>
+                {
+                    b.SetClass("w-full rounded flex flex-row p-4 space-x-8 text-gray-700 shadow bg-white");
+                },
+                b.StyledDiv(
+                    "flex flex-col flex-1", 
+                    leftNodes.ToArray()),
+                b.HtmlDiv(b => { /*divToIgnoreSize*/}, right));
         }
 
-        public static Var<HyperNode> RenderServiceMap(this LayoutBuilder b, InfrastructureSummary summary, ServiceSummary currentService)
+        public static Var<IVNode> RenderServiceMap(this LayoutBuilder b, InfrastructureSummary summary, ServiceSummary currentService)
         {
             List<ControlsMapping> controlsMappings = new List<ControlsMapping>();
 
-            //b.Module.Imports.Add("import {connectors} from '/connect.js'");
+            List<Var<IVNode>> httpAreaNodes = new();
+            List<Var<IVNode>> inputServicesAreaNodes = new();
+            List<Var<IVNode>> inputRedisAreaNodes = new();
+            List<Var<IVNode>> portsAreaNodes = new();
+            List<Var<IVNode>> outputRedisAreaNodes = new();
+            List<Var<IVNode>> outputServicesAreaNodes = new();
+            List<Var<IVNode>> dbAreaNodes = new();
 
-            var serviceMapRoot = b.Div("h-full w-full p-2 text-sm flex flex-col space-y-8 rounded shadow bg-white");
-
-            var httpRowContainer = b.Add(serviceMapRoot, b.Div("flex flex-row items-center"));
-
-            var httpLabel = b.Add(httpRowContainer, b.Text("HTTP"));
-            b.AddClass(httpLabel, "text-lg font-semibold text-gray-300 vertical-text");
-
-            var httpServicesContainer = b.Add(httpRowContainer, b.Div("flex w-full justify-center"));
-            var httpArea = b.Add(httpServicesContainer, b.Div("flex flex-row items-center"));
-
-            var redisRow = b.Add(serviceMapRoot, b.Div("flex flex-row items-center"));
-
-            var redisLabel = b.Add(redisRow, b.Text("REDIS"));
-            b.AddClass(redisLabel, "text-lg font-semibold text-gray-300 vertical-text");
-
-            //var redisAreas = b.Add(redisRow, b.Div("flex flex-row items-center"));
-
-            var redisInputArea = b.Add(redisRow, b.Div("flex-1 flex flex-row"));
-            var inputServicesArea = b.Add(redisInputArea, b.Div(""));
-            var inputRedisArea1 = b.Add(redisInputArea, b.Div("w-full flex items-center justify-end"));
-            var inputRedisArea = b.Add(inputRedisArea1, b.Div(""));
-
-            var serviceNameDiv = b.Add(redisRow, b.Div("flex-none p-16 relative"));
-            var portsArea = b.Add(serviceNameDiv, b.Div("flex flex-row justify-center absolute -translate-y-5 translate-x-12 space-x-2 font-thin text-xs"));
-            var serviceText = b.Add(serviceNameDiv, b.Bold(b.Const(currentService.ServiceName)));
             var serviceNameControlId = "ctrl_currentService";
-            b.SetAttr(serviceText, Html.id, serviceNameControlId);
-
-            var redisOutputArea = b.Add(redisRow, b.Div("flex-1 flex flex-row"));
-            var outputRedisArea_ = b.Add(redisOutputArea, b.Div("w-full flex items-center justify-start"));
-            var outputRedisArea = b.Add(outputRedisArea_, b.Div());
-            var outputServicesArea = b.Add(redisOutputArea, b.Div(""));
-
 
             List<ControlsMapping> inputServices = new();
             string addInputService(string serviceName)
@@ -279,7 +278,7 @@ namespace MdsInfrastructure.Render
                         ControlId = "inputService_" + inputServices.Count
                     };
                     inputServices.Add(inputService);
-                    var control = b.Add(inputServicesArea, b.ServiceLink(serviceName, inputService.ControlId));
+                    inputServicesAreaNodes.Add(b.ServiceLink(serviceName, inputService.ControlId));
                 }
                 return inputService.ControlId;
             }
@@ -296,7 +295,7 @@ namespace MdsInfrastructure.Render
                         ControlId = "outputService_" + outputServices.Count
                     };
                     outputServices.Add(outputService);
-                    var control = b.Add(outputServicesArea, b.ServiceLink(serviceName, outputService.ControlId));
+                    outputServicesAreaNodes.Add(b.ServiceLink(serviceName, outputService.ControlId));
                 }
 
                 return outputService.ControlId;
@@ -314,7 +313,7 @@ namespace MdsInfrastructure.Render
                         ControlId = "httpService_" + httpServices.Count
                     };
                     httpServices.Add(httpService);
-                    b.Add(httpArea, b.ServiceLink(serviceName, httpService.ControlId));
+                    httpAreaNodes.Add(b.ServiceLink(serviceName, httpService.ControlId));
                 }
 
                 return httpService.ControlId;
@@ -331,7 +330,7 @@ namespace MdsInfrastructure.Render
             foreach (var inputChannel in currentService.InputChannels)
             {
                 var controlId = getRedisControlId(inputChannel);
-                b.Add(inputRedisArea, b.RedisChannel(inputChannel, controlId));
+                inputRedisAreaNodes.Add(b.RedisChannel(inputChannel, controlId));
                 b.AddConnector(controlId, serviceNameControlId);
 
                 foreach (var inputService in summary.GetNotificationServices(inputChannel))
@@ -345,7 +344,7 @@ namespace MdsInfrastructure.Render
             foreach (var inputQueue in currentService.InputQueues)
             {
                 var controlId = getRedisControlId(inputQueue);
-                b.Add(inputRedisArea, b.RedisQueue(inputQueue, controlId));
+                inputRedisAreaNodes.Add(b.RedisQueue(inputQueue, controlId));
                 b.AddConnector(controlId, serviceNameControlId);
 
                 foreach (var inputService in summary.GetWriterServices(inputQueue))
@@ -358,7 +357,7 @@ namespace MdsInfrastructure.Render
             foreach (var outputChannel in currentService.OutputChannels)
             {
                 var controlId = getRedisControlId(outputChannel);
-                b.Add(outputRedisArea, b.RedisChannel(outputChannel, controlId));
+                outputRedisAreaNodes.Add(b.RedisChannel(outputChannel, controlId));
                 b.AddConnector(serviceNameControlId, controlId);
 
                 foreach (var listenerService in summary.GetListenerServices(outputChannel))
@@ -371,7 +370,7 @@ namespace MdsInfrastructure.Render
             foreach (var outputQueue in currentService.OutputQueues)
             {
                 var controlId = getRedisControlId(outputQueue);
-                b.Add(outputRedisArea, b.RedisQueue(outputQueue, controlId));
+                outputRedisAreaNodes.Add(b.RedisQueue(outputQueue, controlId));
                 b.AddConnector(serviceNameControlId, controlId);
 
                 foreach (var notificationService in summary.GetReaderServices(outputQueue))
@@ -390,11 +389,11 @@ namespace MdsInfrastructure.Render
                 if (string.IsNullOrEmpty(serverService))
                 {
                     // external
-                    b.Add(httpArea, b.ExternalApiUrl(accessedUrl, controlId));
+                    httpAreaNodes.Add(b.ExternalApiUrl(accessedUrl, controlId));
                 }
                 else
                 {
-                    b.Add(httpArea, b.ApiUrl(serverService, accessedUrl, controlId));
+                    httpAreaNodes.Add(b.ApiUrl(serverService, accessedUrl, controlId));
                 }
 
                 b.AddConnector(serviceNameControlId, controlId, "top", "bottom");
@@ -403,8 +402,11 @@ namespace MdsInfrastructure.Render
             foreach (var port in currentService.ListeningPorts)
             {
                 var controlId = "port_" + port;
-                var portControl = b.Add(portsArea, b.Text(port.ToString()));
-                b.SetAttr(portControl, Html.id, controlId);
+                portsAreaNodes.Add(
+                    b.HtmlSpan(b =>
+                    {
+                        b.SetId(controlId);
+                    }));
 
                 foreach (var service in summary.GetClientServices(currentService.MachineIp, port))
                 {
@@ -412,12 +414,6 @@ namespace MdsInfrastructure.Render
                     b.AddConnector(httpServiceId, controlId, "bottom", "top");
                 }
             }
-
-            var dbRow = b.Add(serviceMapRoot, b.Div("flex flex-row items-center"));
-            var dbLabel = b.Add(dbRow, b.Text("DB"));
-            b.AddClass(dbLabel, "text-lg font-semibold text-gray-300 vertical-text");
-            var dbArea = b.Add(dbRow, b.Div("w-full flex flex-row items-center justify-center"));
-
 
 
             foreach (var dbConnection in currentService.DbConnections)
@@ -430,57 +426,88 @@ namespace MdsInfrastructure.Render
                 string dbServer = dbConn.Server;
                 string dbCatalog = dbConn.Db;
 
-                //var segments = dbConnection.Split(";", StringSplitOptions.RemoveEmptyEntries);
-
-                //foreach (var segment in segments)
-                //{
-                //    if (dbServerKeys.Any(x => segment.ToLower().Contains(x)))
-                //    {
-                //        var keyValue = segment.Split("=", StringSplitOptions.RemoveEmptyEntries);
-
-                //        if (keyValue.Count() == 2)
-                //        {
-                //            dbServer = keyValue.Last();
-                //        }
-                //    }
-                //    else
-                //    {
-                //        if (dbCatalogKeys.Any(x => segment.ToLower().Contains(x)))
-                //        {
-                //            var keyValue = segment.Split("=", StringSplitOptions.RemoveEmptyEntries);
-
-                //            if (keyValue.Count() == 2)
-                //            {
-                //                dbCatalog = keyValue.Last();
-                //            }
-                //        }
-                //    };
-                //}
-
                 if (!string.IsNullOrEmpty(dbServer) && !string.IsNullOrEmpty(dbCatalog))
                 {
-                    var dbControl = b.Add(dbArea, b.Div("flex flex-col px-8"));
-                    b.Add(dbControl, b.Text(dbServer));
-                    b.Add(dbControl, b.Text(dbCatalog));
-                    b.SetAttr(dbControl, Html.id, controlId);
+                    dbAreaNodes.Add(
+                        b.HtmlDiv(
+                            b =>
+                            {
+                                b.SetId(controlId);
+                                b.SetClass("flex flex-col px-8");
+                            },
+                            b.T(dbServer),
+                            b.T(dbCatalog)));
+
                     b.AddConnector(serviceNameControlId, controlId, "bottom", "top");
                 }
                 else
                 {
-                    var dbControl = b.Add(dbArea, b.Text(dbConnection));
-                    b.SetAttr(dbControl, Html.id, controlId);
+                    dbAreaNodes.Add(
+                        b.HtmlSpan(b =>
+                        {
+                            b.SetId(controlId);
+                        },
+                        b.T(dbConnection)));
+
                     b.AddConnector(serviceNameControlId, controlId, "bottom", "top");
                 }
             }
 
+            inputServicesAreaNodes.Add(
+                b.StyledDiv(
+                    "w-full flex items-center justify-end",
+                    b.HtmlDiv(b => { }, inputRedisAreaNodes.ToArray())));
+
+            var serviceMapRoot = b.StyledDiv(
+                "h-full w-full p-2 text-sm flex flex-col space-y-8 rounded shadow bg-white",
+                b.StyledDiv( // httpRowContainer
+                    "flex flex-row items-center",
+                    b.StyledSpan("text-lg font-semibold text-gray-300 vertical-text", b.T("HTTP")),
+                    b.StyledDiv(// httpServicesContainer
+                        "flex w-full justify-center",
+                        b.StyledDiv( // httpArea
+                            "flex flex-row items-center",
+                            httpAreaNodes.ToArray()))),
+                b.StyledDiv( // redisRow
+                    "flex flex-row items-center",
+                    b.StyledSpan("text-lg font-semibold text-gray-300 vertical-text", b.T("REDIS")), // redisLabel
+                    b.StyledDiv( //redisInputArea
+                        "flex-1 flex flex-row",
+                        b.HtmlDiv(b => { }, inputServicesAreaNodes.ToArray())),
+                    b.StyledDiv( // serviceNameDiv
+                        "flex-none p-16 relative",
+                        b.StyledDiv( // portsArea
+                            "flex flex-row justify-center absolute -translate-y-5 translate-x-12 space-x-2 font-thin text-xs",
+                            portsAreaNodes.ToArray()),
+                        b.HtmlSpan(
+                            b =>
+                            {
+                                b.SetId(serviceNameControlId);
+                            },
+                            b.Bold(currentService.ServiceName))),
+                    b.StyledDiv( // redisOutputArea
+                        "flex-1 flex flex-row",
+                        b.StyledDiv(
+                            "w-full flex items-center justify-start",
+                            b.HtmlDiv(b => { }, outputRedisAreaNodes.ToArray())),
+                        b.HtmlDiv(b => { }, outputServicesAreaNodes.ToArray()))),
+                b.StyledDiv( // dbRow
+                    "flex flex-row items-center",
+                    b.StyledSpan( // dbLabel
+                        "text-lg font-semibold text-gray-300 vertical-text",
+                        b.T("DB")),
+                    b.StyledDiv( // dbArea
+                        "w-full flex flex-row items-center justify-center",
+                        dbAreaNodes.ToArray())));
+
             return serviceMapRoot;
         }
 
-        public static Var<HyperNode> RenderRedisMapCard(this LayoutBuilder b, InfrastructureSummary summary, ServiceSummary currentService)
+        public static Var<IVNode> RenderRedisMapCard(this LayoutBuilder b, InfrastructureSummary summary, ServiceSummary currentService)
         {
-            var container = b.Div("h-96 w-full rounded shadow bg-white");
-            b.Add(container, b.RenderRedisMap(summary, currentService));
-            return container;
+            return b.StyledDiv(
+                "h-96 w-full rounded shadow bg-white",
+                b.RenderRedisMap(summary, currentService));
         }
 
 
@@ -521,8 +548,28 @@ namespace MdsInfrastructure.Render
             public EdgeData data { get; set; }
         }
 
+        private static Var<IVNode> IconCommandButton(
+            this LayoutBuilder b,
+            string icon,
+            Action<PropsBuilder<HtmlButton>> setProps)
+        {
+            var button = b.HtmlButton(
+                b =>
+                {
+                    b.AddClass("rounded");
+                    setProps(b);
+                },
+                b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("flex flex-row space-x-2 items-center");
+                    },
+                    b.Svg(icon, "h-5 w-5")));
 
-        public static Var<HyperNode> RenderRedisMap(this LayoutBuilder b, InfrastructureSummary summary, ServiceSummary serviceSummary)
+            return button;
+        }
+
+        public static Var<IVNode> RenderRedisMap(this LayoutBuilder b, InfrastructureSummary summary, ServiceSummary serviceSummary)
         {
             b.AddScript("cytoscape.min.js");
             b.AddSubscription<object>(
@@ -538,33 +585,11 @@ namespace MdsInfrastructure.Render
 
             var isMaximized = b.CallExternal<bool>("cy", "getMaximized");
 
-            var container = b.Div("");
-
-            b.If(isMaximized, b =>
-            {
-                b.AddClass(container, "fixed w-screen h-screen top-0 left-0 bg-white z-50");
-            },
-            b =>
-            {
-                b.AddClass(container, "h-full w-full relative bg-white z-10");
-            });
-
-            var microBar = b.Add(container, b.Div("absolute right-1 top-1 z-30 flex flex-row space-x-1 items-stretch opacity-50 hover:opacity-100 transition text-sky-600"));
-
             var onPlus = b.MakeAction((SyntaxBuilder b, Var<InfrastructureSummary> state) =>
             {
                 b.CallExternal("cy", "plusZoom");
                 return b.Clone(state);
             });
-
-            var plus = b.NewObj<CommandButton.Props<InfrastructureSummary>>(b =>
-            {
-                //b.Set(x => x.ColorClass, "bg-white");
-                b.Set(x => x.SvgIcon, MdsCommon.Icon.Plus);
-                b.Set(x => x.OnClick, onPlus);
-            });
-
-            b.AddClass(b.Add(microBar, b.CommandButton(plus)), "bg-white");
 
 
             var onMinus = b.MakeAction((SyntaxBuilder b, Var<InfrastructureSummary> state) =>
@@ -573,54 +598,77 @@ namespace MdsInfrastructure.Render
                 return b.Clone(state);
             });
 
-            var minus = b.NewObj<CommandButton.Props<InfrastructureSummary>>(b =>
-            {
-                //b.Set(x => x.ColorClass, "bg-white");
-                b.Set(x => x.SvgIcon, MdsCommon.Icon.Minus);
-                b.Set(x => x.OnClick, onMinus);
-            });
+            var container =
+                b.HtmlDiv(
+                    b =>
+                    {
+                        b.If(isMaximized, b =>
+                        {
+                            b.AddClass("fixed w-screen h-screen top-0 left-0 bg-white z-50");
+                        },
+                        b =>
+                        {
+                            b.AddClass("h-full w-full relative bg-white z-10");
+                        });
+                    },
+                    b.HtmlDiv( // microBar
+                        b =>
+                        {
+                            b.SetClass("absolute right-1 top-1 z-30 flex flex-row space-x-1 items-stretch opacity-50 hover:opacity-100 transition text-sky-600");
+                        },
+                        b.IconCommandButton(
+                            Icon.Plus,
+                            b =>
+                            {
+                                b.AddClass("bg-white");
+                                b.OnClickAction(onPlus);
+                            }),
+                        b.IconCommandButton(
+                            Icon.Minus,
+                            b =>
+                            {
+                                b.AddClass("bg-white");
+                                b.OnClickAction(onMinus);
+                            }),
+                        b.If(
+                            isMaximized,
+                            b =>
+                            {
+                                var onMinimize = b.MakeAction((SyntaxBuilder b, Var<InfrastructureSummary> state) =>
+                                {
+                                    b.CallExternal("cy", "minimize");
+                                    return b.Clone(state);
+                                });
 
-            b.AddClass(b.Add(microBar, b.CommandButton(minus)), "bg-white");
+                                return b.IconCommandButton(Icon.Minimize,
+                                    b =>
+                                    {
+                                        b.AddClass("bg-white");
+                                        b.OnClickAction(onMinimize);
+                                    });
+                            },
+                            b =>
+                            {
+                                var onMaximize = b.MakeAction((SyntaxBuilder b, Var<InfrastructureSummary> state) =>
+                                {
+                                    b.CallExternal("cy", "maximize");
+                                    return b.Clone(state);
+                                });
 
-            b.If(isMaximized, b =>
-            {
-                var onMinimize = b.MakeAction((SyntaxBuilder b, Var<InfrastructureSummary> state) =>
-                {
-                    b.CallExternal("cy", "minimize");
-                    return b.Clone(state);
-                });
-
-                var minimize = b.NewObj<CommandButton.Props<InfrastructureSummary>>(b =>
-                {
-                    //b.Set(x => x.ColorClass, "bg-white");
-                    b.Set(x => x.SvgIcon, MdsCommon.Icon.Minimize);
-                    b.Set(x => x.OnClick, onMinimize);
-                });
-
-                b.AddClass(b.Add(microBar, b.CommandButton(minimize)), "bg-white");
-            },
-            b =>
-            {
-                var onMaximize = b.MakeAction((SyntaxBuilder b, Var<InfrastructureSummary> state) =>
-                {
-                    b.CallExternal("cy", "maximize");
-                    return b.Clone(state);
-                });
-
-                var maximize = b.NewObj<CommandButton.Props<InfrastructureSummary>>(b =>
-                {
-                    //b.Set(x => x.ColorClass, "bg-white");
-                    b.Set(x => x.SvgIcon, MdsCommon.Icon.Maximize);
-                    b.Set(x => x.OnClick, onMaximize);
-                });
-
-                b.AddClass(b.Add(microBar, b.CommandButton(maximize)), "bg-white");
-            });
-
-            var cy = b.Add(container, b.Div("h-full w-full absolute"));
-            b.SetAttr(cy, Html.id, "cy");
-
-            //b.ModuleBuilder.AddImport("import {setGraph, plusZoom, minusZoom, maximize, minimize, getMaximized } from '/cy.js'");
+                                return b.IconCommandButton(
+                                    Icon.Maximize,
+                                    b =>
+                                    {
+                                        b.AddClass("bg-white");
+                                        b.OnClickAction(onMaximize);
+                                    });
+                            })),
+                    b.HtmlDiv(
+                        b =>
+                        {
+                            b.SetId("cy");
+                            b.SetClass("h-full w-full absolute");
+                        }));
 
             var graph = RedisGraph(summary, serviceSummary);
 

@@ -9,11 +9,11 @@ namespace MdsInfrastructure.Render
 {
     public static partial class EditConfiguration
     {
-        public static Var<HyperNode> EditService(
+        public static Var<IVNode> EditService(
            this LayoutBuilder b,
            Var<EditConfigurationPage> clientModel)
         {
-            var toolbar = b.Toolbar(b.OkButton(MainPage, x => x.EditServiceId));
+            var toolbar = b.Toolbar(b => { }, b.OkButton(MainPage, x => x.EditServiceId));
 
             var tabs = b.Tabs(
                 clientModel,
@@ -21,19 +21,19 @@ namespace MdsInfrastructure.Render
                 toolbar,
                 new TabRenderer()
                 {
-                    TabHeader = b => b.Text("Service"),
+                    TabHeader = b => b.T("Service"),
                     TabContent = b => b.Call(TabService, clientModel),
                     TabPageCode = "Service"
                 },
                 new TabRenderer()
                 {
-                    TabHeader = b => b.Text("Parameters"),
+                    TabHeader = b => b.T("Parameters"),
                     TabContent = b => b.Call(TabParameters, clientModel),
                     TabPageCode = "Parameters"
                 },
                 new TabRenderer()
                 {
-                    TabHeader = b => b.Text("Notes"),
+                    TabHeader = b => b.T("Notes"),
                     TabContent = b => b.Call(TabNotes, clientModel),
                     TabPageCode = "Notes"
                 });

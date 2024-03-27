@@ -55,8 +55,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Shoelace", "..\meta
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Messaging", "..\metapsi\Metapsi.Messaging\Metapsi.Messaging.csproj", "{AA576641-4B06-43A9-8F57-9DDCCA4607E0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.ServiceDoc", "..\metapsi\Metapsi.ServiceDoc\Metapsi.ServiceDoc.csproj", "{60FEBBEA-6362-4BF3-BCDD-142CD4737BB8}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Web.Contracts", "..\metapsi\Metapsi.Web.Contracts\Metapsi.Web.Contracts.csproj", "{6517832B-12DF-46F4-8751-77249D16118F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsCommon.Controls.Direct", "MdsCommon.Controls\MdsCommon.Controls.Direct.csproj", "{74F372B3-DF60-4E32-8B08-54067BD9F90B}"
@@ -68,6 +66,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Mds", "..\metapsi\Metapsi.Mds\Metapsi.Mds.csproj", "{90D35CAF-9EB9-4753-957A-947D4496EC04}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Timer", "..\metapsi\Metapsi.Timer\Metapsi.Timer.csproj", "{1DA3D6AD-C415-41E4-9ED4-F716BD808008}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Html", "..\metapsi\Metapsi.Html\Metapsi.Html.csproj", "{10DA671D-492D-408C-83AE-E0A17796E85C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -179,10 +179,6 @@ Global
 		{AA576641-4B06-43A9-8F57-9DDCCA4607E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AA576641-4B06-43A9-8F57-9DDCCA4607E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AA576641-4B06-43A9-8F57-9DDCCA4607E0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{60FEBBEA-6362-4BF3-BCDD-142CD4737BB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{60FEBBEA-6362-4BF3-BCDD-142CD4737BB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{60FEBBEA-6362-4BF3-BCDD-142CD4737BB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{60FEBBEA-6362-4BF3-BCDD-142CD4737BB8}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6517832B-12DF-46F4-8751-77249D16118F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{6517832B-12DF-46F4-8751-77249D16118F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6517832B-12DF-46F4-8751-77249D16118F}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -207,6 +203,10 @@ Global
 		{1DA3D6AD-C415-41E4-9ED4-F716BD808008}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1DA3D6AD-C415-41E4-9ED4-F716BD808008}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1DA3D6AD-C415-41E4-9ED4-F716BD808008}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10DA671D-492D-408C-83AE-E0A17796E85C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10DA671D-492D-408C-83AE-E0A17796E85C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10DA671D-492D-408C-83AE-E0A17796E85C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10DA671D-492D-408C-83AE-E0A17796E85C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

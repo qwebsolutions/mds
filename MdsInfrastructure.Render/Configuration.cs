@@ -7,6 +7,7 @@ using Metapsi.Ui;
 using System;
 using System.Linq;
 using MdsCommon.Controls;
+using Metapsi.Html;
 
 namespace MdsInfrastructure.Render
 {
@@ -31,55 +32,65 @@ namespace MdsInfrastructure.Render
                             Main = new Header.Title() { Operation = "Configurations" },
                             User = serverModel.User,
                         })),
-                        Render(b, clientModel)).As<IVNode>();
+                        Render(b, clientModel));
             }
 
-            private static Var<HyperNode> Render(LayoutBuilder b, Var<ConfigurationHeadersList> clientModel)
+            private static Var<IVNode> Render(LayoutBuilder b, Var<ConfigurationHeadersList> clientModel)
             {
                 var addConfigurationUrl = Route.Path<Routes.Configuration.Add>();
                 var rows = b.Get(clientModel, x => x.ConfigurationHeaders.OrderBy(x => x.Name).ToList());
 
-                var rc = b.RenderCell<InfrastructureConfiguration>((b, configurationHeader, column) =>
-                {
-                    var confId = b.Get(configurationHeader, x => x.Id);
+                //var rc = b.RenderCell<InfrastructureConfiguration>((b, configurationHeader, column) =>
+                //{
+                //    var confId = b.Get(configurationHeader, x => x.Id);
 
-                    var cell = b.Div();
+                //    var isNameCol = b.AreEqual(b.Get(column, x => x.Name), b.Const("Name"));
 
-                    var isNameCol = b.AreEqual(b.Get(column, x => x.Name), b.Const("Name"));
+                //    var cell = b.HtmlDiv(
+                //        b =>
+                //        {
+                //            //cell
+                //        },
+                //        b.If(
+                //            isNameCol,
+                //            b =>
+                //            {
+                //                var confName = b.Get(configurationHeader, x => x.Name);
+                //                var confId = b.Get(configurationHeader, x => x.Id);
+                //                return b.Link(confName, b.Url<Routes.Configuration.Edit, Guid>(confId));
+                //            },
+                //            b =>
+                //            {
+                //                var servicesCount = b.Get(clientModel, confId, (x, confId) => x.Services.Where(x => x.ConfigurationHeaderId == confId).Count());
+                //                return b.T(b.AsString(servicesCount));
+                //            }));
 
-                    b.If(isNameCol,
-                        b =>
-                        {
-                            var confName = b.Get(configurationHeader, x => x.Name);
-                            var confId = b.Get(configurationHeader, x => x.Id);
-                            var link = b.Add(cell, b.Link(confName, b.Url<Routes.Configuration.Edit, Guid>(confId)));
-                        },
-                        b =>
-                        {
-                            var servicesCount = b.Get(clientModel, confId, (x, confId) => x.Services.Where(x => x.ConfigurationHeaderId == confId).Count());
-                            b.Add(cell, b.AsString(servicesCount));
-                        });
+                //    return b.VPadded4(cell);
+                //});
 
-                    return b.VPadded4(cell);
-                });
 
-                var dataGrid = b.DataGrid<InfrastructureConfiguration>(
-                    new()
-                    {
-                    b => b.AddClass(b.FromDefault<NavigateButton.Props>(NavigateButton.Render, b=>
-                    {
-                        b.Set(x=>x.Label, "Add configuration");
-                        b.Set(x => x.Href, addConfigurationUrl);
-                    }), "text-white")
-                    },
-                    b =>
-                    {
-                        b.AddColumn("Name");
-                        b.AddColumn("Services");
-                        b.SetRows(rows);
-                        b.SetRenderCell(rc);
-                    });
-                b.AddClass(dataGrid, "drop-shadow");
+                var dataGrid = b.DataGrid(MdsDefaultBuilder.DataGrid<InfrastructureConfiguration>(), rows);
+
+
+
+                //var dataGrid = b.DataGrid<InfrastructureConfiguration>(
+                //    new()
+                //    {
+                //    b => b.AddClass(b.FromDefault<NavigateButton.Props>(NavigateButton.Render, b=>
+                //    {
+                //        b.Set(x=>x.Label, "Add configuration");
+                //        b.Set(x => x.Href, addConfigurationUrl);
+                //    }), "text-white")
+                //    },
+                //    b =>
+                //    {
+                //        b.AddColumn("Name");
+                //        b.AddColumn("Services");
+                //        b.SetRows(rows);
+                //        b.SetRenderCell(rc);
+                //    });
+                //b.AddClass(dataGrid, "drop-shadow");
+                throw new NotImplementedException();
                 return dataGrid;
             }
         }
@@ -114,7 +125,7 @@ namespace MdsInfrastructure.Render
                 return b.MakeStateWithEffects(model);
             }
 
-            private Var<HyperNode> Render(LayoutBuilder b, Var<EditConfigurationPage> clientModel)
+            private Var<IVNode> Render(LayoutBuilder b, Var<EditConfigurationPage> clientModel)
             {
                 return b.View(
                     clientModel,
@@ -158,81 +169,82 @@ namespace MdsInfrastructure.Render
                 public string Value { get; set; }
             }
 
-            public Var<HyperNode> RenderDeploymentConfiguration(
+            public Var<IVNode> RenderDeploymentConfiguration(
                 LayoutBuilder b,
                 System.Collections.Generic.List<MdsCommon.ServiceConfigurationSnapshot> infrastructureSnapshot,
                 InfrastructureConfiguration infrastructureConfiguration)
             {
-                var view = b.Div();
+                throw new NotImplementedException();
+                //var view = b.Div();
 
-                var deploymentReportUrl = b.Url<Routes.Deployment.ConfigurationPreview, Guid>(b.Const(infrastructureConfiguration.Id));
-                //var confirmDeploymentUrl = b.Url(ConfirmDeployment, b.Const(infrastructureConfiguration.Id));
+                //var deploymentReportUrl = b.Url<Routes.Deployment.ConfigurationPreview, Guid>(b.Const(infrastructureConfiguration.Id));
+                ////var confirmDeploymentUrl = b.Url(ConfirmDeployment, b.Const(infrastructureConfiguration.Id));
 
-                var swapIcon = Icon.Swap;
+                //var swapIcon = Icon.Swap;
 
-                var deployNowButton = b.Node(
-                    "button",
-                    "bg-red-500 rounded px-4 py-2 text-white",
-                    b => b.Text("Deploy now"));
+                //var deployNowButton = b.Node(
+                //    "button",
+                //    "bg-red-500 rounded px-4 py-2 text-white",
+                //    b => b.Text("Deploy now"));
 
-                b.SetOnClick(deployNowButton, b.MakeAction((SyntaxBuilder b, Var<ReviewConfigurationPage> model) =>
-                {
-                    return b.MakeStateWithEffects(
-                        b.ShowPanel(model),
-                        b.MakeEffect(
-                            b.Def(
-                                b.Request(
-                                Frontend.ConfirmDeployment,
-                                b.Get(model, x => x.SavedConfiguration.Id),
-                                b.MakeAction((SyntaxBuilder b, Var<ReviewConfigurationPage> model, Var<Frontend.ConfirmDeploymentResponse> response) =>
-                                {
-                                    b.SetUrl(b.Const("/"));
-                                    return model;
-                                })))
-                        ));
-                }));
+                //b.SetOnClick(deployNowButton, b.MakeAction((SyntaxBuilder b, Var<ReviewConfigurationPage> model) =>
+                //{
+                //    return b.MakeStateWithEffects(
+                //        b.ShowPanel(model),
+                //        b.MakeEffect(
+                //            b.Def(
+                //                b.Request(
+                //                Frontend.ConfirmDeployment,
+                //                b.Get(model, x => x.SavedConfiguration.Id),
+                //                b.MakeAction((SyntaxBuilder b, Var<ReviewConfigurationPage> model, Var<Frontend.ConfirmDeploymentResponse> response) =>
+                //                {
+                //                    b.SetUrl(b.Const("/"));
+                //                    return model;
+                //                })))
+                //        ));
+                //}));
 
-                var toolbar = b.Add(view,
-                    b.Toolbar(
-                        b => b.NavigateButton(b =>
-                        {
-                            b.Set(x => x.Label, "Review deployment actions");
-                            b.Set(x => x.Href, deploymentReportUrl);
-                            b.Set(x => x.SvgIcon, swapIcon);
-                        }),
-                        b => deployNowButton));
+                //var toolbar = b.Add(view,
+                //    b.Toolbar(
+                //        b => b.NavigateButton(b =>
+                //        {
+                //            b.Set(x => x.Label, "Review deployment actions");
+                //            b.Set(x => x.Href, deploymentReportUrl);
+                //            b.Set(x => x.SvgIcon, swapIcon);
+                //        }),
+                //        b => deployNowButton));
 
-                b.AddClass(toolbar, "justify-end");
+                //b.AddClass(toolbar, "justify-end");
 
-                System.Collections.Generic.List<ConfigurationRow> configurationRows = new();
-                foreach (ServiceConfigurationSnapshot serviceSnapshot in infrastructureSnapshot.OrderBy(x => x.ServiceName))
-                {
-                    configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = "Node", Value = serviceSnapshot.NodeName });
-                    configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = "Project", Value = serviceSnapshot.ProjectName });
-                    configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = "Version", Value = serviceSnapshot.ProjectVersionTag });
-                    foreach (var param in serviceSnapshot.ServiceConfigurationSnapshotParameters)
-                    {
-                        configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = param.ParameterName, Value = param.DeployedValue });
-                    }
-                }
+                //System.Collections.Generic.List<ConfigurationRow> configurationRows = new();
+                //foreach (ServiceConfigurationSnapshot serviceSnapshot in infrastructureSnapshot.OrderBy(x => x.ServiceName))
+                //{
+                //    configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = "Node", Value = serviceSnapshot.NodeName });
+                //    configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = "Project", Value = serviceSnapshot.ProjectName });
+                //    configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = "Version", Value = serviceSnapshot.ProjectVersionTag });
+                //    foreach (var param in serviceSnapshot.ServiceConfigurationSnapshotParameters)
+                //    {
+                //        configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = param.ParameterName, Value = param.DeployedValue });
+                //    }
+                //}
 
-                var rc = b.Def((LayoutBuilder b, Var<ConfigurationRow> row, Var<DataTable.Column> column) =>
-                {
-                    return b.VPadded4(b.Text(b.GetProperty<string>(row, b.Get(column, x => x.Name))));
-                });
+                //var rc = b.Def((LayoutBuilder b, Var<ConfigurationRow> row, Var<DataTable.Column> column) =>
+                //{
+                //    return b.VPadded4(b.T(b.GetProperty<string>(row, b.Get(column, x => x.Name))));
+                //});
 
-                var dataTableProps = b.NewObj<DataTable.Props<ConfigurationRow>>(b =>
-                {
-                    b.SetRows(b.Const(configurationRows.ToList()));
-                    b.AddColumn(nameof(ConfigurationRow.ServiceName), "Service name");
-                    b.AddColumn(nameof(ConfigurationRow.Property));
-                    b.AddColumn(nameof(ConfigurationRow.Value));
-                    b.SetRenderCell(rc);
-                });
+                //var dataTableProps = b.NewObj<DataTable.Props<ConfigurationRow>>(b =>
+                //{
+                //    b.SetRows(b.Const(configurationRows.ToList()));
+                //    b.AddColumn(nameof(ConfigurationRow.ServiceName), "Service name");
+                //    b.AddColumn(nameof(ConfigurationRow.Property));
+                //    b.AddColumn(nameof(ConfigurationRow.Value));
+                //    b.SetRenderCell(rc);
+                //});
 
-                b.Add(view, b.DataTable(dataTableProps));
+                //b.Add(view, b.DataTable(dataTableProps));
 
-                return view;
+                //return view;
             }
 
         }
@@ -248,7 +260,7 @@ namespace MdsInfrastructure.Render
             return b.Clone(page);
         }
 
-        public static Var<EditConfigurationPage> EditView<TModel>(this SyntaxBuilder b, Var<EditConfigurationPage> page, Func<LayoutBuilder, Var<TModel>, Var<HyperNode>> viewRenderer)
+        public static Var<EditConfigurationPage> EditView<TModel>(this SyntaxBuilder b, Var<EditConfigurationPage> page, Func<LayoutBuilder, Var<TModel>, Var<IVNode>> viewRenderer)
         {
             b.SwapView(page, b.Const(AreaName), b.GetViewName(viewRenderer));
             return b.Clone(page);

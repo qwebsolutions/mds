@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Metapsi.Shoelace;
 using MdsCommon;
 using Microsoft.Extensions.Options;
+using Metapsi.Html;
 
 namespace MdsInfrastructure.Render
 {
@@ -20,7 +21,7 @@ namespace MdsInfrastructure.Render
         public const string IdMergeSuccessPopup = "id-merge-success";
         public const string IdMergeFailedPopup = "if-merge-failed";
 
-        public static Var<HyperNode> MainPage(
+        public static Var<IVNode> MainPage(
             LayoutBuilder b,
             Var<EditConfigurationPage> clientModel)
         {
@@ -38,9 +39,10 @@ namespace MdsInfrastructure.Render
                 b.SlMenu(
                     b =>
                     {
-                        b.OnSlSelect(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<SlMenuSelectArgs> args) =>
+                        b.OnSlSelect(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<object> args) =>
                         {
-                            var selectedValue = b.Get(args, x => x.detail.item.value);
+                            var selectedValue = b.NavigateProperties<object, string>(args, b.Const(new List<string>() { "detail", "item", "value" }));
+                            //var selectedValue = b.Get(args, x => x.detail.item.value);
 
                             var showCurrentJson = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
                             {
@@ -87,7 +89,7 @@ namespace MdsInfrastructure.Render
                     b.SlMenuItem(
                         b =>
                         {
-                            b.SetValue("show-current-json");                   
+                            b.SetValue("show-current-json");
                         },
                         b.SlIcon(
                             b =>
@@ -111,106 +113,107 @@ namespace MdsInfrastructure.Render
 
             var deploymentReportUrl = b.Url<Routes.Deployment.ConfigurationPreview, Guid>(configId);
 
-            var saveButton = b.Node(
-                "button",
-                "rounded text-white py-2 px-4 shadow",
-                b => b.Text("Save", "text-white"));
-
-            b.If(isSaved,
+            var saveButton = b.HtmlButton(
                 b =>
                 {
-                    b.SetAttr(saveButton, Html.disabled, true);
-                    b.AddClass(saveButton, "bg-gray-300");
-                },
-                b =>
-                {
-                    b.SetAttr(saveButton, Html.disabled, false);
-                    b.AddClass(saveButton, "bg-sky-500");
-                });
+                    b.SetClass("rounded text-white py-2 px-4 shadow");
+                    b.If(isSaved,
+                        b =>
+                        {
+                            b.SetDisabled();
+                            b.AddClass("bg-gray-300");
+                        },
+                        b =>
+                        {
+                            b.AddClass("bg-sky-500");
+                        });
 
-            b.SetOnClick(saveButton, b.MakeAction<EditConfigurationPage>((b, model) =>
-            {
-                var saveInput = b.NewObj<SaveConfigurationInput>();
-                b.Set(saveInput, x => x.InfrastructureConfiguration, b.Get(model, x => x.Configuration));
-                b.Set(saveInput, x => x.OriginalJson, b.Get(model, x => x.InitialConfiguration));
-
-                return b.MakeStateWithEffects(
-                    b.ShowPanel(model),
-                    b.MakeEffect(
-                        b.Def(
-                            b.Request(
-                                Frontend.SaveConfiguration,
-                                saveInput,
-                                b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<SaveConfigurationResponse> response) =>
-                                {
-                                    b.Set(page, x => x.SaveConfigurationResponse, response);
-                                    return b.If(b.Get(response, x => x.ConflictMessages.Any()), b =>
-                                    {
-                                        b.ShowDialog(b.Const(IdSaveConflictPopup));
-                                        return b.Clone(page);
-                                    },
-                                    b =>
-                                    {
-                                        b.Set(page, x => x.InitialConfiguration, b.Serialize(b.Get(page, x => x.Configuration)));
-                                        b.HideDialog(b.Const(IdSaveConflictPopup));
-                                        return b.Clone(page);
-                                    });
-                                })))));
-            }));
-
-            var deployLink = b.Node(
-                "a",
-                "rounded text-white py-2 px-4 shadow",
-                b => b.Text("Deploy", "text-white"));
-
-            b.SetAttr(deployLink, Html.href, deploymentReportUrl);
-
-            b.If(b.Not(isSaved),
-                b =>
-                {
-                    b.SetAttr(deployLink, Html.disabled, true);
-                    b.AddClass(deployLink, "bg-gray-300");
-                },
-                b =>
-                {
-                    b.SetAttr(deployLink, Html.disabled, false);
-                    b.AddClass(deployLink, "bg-sky-500");
-                });
-
-            var container = b.Div("flex flex-col w-full bg-white rounded shadow");
-            b.Add(
-                container,
-                b.Tabs(
-                    b =>
+                    b.OnClickAction(b.MakeAction<EditConfigurationPage>((b, model) =>
                     {
-                        b.AddTab(
-                            "Configuration",
-                            b => b.Call(EditConfiguration.TabConfiguration, clientModel));
+                        var saveInput = b.NewObj<SaveConfigurationInput>();
+                        b.Set(saveInput, x => x.InfrastructureConfiguration, b.Get(model, x => x.Configuration));
+                        b.Set(saveInput, x => x.OriginalJson, b.Get(model, x => x.InitialConfiguration));
 
-                        b.AddTab(
-                            "Services",
-                            b => b.Call(EditConfiguration.TabServices, clientModel).As<IVNode>());
+                        return b.MakeStateWithEffects(
+                            b.ShowPanel(model),
+                            b.MakeEffect(
+                                b.Def(
+                                    b.Request(
+                                        Frontend.SaveConfiguration,
+                                        saveInput,
+                                        b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<SaveConfigurationResponse> response) =>
+                                        {
+                                            b.Set(page, x => x.SaveConfigurationResponse, response);
+                                            return b.If(b.Get(response, x => x.ConflictMessages.Any()), b =>
+                                            {
+                                                b.ShowDialog(b.Const(IdSaveConflictPopup));
+                                                return b.Clone(page);
+                                            },
+                                            b =>
+                                            {
+                                                b.Set(page, x => x.InitialConfiguration, b.Serialize(b.Get(page, x => x.Configuration)));
+                                                b.HideDialog(b.Const(IdSaveConflictPopup));
+                                                return b.Clone(page);
+                                            });
+                                        })))));
+                    }));
+                },
+                b.T("Save"));
 
-                        b.AddTab(
-                            "Applications",
-                            b => b.Call(EditConfiguration.TabApplications, clientModel).As<IVNode>());
+            var deployLink = b.HtmlA(
+                b =>
+                {
+                    b.SetClass("rounded text-white py-2 px-4 shadow");
+                    b.SetHref(deploymentReportUrl);
 
-                        b.AddTab(
-                            "Variables",
-                            b => b.Call(EditConfiguration.TabVariables, clientModel).As<IVNode>());
+                    b.If(b.Not(isSaved),
+                        b =>
+                        {
+                            b.SetAttribute("disabled");
+                            b.AddClass("bg-gray-300");
+                        },
+                        b =>
+                        {
+                            b.AddClass("bg-sky-500");
+                        });
+                },
+                b.T("Deploy"));
 
-                        b.AddToolbarCommand(b => menuDropdown);
-                        b.AddToolbarCommand(b => deployLink.As<IVNode>());
-                        b.AddToolbarCommand(b => saveButton.As<IVNode>());
 
-                    }).As<HyperNode>());
 
-            b.Add(container, SaveConflictPopup(b, clientModel).As<HyperNode>());
-            b.Add(container, MergeFailedPopup(b, clientModel).As<HyperNode>());
-            b.Add(container, MergeSuccessPopup(b, clientModel).As<HyperNode>());
-            b.Add(container, CurrentConfigurationJsonPopup(b, clientModel).As<HyperNode>());
 
-            return container;
+            return b.HtmlDiv(b =>
+            {
+                b.SetClass("flex flex-col w-full bg-white rounded shadow");
+            },
+            b.Tabs(
+                b =>
+                {
+                    b.AddTab(
+                        "Configuration",
+                        b => b.Call(EditConfiguration.TabConfiguration, clientModel));
+
+                    b.AddTab(
+                        "Services",
+                        b => b.Call(EditConfiguration.TabServices, clientModel).As<IVNode>());
+
+                    b.AddTab(
+                        "Applications",
+                        b => b.Call(EditConfiguration.TabApplications, clientModel).As<IVNode>());
+
+                    b.AddTab(
+                        "Variables",
+                        b => b.Call(EditConfiguration.TabVariables, clientModel).As<IVNode>());
+
+                    b.AddToolbarCommand(b => menuDropdown);
+                    b.AddToolbarCommand(b => deployLink.As<IVNode>());
+                    b.AddToolbarCommand(b => saveButton.As<IVNode>());
+
+                }),
+            SaveConflictPopup(b, clientModel),
+            MergeFailedPopup(b, clientModel),
+            MergeSuccessPopup(b, clientModel),
+            CurrentConfigurationJsonPopup(b, clientModel));
         }
 
         private static Var<bool> HasChanges(SyntaxBuilder b, Var<EditConfigurationPage> model)
@@ -417,7 +420,7 @@ namespace MdsInfrastructure.Render
                     b.SetDynamic(props, DynamicProperty.String("slot"), b.Const("label"));
                 },
                 b.T(label),
-                b.SvgNew($"{color} w-5 h-5", svg));
+                b.Svg(svg, $"{color} w-5 h-5"));
         }
 
         public static Var<IVNode> DialogFooter(this LayoutBuilder b, string text, params Var<IVNode>[] buttons)

@@ -12,6 +12,7 @@ using MdsCommon.HtmlControls;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Metapsi.Dom;
 using System.ComponentModel.DataAnnotations.Schema;
+using Metapsi.Html;
 
 namespace MdsInfrastructure.Render
 {
@@ -100,70 +101,75 @@ namespace MdsInfrastructure.Render
                 return b.EditView<EditConfigurationPage>(clientModel, EditService);
             };
 
-            var container = b.Span();
-            b.Add(container, b.Link<EditConfigurationPage>(b.WithDefault(serviceName), b.MakeAction<EditConfigurationPage>(goToEditService)));
-            b.If(serviceDisabled, (LayoutBuilder b) =>
-            {
-                var badge = b.Add(container, b.Badge(b.Const("disabled")));
-                b.AddClass(badge, "bg-gray-400");
-            });
-            return container.As<IVNode>();
+            return b.HtmlSpan(
+                b =>
+                {
+                },
+                b.Link<EditConfigurationPage>(b.WithDefault(serviceName), b.MakeAction<EditConfigurationPage>(goToEditService)),
+                b.Optional(
+                    serviceDisabled,
+                    b =>
+                    {
+                        return b.Badge(b.Const("disabled"), b.Const("bg-gray-400"));
+                    }));
         }
 
-        public static Var<HyperNode> TabServices(
+        public static Var<IVNode> TabServices(
            LayoutBuilder b,
            Var<EditConfigurationPage> clientModel)
         {
-            var container = b.Div("w-full h-full");
+            throw new NotImplementedException();
 
-            var allServices = b.Get(clientModel, x => x.Configuration.InfrastructureServices.OrderBy(x => x.ServiceName).ToList());
-            var serviceRows = b.Map(allServices, (b, service) => b.ServiceRow(clientModel, service));
-            var filteredServices = b.FilterList(serviceRows, b.Get(clientModel, x => x.ServicesFilter));
+            //var container = b.Div("w-full h-full");
 
-            b.OnModel(
-                clientModel,
-                (bParent, context) =>
-                {
-                    var b = new LayoutBuilder(bParent);
+            //var allServices = b.Get(clientModel, x => x.Configuration.InfrastructureServices.OrderBy(x => x.ServiceName).ToList());
+            //var serviceRows = b.Map(allServices, (b, service) => b.ServiceRow(clientModel, service));
+            //var filteredServices = b.FilterList(serviceRows, b.Get(clientModel, x => x.ServicesFilter));
 
-                    b.Add(container, b.DataGrid<InfrastructureServiceRow>(
-                        b =>
-                        {
-                            b.OnTable(b =>
-                            {
-                                b.FillFrom(filteredServices, exceptColumns: new()
-                                {
-                                    nameof(InfrastructureServiceRow.Id),
-                                    nameof(InfrastructureServiceRow.Tags)
-                                });
+            //b.OnModel(
+            //    clientModel,
+            //    (bParent, context) =>
+            //    {
+            //        var b = new LayoutBuilder(bParent);
 
-                                b.SetCommonStyle();
+            //        b.Add(container, b.DataGrid<InfrastructureServiceRow>(
+            //            b =>
+            //            {
+            //                b.OnTable(b =>
+            //                {
+            //                    b.FillFrom(filteredServices, exceptColumns: new()
+            //                    {
+            //                        nameof(InfrastructureServiceRow.Id),
+            //                        nameof(InfrastructureServiceRow.Tags)
+            //                    });
 
-                                b.OverrideColumnCell(
-                                    nameof(InfrastructureServiceRow.Name),
-                                    (b, data) => b.RenderServiceNameCell(b.Get(data, x => x.Row)));
+            //                    b.SetCommonStyle();
 
-                            });
+            //                    b.OverrideColumnCell(
+            //                        nameof(InfrastructureServiceRow.Name),
+            //                        (b, data) => b.RenderServiceNameCell(b.Get(data, x => x.Row)));
 
-                            b.AddHoverRowAction<EditConfigurationPage, InfrastructureServiceRow>(OnRemoveService, Icon.Remove, (b, data, props)=>
-                            {
-                                b.AddClass(props, "text-red-500");
-                            });
+            //                });
 
-                            b.AddToolbarChild(AddServiceButton);
+            //                b.AddHoverRowAction<EditConfigurationPage, InfrastructureServiceRow>(OnRemoveService, Icon.Remove, (b, data, props)=>
+            //                {
+            //                    b.AddClass(props, "text-red-500");
+            //                });
 
-                            b.AddToolbarChild(
-                                b => b.Filter(
-                                    b =>
-                                    {
-                                        b.BindFilter(context, x => x.ServicesFilter);
-                                    }),
-                                HorizontalPlacement.Right);
+            //                b.AddToolbarChild(AddServiceButton);
 
-                        }).As<HyperNode>());
-                });
+            //                b.AddToolbarChild(
+            //                    b => b.Filter(
+            //                        b =>
+            //                        {
+            //                            b.BindFilter(context, x => x.ServicesFilter);
+            //                        }),
+            //                    HorizontalPlacement.Right);
 
-            return container;
+            //            }).As<HyperNode>());
+            //    });
+
+            //return container;
         }
 
         public static Var<string> GetProjectLabel(SyntaxBuilder b, Var<EditConfigurationPage> clientModel, Var<InfrastructureService> service)

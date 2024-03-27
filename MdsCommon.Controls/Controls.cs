@@ -1,4 +1,5 @@
-﻿using Metapsi.Hyperapp;
+﻿using Metapsi.Html;
+using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,21 +14,26 @@ namespace MdsCommon.Controls
 
     public static partial class Control
     {
-        public static Var<HyperNode> Badge(
+        public static Var<IVNode> Badge(
             this LayoutBuilder b,
-            Var<string> label)
+            Var<string> label,
+            Var<string> additionalCss)
         {
-            var badge = b.Text(label);
-            b.AddClass(badge, "uppercase text-xs text-white p-1 mx-4 font-medium rounded-md");
-            return badge;
+            return b.HtmlSpan(
+                b =>
+                {
+                    b.SetClass("uppercase text-xs text-white p-1 mx-4 font-medium rounded-md");
+                    b.AddClass(additionalCss);
+                },
+                b.T(label));
         }
 
 
-        public static Var<HyperNode> Tabs<TPage>(
+        public static Var<IVNode> Tabs<TPage>(
             this LayoutBuilder b,
             Var<TPage> page,
             Var<string> tabName,
-            Var<HyperNode> toolbar,
+            Var<IVNode> toolbar,
             params TabRenderer[] tabPages)
         {
             return b.RenderTab(page, tabName, toolbar, tabPages);
@@ -38,8 +44,8 @@ namespace MdsCommon.Controls
     public class TabRenderer
     {
         public string TabPageCode { get; set; } = string.Empty;
-        public System.Func<LayoutBuilder, Var<HyperNode>> TabHeader { get; set; }
-        public System.Func<LayoutBuilder, Var<HyperNode>> TabContent { get; set; }
+        public System.Func<LayoutBuilder, Var<IVNode>> TabHeader { get; set; }
+        public System.Func<LayoutBuilder, Var<IVNode>> TabContent { get; set; }
     }
 }
 

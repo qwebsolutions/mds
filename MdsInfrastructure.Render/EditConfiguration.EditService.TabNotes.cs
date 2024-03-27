@@ -9,7 +9,7 @@ namespace MdsInfrastructure.Render
 {
     public static partial class EditConfiguration
     {
-        public static Var<HyperNode> TabNotes(
+        public static Var<IVNode> TabNotes(
             LayoutBuilder b,
             Var<EditConfigurationPage> clientModel)
         {
