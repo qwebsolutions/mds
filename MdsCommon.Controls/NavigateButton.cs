@@ -80,7 +80,7 @@ namespace MdsCommon.Controls
                             }),
                         b.Optional(
                             b.HasValue(b.Get(props, x => x.Label)),
-                            b => b.T(b.Get(props, x => x.Label))))
+                            b => b.TextSpan(b.Get(props, x => x.Label))))
 
                         ));
         }

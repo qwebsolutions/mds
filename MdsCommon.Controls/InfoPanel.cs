@@ -92,7 +92,7 @@ namespace MdsCommon.Controls
                                 b.Svg(info, "w-full h-full")));
                     }
                 },
-                b => b.T(b.Const(body)));
+                b => b.TextSpan(b.Const(body)));
         }
 
         public static Var<IVNode> PanelsContainer(this LayoutBuilder b, int columns, IEnumerable<Var<IVNode>> panels)

@@ -21,19 +21,19 @@ namespace MdsInfrastructure.Render
                 toolbar,
                 new TabRenderer()
                 {
-                    TabHeader = b => b.T("Service"),
+                    TabHeader = b => b.TextSpan("Service"),
                     TabContent = b => b.Call(TabService, clientModel),
                     TabPageCode = "Service"
                 },
                 new TabRenderer()
                 {
-                    TabHeader = b => b.T("Parameters"),
+                    TabHeader = b => b.TextSpan("Parameters"),
                     TabContent = b => b.Call(TabParameters, clientModel),
                     TabPageCode = "Parameters"
                 },
                 new TabRenderer()
                 {
-                    TabHeader = b => b.T("Notes"),
+                    TabHeader = b => b.TextSpan("Notes"),
                     TabContent = b => b.Call(TabNotes, clientModel),
                     TabPageCode = "Notes"
                 });

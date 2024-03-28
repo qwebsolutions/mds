@@ -543,10 +543,17 @@ namespace MdsInfrastructure
                 fullDbPath,
                 async c =>
                 {
+                    var configRows = (await c.Transaction.LoadRecords<InfrastructureConfiguration>()).ToList();
+                    var serviceRows = await c.Transaction.LoadRecords<InfrastructureService>();
+
+                    foreach (var config in configRows)
+                    {
+                        config.InfrastructureServices.AddRange(serviceRows.Where(x => x.ConfigurationHeaderId == config.Id));
+                    }
+
                     return new ConfigurationHeadersList()
                     {
-                        ConfigurationHeaders = (await c.Transaction.LoadRecords<InfrastructureConfiguration>()).ToList(),
-                        Services = (await c.Transaction.LoadRecords<InfrastructureService>()).ToList()
+                        ConfigurationHeaders = configRows
                     };
                 });
         }

@@ -27,7 +27,7 @@ namespace MdsCommon
                     {
                         b.AddClass("font-bold text-gray-800 px-2");
                     },
-                    b.T(mainOperation)),
+                    b.TextSpan(mainOperation)),
                 b.Optional(
                     b.HasValue(mainEntity),
                     b => b.HtmlSpan(
@@ -35,7 +35,7 @@ namespace MdsCommon
                         {
                             b.SetClass("font-medium text-gray-500 px-2");
                         },
-                        b.T(mainEntity))));
+                        b.TextSpan(mainEntity))));
 
             var signInArea = b.Optional(
                 b.Get(props, x => x.UseSignIn),
@@ -55,7 +55,7 @@ namespace MdsCommon
                                 {
                                     b.SetClass("font-semibold text-sm text-gray-800");
                                 },
-                                b.T(userName)),
+                                b.TextSpan(userName)),
                             b.Optional(
                                 b.Get(props, x => x.User.AuthType == Metapsi.Ui.AuthType.Oidc),
                                 b =>
@@ -67,7 +67,7 @@ namespace MdsCommon
                                             b.UnderlineBlue();
                                             b.SetHref(b.Concat(b.RootPath(), b.Const("/signout")));
                                         },
-                                        b.T("Sign out"));
+                                        b.TextSpan("Sign out"));
                                 }));
 
                     },
@@ -79,7 +79,7 @@ namespace MdsCommon
                             b.UnderlineBlue();
                             b.SetHref(b.Concat(b.RootPath(), b.Const("/signin-redirect")));
                         },
-                        b.T("Sign in"));
+                        b.TextSpan("Sign in"));
                     });
                 });
 

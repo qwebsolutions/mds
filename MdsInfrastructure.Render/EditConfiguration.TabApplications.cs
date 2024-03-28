@@ -172,7 +172,7 @@ namespace MdsInfrastructure.Render
                     b.AddPrimaryButtonStyle(props);
                     b.OnClickAction<EditConfigurationPage>(props, OnAddApplication);
                 },
-                (b, data) => b.T("Add application")),
+                (b, data) => b.TextSpan("Add application")),
                 b.Const(new object()));
 
         }

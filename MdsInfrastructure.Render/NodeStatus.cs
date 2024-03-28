@@ -35,7 +35,7 @@ namespace MdsInfrastructure.Render
 
             if (selectedNode == null)
             {
-                return b.T("Node not found");
+                return b.TextSpan("Node not found");
             }
 
             var nodeServices = nodesStatusPage.Deployment.GetDeployedServices().Where(x => x.NodeName == selectedNode.NodeName);

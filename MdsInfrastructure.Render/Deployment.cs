@@ -134,7 +134,7 @@ namespace MdsInfrastructure.Render
                         {
                             b.SetClass("flex flex-row space-x-2");
                         },
-                        b.T("There are no changes to deploy."),
+                        b.TextSpan("There are no changes to deploy."),
                         b.Link(b.Const("Edit"), b.Url<Routes.Configuration.Edit, Guid>(b.Const(infrastructureConfiguration.Id)))));
             }
             else
@@ -179,7 +179,7 @@ namespace MdsInfrastructure.Render
                                             )));
                             }));
                         },
-                        b.T("Deploy now"))),
+                        b.TextSpan("Deploy now"))),
                     b.ChangesReport(serviceChanges));
 
                 return view;
@@ -349,7 +349,7 @@ namespace MdsInfrastructure.Render
                         b.SetClass("text-red-800 line-through flex flex-row space-x-4");
                     },
                     b.HtmlSpanText(Font.Bold(), parameterChange.PropertyName),
-                    b.T(parameterChange.OldValue));
+                    b.TextSpan(parameterChange.OldValue));
             }
 
             // added, no old value
@@ -361,7 +361,7 @@ namespace MdsInfrastructure.Render
                         b.SetClass("text-green-800 flex flex-row space-x-4");
                     },
                     b.HtmlSpanText(Font.Bold(), parameterChange.PropertyName),
-                    b.T(parameterChange.NewValue));
+                    b.TextSpan(parameterChange.NewValue));
             }
 
             // value changed
@@ -372,9 +372,9 @@ namespace MdsInfrastructure.Render
                         b.SetClass("text-sky-800 flex flex-row space-x-4");
                     },
                     b.HtmlSpanText(Font.Bold(), parameterChange.PropertyName),
-                    b.T(parameterChange.OldValue),
-                    b.T("➔"),
-                    b.T(parameterChange.NewValue));
+                    b.TextSpan(parameterChange.OldValue),
+                    b.TextSpan("➔"),
+                    b.TextSpan(parameterChange.NewValue));
             }
         }
 

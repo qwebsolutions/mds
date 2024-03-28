@@ -27,7 +27,7 @@ namespace MdsCommon.Controls
                     b.SetAttribute("placeholder", b.Get(props, x => x.Placeholder));
                     b.SetDisabled(b.Not(b.Get(props, x => x.Enabled)));
                 },
-                b.T(b.Get(props, x => x.Text)));
+                b.TextSpan(b.Get(props, x => x.Text)));
         }
     }
     public static partial class Controls

@@ -36,7 +36,7 @@ namespace MdsInfrastructure.Render
             var notes = b.Get(service, x => x.InfrastructureServiceNotes.ToList());
             var noteTypes = b.Get(clientModel, x => x.NoteTypes);
 
-            throw new NotImplementedException();
+            return b.DataGrid(MdsDefaultBuilder.DataGrid<InfrastructureServiceNote>(), notes);
 
             //var rc = b.RenderCell<InfrastructureServiceNote>(
             //            (b, row, col) =>

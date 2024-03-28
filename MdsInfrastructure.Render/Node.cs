@@ -6,7 +6,6 @@ using M = MdsInfrastructure.Node;
 using System.Linq;
 using System;
 using MdsCommon.Controls;
-using Metapsi.ChoicesJs;
 using System.Diagnostics.Contracts;
 using Metapsi.Html;
 
@@ -204,7 +203,7 @@ namespace MdsInfrastructure.Render
 
             foreach (var formField in forms)
             {
-                b.Push(formFieldControls, b.T(formField.Item1));
+                b.Push(formFieldControls, b.TextSpan(formField.Item1));
                 b.Push(formFieldControls, formField.Item2);
             }
 
@@ -213,13 +212,13 @@ namespace MdsInfrastructure.Render
 
         public static void AddFormField(this LayoutBuilder b, Var<System.Collections.Generic.List<IVNode>> nodes, string label, Var<IVNode> fieldControl)
         {
-            b.Push(nodes, b.T(label));
+            b.Push(nodes, b.TextSpan(label));
             b.Push(nodes, fieldControl);
         }
 
         //public static (Var<IVNode>, Var<IVNode>) FormField(this LayoutBuilder b, string label, Var<IVNode> fieldControl)
         //{
-        //    return (b.T(label), fieldControl);
+        //    return (b.TextSpan(label), fieldControl);
         //}
 
         public static Var<string> WithDefault(this SyntaxBuilder b, Var<string> value)

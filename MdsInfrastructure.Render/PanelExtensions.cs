@@ -36,7 +36,7 @@ namespace MdsInfrastructure.Render
                             b.SetClass("hover:underline cursor-pointer font-bold");
                             b.SetHref(nodeUrl);
                         },
-                        b.T(nodeName)),
+                        b.TextSpan(nodeName)),
                     b.HtmlImg(
                         b =>
                         {
@@ -52,7 +52,7 @@ namespace MdsInfrastructure.Render
                 return b.InfoPanel(
                     b.Const(Panel.Style.Error),
                     nodeHeader,
-                    (b) => b.T("Could not retrieve status"));
+                    (b) => b.TextSpan("Could not retrieve status"));
             }
             else if (Math.Abs((healthStatus.Where(x => x.NodeName == nodeName).Max(x => x.TimestampUtc) - DateTime.Now).TotalMinutes) > 1)
             {
@@ -60,14 +60,14 @@ namespace MdsInfrastructure.Render
                 return b.InfoPanel(
                     b.Const(Panel.Style.Error),
                     nodeHeader,
-                    b => b.T($"Status not received for {Convert.ToInt32(Math.Abs(timespan.TotalMinutes))} minutes!"));
+                    b => b.TextSpan($"Status not received for {Convert.ToInt32(Math.Abs(timespan.TotalMinutes))} minutes!"));
             }
             else if (status.StatusValues.Any(x => x.GeneralStatus == GeneralStatus.NoData))
             {
                 return b.InfoPanel(
                     b.Const(Panel.Style.Error),
                     nodeHeader,
-                    b => b.T("Data not available!"));
+                    b => b.TextSpan("Data not available!"));
             }
             else
             {
@@ -82,7 +82,7 @@ namespace MdsInfrastructure.Render
                             b.AddClass(b.Const("font-bold"));
                         }
                     }, 
-                    b.T($"Available HDD: {availableHddGb.CurrentValue} GB ({availableHddPercent.CurrentValue}%)"));
+                    b.TextSpan($"Available HDD: {availableHddGb.CurrentValue} GB ({availableHddPercent.CurrentValue}%)"));
 
 
                 var availableRamGb = status.StatusValues.Single(x => x.Name == StatusExtensions.AvailableRamGb);
@@ -96,7 +96,7 @@ namespace MdsInfrastructure.Render
                             b.AddClass(b.Const("font-bold"));
                         }
                     },
-                    b.T($"Available RAM: {availableRamGb.CurrentValue} GB ({availableRamPercent.CurrentValue}%)"));
+                    b.TextSpan($"Available RAM: {availableRamGb.CurrentValue} GB ({availableRamPercent.CurrentValue}%)"));
 
                 Panel.Style panelStyling = Panel.Style.Ok;
 
@@ -147,7 +147,7 @@ namespace MdsInfrastructure.Render
                 }
             }
 
-            Var<IVNode> statusLabel = b.T($"{applicationServices.Count()} services (all ok)");
+            Var<IVNode> statusLabel = b.TextSpan($"{applicationServices.Count()} services (all ok)");
 
             if (dangerServicesCount > 0)
             {
@@ -156,7 +156,7 @@ namespace MdsInfrastructure.Render
                     {
                         b.SetClass("font-bold");
                     },
-                    b.T($"{applicationServices.Count()} services ({dangerServicesCount} in error)"));
+                    b.TextSpan($"{applicationServices.Count()} services ({dangerServicesCount} in error)"));
                 panelStyling = Panel.Style.Error;
             }
            
@@ -167,7 +167,7 @@ namespace MdsInfrastructure.Render
                 },
                 b.InfoPanel(
                 b.Const(panelStyling),
-                b => b.T(applicationName),
+                b => b.TextSpan(applicationName),
                 b => statusLabel));
         }
 
@@ -207,7 +207,7 @@ namespace MdsInfrastructure.Render
                         b.Push(statusRows, b.HtmlSpanText(b => b.AddClass("font-bold"), $"SERVICE STATUS: ERROR"));
                     }
 
-                    b.Push(statusRows, b.T($"Started {runningSince.CurrentValue} ({serviceStatus.StatusValues.Single(x => x.Name == StatusExtensions.ServiceRunningFor).CurrentValue})"));
+                    b.Push(statusRows, b.TextSpan($"Started {runningSince.CurrentValue} ({serviceStatus.StatusValues.Single(x => x.Name == StatusExtensions.ServiceRunningFor).CurrentValue})"));
 
                     var lastChecked = serviceStatus.StatusValues.Single(x => x.Name == StatusExtensions.ServiceSyncAgo);
                     string lastCheckedLabel = $"({lastChecked.CurrentValue} seconds ago)";
@@ -222,7 +222,7 @@ namespace MdsInfrastructure.Render
                         panelStyle = Panel.Style.Warning;
                     }
 
-                    b.Push(statusRows, b.T($"{usedRamLabel} {lastCheckedLabel}"));
+                    b.Push(statusRows, b.TextSpan($"{usedRamLabel} {lastCheckedLabel}"));
                 }
 
                 var startCount = serviceStatus.StatusValues.SingleOrDefault(x => x.Name == StatusExtensions.StartCount);
@@ -234,7 +234,7 @@ namespace MdsInfrastructure.Render
                         panelStyle = Panel.Style.Warning;
                         //startedLabel = $"<b>{startedLabel}</b>";
                     }
-                    b.Push(statusRows, b.T(startedLabel));
+                    b.Push(statusRows, b.TextSpan(startedLabel));
                 }
                 else
                 {
@@ -247,7 +247,7 @@ namespace MdsInfrastructure.Render
                             panelStyle = Panel.Style.Warning;
                         }
 
-                        b.Push(statusRows, b.T(crashLabel));
+                        b.Push(statusRows, b.TextSpan(crashLabel));
                     }
                 }
 

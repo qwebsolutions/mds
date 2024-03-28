@@ -44,7 +44,7 @@ namespace MdsInfrastructure.Render
             var service = b.Get(clientModel, serviceId, (x, id) => x.Configuration.InfrastructureServices.Single(x => x.Id == id));
             var parameters = b.Get(service, x => x.InfrastructureServiceParameterDeclarations);
 
-            throw new NotImplementedException();
+            return b.DataGrid<InfrastructureServiceParameterDeclaration>(MdsDefaultBuilder.DataGrid<InfrastructureServiceParameterDeclaration>(), parameters);
 
             //var rc= b.RenderCell<InfrastructureServiceParameterDeclaration>(
             //            (b, row, col) =>

@@ -22,7 +22,7 @@ namespace MdsCommon.Controls
                     b.SetClass("underline text-sky-500");
                     b.SetHref(absoluteUrl);
                 },
-                b.T(text));
+                b.TextSpan(text));
         }
 
 
@@ -51,7 +51,7 @@ namespace MdsCommon.Controls
                     b.SetHref(b.Const("javascript:void(0);"));
                     b.OnClickAction(onClick);
                 },
-                b.T(text));
+                b.TextSpan(text));
         }
     }
 }

@@ -105,7 +105,7 @@ namespace MdsCommon.Controls
                             })),
                     b.Optional(b.HasValue(b.Get(props, x => x.Label)), b =>
                     {
-                        return b.T(b.Get(props, x => x.Label));
+                        return b.TextSpan(b.Get(props, x => x.Label));
                     })));
 
             return button;

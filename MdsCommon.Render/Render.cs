@@ -84,7 +84,7 @@ namespace MdsCommon
                                     {
                                         b.SetClass("rounded text-white py-2 px-4 shadow bg-sky-500");
                                     },
-                                    b.T("Sign in")),
+                                    b.TextSpan("Sign in")),
                                 b.HiddenPayload(b.Get(clientModel, x => x.Credentials))))
                         )));
         }

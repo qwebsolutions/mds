@@ -11,15 +11,18 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\metapsi\Metapsi.ChoicesJs\Metapsi.ChoicesJs.csproj" />
 		<ProjectReference Include="..\..\metapsi\Metapsi.Heroicons\Metapsi.Heroicons.csproj" />
+		<ProjectReference Include="..\..\metapsi\Metapsi.Html\Metapsi.Html.csproj" />
 		<ProjectReference Include="..\..\metapsi\Metapsi.Hyperapp\Metapsi.Hyperapp.csproj" />
 		<ProjectReference Include="..\..\metapsi\Metapsi.Module\Metapsi.Module.csproj" />
+		<ProjectReference Include="..\..\metapsi\Metapsi.Shoelace\Metapsi.Shoelace.csproj" />
+		<ProjectReference Include="..\..\metapsi\Metapsi.TomSelect\Metapsi.TomSelect.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<EmbeddedResource Include="embedded\MdsCommon.Controls.Choices.css" LogicalName="MdsCommon.Controls.Choices.css" />
 		<EmbeddedResource Include="embedded\MdsCommon.Controls.css" LogicalName="MdsCommon.Controls.css" />
+		<EmbeddedResource Include="embedded\MdsCommon.TomSelect.css" LogicalName="MdsCommon.TomSelect.css" />
 	</ItemGroup>
 
 </Project>

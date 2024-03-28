@@ -17,7 +17,13 @@ namespace MdsInfrastructure.Render
            LayoutBuilder b,
            Var<EditConfigurationPage> clientModel)
         {
-            throw new System.NotImplementedException();
+            var allVariables = b.Get(clientModel, x => x.Configuration.InfrastructureVariables.OrderBy(x => x.VariableName).ToList());
+            var filteredVariables = b.FilterList<InfrastructureVariable>(allVariables, b.Get(clientModel, x => x.VariablesFilter));
+
+
+            return b.DataGrid<InfrastructureVariable>(MdsDefaultBuilder.DataGrid<InfrastructureVariable>(), filteredVariables);
+
+            //throw new System.NotImplementedException();
             //var container = b.Div("w-full h-full");
 
             //var configId = b.Get(clientModel, x => x.Configuration.Id);
@@ -30,8 +36,6 @@ namespace MdsInfrastructure.Render
             //    return b.Clone(clientModel);
             //};
 
-            //var allVariables = b.Get(clientModel, x => x.Configuration.InfrastructureVariables.OrderBy(x => x.VariableName).ToList());
-            //var filteredVariables = b.FilterList<InfrastructureVariable>(allVariables, b.Get(clientModel, x => x.VariablesFilter));
 
             //b.OnModel(
             //    clientModel,
@@ -128,7 +132,7 @@ namespace MdsInfrastructure.Render
                     b.AddPrimaryButtonStyle(props);
                     b.OnClickAction<EditConfigurationPage>(props, OnAddVariable);
                 },
-                (b, data) => b.T("Add variable")),
+                (b, data) => b.TextSpan("Add variable")),
                 b.Const(new object()));
 
         }

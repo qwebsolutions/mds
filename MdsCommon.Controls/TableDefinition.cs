@@ -81,7 +81,7 @@ namespace MdsCommon.HtmlControls
             builder.HeaderCell = ControlDefinition.New<ColumnData>(
                 "td",
                 (b, data, props) => { },
-                (b, column) => b.T(b.Get(column, x => x.Name)));
+                (b, column) => b.TextSpan(b.Get(column, x => x.Name)));
 
             builder.TableRow = ControlDefinition.New<TableRowData<TRow>>(
                 "tr",
@@ -104,7 +104,7 @@ namespace MdsCommon.HtmlControls
             builder.CellContent = ControlDefinition.New<CellData<TRow>>(
                 "span",
                 (b, data, props) => { },
-                (b, data) => b.T("-"));
+                (b, data) => b.TextSpan("-"));
 
             return builder;
         }

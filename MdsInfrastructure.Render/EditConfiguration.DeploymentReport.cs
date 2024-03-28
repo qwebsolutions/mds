@@ -52,7 +52,7 @@ namespace MdsInfrastructure
                     b.Svg(Icon.Enter),
                     b.StyledSpan(
                         "grid w-full justify-end",
-                        b.T($"Install {serviceChange.ProjectName.NewValue} {serviceChange.ProjectVersionTag.NewValue} on {serviceChange.NodeName.NewValue}"))),
+                        b.TextSpan($"Install {serviceChange.ProjectName.NewValue} {serviceChange.ProjectVersionTag.NewValue} on {serviceChange.NodeName.NewValue}"))),
                 b.ListParameterChanges(serviceChange));
         }
 
@@ -64,7 +64,7 @@ namespace MdsInfrastructure
                     "flex flex-row items-center space-x-4",
                     b.Bold(serviceChange.ServiceName),
                     b.Svg(Icon.Remove),
-                    b.StyledSpan("grid w-full justify-end", b.T($"Uninstall {serviceChange.ProjectName.OldValue} {serviceChange.ProjectVersionTag.OldValue} from {serviceChange.NodeName.OldValue}"))),
+                    b.StyledSpan("grid w-full justify-end", b.TextSpan($"Uninstall {serviceChange.ProjectName.OldValue} {serviceChange.ProjectVersionTag.OldValue} from {serviceChange.NodeName.OldValue}"))),
                 b.ListParameterChanges(serviceChange));
         }
 
@@ -83,8 +83,8 @@ namespace MdsInfrastructure
                     b.StyledSpan(
                         "grid w-full justify-end",
                         sameVersion ?
-                        b.T($"Restart {serviceChange.ProjectName.NewValue} {serviceChange.ProjectVersionTag.NewValue} on {serviceChange.NodeName.NewValue}") :
-                        b.T($"Upgrade {serviceChange.ProjectName.NewValue} from {serviceChange.ProjectVersionTag.OldValue} to {serviceChange.ProjectVersionTag.NewValue} on {serviceChange.NodeName.NewValue}"))),
+                        b.TextSpan($"Restart {serviceChange.ProjectName.NewValue} {serviceChange.ProjectVersionTag.NewValue} on {serviceChange.NodeName.NewValue}") :
+                        b.TextSpan($"Upgrade {serviceChange.ProjectName.NewValue} from {serviceChange.ProjectVersionTag.OldValue} to {serviceChange.ProjectVersionTag.NewValue} on {serviceChange.NodeName.NewValue}"))),
                 b.ListParameterChanges(serviceChange));
         }
 
@@ -114,7 +114,7 @@ namespace MdsInfrastructure
                 return b.StyledSpan(
                     "text-red-800 line-through flex flex-row space-x-4",
                     b.Bold(parameterChange.PropertyName),
-                    b.T(parameterChange.OldValue));
+                    b.TextSpan(parameterChange.OldValue));
             }
 
             // added, no old value
@@ -123,7 +123,7 @@ namespace MdsInfrastructure
                 return b.StyledSpan(
                     "text-green-800 flex flex-row space-x-4",
                     b.Bold(parameterChange.PropertyName),
-                    b.T(parameterChange.NewValue));
+                    b.TextSpan(parameterChange.NewValue));
             }
 
             // value changed
@@ -131,9 +131,9 @@ namespace MdsInfrastructure
                 return b.StyledSpan(
                     "text-sky-800 flex flex-row space-x-4",
                     b.Bold(parameterChange.PropertyName),
-                    b.T(parameterChange.OldValue),
-                    b.T("➔"),
-                    b.T(parameterChange.NewValue));
+                    b.TextSpan(parameterChange.OldValue),
+                    b.TextSpan("➔"),
+                    b.TextSpan(parameterChange.NewValue));
             }
         }
     }

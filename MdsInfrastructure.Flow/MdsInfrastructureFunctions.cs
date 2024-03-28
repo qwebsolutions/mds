@@ -13,18 +13,18 @@ public static partial class MdsInfrastructureFunctions
         return await commandContext.Do(Backend.LoadAllConfigurationHeaders);
     }
 
-    public static string GetConfigurationCellValue(ConfigurationHeadersList dataModel, InfrastructureConfiguration configurationHeader, string fieldName)
-    {
-        if (fieldName == "ServicesCount")
-        {
-            return dataModel.Services.Where(x => x.ConfigurationHeaderId == configurationHeader.Id).Count().ToString();
-        }
+    //public static string GetConfigurationCellValue(ConfigurationHeadersList dataModel, InfrastructureConfiguration configurationHeader, string fieldName)
+    //{
+    //    if (fieldName == "ServicesCount")
+    //    {
+    //        return dataModel.Services.Where(x => x.ConfigurationHeaderId == configurationHeader.Id).Count().ToString();
+    //    }
 
-        if (fieldName == nameof(InfrastructureConfiguration.Name))
-            return configurationHeader.Name;
+    //    if (fieldName == nameof(InfrastructureConfiguration.Name))
+    //        return configurationHeader.Name;
 
-        return string.Empty;
-    }
+    //    return string.Empty;
+    //}
 
     public static async Task<EditConfigurationPage> InitializeEditConfiguration(
         CommandContext commandContext,

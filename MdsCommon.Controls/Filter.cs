@@ -1,7 +1,7 @@
 ﻿using MdsCommon.Controls;
 using Metapsi;
-using Metapsi.ChoicesJs;
 using Metapsi.Dom;
+using Metapsi.Html;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using Metapsi.Ui;
@@ -44,6 +44,60 @@ namespace MdsCommon.HtmlControls
 
     public static partial class Control
     {
+        public static Var<IVNode> Filter<TModel>(this LayoutBuilder b,
+            Var<TModel> model,
+            System.Linq.Expressions.Expression<Func<TModel, string>> property)
+        {
+            var filterValue = b.Get(model, property);
+            b.Log(filterValue);
+
+            return b.HtmlDiv(
+                b =>
+                {
+                    b.SetClass(b.Const("flex flex-row items-center relative"));
+                },
+                b.HtmlInput(
+                    b =>
+                    {
+                        b.SetType("text");
+                        b.SetClass("border rounded-full px-4 py-2");
+                        b.SetValue(filterValue);
+                        b.OnInputAction(b.MakeAction((SyntaxBuilder b, Var<TModel> model, Var<string> newValue) =>
+                        {
+                            b.Set(model, property, newValue);
+                            return b.Clone(model);
+                        }));
+                    }),
+                b.Optional(
+                    b.HasValue(filterValue),
+                    b =>
+                    {
+                        var clearFilterAction = b.MakeAction((SyntaxBuilder b, Var<TModel> model, Var<DomEvent> @event) =>
+                        {
+                            b.PreventDefault(@event);
+                            b.StopPropagation(@event);
+                            b.Set(model, property, string.Empty);
+                            return b.MakeStateWithEffects(
+                                b.Clone(model),
+                                b =>
+                                {
+                                    var target = b.Get(@event, x => x.currentTarget);
+                                    var htmlInput = b.GetProperty<DomElement>(target, b.Const("previousSibling"));
+                                    b.CallOnObject(htmlInput, "focus");
+                                });
+                        });
+
+                        return b.HtmlButton(
+                            b =>
+                            {
+                                b.SetClass(b.Const("absolute right-3 w-6 h-6 text-gray-300"));
+                                b.OnEventAction("mousedown", clearFilterAction);
+                                b.OnEventAction("click", clearFilterAction);
+                            },
+                            b.Svg(Metapsi.Heroicons.Outline.XCircle));
+                    }));
+        }
+
         public static FilterDefinition DefaultFilter()
         {
             FilterDefinition filterBuilder = new();

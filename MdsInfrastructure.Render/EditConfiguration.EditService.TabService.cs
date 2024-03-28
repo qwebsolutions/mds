@@ -4,11 +4,11 @@ using Metapsi.Syntax;
 using System;
 using System.Linq;
 using MdsCommon.Controls;
-using Metapsi.ChoicesJs;
 using System.Collections.Generic;
 using Metapsi.Html;
 using Metapsi;
 using System.Dynamic;
+using Metapsi.TomSelect;
 
 namespace MdsInfrastructure.Render
 {
@@ -63,40 +63,40 @@ namespace MdsInfrastructure.Render
                 {
                     b.SetClass("grid grid-cols-2 place-items-center w-full gap-4");
                 },
-                b.StyledSpan("w-full", b.T("Service name")),
-                b.HtmlInput(
+                b.StyledSpan("w-full", b.TextSpan("Service name")),
+                b.MdsInputText(
                     b =>
                     {
-                        b.SetClass("hyper-input w-full");
+                        b.SetClass("w-full");
                         b.BindTo(clientModel, GetSelectedService, x => x.ServiceName);
                     }),
-                b.StyledSpan("w-full", b.T("Application")),
-                b.Choices(b =>
+                b.StyledSpan("w-full", b.TextSpan("Application")),
+                b.MdsDropDown(b =>
                 {
                     b.SetClass("w-full");
-                    b.SetChoices(allApplications, x => x.Id, x => x.Name, b.Get(service, x => x.ApplicationId));
+                    b.SetOptions(allApplications, x => x.Id, x => x.Name);
+                    b.SetItem(b.Get(service, x => x.ApplicationId));
                     b.OnChange(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
                     {
+                        b.Log("OnChange", value);
                         var selectedId = b.ParseId(value);
                         b.Set(b.GetSelectedService(page), x => x.ApplicationId, selectedId);
                         return b.Clone(page);
                     }));
                 }),
-                b.StyledSpan("w-full", b.T("Project")),
-                b.Choices(
+                b.StyledSpan("w-full", b.TextSpan("Project")),
+                b.MdsDropDown(
                     b =>
                     {
-                        var projectOptions = b.Get(
-                            b.MapChoices(
-                                activeProjects,
+                        b.SetClass("w-full");
+                        b.SetOptions(
+                                b.Get(activeProjects, x => x.OrderBy(x => x.Name).ToList()),
                                 x => x.Id,
-                                x => x.Name,
-                                selectedProjectId),
-                            x => x.OrderBy(x => x.label).ToList());
+                                x => x.Name);
 
-                        b.SetChoices(projectOptions);
+                        b.SetItem(selectedProjectId);
 
-                        b.OnChange((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
+                        b.OnChange(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
                         {
                             var service = b.GetSelectedService(page);
                             var selectedId = b.ParseId(value);
@@ -104,15 +104,16 @@ namespace MdsInfrastructure.Render
                             b.Set(service, x => x.ProjectVersionId, b.EmptyId());
                             b.Set(service, x => x.InfrastructureNodeId, b.EmptyId());
                             return b.Clone(page);
-                        });
+                        }));
                     }),
-                b.StyledSpan("w-full", b.T("Version")),
-                b.Choices(
+                b.StyledSpan("w-full", b.TextSpan("Version")),
+                b.TomSelect(
                     b =>
                     {
                         b.SetClass("w-full");
-                        b.SetChoices(versions, x => x.Id, x => x.VersionTag, selectedVersionId);
-                        b.OnChange((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
+                        b.SetOptions(versions, x => x.Id, x => x.VersionTag);
+                        b.SetItem(selectedVersionId);
+                        b.OnChange(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
                         {
                             var service = b.GetSelectedService(page);
                             var newVersionId = b.ParseId(value);
@@ -174,22 +175,24 @@ namespace MdsInfrastructure.Render
                                 });
 
                             return b.Clone(page);
-                        });
+                        }));
                     }),
-                b.StyledSpan("w-full", b.T("Deployed on node")),
-                b.Choices(
+                b.StyledSpan("w-full", b.TextSpan("Deployed on node")),
+                b.TomSelect(
                     b =>
                     {
-                        b.SetChoices(matchingNodes, x => x.Id, x => x.NodeName, b.Get(service, x => x.InfrastructureNodeId));
-                        b.OnChange((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
+                        b.SetClass("w-full");
+                        b.SetOptions(matchingNodes, x => x.Id, x => x.NodeName);
+                        b.SetItem(b.Get(service, x => x.InfrastructureNodeId));
+                        b.OnChange(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
                         {
                             var service = b.GetSelectedService(page);
                             var selectedId = b.ParseId(value);
                             b.Set(service, x => x.InfrastructureNodeId, selectedId);
                             return b.Clone(page);
-                        });
+                        }));
                     }),
-                b.StyledSpan("w-full", b.T("Service status")),
+                b.StyledSpan("w-full", b.TextSpan("Service status")),
                 b.BoundToggle(
                     service,
                     x => x.Enabled,

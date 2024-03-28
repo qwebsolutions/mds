@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using MdsCommon;
 using MdsCommon.Controls;
 using System.Xml.Serialization;
-using Metapsi.ChoicesJs;
 using MdsCommon.HtmlControls;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Metapsi.Dom;
@@ -118,7 +117,42 @@ namespace MdsInfrastructure.Render
            LayoutBuilder b,
            Var<EditConfigurationPage> clientModel)
         {
-            throw new NotImplementedException();
+            var allServices = b.Get(clientModel, x => x.Configuration.InfrastructureServices.OrderBy(x => x.ServiceName).ToList());
+            var serviceRows = b.Map(allServices, (b, service) => b.ServiceRow(clientModel, service));
+            var filteredServices = b.FilterList(serviceRows, b.Get(clientModel, x => x.ServicesFilter));
+
+            var gridBuilder = MdsDefaultBuilder.DataGrid<InfrastructureServiceRow>();
+            gridBuilder.CreateToolbarActions = (b) =>
+            {
+                return b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("flex w-full items-center justify-between");
+                    },
+                    b.HtmlButton(
+                        b =>
+                        {
+                            b.SetClass("py-2 px-4 rounded shadow bg-sky-500 text-white");
+                        },
+                        b.T("Add service")),
+                    b.Filter(clientModel, x => x.ServicesFilter));
+                        
+            };
+
+            gridBuilder.DataTableBuilder.OverrideDataCell(
+                nameof(InfrastructureConfiguration.Name),
+                (b, row) =>
+                {
+                    return b.RenderServiceNameCell(row);
+                });
+
+            var dataGrid = b.DataGrid(
+                gridBuilder,
+                filteredServices,
+                b.Const(
+                    DataTable.GetColumns<InfrastructureServiceRow>().Where(
+                        x => x != "Id" && x != "Tags").ToList()));
+            return dataGrid;
 
             //var container = b.Div("w-full h-full");
 
@@ -210,7 +244,7 @@ namespace MdsInfrastructure.Render
                     b.OnClickAction<EditConfigurationPage>(props, OnAddService);
                     b.SetClass(props, "rounded py-2 px-4 shadow bg-sky-500 text-white");
                 },
-                (b, data) => b.T("Add service")), 
+                (b, data) => b.TextSpan("Add service")), 
                 b.Const(new object()));
 
         }

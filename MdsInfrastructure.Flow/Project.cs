@@ -1,5 +1,6 @@
 ﻿using Metapsi;
 using Microsoft.AspNetCore.Http;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MdsInfrastructure.Flow;
@@ -16,7 +17,7 @@ public static class Project
             {
                 ProjectsList = await commandContext.Do(Backend.LoadAllProjects),
                 AllConfigurationHeaders = allConfigurations.ConfigurationHeaders,
-                InfrastructureServices = allConfigurations.Services,
+                InfrastructureServices = allConfigurations.ConfigurationHeaders.SelectMany(x=>x.InfrastructureServices).ToList(),
                 User = httpContext.User()
             };
 

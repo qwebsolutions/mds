@@ -17,9 +17,9 @@ namespace MdsInfrastructure.Render
                     "flex flex-row justify-between items-center gap-8",
                     b.StyledSpan(
                         "whitespace-nowrap",
-                        b.T("Configuration name")),
+                        b.TextSpan("Configuration name")),
                     b.BoundInput(clientModel, x => x.Configuration, x => x.Name)),
-                b.T(b.Get(clientModel, x => x.LastDeployed)));
+                b.TextSpan(b.Get(clientModel, x => x.LastDeployed)));
         }
     }
 }

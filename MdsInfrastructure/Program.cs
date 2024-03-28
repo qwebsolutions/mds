@@ -478,7 +478,7 @@ namespace MdsInfrastructure
             webServerRefs.RegisterStaticFiles(typeof(MdsCommon.HeaderRenderer).Assembly);
             webServerRefs.RegisterStaticFiles(typeof(MdsCommon.Controls.Control).Assembly);
             webServerRefs.RegisterStaticFiles(typeof(Metapsi.Dom.ClickTarget).Assembly);
-            webServerRefs.RegisterStaticFiles(typeof(Metapsi.ChoicesJs.Control).Assembly);
+            webServerRefs.RegisterStaticFiles(typeof(Metapsi.TomSelect.Control).Assembly);
             
             {
                 var app = references.ApplicationSetup.Revive();

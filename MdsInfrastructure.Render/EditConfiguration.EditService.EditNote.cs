@@ -1,5 +1,5 @@
 ﻿using MdsCommon.Controls;
-using Metapsi.ChoicesJs;
+using Metapsi.TomSelect;
 using Metapsi.Html;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using Metapsi;
 
 namespace MdsInfrastructure.Render
 {
@@ -29,64 +30,26 @@ namespace MdsInfrastructure.Render
             var noteTypeId = b.Get(note,x => x.NoteTypeId);
             var currentNoteType = b.Get(clientModel, noteTypeId, (x, noteTypeId) => x.NoteTypes.SingleOrDefault(x => x.Id == noteTypeId, new NoteType() { Code = "" }));
 
-            //var view = b.Div();
-            //var noteOptions = b.Get(noteTypes, x => x.Select(x => new DropDown.Option() { value = x.Id.ToString(), label = x.Description }).ToList());
-            var noteOptions = b.MapChoices(noteTypes, x => x.Id, x => x.Description, b.Get(note, x => x.NoteTypeId));
-
-            var toolbar = b.Toolbar(b => { }, b.OkButton(EditService, x => x.EditServiceNoteId));
-
-            //var form = b.Add(view, b.Form(toolbar));
-            //b.AddClass(form, "bg-white rounded");
-            //b.Add(form, b.Text("Note type"));
-            //b.Add(form, b.DropDown(
-            //    b.Const("noteType"),
-            //    b.Get(note, x => x.NoteTypeId).As<string>(),
-            //    noteOptions,
-            //    b.Def<string>(
-            //    (b, noteType) =>
-            //    {
-            //        b.Modify(note, b =>
-            //        {
-            //            b.Set(x => x.NoteTypeId, noteType.As<System.Guid>());
-            //            b.Set(x => x.Reference, b.Const(string.Empty));
-            //        });
-            //    }),
-            //    b.Const("Note type")));
-
-            
+            var toolbar = b.Toolbar(b => { }, b.OkButton(EditService, x => x.EditServiceNoteId));          
 
             var formFields = b.NewCollection<IVNode>();
 
-            var noteTypeDd = b.Choices(b =>
-            {
-                b.SetChoices(noteTypes, x => x.Id, x => x.Description, noteTypeId);
-                b.OnChange(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel, Var<string> value) =>
+            var noteTypeDd = b.TomSelect(
+                b =>
                 {
-                    var editedNote = b.GetEditedNote(clientModel);
-                    b.Set(editedNote, x => x.NoteTypeId, b.ParseId(value));
-                    // This is a rather ugly workaround
-                    b.Set(editedNote, x => x.Reference, b.Const(string.Empty));
-                    return b.Clone(clientModel);
-                }));
-            });
+                    b.SetOptions(noteTypes, x => x.Id, x => x.Description);
+                    b.SetItem(noteTypeId);
+                    b.OnChange(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel, Var<string> value) =>
+                    {
+                        var editedNote = b.GetEditedNote(clientModel);
+                        b.Set(editedNote, x => x.NoteTypeId, b.ParseId(value));
+                        // This is a rather ugly workaround
+                        b.Set(editedNote, x => x.Reference, b.Const(string.Empty));
+                        return b.Clone(clientModel);
+                    }));
+                });
 
             b.AddFormField(formFields, "Note type", noteTypeDd);
-
-            //var noteTypeDd = 
-            //    b.BoundDropDown<EditConfigurationPage, InfrastructureServiceNote, NoteType, Guid>(
-            //        clientModel,
-            //        b.Def<SyntaxBuilder, EditConfigurationPage, InfrastructureServiceNote>(GetEditedNote),
-            //        x => x.NoteTypeId,
-            //        b.Def<EditConfigurationPage, List<NoteType>>(x => x.NoteTypes),
-            //        b.Def<NoteType, Guid>(x => x.Id),
-            //        b.Def<NoteType, string>(x => x.Description)));
-
-            //Metapsi.ChoicesJs.Event.SetOnChoice(b, noteTypeDd, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<Choice> payload) =>
-            //{
-            //    // This is a rather ugly workaround
-            //    b.Set(b.GetEditedNote(page), x => x.Reference, b.Const(string.Empty));
-            //    return b.Clone(page);
-            //}));
 
             var noteTypeCode = b.ToLowercase(b.Get(currentNoteType, x => x.Code));
             var isParameterNote = b.AreEqual(noteTypeCode, b.Const("parameter"));
@@ -98,15 +61,17 @@ namespace MdsInfrastructure.Render
                 b.AddFormField(
                     formFields,
                     "Referenced parameter",
-                    b.Choices(b =>
-                    {
-                        b.SetChoices(serviceParams, x => x.Id, x => x.ParameterName, b.ParseId(b.Get(note, x => x.Reference)));
-                        b.OnChange(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel, Var<string> value) =>
+                    b.TomSelect(
+                        b=>
                         {
-                            b.Set(b.GetEditedNote(clientModel), x => x.Reference, value);
-                            return b.Clone(clientModel);
-                        }));
-                    }));               
+                            b.SetOptions(serviceParams, x => x.Id, x => x.ParameterName);
+                            b.SetItem(b.ParseId(b.Get(note, x => x.Reference)));
+                            b.OnChange(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel, Var<string> value) =>
+                            {
+                                b.Set(b.GetEditedNote(clientModel), x => x.Reference, value);
+                                return b.Clone(clientModel);
+                            }));
+                        }));             
             },
             b =>
             {
@@ -166,7 +131,7 @@ namespace MdsInfrastructure.Render
                     {
                         b.SetClass("flex flex-row space-x-2 items-center");
                     },
-                    b.T("OK")));
+                    b.TextSpan("OK")));
 
             return button;
         }

@@ -48,11 +48,11 @@ namespace MdsCommon
             //                {
 
             //                },
-            //                b.T(criticality),
+            //                b.TextSpan(criticality),
             //                b.AlertBadge(criticality));
             //        }),
-            //        (nameof(InfrastructureEvent.Source), b => b.T(b.Get(row, x => x.Source))),
-            //        (nameof(InfrastructureEvent.ShortDescription), b => b.T(b.Get(row, x => x.ShortDescription)))));
+            //        (nameof(InfrastructureEvent.Source), b => b.TextSpan(b.Get(row, x => x.Source))),
+            //        (nameof(InfrastructureEvent.ShortDescription), b => b.TextSpan(b.Get(row, x => x.ShortDescription)))));
             //});
 
             //var rows = b.Get(clientModel, x => x.InfrastructureEvents);
@@ -86,14 +86,14 @@ namespace MdsCommon
                 {
                     b.SetClass("grid grid-cols-2 gap-4");
                 },
-                b.T("Event timestamp"),
-                b.T(b.ItalianFormat(b.Get(e, e => e.Timestamp))),
-                b.T("Event description"),
-                b.T(b.Get(e, e => e.ShortDescription)),
-                b.T("Event source"),
-                b.T(b.Get(e, e => e.Source)),
-                b.T("Details"),
-                b.T(""));
+                b.TextSpan("Event timestamp"),
+                b.TextSpan(b.ItalianFormat(b.Get(e, e => e.Timestamp))),
+                b.TextSpan("Event description"),
+                b.TextSpan(b.Get(e, e => e.ShortDescription)),
+                b.TextSpan("Event source"),
+                b.TextSpan(b.Get(e, e => e.Source)),
+                b.TextSpan("Details"),
+                b.TextSpan(""));
 
             var details = b.HtmlDiv(
                 b =>
@@ -101,7 +101,7 @@ namespace MdsCommon
                     b.SetClass("overflow-auto");// Doesn't work
                 },
                 b.HtmlPre(b => { },
-                    b.T(b.Get(e, e => e.FullDescription))));
+                    b.TextSpan(b.Get(e, e => e.FullDescription))));
 
             return b.HtmlDiv(b => { },
                 gridLayout,

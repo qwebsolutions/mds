@@ -22,7 +22,7 @@ namespace MdsInfrastructure
 
             var currentViewName = b.GetVar<TModel>(clientModel, FeatureName, b.Const(areaName), b.Const(defaultViewName));
 
-            var outNode = b.Ref<IVNode>(b.T("View error"));
+            var outNode = b.Ref<IVNode>(b.TextSpan("View error"));
 
             foreach (var renderer in renderers)
             {

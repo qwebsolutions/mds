@@ -31,17 +31,19 @@ namespace MdsCommon.Controls
             if(columns == null)
                 columns = b.Const(DataTable.GetColumns<TRow>());
 
-            var dataTableBuilder = new DataTableBuilder<TRow>()
-            {
-                CreateDataCell = dataGridBuilder.DataTableBuilder.CreateDataCell,
-                CreateHeaderCell = dataGridBuilder.DataTableBuilder.CreateHeaderCell,
-                SetTableProps = dataGridBuilder.DataTableBuilder.SetTableProps,
-                SetTbodyProps = dataGridBuilder.DataTableBuilder.SetTbodyProps,
-                SetTdProps = dataGridBuilder.DataTableBuilder.SetTdProps,
-                SetTheadProps = dataGridBuilder.DataTableBuilder.SetTheadProps,
-                SetThProps = dataGridBuilder.DataTableBuilder.SetThProps,
-                SetTrProps = dataGridBuilder.DataTableBuilder.SetTrProps
-            };
+            //var dataTableBuilder = new DataTableBuilder<TRow>()
+            //{
+            //    CreateDataCell = dataGridBuilder.DataTableBuilder.CreateDataCell,
+            //    CreateHeaderCell = dataGridBuilder.DataTableBuilder.CreateHeaderCell,
+            //    SetTableProps = dataGridBuilder.DataTableBuilder.SetTableProps,
+            //    SetTbodyProps = dataGridBuilder.DataTableBuilder.SetTbodyProps,
+            //    SetTdProps = dataGridBuilder.DataTableBuilder.SetTdProps,
+            //    SetTheadProps = dataGridBuilder.DataTableBuilder.SetTheadProps,
+            //    SetThProps = dataGridBuilder.DataTableBuilder.SetThProps,
+            //    SetTrProps = dataGridBuilder.DataTableBuilder.SetTrProps
+            //};
+
+            var dataTableBuilder = dataGridBuilder.DataTableBuilder.Clone();
 
             var withActionsColumn = b.NewCollection<string>();
             b.PushRange(withActionsColumn, columns);

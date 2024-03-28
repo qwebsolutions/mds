@@ -97,7 +97,7 @@ namespace MdsInfrastructure.Render
                                 b.SetSlot(SlMenuItem.Slot.Prefix);
                                 b.SetName(b.Const("clipboard-check"));
                             }),
-                        b.T("Local configuration")),
+                        b.TextSpan("Local configuration")),
                     b.SlMenuItem(
                         b =>
                         {
@@ -109,7 +109,7 @@ namespace MdsInfrastructure.Render
                                 b.SetSlot(SlMenuItem.Slot.Prefix);
                                 b.SetName("box-arrow-down");
                             }),
-                        b.T("Merge tools"))));
+                        b.TextSpan("Merge tools"))));
 
             var deploymentReportUrl = b.Url<Routes.Deployment.ConfigurationPreview, Guid>(configId);
 
@@ -158,7 +158,7 @@ namespace MdsInfrastructure.Render
                                         })))));
                     }));
                 },
-                b.T("Save"));
+                b.TextSpan("Save"));
 
             var deployLink = b.HtmlA(
                 b =>
@@ -177,7 +177,7 @@ namespace MdsInfrastructure.Render
                             b.AddClass("bg-sky-500");
                         });
                 },
-                b.T("Deploy"));
+                b.TextSpan("Deploy"));
 
 
 
@@ -231,7 +231,7 @@ namespace MdsInfrastructure.Render
                 {
                     b.AddClass(props, "flex flex-col gap-2 text-sm");
                 },
-                b.Map(messages, (b, message) => b.H("span", (b, props) => { }, b.T(message))));
+                b.Map(messages, (b, message) => b.H("span", (b, props) => { }, b.TextSpan(message))));
         }
 
         public static Var<IVNode> CurrentConfigurationJsonPopup(
@@ -250,7 +250,7 @@ namespace MdsInfrastructure.Render
                         return b.Clone(model);
                     }));
                 },
-                b.T("OK"));
+                b.TextSpan("OK"));
 
             var copyButton = (LayoutBuilder b) =>
             {
@@ -327,7 +327,7 @@ namespace MdsInfrastructure.Render
                                         })))));
                     }));
                 },
-                b.T("Merge"));
+                b.TextSpan("Merge"));
 
             return b.SlNode(
                 "sl-dialog",
@@ -371,7 +371,7 @@ namespace MdsInfrastructure.Render
                                     return b.Clone(model);
                                 }));
                             },
-                            b.T("OK"))));
+                            b.TextSpan("OK"))));
         }
 
 
@@ -407,7 +407,7 @@ namespace MdsInfrastructure.Render
                                 return b.Clone(model);
                             }));
                         },
-                        b.T("OK"))));
+                        b.TextSpan("OK"))));
         }
 
         public static Var<IVNode> DialogHeader(this LayoutBuilder b, string label, string svg, string color)
@@ -419,7 +419,7 @@ namespace MdsInfrastructure.Render
                     b.AddClass(props, "flex flex-row items-center gap-2");
                     b.SetDynamic(props, DynamicProperty.String("slot"), b.Const("label"));
                 },
-                b.T(label),
+                b.TextSpan(label),
                 b.Svg(svg, $"{color} w-5 h-5"));
         }
 
@@ -439,7 +439,7 @@ namespace MdsInfrastructure.Render
                         {
                             b.AddClass(props, "text-xs text-gray-600 text-left");
                         },
-                        b.T(text)),
+                        b.TextSpan(text)),
                     b.H(
                         "div",
                         (b, props) =>

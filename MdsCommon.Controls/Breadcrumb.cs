@@ -44,7 +44,7 @@ namespace MdsCommon.Controls
         {
             b.SetIfEmpty<Props, string>(props, x => x.LinkCss, b.Const(""));
             b.SetIfEmpty<Props, string>(props, x => x.CurrentPageCss, b.Const(""));
-            b.SetIfEmpty(props, x => x.Separator, b.T("»"));
+            b.SetIfEmpty(props, x => x.Separator, b.TextSpan("»"));
 
             var nodes = b.NewCollection<IVNode>();
 
@@ -58,7 +58,7 @@ namespace MdsCommon.Controls
                         b.SetClass(b.Get(props, x => x.LinkCss));
                         b.SetHref(b.Get(item, x => x.Href));
                     },
-                    b.T(b.Get(item, x => x.Label)));
+                    b.TextSpan(b.Get(item, x => x.Label)));
 
                 b.Push(nodes, link);
                 b.Push(nodes, b.Clone(b.Get(props, x => x.Separator)));
@@ -70,7 +70,7 @@ namespace MdsCommon.Controls
                     {
                         b.SetClass(b.Get(props, x => x.CurrentPageCss));
                     },
-                    b.T(b.Get(props, x => x.CurrentPage))));
+                    b.TextSpan(b.Get(props, x => x.CurrentPage))));
 
             var container = b.HtmlDiv(
                 b =>

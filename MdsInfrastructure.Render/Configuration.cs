@@ -37,62 +37,75 @@ namespace MdsInfrastructure.Render
 
             private static Var<IVNode> Render(LayoutBuilder b, Var<ConfigurationHeadersList> clientModel)
             {
-                var addConfigurationUrl = Route.Path<Routes.Configuration.Add>();
                 var rows = b.Get(clientModel, x => x.ConfigurationHeaders.OrderBy(x => x.Name).ToList());
-
-                //var rc = b.RenderCell<InfrastructureConfiguration>((b, configurationHeader, column) =>
-                //{
-                //    var confId = b.Get(configurationHeader, x => x.Id);
-
-                //    var isNameCol = b.AreEqual(b.Get(column, x => x.Name), b.Const("Name"));
-
-                //    var cell = b.HtmlDiv(
-                //        b =>
-                //        {
-                //            //cell
-                //        },
-                //        b.If(
-                //            isNameCol,
-                //            b =>
-                //            {
-                //                var confName = b.Get(configurationHeader, x => x.Name);
-                //                var confId = b.Get(configurationHeader, x => x.Id);
-                //                return b.Link(confName, b.Url<Routes.Configuration.Edit, Guid>(confId));
-                //            },
-                //            b =>
-                //            {
-                //                var servicesCount = b.Get(clientModel, confId, (x, confId) => x.Services.Where(x => x.ConfigurationHeaderId == confId).Count());
-                //                return b.T(b.AsString(servicesCount));
-                //            }));
-
-                //    return b.VPadded4(cell);
-                //});
-
-
-                var dataGrid = b.DataGrid(MdsDefaultBuilder.DataGrid<InfrastructureConfiguration>(), rows);
-
-
-
-                //var dataGrid = b.DataGrid<InfrastructureConfiguration>(
-                //    new()
-                //    {
-                //    b => b.AddClass(b.FromDefault<NavigateButton.Props>(NavigateButton.Render, b=>
-                //    {
-                //        b.Set(x=>x.Label, "Add configuration");
-                //        b.Set(x => x.Href, addConfigurationUrl);
-                //    }), "text-white")
-                //    },
-                //    b =>
-                //    {
-                //        b.AddColumn("Name");
-                //        b.AddColumn("Services");
-                //        b.SetRows(rows);
-                //        b.SetRenderCell(rc);
-                //    });
-                //b.AddClass(dataGrid, "drop-shadow");
-                throw new NotImplementedException();
-                return dataGrid;
+                return b.StyledDiv(
+                    "rounded bg-white drop-shadow p-4", 
+                    b.ListConfigurationsGrid(rows));
             }
+        }
+
+        public static Var<IVNode> ListConfigurationsGrid(this LayoutBuilder b, Var<System.Collections.Generic.List<InfrastructureConfiguration>> rows)
+        {
+            var gridBuilder = MdsDefaultBuilder.DataGrid<InfrastructureConfiguration>();
+            gridBuilder.CreateToolbarActions = (b) =>
+            {
+                return b.HtmlDiv(
+                    b =>
+                    {
+
+                    },
+                    b.HtmlButton(
+                        b =>
+                        {
+                            b.SetClass("py-2 px-4 rounded shadow bg-sky-500 text-white");
+                        },
+                        b.T("Add configuration")));
+            };
+
+            gridBuilder.DataTableBuilder.SetTbodyProps = (b) =>
+            {
+                b.SetClass("bg-red-100");
+            };
+
+            gridBuilder.DataTableBuilder.OverrideHeaderCell(
+                nameof(InfrastructureConfiguration.InfrastructureServices),
+                b =>
+                {
+                    return b.T("Services");
+                });
+
+            gridBuilder.DataTableBuilder.OverrideDataCell(
+                nameof(InfrastructureConfiguration.Name),
+                (b, row) =>
+                {
+                    return b.HtmlA(
+                        b =>
+                        {
+                            b.AddClass("py-4");
+                            b.UnderlineBlue();
+                            b.SetHref(b.Url<Routes.Configuration.Edit, Guid>(b.Get(row, x => x.Id)));
+                        },
+                        b.T(b.Get(row, x => x.Name)));
+                });
+
+            gridBuilder.DataTableBuilder.OverrideDataCell(
+                nameof(InfrastructureConfiguration.InfrastructureServices),
+                (b, row) =>
+                {
+                    var count = b.AsString(b.Get(row, x => x.InfrastructureServices.Count()));
+                    return b.StyledSpan("py-4", b.T(count));
+                });
+
+            var dataGrid = b.DataGrid(
+                gridBuilder, 
+                rows,
+                b.Const(
+                    new System.Collections.Generic.List<string>()
+                    {
+                        nameof(InfrastructureConfiguration.Name),
+                        nameof(InfrastructureConfiguration.InfrastructureServices),
+                    }));
+            return dataGrid;
         }
 
         public class Edit : MixedHyperPage<EditConfigurationPage, EditConfigurationPage>
@@ -230,7 +243,7 @@ namespace MdsInfrastructure.Render
 
                 //var rc = b.Def((LayoutBuilder b, Var<ConfigurationRow> row, Var<DataTable.Column> column) =>
                 //{
-                //    return b.VPadded4(b.T(b.GetProperty<string>(row, b.Get(column, x => x.Name))));
+                //    return b.VPadded4(b.TextSpan(b.GetProperty<string>(row, b.Get(column, x => x.Name))));
                 //});
 
                 //var dataTableProps = b.NewObj<DataTable.Props<ConfigurationRow>>(b =>

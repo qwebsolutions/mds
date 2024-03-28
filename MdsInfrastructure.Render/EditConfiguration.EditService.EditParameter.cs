@@ -3,8 +3,8 @@ using Metapsi.Hyperapp;
 using System.Linq;
 using System;
 using MdsCommon.Controls;
-using Metapsi.ChoicesJs;
 using Metapsi.Html;
+using Metapsi.TomSelect;
 
 namespace MdsInfrastructure.Render
 {
@@ -18,8 +18,6 @@ namespace MdsInfrastructure.Render
             var paramId = b.Get(parameter, x => x.Id);
             var serviceId = b.Get(parameter, x => x.InfrastructureServiceId);
             var service = b.Get(clientModel, serviceId, (x, serviceId) => x.Configuration.InfrastructureServices.Single(x => x.Id == serviceId));
-
-            var parameterTypeChoices = b.MapChoices(b.Get(clientModel, x => x.ParameterTypes), x => x.Id, x => x.Description, b.Get(parameter, x => x.ParameterTypeId));
 
             var boundToVariable =
                 b.Get(parameter, paramId, (x, paramId) => x.InfrastructureServiceParameterBindings.Count(x => x.InfrastructureServiceParameterDeclarationId == paramId) != 0);
@@ -86,13 +84,14 @@ namespace MdsInfrastructure.Render
                     {
                         b.SetClass("grid grid-cols-2 gap-4 items-center");
                     },
-                    b.T("Parameter name"),
+                    b.TextSpan("Parameter name"),
                     b.BoundInput(clientModel, paramId, (x, paramId) => x.Configuration.InfrastructureServices.SelectMany(x => x.InfrastructureServiceParameterDeclarations).Single(x => x.Id == paramId), x => x.ParameterName, b.Const("Parameter name")),
-                    b.T("Type"),
-                    b.Choices(
+                    b.TextSpan("Type"),
+                    b.TomSelect(
                         b=>
                         {
-                            b.SetChoices(parameterTypeChoices);
+                            b.SetOptions(b.Get(clientModel, x => x.ParameterTypes), x => x.Id, x => x.Description);
+                            b.SetItem(b.Get(parameter, x => x.ParameterTypeId));
                             b.OnChange(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
                             {
                                 b.Set(b.GetEditedParameter(page), x => x.ParameterTypeId, b.ParseId(value));
@@ -102,22 +101,20 @@ namespace MdsInfrastructure.Render
                     fromVariableToggle,
                     b.Optional(
                         boundToVariable, 
-                        b=> b.T("Variable")),
+                        b=> b.TextSpan("Variable")),
                     b.Optional(
                         boundToVariable,
                         b =>
                         {
                             var binding = b.Get(parameter, paramId, (x, paramId) => x.InfrastructureServiceParameterBindings.Single(x => x.InfrastructureServiceParameterDeclarationId == paramId));
 
-                            var variableChoices = b.MapChoices(
-                                b.Get(clientModel, x => x.Configuration.InfrastructureVariables),
-                                x => x.Id,
-                                x => x.VariableName + "(" + x.VariableValue + ")",
-                                b.Get(binding, x => x.InfrastructureVariableId));
-
-                            return b.Choices(b =>
+                            return b.TomSelect(b =>
                             {
-                                b.SetChoices(variableChoices);
+                                b.SetOptions(
+                                    b.Get(clientModel, x => x.Configuration.InfrastructureVariables),
+                                    x => x.Id,
+                                    x => x.VariableName + "(" + x.VariableValue + ")");
+                                b.SetItem(b.Get(binding, x => x.InfrastructureVariableId));
                                 b.OnChange(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> payload) =>
                                 {
                                     var binding = b.Get(parameter, paramId, (x, paramId) => x.InfrastructureServiceParameterBindings.Single(x => x.InfrastructureServiceParameterDeclarationId == paramId));
@@ -128,7 +125,7 @@ namespace MdsInfrastructure.Render
                         }),
                     b.Optional(
                         b.Not(boundToVariable),
-                        b=> b.T("Value")),
+                        b=> b.TextSpan("Value")),
                     b.Optional(
                         b.Not(boundToVariable),
                         b=>

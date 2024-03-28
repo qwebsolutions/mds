@@ -34,7 +34,7 @@ namespace MdsCommon.Controls
             string name,
             Func<LayoutBuilder, Var<IVNode>> renderPanel)
         {
-            builder.Control.AddTab(name, b => b.T(name), renderPanel);
+            builder.Control.AddTab(name, b => b.TextSpan(name), renderPanel);
         }
 
         public static void AddToolbarCommand(
@@ -49,7 +49,7 @@ namespace MdsCommon.Controls
            string name,
            Func<LayoutBuilder, Var<IVNode>> renderPanel)
         {
-            AddTab(tabDefinition, name, b => b.T(name), renderPanel);
+            AddTab(tabDefinition, name, b => b.TextSpan(name), renderPanel);
         }
             
         public static void AddTab(

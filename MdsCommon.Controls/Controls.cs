@@ -25,7 +25,7 @@ namespace MdsCommon.Controls
                     b.SetClass("uppercase text-xs text-white p-1 mx-4 font-medium rounded-md");
                     b.AddClass(additionalCss);
                 },
-                b.T(label));
+                b.TextSpan(label));
         }
 
 

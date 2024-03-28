@@ -56,7 +56,7 @@ namespace MdsInfrastructure.Render
                         {
                             b.SetClass("flex flex-col space-y-4");
                         },
-                        b.T(b.Get(project, x => x.Name)),
+                        b.TextSpan(b.Get(project, x => x.Name)),
                         b.HtmlDiv(
                             b => { },
                             b.Map(versions, (b, version) =>
@@ -143,8 +143,8 @@ namespace MdsInfrastructure.Render
             //                        return b.ShowSidePanel(state);
             //                    });
             //                },
-            //                b.T(b.Get(row, x => x.Name))),
-            //            b => b.T(b.AsString(versions))));
+            //                b.TextSpan(b.Get(row, x => x.Name))),
+            //            b => b.TextSpan(b.AsString(versions))));
             //});
 
             //var projectRows = b.Get(clientModel, x => x.ProjectsList.OrderBy(x => x.Name).ToList());

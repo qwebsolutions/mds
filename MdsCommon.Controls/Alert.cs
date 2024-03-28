@@ -27,7 +27,7 @@ namespace MdsCommon.Controls
                     {
                         b.SetClass("border border-solid border-red-300 bg-red-100 text-red-300 rounded w-1/2 p-2 drop-shadow");
                     },
-                    b.T(b.Get(props, x => x.Text))));
+                    b.TextSpan(b.Get(props, x => x.Text))));
         }
 
         public static Var<IVNode> RenderValidation(this LayoutBuilder b, Var<State> props)
@@ -37,7 +37,7 @@ namespace MdsCommon.Controls
                 {
                     b.SetClass("border border-solid border-red-300 bg-red-100 text-red-300 rounded w-full p-2 drop-shadow");
                 },
-                b.T(b.Get(props, x => x.Text)));
+                b.TextSpan(b.Get(props, x => x.Text)));
         }
     }
 
@@ -65,7 +65,7 @@ namespace MdsCommon.Controls
                         {
                             b.SetClass("border border-solid border-red-300 bg-red-100 text-red-300 rounded w-full p-2 mb-4 drop-shadow transition-all");
                         },
-                        b.T(validationMessage)),
+                        b.TextSpan(validationMessage)),
                 b => b.HtmlDiv(
                     b =>
                     {

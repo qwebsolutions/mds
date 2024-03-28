@@ -20,6 +20,54 @@ namespace MdsCommon.Controls
 
         public Func<LayoutBuilder, Var<string>, Var<IVNode>> CreateHeaderCell { get; set; } = (b, column) => b.HtmlSpanText(b => { }, column);
         public Func<LayoutBuilder, Var<TRow>, Var<string>, Var<IVNode>> CreateDataCell { get; set; } = (b, row, column) => b.HtmlSpanText(b => { }, b.GetProperty<string>(row, column));
+
+        public DataTableBuilder<TRow> Clone()
+        {
+            return new DataTableBuilder<TRow>()
+            {
+                CreateDataCell = CreateDataCell,
+                CreateHeaderCell = CreateHeaderCell,
+                SetTableProps = SetTableProps,
+                SetTbodyProps = SetTbodyProps,
+                SetTdProps = SetTdProps,
+                SetTheadProps = SetTheadProps,
+                SetThProps = SetThProps,
+                SetTrProps = SetTrProps
+            };
+        }
+    }
+
+    public static class DataTableExtensions
+    {
+        public static void OverrideHeaderCell<TRow>(this DataTableBuilder<TRow> tableBuilder, string columnName, Func<LayoutBuilder, Var<IVNode>> cellBuilder)
+        {
+            var prevBuilder = tableBuilder.CreateHeaderCell;
+            tableBuilder.CreateHeaderCell = (LayoutBuilder b, Var<string> column) =>
+            {
+                return b.If(
+                    b.AreEqual(column, b.Const(columnName)),
+                    b =>
+                    {
+                        return b.Call(cellBuilder);
+                    },
+                    b => b.Call(prevBuilder, column));
+            };
+        }
+
+        public static void OverrideDataCell<TRow>(this DataTableBuilder<TRow> tableBuilder, string columnName, Func<LayoutBuilder, Var<TRow>, Var<IVNode>> cellBuilder)
+        {
+            var prevBuilder = tableBuilder.CreateDataCell;
+            tableBuilder.CreateDataCell = (LayoutBuilder b, Var<TRow> row, Var<string> column) =>
+            {
+                return b.If(
+                    b.AreEqual(column, b.Const(columnName)),
+                    b =>
+                    {
+                        return b.Call(cellBuilder, row);
+                    },
+                    b => b.Call(prevBuilder, row, column));
+            };
+        }
     }
 
     public class DataTable
@@ -37,7 +85,16 @@ namespace MdsCommon.Controls
         {
             return new DataTableBuilder<TRow>()
             {
-
+                SetTableProps = b =>
+                {
+                    b.SetClass("bg-white border-collapse w-full overflow-hidden");
+                },
+                SetTheadProps = b =>
+                {
+                    b.SetClass("text-left text-sm text-gray-500 bg-white drop-shadow-sm");
+                },
+                SetThProps = (b, column) => b.SetClass("py-4 border-b border-gray-300 bg-white"),
+                SetTdProps = (b, row, column) => b.SetClass("py-4 border-b border-gray-300")
             };
         }
 
@@ -45,7 +102,11 @@ namespace MdsCommon.Controls
         {
             return new DataGridBuilder<TRow>()
             {
-                DataTableBuilder = MdsDefaultBuilder.DataTable<TRow>()
+                DataTableBuilder = MdsDefaultBuilder.DataTable<TRow>(),
+                SetContainerProps = b =>
+                {
+                    b.SetClass("flex flex-col w-full bg-white gap-8");
+                }
             };
         }
     }
@@ -140,7 +201,7 @@ namespace MdsCommon.Controls
     //                            b.AddClass(b.Get(style, x => x.Th));
     //                            b.AddClass(b.Get(col, x => x.Class));
     //                        },
-    //                        b.T(b.Get(captionRef, x => x.Value)));
+    //                        b.TextSpan(b.Get(captionRef, x => x.Value)));
     //                    })),
     //            b.HtmlTbody(
     //                b => { },

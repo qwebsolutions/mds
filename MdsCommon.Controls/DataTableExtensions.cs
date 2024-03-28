@@ -13,9 +13,9 @@
 //        public static Var<IVNode> AutoFormat<T>(this LayoutBuilder b, Var<T> value, Var<string> type)
 //        {
 //            return b.Switch(type,
-//                b => b.T(b.AsString(value)),
-//                ("List`1", (LayoutBuilder b) => b.T(b.AsString(b.CollectionLength(value.As<List<object>>())))),
-//                ("DateTime", (LayoutBuilder b) => b.T(b.FormatDatetime(value.As<DateTime>()))),
+//                b => b.TextSpan(b.AsString(value)),
+//                ("List`1", (LayoutBuilder b) => b.TextSpan(b.AsString(b.CollectionLength(value.As<List<object>>())))),
+//                ("DateTime", (LayoutBuilder b) => b.TextSpan(b.FormatDatetime(value.As<DateTime>()))),
 //                ("Boolean", (LayoutBuilder b) =>
 //                b.H(
 //                    "input",
@@ -55,7 +55,7 @@
 //                var split = b.SplitOnUppercase(b.Get(column, x=>x.Name));
 //                var columnName = b.JoinStrings(b.Const(" "), split);
 
-//                return b.H("th", b.EmptyProps(), b.T(columnName));
+//                return b.H("th", b.EmptyProps(), b.TextSpan(columnName));
 //            });
 
 //            b.Control.CellContent.SetChild((b, cellData) =>

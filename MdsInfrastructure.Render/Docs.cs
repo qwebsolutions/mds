@@ -108,7 +108,7 @@ namespace MdsInfrastructure.Render
                         b.SetClass("underline text-sky-500");
                         b.SetHref(b.Url<Routes.Docs.Service, string>(b.Const(serviceName)));
                     },
-                    b.T(serviceName)));
+                    b.TextSpan(serviceName)));
         }
 
 
@@ -122,7 +122,7 @@ namespace MdsInfrastructure.Render
                     b.SetId(controlId);
                     b.SetClass("flex flex-col px-4");
                 },
-                b.T(url));
+                b.TextSpan(url));
         }
 
 
@@ -148,7 +148,7 @@ namespace MdsInfrastructure.Render
                             b.SetHref(b.Url<Routes.Docs.Service, string>(b.Const(serviceName)));
                             b.UnderlineBlue();
                         },
-                        b.T(serviceName))),
+                        b.TextSpan(serviceName))),
                 b.TextSpan(url));
         }
 
@@ -162,7 +162,7 @@ namespace MdsInfrastructure.Render
                     b.SetId(controlId);
                     b.SetClass("rounded shadow p-2 relative");
                 },
-                b.T(channelName));
+                b.TextSpan(channelName));
         }
 
         public static Var<IVNode> RedisQueue(this LayoutBuilder b,
@@ -175,7 +175,7 @@ namespace MdsInfrastructure.Render
                     b.SetId(controlId);
                     b.SetClass("rounded shadow p-2 relative");
                 },
-                b.T(channelName));
+                b.TextSpan(channelName));
         }
 
         public static Var<IVNode> Render(this LayoutBuilder b, InfrastructureSummary summary, ServiceSummary currentService)
@@ -197,7 +197,7 @@ namespace MdsInfrastructure.Render
             var summaryNote = currentService.ServiceDescription;
             if (!string.IsNullOrEmpty(summaryNote))
             {
-                leftNodes.Add(b.StyledSpan("font-thin text-gray-500", b.T(summaryNote)));
+                leftNodes.Add(b.StyledSpan("font-thin text-gray-500", b.TextSpan(summaryNote)));
             }
 
             leftNodes.Add(b.Bold(currentService.ServiceName));
@@ -221,13 +221,13 @@ namespace MdsInfrastructure.Render
                             "flex flex-row space-x-2",
                             b.StyledSpan(
                                 "font-semibold",
-                                b.T(parameter.ParameterName)),
-                            b.StyledSpan("", b.T(parameter.DeployedValue))),
+                                b.TextSpan(parameter.ParameterName)),
+                            b.StyledSpan("", b.TextSpan(parameter.DeployedValue))),
                         b.StyledSpan(
                             "text-gray-500",
                             !string.IsNullOrEmpty(parameter.ParameterComment)
-                            ? b.T(parameter.ParameterComment)
-                            : b.T(parameter.ParameterTypeDescription))));
+                            ? b.TextSpan(parameter.ParameterComment)
+                            : b.TextSpan(parameter.ParameterTypeDescription))));
             }
 
             var right = b.StyledDiv(
@@ -235,11 +235,11 @@ namespace MdsInfrastructure.Render
                 b.StyledDiv(
                     "flex flex-row space-x-2 items-center font-semibold",
                     b.Svg(Icon.Computer, "w-3 h-3 text-gray-400"),
-                    b.StyledSpan("", b.T(currentService.NodeName))),
+                    b.StyledSpan("", b.TextSpan(currentService.NodeName))),
                 b.StyledDiv(
                     "flex flex-row space-x-2 items-center font-semibold",
                     b.Svg(Icon.DocumentText, "w-3 h-3 text-gray-400"),
-                    b.StyledSpan("", b.T(currentService.ProjectLabel()))));
+                    b.StyledSpan("", b.TextSpan(currentService.ProjectLabel()))));
 
             return b.HtmlDiv(
                 b =>
@@ -407,7 +407,7 @@ namespace MdsInfrastructure.Render
                     b.HtmlSpan(b =>
                     {
                         b.SetId(controlId);
-                    }));
+                    }, b.T(port.ToString())));
 
                 foreach (var service in summary.GetClientServices(currentService.MachineIp, port))
                 {
@@ -436,8 +436,8 @@ namespace MdsInfrastructure.Render
                                 b.SetId(controlId);
                                 b.SetClass("flex flex-col px-8");
                             },
-                            b.T(dbServer),
-                            b.T(dbCatalog)));
+                            b.TextSpan(dbServer),
+                            b.TextSpan(dbCatalog)));
 
                     b.AddConnector(serviceNameControlId, controlId, "bottom", "top");
                 }
@@ -448,12 +448,13 @@ namespace MdsInfrastructure.Render
                         {
                             b.SetId(controlId);
                         },
-                        b.T(dbConnection)));
+                        b.TextSpan(dbConnection)));
 
                     b.AddConnector(serviceNameControlId, controlId, "bottom", "top");
                 }
             }
 
+            inputServicesAreaNodes.Add(b.HtmlDiv(b => { }));
             inputServicesAreaNodes.Add(
                 b.StyledDiv(
                     "w-full flex items-center justify-end",
@@ -463,7 +464,7 @@ namespace MdsInfrastructure.Render
                 "h-full w-full p-2 text-sm flex flex-col space-y-8 rounded shadow bg-white",
                 b.StyledDiv( // httpRowContainer
                     "flex flex-row items-center",
-                    b.StyledSpan("text-lg font-semibold text-gray-300 vertical-text", b.T("HTTP")),
+                    b.StyledSpan("text-lg font-semibold text-gray-300 vertical-text", b.TextSpan("HTTP")),
                     b.StyledDiv(// httpServicesContainer
                         "flex w-full justify-center",
                         b.StyledDiv( // httpArea
@@ -471,10 +472,10 @@ namespace MdsInfrastructure.Render
                             httpAreaNodes.ToArray()))),
                 b.StyledDiv( // redisRow
                     "flex flex-row items-center",
-                    b.StyledSpan("text-lg font-semibold text-gray-300 vertical-text", b.T("REDIS")), // redisLabel
+                    b.StyledSpan("text-lg font-semibold text-gray-300 vertical-text", b.TextSpan("REDIS")), // redisLabel
                     b.StyledDiv( //redisInputArea
                         "flex-1 flex flex-row",
-                        b.HtmlDiv(b => { }, inputServicesAreaNodes.ToArray())),
+                        inputServicesAreaNodes.ToArray()),
                     b.StyledDiv( // serviceNameDiv
                         "flex-none p-16 relative",
                         b.StyledDiv( // portsArea
@@ -496,7 +497,7 @@ namespace MdsInfrastructure.Render
                     "flex flex-row items-center",
                     b.StyledSpan( // dbLabel
                         "text-lg font-semibold text-gray-300 vertical-text",
-                        b.T("DB")),
+                        b.TextSpan("DB")),
                     b.StyledDiv( // dbArea
                         "w-full flex flex-row items-center justify-center",
                         dbAreaNodes.ToArray())));
@@ -557,7 +558,7 @@ namespace MdsInfrastructure.Render
             var button = b.HtmlButton(
                 b =>
                 {
-                    b.AddClass("rounded");
+                    b.AddClass("rounded p-1 shadow");
                     setProps(b);
                 },
                 b.HtmlDiv(

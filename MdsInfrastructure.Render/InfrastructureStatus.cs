@@ -5,7 +5,6 @@ using Metapsi.Ui;
 using MdsCommon;
 using System.Linq;
 using MdsCommon.Controls;
-using Metapsi.ChoicesJs;
 using System.Collections.Generic;
 using Metapsi.Html;
 
@@ -44,7 +43,7 @@ namespace MdsInfrastructure.Render
 
             if (dataModel.Deployment == null)
             {
-                return b.T("No deployment yet! The infrastructure is not running any service!");
+                return b.TextSpan("No deployment yet! The infrastructure is not running any service!");
             }
 
             int totalServices = dataModel.Deployment.GetDeployedServices().Count();
