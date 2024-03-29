@@ -235,18 +235,18 @@ namespace MdsInfrastructure.Render
             return b.GetRef(projectLabelRef);
         }
 
-        public static Var<IVNode> AddServiceButton(this LayoutBuilder b)
-        {
-            return b.Render(ControlDefinition.New<object>(
-                "button",
-                (b, data, props) =>
-                {
-                    b.OnClickAction<EditConfigurationPage>(props, OnAddService);
-                    b.SetClass(props, "rounded py-2 px-4 shadow bg-sky-500 text-white");
-                },
-                (b, data) => b.TextSpan("Add service")), 
-                b.Const(new object()));
+        //public static Var<IVNode> AddServiceButton(this LayoutBuilder b)
+        //{
+        //    return b.Render(ControlDefinition.New<object>(
+        //        "button",
+        //        (b, data, props) =>
+        //        {
+        //            b.OnClickAction<EditConfigurationPage>(props, OnAddService);
+        //            b.SetClass(props, "rounded py-2 px-4 shadow bg-sky-500 text-white");
+        //        },
+        //        (b, data) => b.TextSpan("Add service")), 
+        //        b.Const(new object()));
 
-        }
+        //}
     }
 }

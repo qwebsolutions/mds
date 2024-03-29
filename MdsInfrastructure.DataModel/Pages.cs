@@ -18,6 +18,7 @@ namespace MdsInfrastructure
         public string ServicesFilter { get; set; } = string.Empty;
         public string ApplicationsFilter { get; set; } = string.Empty;
         public string VariablesFilter { get; set; } = string.Empty;
+        public string ParametersFilter { get; set; } = string.Empty;
 
         public InfrastructureConfiguration Configuration { get; set; }
         public List<MdsCommon.Project> AllProjects { get; set; }

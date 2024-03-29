@@ -14,16 +14,19 @@ namespace MdsInfrastructure.Render
             var appId = b.Get(clientModel, x => x.EditApplicationId);
             var app = b.Get(clientModel, appId, (x, appId) => x.Configuration.Applications.Single(x => x.Id == appId));
 
-            var toolbar = b.Toolbar(b => { }, b.OkButton(MainPage, x => x.EditApplicationId));
+            var toolbar = b.Toolbar(
+                b =>
+                {
+                }, 
+                b.OkButton(MainPage, x => x.EditApplicationId));
 
-            var form = b.Form(
+            return b.Form(
                 b =>
                 {
                     b.AddClass("rounded bg-white drop-shadow");
                 },
                 toolbar,
                 ("Application name", b.BoundInput(clientModel, appId, (x, appId) => x.Configuration.Applications.Single(x => x.Id == appId), x => x.Name, b.Const(""))));
-            return form;
         }
     }
 }

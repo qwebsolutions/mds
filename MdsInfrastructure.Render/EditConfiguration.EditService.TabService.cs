@@ -9,6 +9,7 @@ using Metapsi.Html;
 using Metapsi;
 using System.Dynamic;
 using Metapsi.TomSelect;
+using Metapsi.Shoelace;
 
 namespace MdsInfrastructure.Render
 {
@@ -68,6 +69,7 @@ namespace MdsInfrastructure.Render
                     b =>
                     {
                         b.SetClass("w-full");
+                        b.SetPlaceholder("Service name");
                         b.BindTo(clientModel, GetSelectedService, x => x.ServiceName);
                     }),
                 b.StyledSpan("w-full", b.TextSpan("Application")),
@@ -75,19 +77,14 @@ namespace MdsInfrastructure.Render
                 {
                     b.SetClass("w-full");
                     b.SetOptions(allApplications, x => x.Id, x => x.Name);
-                    b.SetItem(b.Get(service, x => x.ApplicationId));
-                    b.OnChange(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> value) =>
-                    {
-                        b.Log("OnChange", value);
-                        var selectedId = b.ParseId(value);
-                        b.Set(b.GetSelectedService(page), x => x.ApplicationId, selectedId);
-                        return b.Clone(page);
-                    }));
+                    b.BindTo(clientModel, GetSelectedService, x => x.ApplicationId);
+                    b.SetPlaceholder("Application");
                 }),
                 b.StyledSpan("w-full", b.TextSpan("Project")),
                 b.MdsDropDown(
                     b =>
                     {
+                        b.SetPlaceholder("Project");
                         b.SetClass("w-full");
                         b.SetOptions(
                                 b.Get(activeProjects, x => x.OrderBy(x => x.Name).ToList()),
@@ -107,9 +104,10 @@ namespace MdsInfrastructure.Render
                         }));
                     }),
                 b.StyledSpan("w-full", b.TextSpan("Version")),
-                b.TomSelect(
+                b.MdsDropDown(
                     b =>
                     {
+                        b.SetPlaceholder("Version");
                         b.SetClass("w-full");
                         b.SetOptions(versions, x => x.Id, x => x.VersionTag);
                         b.SetItem(selectedVersionId);
@@ -178,9 +176,10 @@ namespace MdsInfrastructure.Render
                         }));
                     }),
                 b.StyledSpan("w-full", b.TextSpan("Deployed on node")),
-                b.TomSelect(
+                b.MdsDropDown(
                     b =>
                     {
+                        b.SetPlaceholder("Deployment node");
                         b.SetClass("w-full");
                         b.SetOptions(matchingNodes, x => x.Id, x => x.NodeName);
                         b.SetItem(b.Get(service, x => x.InfrastructureNodeId));
@@ -199,7 +198,6 @@ namespace MdsInfrastructure.Render
                     b.Const("Enabled"),
                     b.Const("Disabled"),
                     b => b.Set(x => x.ExtraRootCss, "w-full"))
-
                 );
         }
 

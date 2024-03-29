@@ -31,23 +31,28 @@ namespace MdsInfrastructure.Render
             var allApplications = b.Get(clientModel, x => x.Configuration.Applications.OrderBy(x => x.Name).ToList());
             var filteredApplications = b.FilterList<Application>(allApplications, b.Get(clientModel, x => x.ApplicationsFilter));
 
-            var defaultBuilder = MdsDefaultBuilder.DataGrid<Application>();
             var gridBuilder = MdsDefaultBuilder.DataGrid<Application>();
 
             gridBuilder.DataTableBuilder.CreateDataCell = (b, application, column) =>
             {
-                return b.If(
-                    b.AreEqual(
-                        column,
-                        b.Const(nameof(Application.Name))),
+                return b.RenderApplicationNameCell(application);
+            };
+
+            gridBuilder.CreateToolbarActions = b =>
+            {
+                return b.HtmlDiv(b =>
+                {
+                    b.AddClass("flex flex-row items-center justify-between");
+                },
+                b.HtmlButton(
                     b =>
                     {
-                        return b.RenderApplicationNameCell(application);
+                        b.AddPrimaryButtonStyle();
+                        b.OnClickAction<EditConfigurationPage, HtmlButton>(OnAddApplication);
                     },
-                    b =>
-                    {
-                        return defaultBuilder.DataTableBuilder.CreateDataCell(b, application, column);
-                    });
+                    b.T("Add application")),
+                b.Filter(clientModel, x => x.ApplicationsFilter)
+                );
             };
 
             gridBuilder.CreateRowActions = (b, row) =>
@@ -71,7 +76,8 @@ namespace MdsInfrastructure.Render
                 },
                 b.DataGrid(
                     gridBuilder,
-                    filteredApplications));
+                    filteredApplications,
+                    b.Const(new System.Collections.Generic.List<string>() { nameof(Application.Name) })));
 
             //b.OnModel(
             //    clientModel,
@@ -163,18 +169,18 @@ namespace MdsInfrastructure.Render
             return b.EditView<EditConfigurationPage>(clientModel, EditApplication);
         }
 
-        public static Var<IVNode> AddApplicationButton(this LayoutBuilder b)
-        {
-            return b.Render(ControlDefinition.New<object>(
-                "button",
-                (b, data, props) =>
-                {
-                    b.AddPrimaryButtonStyle(props);
-                    b.OnClickAction<EditConfigurationPage>(props, OnAddApplication);
-                },
-                (b, data) => b.TextSpan("Add application")),
-                b.Const(new object()));
+        //public static Var<IVNode> AddApplicationButton(this LayoutBuilder b)
+        //{
+        //    return b.Render(ControlDefinition.New<object>(
+        //        "button",
+        //        (b, data, props) =>
+        //        {
+        //            b.AddPrimaryButtonStyle(props);
+        //            b.OnClickAction<EditConfigurationPage>(props, OnAddApplication);
+        //        },
+        //        (b, data) => b.TextSpan("Add application")),
+        //        b.Const(new object()));
 
-        }
+        //}
     }
 }

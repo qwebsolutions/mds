@@ -18,10 +18,34 @@ namespace MdsInfrastructure.Render
            Var<EditConfigurationPage> clientModel)
         {
             var allVariables = b.Get(clientModel, x => x.Configuration.InfrastructureVariables.OrderBy(x => x.VariableName).ToList());
-            var filteredVariables = b.FilterList<InfrastructureVariable>(allVariables, b.Get(clientModel, x => x.VariablesFilter));
+            var filteredVariables = b.FilterList(allVariables, b.Get(clientModel, x => x.VariablesFilter));
 
+            var gridBuilder = MdsDefaultBuilder.DataGrid<InfrastructureVariable>();
+            gridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(InfrastructureVariable.VariableName), b => b.T("Variable name"));
+            gridBuilder.DataTableBuilder.OverrideDataCell(nameof(InfrastructureVariable.VariableName), (b, variable) => b.RenderVariableNameCell(variable));
+            gridBuilder.DataTableBuilder.OverrideHeaderCell("value", b => b.T("Variable value"));
 
-            return b.DataGrid<InfrastructureVariable>(MdsDefaultBuilder.DataGrid<InfrastructureVariable>(), filteredVariables);
+            gridBuilder.CreateToolbarActions = b =>
+            {
+                return b.HtmlDiv(b =>
+                {
+                    b.SetClass("flex flex-row items-center justify-between");
+                },
+                b.HtmlButton(
+                    b =>
+                    {
+                        b.AddPrimaryButtonStyle();
+                        b.OnClickAction<EditConfigurationPage, HtmlButton>(OnAddVariable);
+                    },
+                    b.T("Add variable")),
+                b.Filter(clientModel, x => x.VariablesFilter));
+            };
+
+            return b.DataGrid(
+                gridBuilder,
+                filteredVariables,
+                nameof(InfrastructureVariable.VariableName),
+                nameof(InfrastructureVariable.VariableValue));
 
             //throw new System.NotImplementedException();
             //var container = b.Div("w-full h-full");
@@ -101,12 +125,7 @@ namespace MdsInfrastructure.Render
                 return b.EditView<EditConfigurationPage>(clientModel, EditVariable);
             };
 
-            return b.HtmlSpan(
-                b =>
-                {
-
-                },
-                b.Link<EditConfigurationPage>(b.WithDefault(variableName), b.MakeAction<EditConfigurationPage>(goToVariable)));
+            return b.Link(b.WithDefault(variableName), b.MakeAction(goToVariable));
         }
 
         public static Var<EditConfigurationPage> OnAddVariable(SyntaxBuilder b, Var<EditConfigurationPage> clientModel)
@@ -121,20 +140,6 @@ namespace MdsInfrastructure.Render
             b.Push(b.Get(clientModel, x => x.Configuration.InfrastructureVariables), newVar);
             b.Set(clientModel, x => x.EditVariableId, newId);
             return b.EditView(clientModel, b.GetViewName<EditConfigurationPage>(EditConfiguration.EditVariable));
-        }
-
-        public static Var<IVNode> AddVariableButton(this LayoutBuilder b)
-        {
-            return b.Render(ControlDefinition.New<object>(
-                "button",
-                (b, data, props) =>
-                {
-                    b.AddPrimaryButtonStyle(props);
-                    b.OnClickAction<EditConfigurationPage>(props, OnAddVariable);
-                },
-                (b, data) => b.TextSpan("Add variable")),
-                b.Const(new object()));
-
         }
     }
 }

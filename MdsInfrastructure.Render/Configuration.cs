@@ -62,11 +62,6 @@ namespace MdsInfrastructure.Render
                         b.T("Add configuration")));
             };
 
-            gridBuilder.DataTableBuilder.SetTbodyProps = (b) =>
-            {
-                b.SetClass("bg-red-100");
-            };
-
             gridBuilder.DataTableBuilder.OverrideHeaderCell(
                 nameof(InfrastructureConfiguration.InfrastructureServices),
                 b =>

@@ -111,15 +111,15 @@ namespace MdsCommon.Controls
             return button;
         }
 
-        public static void AddButtonStyle(this PropsBuilder b, Var<DynamicObject> props)
+        public static void AddButtonStyle(this PropsBuilder<HtmlButton> b)
         {
-            b.AddClass(props, "rounded flex flex-row items-center py-2 px-4 shadow text-white");
+            b.AddClass("rounded flex flex-row items-center py-2 px-4 shadow text-white");
         }
 
-        public static void AddPrimaryButtonStyle(this PropsBuilder b, Var<DynamicObject> props)
+        public static void AddPrimaryButtonStyle(this PropsBuilder<HtmlButton> b)
         {
-            b.AddButtonStyle(props);
-            b.AddClass(props, "bg-sky-500");
+            b.AddButtonStyle();
+            b.AddClass("bg-sky-500");
         }
     }
 

@@ -65,7 +65,11 @@ namespace MdsInfrastructure.Render
                             return b.Clone(clientModel);
                         })),
                 b.Const("From variable"),
-                b.Const("Value"));
+                b.Const("Value"),
+                b=>
+                {
+                    b.Set(x => x.ExtraRootCss, "col-span-2");
+                });
 
             var view = b.HtmlDiv(
                 b =>
@@ -85,9 +89,13 @@ namespace MdsInfrastructure.Render
                         b.SetClass("grid grid-cols-2 gap-4 items-center");
                     },
                     b.TextSpan("Parameter name"),
-                    b.BoundInput(clientModel, paramId, (x, paramId) => x.Configuration.InfrastructureServices.SelectMany(x => x.InfrastructureServiceParameterDeclarations).Single(x => x.Id == paramId), x => x.ParameterName, b.Const("Parameter name")),
+                    b.MdsInputText(
+                        b=>
+                        {
+                            b.BindTo(clientModel, GetEditedParameter, x => x.ParameterName);
+                        }),
                     b.TextSpan("Type"),
-                    b.TomSelect(
+                    b.MdsDropDown(
                         b=>
                         {
                             b.SetOptions(b.Get(clientModel, x => x.ParameterTypes), x => x.Id, x => x.Description);
@@ -108,7 +116,7 @@ namespace MdsInfrastructure.Render
                         {
                             var binding = b.Get(parameter, paramId, (x, paramId) => x.InfrastructureServiceParameterBindings.Single(x => x.InfrastructureServiceParameterDeclarationId == paramId));
 
-                            return b.TomSelect(b =>
+                            return b.MdsDropDown(b =>
                             {
                                 b.SetOptions(
                                     b.Get(clientModel, x => x.Configuration.InfrastructureVariables),
@@ -130,8 +138,17 @@ namespace MdsInfrastructure.Render
                         b.Not(boundToVariable),
                         b=>
                         {
-                            var value = b.Get(parameter, x => x.InfrastructureServiceParameterValues.Single());
-                            return b.BoundInput(value, x => x.ParameterValue, b.Const("Value"));
+                            return b.MdsInputText(
+                                b =>
+                                {
+                                    b.BindTo(
+                                        clientModel,
+                                        (b, model) =>
+                                        b.Get(
+                                            b.GetEditedParameter(clientModel),
+                                            x => x.InfrastructureServiceParameterValues.Single()),
+                                        x => x.ParameterValue);
+                                });
                         }))
                 );
 

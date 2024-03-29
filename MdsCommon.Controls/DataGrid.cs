@@ -4,6 +4,7 @@ using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MdsCommon.Controls
 {
@@ -26,23 +27,8 @@ namespace MdsCommon.Controls
             this LayoutBuilder b,
             DataGridBuilder<TRow> dataGridBuilder,
             Var<List<TRow>> rows,
-            Var<List<string>> columns = null)
+            Var<List<string>> columns)
         {
-            if(columns == null)
-                columns = b.Const(DataTable.GetColumns<TRow>());
-
-            //var dataTableBuilder = new DataTableBuilder<TRow>()
-            //{
-            //    CreateDataCell = dataGridBuilder.DataTableBuilder.CreateDataCell,
-            //    CreateHeaderCell = dataGridBuilder.DataTableBuilder.CreateHeaderCell,
-            //    SetTableProps = dataGridBuilder.DataTableBuilder.SetTableProps,
-            //    SetTbodyProps = dataGridBuilder.DataTableBuilder.SetTbodyProps,
-            //    SetTdProps = dataGridBuilder.DataTableBuilder.SetTdProps,
-            //    SetTheadProps = dataGridBuilder.DataTableBuilder.SetTheadProps,
-            //    SetThProps = dataGridBuilder.DataTableBuilder.SetThProps,
-            //    SetTrProps = dataGridBuilder.DataTableBuilder.SetTrProps
-            //};
-
             var dataTableBuilder = dataGridBuilder.DataTableBuilder.Clone();
 
             var withActionsColumn = b.NewCollection<string>();
@@ -83,6 +69,23 @@ namespace MdsCommon.Controls
                 dataGridBuilder.SetContainerProps,
                 b.Call(dataGridBuilder.CreateToolbarActions),
                 b.DataTable(dataTableBuilder, rows, withActionsColumn));
+        }
+
+        public static Var<IVNode> DataGrid<TRow>(
+            this LayoutBuilder b,
+            DataGridBuilder<TRow> dataGridBuilder,
+            Var<List<TRow>> rows)
+        {
+            return b.DataGrid(dataGridBuilder, rows, b.Const(DataTable.GetColumns<TRow>()));
+        }
+
+        public static Var<IVNode> DataGrid<TRow>(
+            this LayoutBuilder b,
+            DataGridBuilder<TRow> dataGridBuilder,
+            Var<List<TRow>> rows,
+            params string[] columns)
+        {
+            return b.DataGrid(dataGridBuilder, rows, b.Const(columns.ToList()));
         }
     }
 

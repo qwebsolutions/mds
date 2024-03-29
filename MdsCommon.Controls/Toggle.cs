@@ -63,7 +63,6 @@ namespace MdsCommon.Controls
                                          var value = b.Get(target, x => x.@checked);
                                          return b.MakeActionDescriptor(onToggle, value);
                                      }));
-
                             }),
                         b.HtmlDiv(
                             b =>

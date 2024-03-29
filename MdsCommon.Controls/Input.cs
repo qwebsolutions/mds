@@ -185,56 +185,56 @@ namespace MdsCommon.Controls
             return b.BoundInput(state, onEntity, onProperty, b.Const(placeholder));
         }
 
-        public static void BindTo<TControl, TState, TEntity>(
-            this PropsBuilder<TControl> b,
-            Var<TState> state,
-            System.Func<SyntaxBuilder, Var<TState>, Var<TEntity>> onEntity,
-            System.Linq.Expressions.Expression<System.Func<TEntity, string>> onProperty)
-            where TControl : IHasInputTextEvent, IHasValueAttribute, new()
-        {
-            b.BindTo(state, b.Def(onEntity), onProperty);
-        }
+        //public static void BindTo<TControl, TState, TEntity>(
+        //    this PropsBuilder<TControl> b,
+        //    Var<TState> state,
+        //    System.Func<SyntaxBuilder, Var<TState>, Var<TEntity>> onEntity,
+        //    System.Linq.Expressions.Expression<System.Func<TEntity, string>> onProperty)
+        //    where TControl : IHasInputTextEvent, IHasValueAttribute, new()
+        //{
+        //    b.BindTo(state, b.Def(onEntity), onProperty);
+        //}
 
-        public static void BindTo<TControl, TState, TEntity>(
-            this PropsBuilder<TControl> b,
-            Var<TState> state,
-            Var<System.Func<TState, TEntity>> onEntity,
-            System.Linq.Expressions.Expression<System.Func<TEntity, string>> onProperty)
-            where TControl : IHasInputTextEvent, IHasValueAttribute, new()
-        {
-            Var<TEntity> entity = b.Call(onEntity, state);
-            Var<string> value = b.Get(entity, onProperty);
+        //public static void BindTo<TControl, TState, TEntity>(
+        //    this PropsBuilder<TControl> b,
+        //    Var<TState> state,
+        //    Var<System.Func<TState, TEntity>> onEntity,
+        //    System.Linq.Expressions.Expression<System.Func<TEntity, string>> onProperty)
+        //    where TControl : IHasInputTextEvent, IHasValueAttribute, new()
+        //{
+        //    Var<TEntity> entity = b.Call(onEntity, state);
+        //    Var<string> value = b.Get(entity, onProperty);
 
-            var setProperty = b.MakeAction<TState, string>((SyntaxBuilder b, Var<TState> state, Var<string> inputValue) =>
-            {
-                Var<TEntity> entity = b.Call(onEntity, state);
-                b.Set(entity, onProperty, inputValue);
-                return b.Clone(state);
-            });
+        //    var setProperty = b.MakeAction<TState, string>((SyntaxBuilder b, Var<TState> state, Var<string> inputValue) =>
+        //    {
+        //        Var<TEntity> entity = b.Call(onEntity, state);
+        //        b.Set(entity, onProperty, inputValue);
+        //        return b.Clone(state);
+        //    });
 
-            b.SetValue(value);
-            b.OnInputAction(setProperty);
-        }
+        //    b.SetValue(value);
+        //    b.OnInputAction(setProperty);
+        //}
 
-        public static void BindTo<TControl, TState, TEntity>(this PropsBuilder<TControl> b,
-            Var<TState> state,
-            System.Linq.Expressions.Expression<System.Func<TState, TEntity>> onEntity,
-            System.Linq.Expressions.Expression<System.Func<TEntity, string>> onProperty)
-            where TControl : IHasInputTextEvent, IHasValueAttribute, new()
-        {
-            Var<TEntity> entity = b.Get(state, onEntity);
-            Var<string> value = b.Get(entity, onProperty);
+        //public static void BindTo<TControl, TState, TEntity>(this PropsBuilder<TControl> b,
+        //    Var<TState> state,
+        //    System.Linq.Expressions.Expression<System.Func<TState, TEntity>> onEntity,
+        //    System.Linq.Expressions.Expression<System.Func<TEntity, string>> onProperty)
+        //    where TControl : IHasInputTextEvent, IHasValueAttribute, new()
+        //{
+        //    Var<TEntity> entity = b.Get(state, onEntity);
+        //    Var<string> value = b.Get(entity, onProperty);
 
-            var setProperty = b.MakeAction<TState, string>((SyntaxBuilder b, Var<TState> state, Var<string> inputValue) =>
-            {
-                Var<TEntity> entity = b.Get(state, onEntity);
-                b.Set(entity, onProperty, inputValue);
-                return b.Clone(state);
-            });
+        //    var setProperty = b.MakeAction<TState, string>((SyntaxBuilder b, Var<TState> state, Var<string> inputValue) =>
+        //    {
+        //        Var<TEntity> entity = b.Get(state, onEntity);
+        //        b.Set(entity, onProperty, inputValue);
+        //        return b.Clone(state);
+        //    });
 
-            b.SetValue(value);
-            b.OnInputAction(setProperty);
-        }
+        //    b.SetValue(value);
+        //    b.OnInputAction(setProperty);
+        //}
     }
 }
 

@@ -194,7 +194,7 @@ namespace MdsInfrastructure.Render
                     b.SetClass("grid grid-cols-2 gap-4 items-center p-4");
                     setProps(b);
                 },
-                formFieldControls);
+                nodes);
         }
 
         public static Var<IVNode> Form(this LayoutBuilder b, Action<PropsBuilder<HtmlDiv>> setProps, Var<IVNode> toolbar, params (string, Var<IVNode>)[] forms)

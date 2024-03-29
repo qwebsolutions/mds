@@ -2,6 +2,8 @@
 using Metapsi.Syntax;
 using System.Linq;
 using MdsCommon.Controls;
+using Metapsi.Html;
+using Metapsi.Shoelace;
 
 namespace MdsInfrastructure.Render
 {

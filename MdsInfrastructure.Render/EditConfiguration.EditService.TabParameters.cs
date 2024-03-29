@@ -4,6 +4,8 @@ using System.Linq;
 using System;
 using MdsCommon;
 using MdsCommon.Controls;
+using Metapsi.Html;
+using MdsCommon.HtmlControls;
 
 namespace MdsInfrastructure.Render
 {
@@ -13,38 +15,10 @@ namespace MdsInfrastructure.Render
             LayoutBuilder b,
             Var<EditConfigurationPage> clientModel)
         {
-            var serviceId = b.Get(clientModel, x => x.EditServiceId);
+            var allParameters = b.Get(b.GetSelectedService(clientModel), x => x.InfrastructureServiceParameterDeclarations);
+            var filteredParameters = b.FilterList(allParameters, b.Get(clientModel, x => x.ParametersFilter));
+            return b.ListParametersGrid(clientModel, filteredParameters);
 
-            var onAddParameter = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
-            {
-                var service = b.Get(clientModel, serviceId, (x, id) => x.Configuration.InfrastructureServices.Single(x => x.Id == id));
-                var parameters = b.Get(service, x => x.InfrastructureServiceParameterDeclarations);
-
-                var newParameterId = b.NewId();
-                var newValueId = b.NewId();
-                var newParam = b.NewObj<InfrastructureServiceParameterDeclaration>(b =>
-                {
-                    b.Set(x => x.Id, newParameterId);
-                    b.Set(x => x.ParameterName, b.Const(""));
-                    b.Set(x => x.InfrastructureServiceId, serviceId);
-                    b.Update(x => x.InfrastructureServiceParameterValues, b =>
-                    {
-                        b.Add(b =>
-                        {
-                            b.Set(x => x.Id, newValueId);
-                            b.Set(x => x.InfrastructureServiceParameterDeclarationId, newParameterId);
-                        });
-                    });
-                });
-                b.Push(parameters, newParam);
-                b.Set(clientModel, x => x.EditParameterId, newParameterId);
-                return b.EditView<EditConfigurationPage>(clientModel, EditParameter);
-            });
-
-            var service = b.Get(clientModel, serviceId, (x, id) => x.Configuration.InfrastructureServices.Single(x => x.Id == id));
-            var parameters = b.Get(service, x => x.InfrastructureServiceParameterDeclarations);
-
-            return b.DataGrid<InfrastructureServiceParameterDeclaration>(MdsDefaultBuilder.DataGrid<InfrastructureServiceParameterDeclaration>(), parameters);
 
             //var rc= b.RenderCell<InfrastructureServiceParameterDeclaration>(
             //            (b, row, col) =>
@@ -126,6 +100,96 @@ namespace MdsInfrastructure.Render
                     var variable = b.Get(page, bindingVarId, (x, bindingVarId) => x.Configuration.InfrastructureVariables.SingleOrDefault(x => x.Id == bindingVarId, new InfrastructureVariable() { VariableValue = "(not selected)" }));
                     return b.Get(variable, x => x.VariableValue);
                 });
+        }
+
+        public static Var<IVNode> ListParametersGrid(
+            this LayoutBuilder b, 
+            Var<EditConfigurationPage> clientModel,
+            Var<System.Collections.Generic.List<InfrastructureServiceParameterDeclaration>> displayedParameters)
+        {
+            var parametersGrid = MdsDefaultBuilder.DataGrid<InfrastructureServiceParameterDeclaration>();
+            parametersGrid.DataTableBuilder.OverrideDataCell(
+                "Parameter",
+                (b, parameter) =>
+                {
+                    return b.Link(
+                        b.Get(parameter, x => x.ParameterName, "(not set)"),
+                        b.MakeAction<EditConfigurationPage>(
+                            (b, clientModel) =>
+                            {
+                                b.Set(clientModel, x => x.EditParameterId, b.Get(parameter, x => x.Id));
+                                return b.EditView<EditConfigurationPage>(clientModel, EditParameter);
+                            }));
+                });
+            parametersGrid.DataTableBuilder.OverrideDataCell(
+                "Type",
+                (b, parameter) =>
+                {
+                    var typeId = b.Get(parameter, x => x.ParameterTypeId);
+                    var typeLabel = b.Get(clientModel, typeId, (x, typeId) => x.ParameterTypes.SingleOrDefault(x => x.Id == typeId, new ParameterType() { Description = "(not selected)" }).Description);
+                    return b.T(typeLabel);
+                });
+
+            parametersGrid.DataTableBuilder.OverrideDataCell(
+                "Value",
+                (b, parameter) =>
+                {
+                    return b.T(b.Call(GetParameterValue, clientModel, parameter));
+                });
+
+            parametersGrid.CreateToolbarActions = (b) =>
+            {
+                return b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("flex flex-row items-center justify-between");
+                    },
+                    b.HtmlButton(
+                        b =>
+                        {
+                            b.AddPrimaryButtonStyle();
+                            b.OnClickAction<EditConfigurationPage, HtmlButton>(AddParameter);
+                        },
+                        b.T("Add parameter")),
+                    b.Filter(clientModel, x => x.ParametersFilter));
+            };
+
+            return b.DataGrid(
+                parametersGrid, 
+                displayedParameters,
+                b.Const(new System.Collections.Generic.List<string>()
+                {
+                    "Parameter",
+                    "Type",
+                    "Value"
+                }));
+        }
+
+        public static Var<EditConfigurationPage> AddParameter(SyntaxBuilder b, Var<EditConfigurationPage> clientModel)
+        {
+            var selectedService = b.GetSelectedService(clientModel);
+            var selectedServiceId = b.Get(selectedService, x => x.Id);
+            var parameters = b.Get(selectedService, x => x.InfrastructureServiceParameterDeclarations);
+
+            var newParameterId = b.NewId();
+            var newValueId = b.NewId();
+            var newParam = b.NewObj<InfrastructureServiceParameterDeclaration>(b =>
+            {
+                b.Set(x => x.Id, newParameterId);
+                b.Set(x => x.ParameterName, b.Const(""));
+                b.Set(x => x.InfrastructureServiceId, selectedServiceId);
+                b.Update(x => x.InfrastructureServiceParameterValues, b =>
+                {
+                    b.Add(b =>
+                    {
+                        b.Set(x => x.Id, newValueId);
+                        b.Set(x => x.InfrastructureServiceParameterDeclarationId, newParameterId);
+                    });
+                });
+            });
+            b.Push(parameters, newParam);
+            b.Set(clientModel, x => x.EditParameterId, newParameterId);
+            return b.EditView<EditConfigurationPage>(clientModel, EditParameter);
         }
     }
 }

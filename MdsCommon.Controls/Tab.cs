@@ -67,18 +67,17 @@ namespace MdsCommon.Controls
                         b.Set(data, x => x.SelectedTabName, b.Const(name));
                     });
 
-                return b.H(
-                    "div",
-                    (b, props) =>
+                return b.HtmlDiv(
+                    b =>
                     {
-                        b.AddClass(props, "cursor-pointer py-4");
+                        b.AddClass("cursor-pointer py-4");
 
                         b.If(
                             b.AreEqual(b.Get(data, x => x.SelectedTabName), b.Const(name)),
-                            b => b.AddClass(props, "border-b-2 border-sky-400"),
-                            b => b.AddClass(props, "border-white hover:border-sky-400 hover:border-b-2"));
+                            b => b.AddClass("border-b-2 border-sky-400"),
+                            b => b.AddClass("border-white hover:border-sky-400 hover:border-b-2"));
 
-                        b.OnClickAction(props, b.MakeAction((SyntaxBuilder b, Var<object> state) =>
+                        b.OnClickAction(b.MakeAction((SyntaxBuilder b, Var<object> state) =>
                         {
                             b.Set(data, x => x.SelectedTabName, b.Const(name));
                             return b.Clone(state);

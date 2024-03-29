@@ -98,89 +98,89 @@ namespace MdsCommon.HtmlControls
                     }));
         }
 
-        public static FilterDefinition DefaultFilter()
-        {
-            FilterDefinition filterBuilder = new();
-            filterBuilder.Container = ControlDefinition.New<Filter>(
-                "div",
-                (b, data, props) =>
-                {
-                    b.SetClass(props, b.Const("flex flex-row items-center relative"));
-                },
-                (b, data) => b.Render(filterBuilder.Input, data),
-                (b, data) => b.Optional(
-                    b.HasValue(b.Get(data, x => x.Value)),
-                    b => b.Render(filterBuilder.ClearButton, data)));
+        //public static FilterDefinition DefaultFilter()
+        //{
+        //    FilterDefinition filterBuilder = new();
+        //    filterBuilder.Container = ControlDefinition.New<Filter>(
+        //        "div",
+        //        (b, data, props) =>
+        //        {
+        //            b.SetClass(props, b.Const("flex flex-row items-center relative"));
+        //        },
+        //        (b, data) => b.Render(filterBuilder.Input, data),
+        //        (b, data) => b.Optional(
+        //            b.HasValue(b.Get(data, x => x.Value)),
+        //            b => b.Render(filterBuilder.ClearButton, data)));
 
-            filterBuilder.Input = ControlDefinition.New<Filter>(
-                "input",
-                (b, data, props) =>
-                {
-                    b.SetDynamic(props, Html.type, b.Const("text"));
-                    b.SetDynamic(props, Html.value, b.Get(data, x => x.Value));
-                    b.SetClass(props, b.Const("border rounded-full px-4 py-2"));
-                });
+        //    filterBuilder.Input = ControlDefinition.New<Filter>(
+        //        "input",
+        //        (b, data, props) =>
+        //        {
+        //            b.SetDynamic(props, Html.type, b.Const("text"));
+        //            b.SetDynamic(props, Html.value, b.Get(data, x => x.Value));
+        //            b.SetClass(props, b.Const("border rounded-full px-4 py-2"));
+        //        });
 
-            filterBuilder.ClearButton = ControlDefinition.New<Filter>(
-                    "button",
-                    (b, data, props) =>
-                    {
-                        b.SetClass(props, b.Const("absolute right-3 w-6 h-6 text-gray-300"));
-                    },
-                    (b, data) => b.Render(filterBuilder.ClearIcon, data));
+        //    filterBuilder.ClearButton = ControlDefinition.New<Filter>(
+        //            "button",
+        //            (b, data, props) =>
+        //            {
+        //                b.SetClass(props, b.Const("absolute right-3 w-6 h-6 text-gray-300"));
+        //            },
+        //            (b, data) => b.Render(filterBuilder.ClearIcon, data));
 
-            filterBuilder.ClearIcon = ControlDefinition.New<Filter>(
-                "div",
-                (b, data, props) =>
-                {
-                    b.SetDynamic(props, Html.innerHTML, b.Const(Metapsi.Heroicons.Outline.XCircle));
-                });
+        //    filterBuilder.ClearIcon = ControlDefinition.New<Filter>(
+        //        "div",
+        //        (b, data, props) =>
+        //        {
+        //            b.SetDynamic(props, Html.innerHTML, b.Const(Metapsi.Heroicons.Outline.XCircle));
+        //        });
 
-            return filterBuilder;
-        }
+        //    return filterBuilder;
+        //}
 
-        public static Var<IVNode> Filter(this LayoutBuilder b, Action<ControlBuilder<FilterDefinition, Filter>> custom)
-        {
-            return b.FromDefinition(DefaultFilter, custom);
-        }
+        //public static Var<IVNode> Filter(this LayoutBuilder b, Action<ControlBuilder<FilterDefinition, Filter>> custom)
+        //{
+        //    return b.FromDefinition(DefaultFilter, custom);
+        //}
 
-        public static void BindFilter<TPageModel, TSubmodel>(
-            this ControlBuilder<FilterDefinition, MdsCommon.HtmlControls.Filter> b,
-            Var<DataContext<TPageModel, TSubmodel>> dataContext,
-            System.Linq.Expressions.Expression<Func<TSubmodel, string>> property)
-        {
-            b.SetData((b, data) =>
-            {
-                b.InBindingContext(dataContext, data, b =>
-                {
-                    b.BindOneWay(x => x.Value, property);
-                });
-            });
+        //public static void BindFilter<TPageModel, TSubmodel>(
+        //    this ControlBuilder<FilterDefinition, MdsCommon.HtmlControls.Filter> b,
+        //    Var<DataContext<TPageModel, TSubmodel>> dataContext,
+        //    System.Linq.Expressions.Expression<Func<TSubmodel, string>> property)
+        //{
+        //    b.SetData((b, data) =>
+        //    {
+        //        b.InBindingContext(dataContext, data, b =>
+        //        {
+        //            b.BindOneWay(x => x.Value, property);
+        //        });
+        //    });
 
-            b.Control.Input.EditProps((b, props) =>
-            {
-                b.OnInputAction(
-                    props,
-                    b.MakeAction((SyntaxBuilder b, Var<TPageModel> pageModel, Var<string> newValue) =>
-                    {
-                        var accessData = b.Get(dataContext, x => x.AccessData);
-                        var data = b.Call(accessData, pageModel);
-                        b.Set(data, property, newValue);
-                        return b.Clone(pageModel);
-                    }));
-            });
+        //    b.Control.Input.EditProps((b, props) =>
+        //    {
+        //        b.OnInputAction(
+        //            props,
+        //            b.MakeAction((SyntaxBuilder b, Var<TPageModel> pageModel, Var<string> newValue) =>
+        //            {
+        //                var accessData = b.Get(dataContext, x => x.AccessData);
+        //                var data = b.Call(accessData, pageModel);
+        //                b.Set(data, property, newValue);
+        //                return b.Clone(pageModel);
+        //            }));
+        //    });
 
-            b.Control.ClearButton.EditProps((b, props) =>
-            {
-                b.OnClickAction(props, b.MakeAction((SyntaxBuilder b, Var<TPageModel> pageModel) =>
-                {
-                    var accessData = b.Get(dataContext, x => x.AccessData);
-                    var data = b.Call(accessData, pageModel);
-                    b.Set(data, property, b.Const(string.Empty));
-                    return b.Clone(pageModel);
-                }));
-            });
-        }
+        //    b.Control.ClearButton.EditProps((b, props) =>
+        //    {
+        //        b.OnClickAction(props, b.MakeAction((SyntaxBuilder b, Var<TPageModel> pageModel) =>
+        //        {
+        //            var accessData = b.Get(dataContext, x => x.AccessData);
+        //            var data = b.Call(accessData, pageModel);
+        //            b.Set(data, property, b.Const(string.Empty));
+        //            return b.Clone(pageModel);
+        //        }));
+        //    });
+        //}
     }
 
     public static partial class Control
@@ -223,18 +223,18 @@ namespace MdsCommon.HtmlControls
         //    b.Set(builder, getParams, setDefault(b));
         //}
 
-        public static void BindOneWay<TPageModel, TLocalModel, TBoundObject, TProperty>(
-            this BindingContext<TPageModel, TLocalModel, TBoundObject> bindingContext,
-            System.Linq.Expressions.Expression<Func<TBoundObject, TProperty>> intoProperty,
-            System.Linq.Expressions.Expression<Func<TLocalModel, TProperty>> fromModel)
-        {
-            bindingContext.Add((b, context, bound) =>
-            {
-                var localModel = b.Get(context, x => x.InputData);
-                var value = b.Get(localModel, fromModel);
-                b.Set(bound, intoProperty, value);
-            });
-        }
+        //public static void BindOneWay<TPageModel, TLocalModel, TBoundObject, TProperty>(
+        //    this BindingContext<TPageModel, TLocalModel, TBoundObject> bindingContext,
+        //    System.Linq.Expressions.Expression<Func<TBoundObject, TProperty>> intoProperty,
+        //    System.Linq.Expressions.Expression<Func<TLocalModel, TProperty>> fromModel)
+        //{
+        //    bindingContext.Add((b, context, bound) =>
+        //    {
+        //        var localModel = b.Get(context, x => x.InputData);
+        //        var value = b.Get(localModel, fromModel);
+        //        b.Set(bound, intoProperty, value);
+        //    });
+        //}
 
         //public static void SetOnInput<TState>(this BlockBuilder b, Var<HParams> hParams, Var<HyperType.Action<TState, string>> onInput)
         //{

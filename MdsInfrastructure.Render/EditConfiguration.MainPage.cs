@@ -239,12 +239,11 @@ namespace MdsInfrastructure.Render
             Var<EditConfigurationPage> model)
         {
             var okButton = (LayoutBuilder b) =>
-            b.H(
-                "button",
-                (b, props) =>
+            b.HtmlButton(
+                b =>
                 {
-                    b.AddPrimaryButtonStyle(props);
-                    b.OnClickAction(props, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> model) =>
+                    b.AddPrimaryButtonStyle();
+                    b.OnClickAction(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> model) =>
                     {
                         b.HideDialog(b.Const(IdCurrentJsonPopup));
                         return b.Clone(model);
@@ -289,12 +288,11 @@ namespace MdsInfrastructure.Render
             Var<EditConfigurationPage> model)
         {
             var mergeButton = (LayoutBuilder b) =>
-            b.H(
-                "button",
-                (b, props) =>
+            b.HtmlButton(
+                b =>
                 {
-                    b.AddPrimaryButtonStyle(props);
-                    b.OnClickAction(props, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> model) =>
+                    b.AddPrimaryButtonStyle();
+                    b.OnClickAction(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> model) =>
                     {
                         var mergeConfigurationInput = b.NewObj<MergeConfigurationInput>();
                         b.Set(mergeConfigurationInput, x => x.SourceConfigurationJson, b.Get(model, x => x.InitialConfiguration));
@@ -357,13 +355,12 @@ namespace MdsInfrastructure.Render
                     b.MessagesList(b.Get(model, x => x.MergeConfigurationResponse.SuccessMessages)),
                     b.DialogFooter(
                         "You can save your changes now",
-                        b.H(
-                            "button",
-                            (b, props) =>
+                        b.HtmlButton(
+                            b =>
                             {
-                                b.AddPrimaryButtonStyle(props);
+                                b.AddPrimaryButtonStyle();
 
-                                b.OnClickAction(props, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> model) =>
+                                b.OnClickAction(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> model) =>
                                 {
                                     b.HideDialog(b.Const(IdMergeSuccessPopup));
                                     b.Set(model, x => x.SaveConfigurationResponse, b.NewObj<SaveConfigurationResponse>());
@@ -379,11 +376,10 @@ namespace MdsInfrastructure.Render
             LayoutBuilder b,
             Var<EditConfigurationPage> model)
         {
-            return b.SlNode(
-                "sl-dialog",
-                (b, props) =>
+            return b.SlDialog(
+                b =>
                 {
-                    b.SetDynamic(props, Html.id, b.Const(IdMergeFailedPopup));
+                    b.SetId(IdMergeFailedPopup);
                 },
                 b.DialogHeader("Configuration cannot be saved", Metapsi.Heroicons.Solid.XCircle, "text-red-600"),
                 b.MessagesList(b.Get(model, x => x.MergeConfigurationResponse.ConflictMessages)),
@@ -396,12 +392,11 @@ namespace MdsInfrastructure.Render
                             b.SetDynamic(props, DynamicProperty.String("copy-label"), b.Const("Copy configuration JSON"));
                             b.SetDynamic(props, DynamicProperty.String("value"), b.Get(model, x => x.MergeConfigurationResponse.ConfigurationJson));
                         }),
-                    b.H(
-                        "button",
-                        (b, props) =>
+                    b.HtmlButton(
+                        b =>
                         {
-                            b.AddPrimaryButtonStyle(props);
-                            b.OnClickAction(props, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> model) =>
+                            b.AddPrimaryButtonStyle();
+                            b.OnClickAction(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> model) =>
                             {
                                 b.HideDialog(b.Const(IdMergeFailedPopup));
                                 return b.Clone(model);
