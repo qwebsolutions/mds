@@ -25,10 +25,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Module", "..\metaps
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsCommon.Render.Direct", "MdsCommon.Render\MdsCommon.Render.Direct.csproj", "{D2BFE750-054A-48E0-9433-32EDB1606087}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsLocal.Direct", "MdsLocal\MdsLocal.Direct.csproj", "{4BBD1FBF-3076-41B5-BFCA-6ACD15D9BDE4}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsLocal.Render.Direct", "MdsLocal.Render\MdsLocal.Render.Direct.csproj", "{DF6D5049-5FCD-408C-BF1C-4EBBCC473E01}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsLocal.DataModel.Direct", "MdsLocal.DataModel\MdsLocal.DataModel.Direct.csproj", "{0DD3613A-A66C-47DC-B4E8-D7DD5C928AF8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Ui", "..\metapsi\Metapsi.Ui\Metapsi.Ui.csproj", "{DFEC28E2-FB5E-4A0F-A331-36D5D30A335A}"
@@ -46,8 +42,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsInfrastructure.Flow.Direct", "MdsInfrastructure.Flow\MdsInfrastructure.Flow.Direct.csproj", "{2E0CE3CF-7DE5-439A-B241-EDBC7BC8B36D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Heroicons", "..\metapsi\Metapsi.Heroicons\Metapsi.Heroicons.csproj", "{F7AC2E90-A7A7-4A67-BC9C-590FDCDD6CEB}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.ChoicesJs", "..\metapsi\Metapsi.ChoicesJs\Metapsi.ChoicesJs.csproj", "{4A52A684-2836-41FA-A111-6875E9B2474A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Dom", "..\metapsi\Metapsi.Dom\Metapsi.Dom.csproj", "{C6F333AF-789F-4F12-9DF6-D19913DC1F78}"
 EndProject
@@ -68,6 +62,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Timer", "..\metapsi\Metapsi.Timer\Metapsi.Timer.csproj", "{1DA3D6AD-C415-41E4-9ED4-F716BD808008}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Html", "..\metapsi\Metapsi.Html\Metapsi.Html.csproj", "{10DA671D-492D-408C-83AE-E0A17796E85C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.TomSelect", "..\metapsi\Metapsi.TomSelect\Metapsi.TomSelect.csproj", "{FDBB6E19-10F3-4405-95AA-7BD4E30C7EF3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -119,14 +115,6 @@ Global
 		{D2BFE750-054A-48E0-9433-32EDB1606087}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D2BFE750-054A-48E0-9433-32EDB1606087}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D2BFE750-054A-48E0-9433-32EDB1606087}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4BBD1FBF-3076-41B5-BFCA-6ACD15D9BDE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4BBD1FBF-3076-41B5-BFCA-6ACD15D9BDE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4BBD1FBF-3076-41B5-BFCA-6ACD15D9BDE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4BBD1FBF-3076-41B5-BFCA-6ACD15D9BDE4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DF6D5049-5FCD-408C-BF1C-4EBBCC473E01}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DF6D5049-5FCD-408C-BF1C-4EBBCC473E01}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DF6D5049-5FCD-408C-BF1C-4EBBCC473E01}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DF6D5049-5FCD-408C-BF1C-4EBBCC473E01}.Release|Any CPU.Build.0 = Release|Any CPU
 		{0DD3613A-A66C-47DC-B4E8-D7DD5C928AF8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{0DD3613A-A66C-47DC-B4E8-D7DD5C928AF8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0DD3613A-A66C-47DC-B4E8-D7DD5C928AF8}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -163,10 +151,6 @@ Global
 		{F7AC2E90-A7A7-4A67-BC9C-590FDCDD6CEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F7AC2E90-A7A7-4A67-BC9C-590FDCDD6CEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F7AC2E90-A7A7-4A67-BC9C-590FDCDD6CEB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4A52A684-2836-41FA-A111-6875E9B2474A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4A52A684-2836-41FA-A111-6875E9B2474A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4A52A684-2836-41FA-A111-6875E9B2474A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4A52A684-2836-41FA-A111-6875E9B2474A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C6F333AF-789F-4F12-9DF6-D19913DC1F78}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C6F333AF-789F-4F12-9DF6-D19913DC1F78}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C6F333AF-789F-4F12-9DF6-D19913DC1F78}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -207,6 +191,10 @@ Global
 		{10DA671D-492D-408C-83AE-E0A17796E85C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{10DA671D-492D-408C-83AE-E0A17796E85C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{10DA671D-492D-408C-83AE-E0A17796E85C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDBB6E19-10F3-4405-95AA-7BD4E30C7EF3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDBB6E19-10F3-4405-95AA-7BD4E30C7EF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDBB6E19-10F3-4405-95AA-7BD4E30C7EF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDBB6E19-10F3-4405-95AA-7BD4E30C7EF3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
