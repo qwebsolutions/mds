@@ -4,6 +4,7 @@ using MdsCommon.Controls;
 using Metapsi.Dom;
 using Metapsi.Html;
 using System.ComponentModel;
+using Metapsi.Shoelace;
 
 namespace MdsCommon
 {
@@ -50,12 +51,17 @@ namespace MdsCommon
                                 b.SetClass("p-8 text-gray-800");
                             },
                             b.Get(clientModel, x => x.LoginMessage)),
-                        b.BoundInput(clientModel, x => x.Credentials, x => x.UserName, "User name"),
-                        b.HtmlInput(b =>
+                        b.MdsInputText(
+                            b=>
+                            {
+                                b.BindTo(clientModel, x => x.Credentials, x => x.UserName);
+                                b.SetPlaceholder("User name");
+                            }),
+                        b.MdsInputText(b =>
                         {
-                            b.SetClass("hyper-input");
                             b.BindTo(clientModel, x => x.Credentials, x => x.Password);
-                            b.SetType("password");
+                            b.SetTypePassword();
+                            b.SetPasswordToggle();
                             b.SetPlaceholder("Password");
                             b.OnEnterKey(b.MakeAction((SyntaxBuilder b, Var<SignInPage> state) =>
                             {

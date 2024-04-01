@@ -4,6 +4,7 @@ using Metapsi.Syntax;
 using System;
 using System.Linq;
 using MdsCommon.Controls;
+using Metapsi.Html;
 
 namespace MdsInfrastructure.Render
 {
@@ -36,7 +37,85 @@ namespace MdsInfrastructure.Render
             var notes = b.Get(service, x => x.InfrastructureServiceNotes.ToList());
             var noteTypes = b.Get(clientModel, x => x.NoteTypes);
 
-            return b.DataGrid(MdsDefaultBuilder.DataGrid<InfrastructureServiceNote>(), notes);
+            var gridBuilder = MdsDefaultBuilder.DataGrid<InfrastructureServiceNote>();
+
+            gridBuilder.CreateToolbarActions = b =>
+            {
+                return b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("flex flex-row items-center justify-between");
+                    },
+                    b.HtmlButton(
+                        b =>
+                        {
+                            b.AddPrimaryButtonStyle();
+                            b.OnClickAction(addCommand);
+                        },
+                        b.T("Add note")));
+            };
+
+            gridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(InfrastructureServiceNote.NoteTypeId), b => b.T("Note type"));
+            gridBuilder.DataTableBuilder.OverrideDataCell(
+                nameof(InfrastructureServiceNote.NoteTypeId),
+                (b, note) =>
+                {
+                    var noteTypeId = b.Get(note, x => x.NoteTypeId);
+                    var noteType = b.Get(noteTypes, noteTypeId, (x, noteTypeId) => x.SingleOrDefault(x => x.Id == noteTypeId, new NoteType() { Description = "", Code = "" }));
+                    var noteTypeLabel = b.Get(noteType, x => x.Description, "(not set)");
+                    return b.Link(
+                        noteTypeLabel,
+                        b.MakeAction(
+                            (SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
+                            {
+                                b.Set(clientModel, x => x.EditServiceNoteId, b.Get(note, x => x.Id));
+                                return b.EditView<EditConfigurationPage>(clientModel, EditNote);
+                            }));
+                });
+
+            gridBuilder.DataTableBuilder.OverrideDataCell(
+                nameof(InfrastructureServiceNote.Reference),
+                (b, note) =>
+                {
+                    var noteTypeId = b.Get(note, x => x.NoteTypeId);
+                    var noteType = b.Get(noteTypes, noteTypeId, (x, noteTypeId) => x.SingleOrDefault(x => x.Id == noteTypeId, new NoteType() { Description = "", Code = "" }));
+                    var noteTypeCode = b.ToLowercase(b.Get(noteType, x => x.Code));
+                    var refAsId = b.Get(note, x => x.Reference).As<System.Guid>();
+                    var reference = b.If(
+                        b.AreEqual(noteTypeCode, b.Const("parameter")),
+                        b => b.Get(service, refAsId, (x, refAsId) => x.InfrastructureServiceParameterDeclarations.SingleOrDefault(
+                            x => x.Id == refAsId,
+                            new InfrastructureServiceParameterDeclaration()
+                            {
+                                ParameterName = "(not set)"
+                            }).ParameterName),
+                        b => b.Get(note, x => x.Reference));
+                    return b.T(reference);
+                });
+
+            gridBuilder.AddRowAction((b, note) =>
+            {
+                return b.DeleteRowIconAction(b =>
+                {
+                    var removeNote = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel, Var<Guid> noteId) =>
+                    {
+                        var selectedService = b.GetSelectedService(clientModel);
+                        var note = b.Get(selectedService, noteId, (service, noteId) => service.InfrastructureServiceNotes.Single(x => x.Id == noteId));
+                        b.Remove(b.Get(service, x => x.InfrastructureServiceNotes), note);
+                        return b.Clone(clientModel);
+                    });
+
+                    b.OnClickAction(b.MakeActionDescriptor(removeNote, b.Get(note, x => x.Id)));
+                });
+            });
+
+            return b.DataGrid(
+                gridBuilder,
+                notes,
+                nameof(InfrastructureServiceNote.NoteTypeId),
+                nameof(InfrastructureServiceNote.Reference),
+                nameof(InfrastructureServiceNote.Note));
+
 
             //var rc = b.RenderCell<InfrastructureServiceNote>(
             //            (b, row, col) =>

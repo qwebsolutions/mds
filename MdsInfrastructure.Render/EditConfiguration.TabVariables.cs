@@ -41,6 +41,31 @@ namespace MdsInfrastructure.Render
                 b.Filter(clientModel, x => x.VariablesFilter));
             };
 
+            gridBuilder.AddRowAction((b, row) =>
+            {
+                var isInUse = b.Get(
+                    clientModel,
+                    b.Get(row, x => x.Id),
+                    (x, variableId) => x.Configuration.InfrastructureServices.SelectMany(x => x.InfrastructureServiceParameterDeclarations.SelectMany(x => x.InfrastructureServiceParameterBindings)).Any(x => x.InfrastructureVariableId == variableId));
+
+                return b.Optional(
+                    b.Not(isInUse),
+                    b =>
+                    {
+                        return b.DeleteRowIconAction(b =>
+                        {
+                            b.OnClickAction(
+                                (SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
+                                {
+                                    b.Remove(b.Get(clientModel, x => x.Configuration.InfrastructureVariables), row);
+                                    //var removed = b.Get(clientModel, row, (x, typed) => x.Configuration.InfrastructureVariables.Where(x => x != typed).ToList());
+                                    //b.Set(b.Get(clientModel, x => x.Configuration), x => x.InfrastructureVariables, removed);
+                                    return b.Clone(clientModel);
+                                });
+                        });
+                    });
+            });
+
             return b.DataGrid(
                 gridBuilder,
                 filteredVariables,

@@ -68,6 +68,26 @@ namespace MdsCommon.Controls
                     b => b.Call(prevBuilder, row, column));
             };
         }
+
+        public static void AddTrProps<TRow>(this DataTableBuilder<TRow> tableBuilder, Action<PropsBuilder<HtmlTr>, Var<TRow>> setProps)
+        {
+            var prevProps = tableBuilder.SetTrProps;
+            tableBuilder.SetTrProps = (b, row) =>
+            {
+                prevProps(b, row);
+                setProps(b, row);
+            };
+        }
+
+        public static void AddTdProps<TRow>(this DataTableBuilder<TRow> tableBuilder, Action<PropsBuilder<HtmlTd>, Var<TRow>, Var<string>> setProps)
+        {
+            var prevProps = tableBuilder.SetTdProps;
+            tableBuilder.SetTdProps = (b, row, column) =>
+            {
+                prevProps(b, row, column);
+                setProps(b, row, column);
+            };
+        }
     }
 
     public class DataTable

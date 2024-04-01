@@ -55,19 +55,47 @@ namespace MdsInfrastructure.Render
                 );
             };
 
-            gridBuilder.CreateRowActions = (b, row) =>
+            gridBuilder.AddRowAction((b, row) =>
             {
-                return b.HtmlButton(
-                    b =>
-                    {
-                        b.SetClass("flex rounded bg-gray-200 w-10 h-10 p-1 cursor-pointer justify-center items-center opacity-50 hover:opacity-100");
-                        b.SetInnerHtml(b.Const(Icon.Remove));
-                        b.OnClickAction(
-                            b.MakeActionDescriptor(
-                                b.MakeAction(onRemoveCommand),
+                var isInUse = b.Get(
+                    clientModel,
+                    b.Get(row, x => x.Id),
+                    (x, applicationId) =>
+                    x.Configuration.InfrastructureServices.Any(x => x.ApplicationId == applicationId));
+
+                return b.Optional(
+                    b.Not(isInUse),
+                    b => b.DeleteRowIconAction(
+                        b =>
+                        {
+                            b.OnClickAction(
+                                b.MakeActionDescriptor(
+                                    b.MakeAction(onRemoveCommand),
                                 row));
-                    });
-            };
+                        }));
+            });
+
+            //gridBuilder.CreateRowActions = (b, row) =>
+            //{
+            //    var isInUse = b.Get(
+            //        clientModel,
+            //        b.Get(row, x => x.Id),
+            //        (x, applicationId) =>
+            //        x.Configuration.InfrastructureServices.Any(x => x.ApplicationId == applicationId));
+
+            //    return b.Optional(
+            //        b.Not(isInUse),
+            //        b => b.HtmlButton(
+            //            b =>
+            //            {
+            //                b.SetClass("flex rounded bg-gray-200 w-10 h-10 p-1 cursor-pointer justify-center items-center opacity-50 hover:opacity-100");
+            //                b.SetInnerHtml(b.Const(Icon.Remove));
+            //                b.OnClickAction(
+            //                    b.MakeActionDescriptor(
+            //                        b.MakeAction(onRemoveCommand),
+            //                        row));
+            //            }));
+            //};
 
             return b.HtmlDiv(
                 b =>

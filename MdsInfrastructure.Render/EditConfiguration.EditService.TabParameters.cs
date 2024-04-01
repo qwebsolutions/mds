@@ -154,6 +154,14 @@ namespace MdsInfrastructure.Render
                     b.Filter(clientModel, x => x.ParametersFilter));
             };
 
+            parametersGrid.AddRowAction((b, parameter) =>
+            {
+                return b.DeleteRowIconAction(b =>
+                {
+                    b.OnClickAction(b.MakeActionDescriptor<EditConfigurationPage, InfrastructureServiceParameterDeclaration>(RemoveParameter, parameter));
+                });
+            });
+
             return b.DataGrid(
                 parametersGrid, 
                 displayedParameters,
@@ -163,6 +171,21 @@ namespace MdsInfrastructure.Render
                     "Type",
                     "Value"
                 }));
+        }
+
+        public static Var<EditConfigurationPage> RemoveParameter(SyntaxBuilder b, Var<EditConfigurationPage> clientModel, Var<InfrastructureServiceParameterDeclaration> parameter)
+        {
+            var service = b.GetSelectedService(clientModel);
+            var paramId = b.Get(parameter, x => x.Id);
+            var parameterRemoved = b.Get(service, paramId, (x, paramId) => x.InfrastructureServiceParameterDeclarations.Where(x => x.Id != paramId).ToList());
+            b.Set(service, x => x.InfrastructureServiceParameterDeclarations, parameterRemoved);
+            var bindingRemoved = b.Get(parameter, paramId, (x, paramId) => x.InfrastructureServiceParameterBindings.Where(x => x.InfrastructureServiceParameterDeclarationId != paramId).ToList());
+            b.Set(parameter, x => x.InfrastructureServiceParameterBindings, bindingRemoved);
+            var valueRemoved = b.Get(parameter, paramId, (x, paramId) => x.InfrastructureServiceParameterValues.Where(x => x.InfrastructureServiceParameterDeclarationId != paramId).ToList());
+            b.Set(parameter, x => x.InfrastructureServiceParameterValues, valueRemoved);
+            var notesRemoved = b.Get(service, x => x.InfrastructureServiceNotes.Where(x => x.Reference != paramId.ToString()).ToList());
+            b.Set(service, x => x.InfrastructureServiceNotes, notesRemoved);
+            return b.Clone(clientModel);
         }
 
         public static Var<EditConfigurationPage> AddParameter(SyntaxBuilder b, Var<EditConfigurationPage> clientModel)

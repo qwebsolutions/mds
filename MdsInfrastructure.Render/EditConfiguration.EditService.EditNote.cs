@@ -13,10 +13,10 @@ namespace MdsInfrastructure.Render
 {
     public static partial class EditConfiguration
     {
-        public static Var<Func<TIn, TOut>> Def<TIn, TOut>(this SyntaxBuilder b, System.Linq.Expressions.Expression<Func<TIn, TOut>> getProperty)
-        {
-            return b.Def<SyntaxBuilder, TIn, TOut>((SyntaxBuilder b, Var<TIn> input) => b.Get(input, getProperty));
-        }
+        //public static Var<Func<TIn, TOut>> Def<TIn, TOut>(this SyntaxBuilder b, System.Linq.Expressions.Expression<Func<TIn, TOut>> getProperty)
+        //{
+        //    return b.Def<SyntaxBuilder, TIn, TOut>((SyntaxBuilder b, Var<TIn> input) => b.Get(input, getProperty));
+        //}
 
         public static Var<IVNode> EditNote(
             LayoutBuilder b,
@@ -34,7 +34,7 @@ namespace MdsInfrastructure.Render
 
             var formFields = b.NewCollection<IVNode>();
 
-            var noteTypeDd = b.TomSelect(
+            var noteTypeDd = b.MdsDropDown(
                 b =>
                 {
                     b.SetOptions(noteTypes, x => x.Id, x => x.Description);
@@ -61,7 +61,7 @@ namespace MdsInfrastructure.Render
                 b.AddFormField(
                     formFields,
                     "Referenced parameter",
-                    b.TomSelect(
+                    b.MdsDropDown(
                         b=>
                         {
                             b.SetOptions(serviceParams, x => x.Id, x => x.ParameterName);
@@ -76,15 +76,24 @@ namespace MdsInfrastructure.Render
             b =>
             {
                 b.AddFormField(
-                    formFields, 
+                    formFields,
                     "Reference",
-                    b.BoundInput(clientModel, noteId, (x, noteid) => x.Configuration.InfrastructureServices.SelectMany(x => x.InfrastructureServiceNotes).Single(x => x.Id == noteid), x => x.Reference, b.Const("Reference")));
+                    b.MdsInputText(
+                        b =>
+                        {
+                            b.BindTo(clientModel, GetEditedNote, x => x.Reference);
+                        }));
+                    //b.BoundInput(clientModel, noteId, (x, noteid) => x.Configuration.InfrastructureServices.SelectMany(x => x.InfrastructureServiceNotes).Single(x => x.Id == noteid), x => x.Reference, b.Const("Reference"))); ;
             });
 
             b.AddFormField(
-                formFields, 
+                formFields,
                 "Note",
-                b.BoundInput(clientModel, noteId, (x, noteid) => x.Configuration.InfrastructureServices.SelectMany(x => x.InfrastructureServiceNotes).Single(x => x.Id == noteid), x => x.Note, b.Const("Note")));
+                b.MdsInputText(
+                    b =>
+                    {
+                        b.BindTo(clientModel, GetEditedNote, x => x.Note);
+                    }));
 
             return b.HtmlDiv(
                 b =>
@@ -93,7 +102,7 @@ namespace MdsInfrastructure.Render
                 b.Form(
                     b =>
                     {
-                        b.SetClass("bg-white rounded");
+                        b.AddClass("bg-white rounded");
                     },
                     toolbar,
                     formFields));

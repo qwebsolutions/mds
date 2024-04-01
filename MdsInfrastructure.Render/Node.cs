@@ -160,9 +160,9 @@ namespace MdsInfrastructure.Render
                     b.AddClass("p-4 bg-white rounded drop-shadow");
                 },
                 toolbar,
-                ("Node name", b.BoundInput(clientModel, x => x.InfrastructureNode, x => x.NodeName)),
-                ("Machine address", b.BoundInput(clientModel, x => x.InfrastructureNode, x => x.MachineIp)),
-                ("Node UI port", b.BoundInput(clientModel, x => x.InfrastructureNode, x => x.UiPort, b.Const(string.Empty))));
+                ("Node name", b.MdsInputText(b => b.BindTo(clientModel, x => x.InfrastructureNode, x => x.NodeName))),
+                ("Machine address", b.MdsInputText(b => b.BindTo(clientModel, x => x.InfrastructureNode, x => x.MachineIp))),
+                ("Node UI port", b.MdsInputText(b => b.BindTo(clientModel, x => x.InfrastructureNode, x => x.UiPort))));
 
             // TODO: Node env type?!
 

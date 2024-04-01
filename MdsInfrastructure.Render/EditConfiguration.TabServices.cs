@@ -52,6 +52,8 @@ namespace MdsInfrastructure.Render
 
         public static Var<EditConfigurationPage> OnRemoveService(SyntaxBuilder b, Var<EditConfigurationPage> page, Var<InfrastructureServiceRow> row)
         {
+            b.Log("OnRemoveService page", page);
+            b.Log("OnRemoveService row", row);
             var serviceId = b.Get(row, x => x.Id);
             var serviceRemoved = b.Get(page, serviceId, (x, serviceId) => x.Configuration.InfrastructureServices.Where(x => x.Id != serviceId).ToList());
             b.Set(b.Get(page, x => x.Configuration), x => x.InfrastructureServices, serviceRemoved);
@@ -145,6 +147,23 @@ namespace MdsInfrastructure.Render
                 {
                     return b.RenderServiceNameCell(row);
                 });
+
+            gridBuilder.AddRowAction((b, row) =>
+            {
+                return b.DeleteRowIconAction(
+                    b =>
+                    {
+                        //b.Log("DeleteRowAction", row);
+
+                        var actionDescriptor = b.MakeActionDescriptor(
+                                b.MakeAction<EditConfigurationPage, InfrastructureServiceRow>(OnRemoveService),
+                                row);
+
+                        b.Log("actionDescriptor", actionDescriptor);
+
+                        b.OnClickAction(actionDescriptor);
+                    });
+            });
 
             var dataGrid = b.DataGrid(
                 gridBuilder,
