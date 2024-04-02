@@ -454,12 +454,6 @@ namespace MdsInfrastructure.Render
                 }
             }
 
-            inputServicesAreaNodes.Add(b.HtmlDiv(b => { }));
-            inputServicesAreaNodes.Add(
-                b.StyledDiv(
-                    "w-full flex items-center justify-end",
-                    b.HtmlDiv(b => { }, inputRedisAreaNodes.ToArray())));
-
             var serviceMapRoot = b.StyledDiv(
                 "h-full w-full p-2 text-sm flex flex-col space-y-8 rounded shadow bg-white",
                 b.StyledDiv( // httpRowContainer
@@ -473,9 +467,22 @@ namespace MdsInfrastructure.Render
                 b.StyledDiv( // redisRow
                     "flex flex-row items-center",
                     b.StyledSpan("text-lg font-semibold text-gray-300 vertical-text", b.TextSpan("REDIS")), // redisLabel
-                    b.StyledDiv( //redisInputArea
-                        "flex-1 flex flex-row",
-                        inputServicesAreaNodes.ToArray()),
+                    b.HtmlDiv(
+                        b=>
+                        {
+                            //redisInputArea
+                            b.SetId("inputServicesArea");
+                            b.SetClass("flex-1 flex flex-row");
+                        },
+                        b.HtmlDiv(b => { }, inputServicesAreaNodes.ToArray()),
+                        b.StyledDiv(
+                            "w-full flex items-center justify-end",
+                            b.HtmlDiv(b =>
+                            {
+                                b.SetId("inputRedisArea");
+                            },
+                            inputRedisAreaNodes.ToArray()))
+                        ),
                     b.StyledDiv( // serviceNameDiv
                         "flex-none p-16 relative",
                         b.StyledDiv( // portsArea
