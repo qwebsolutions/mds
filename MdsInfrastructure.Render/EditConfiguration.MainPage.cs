@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Metapsi.Shoelace;
 using MdsCommon;
 using Microsoft.Extensions.Options;
+using Metapsi.Dom;
 
 namespace MdsInfrastructure.Render
 {
@@ -252,13 +253,16 @@ namespace MdsInfrastructure.Render
 
             var copyButton = (LayoutBuilder b) =>
             {
-                return b.SlNode(
-                    "sl-copy-button",
-                    (b, props) =>
-                    {
-                        b.SetDynamic(props, DynamicProperty.String("copy-label"), b.Const("Copy configuration JSON"));
-                        b.SetDynamic(props, DynamicProperty.String("value"), b.Get(model, x => x.CurrentConfigurationSimplifiedJson));
-                    });
+                return b.Optional(
+                    b.GetProperty<bool>(b.Window(), b.Const("isSecureContext")),
+                    b =>
+                    b.SlNode(
+                        "sl-copy-button",
+                        (b, props) =>
+                        {
+                            b.SetDynamic(props, DynamicProperty.String("copy-label"), b.Const("Copy configuration JSON"));
+                            b.SetDynamic(props, DynamicProperty.String("value"), b.Get(model, x => x.CurrentConfigurationSimplifiedJson));
+                        }));
             };
 
             return b.SlNode(
