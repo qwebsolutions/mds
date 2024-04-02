@@ -40,8 +40,7 @@ namespace MdsInfrastructure.Render
                     {
                         b.OnSlSelect(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<object> args) =>
                         {
-                            var detail = b.GetDynamic(args, new DynamicProperty<object>("detail"));
-                            var item = b.GetDynamic(detail, new DynamicProperty<object>("item"));
+                            var item = b.GetDynamic(args, new DynamicProperty<object>("item"));
                             var selectedValue = b.GetDynamic(item, new DynamicProperty<string>("value"));
 
                             var showCurrentJson = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
