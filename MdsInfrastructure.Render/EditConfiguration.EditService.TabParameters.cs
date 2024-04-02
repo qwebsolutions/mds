@@ -5,7 +5,6 @@ using System;
 using MdsCommon;
 using MdsCommon.Controls;
 using Metapsi.Html;
-using MdsCommon.HtmlControls;
 
 namespace MdsInfrastructure.Render
 {

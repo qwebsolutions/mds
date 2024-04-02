@@ -29,23 +29,7 @@ namespace MdsCommon.Controls
         }
 
 
-        public static Var<IVNode> Tabs<TPage>(
-            this LayoutBuilder b,
-            Var<TPage> page,
-            Var<string> tabName,
-            Var<IVNode> toolbar,
-            params TabRenderer[] tabPages)
-        {
-            return b.RenderTab(page, tabName, toolbar, tabPages);
-        }
 
-    }
-
-    public class TabRenderer
-    {
-        public string TabPageCode { get; set; } = string.Empty;
-        public System.Func<LayoutBuilder, Var<IVNode>> TabHeader { get; set; }
-        public System.Func<LayoutBuilder, Var<IVNode>> TabContent { get; set; }
     }
 }
 

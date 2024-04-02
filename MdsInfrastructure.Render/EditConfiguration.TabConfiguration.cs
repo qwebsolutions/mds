@@ -20,7 +20,7 @@ namespace MdsInfrastructure.Render
                     b.StyledSpan(
                         "whitespace-nowrap",
                         b.TextSpan("Configuration name")),
-                    b.BoundInput(clientModel, x => x.Configuration, x => x.Name)),
+                    b.MdsInputText(b=> b.BindTo(clientModel, x => x.Configuration, x => x.Name))),
                 b.TextSpan(b.Get(clientModel, x => x.LastDeployed)));
         }
     }

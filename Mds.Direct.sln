@@ -55,8 +55,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsCommon.Controls.Direct",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.HttpServer.Direct", "Metapsi.HttpServer\Metapsi.HttpServer.Direct.csproj", "{EAF38ADD-9ACB-4556-825D-4E3D26DACF59}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Shoelace.Generate", "..\metapsi\Metapsi.Shoelace.Generate\Metapsi.Shoelace.Generate.csproj", "{C75A3ED9-88E3-44FC-A2E0-351D6A61F3E9}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Mds", "..\metapsi\Metapsi.Mds\Metapsi.Mds.csproj", "{90D35CAF-9EB9-4753-957A-947D4496EC04}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Timer", "..\metapsi\Metapsi.Timer\Metapsi.Timer.csproj", "{1DA3D6AD-C415-41E4-9ED4-F716BD808008}"
@@ -175,10 +173,6 @@ Global
 		{EAF38ADD-9ACB-4556-825D-4E3D26DACF59}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EAF38ADD-9ACB-4556-825D-4E3D26DACF59}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EAF38ADD-9ACB-4556-825D-4E3D26DACF59}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C75A3ED9-88E3-44FC-A2E0-351D6A61F3E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C75A3ED9-88E3-44FC-A2E0-351D6A61F3E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{C75A3ED9-88E3-44FC-A2E0-351D6A61F3E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C75A3ED9-88E3-44FC-A2E0-351D6A61F3E9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{90D35CAF-9EB9-4753-957A-947D4496EC04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{90D35CAF-9EB9-4753-957A-947D4496EC04}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90D35CAF-9EB9-4753-957A-947D4496EC04}.Release|Any CPU.ActiveCfg = Release|Any CPU

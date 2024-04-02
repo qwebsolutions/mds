@@ -10,17 +10,28 @@ namespace MdsInfrastructure
 {
     public static class View
     {
+        public static Reference<string> ViewName = new Reference<string>() { Value = string.Empty };
+
         private const string FeatureName = "views";
 
         public static Var<IVNode> Render<TModel>(
             LayoutBuilder b,
             Var<TModel> clientModel,
-            string areaName,
             string defaultViewName,
             params Func<LayoutBuilder, Var<TModel>, Var<IVNode>>[] renderers)
         {
 
-            var currentViewName = b.GetVar<TModel>(clientModel, FeatureName, b.Const(areaName), b.Const(defaultViewName));
+            var currentViewRef = b.GlobalRef(ViewName);
+            b.If(
+                b.Not(
+                    b.HasValue(
+                        b.GetRef(currentViewRef))),
+                b =>
+                {
+                    b.SetRef(currentViewRef, b.Const(defaultViewName));
+                });
+
+            var currentViewName = b.GetRef(currentViewRef);
 
             var outNode = b.Ref<IVNode>(b.TextSpan("View error"));
 
@@ -42,7 +53,7 @@ namespace MdsInfrastructure
         public static void SwapView<TModel>(this SyntaxBuilder b, Var<TModel> model, Var<string> areaName, Var<string> viewRenderer)
         {
             b.Log("viewRenderer", viewRenderer);
-            b.SetVar<TModel>(model, FeatureName, areaName, viewRenderer);
+            b.SetRef(b.GlobalRef(ViewName), viewRenderer);
         }
 
         public static Var<string> GetViewName<TModel>(this SyntaxBuilder b, Func<LayoutBuilder, Var<TModel>, Var<IVNode>> renderer)

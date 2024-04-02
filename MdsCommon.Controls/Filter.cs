@@ -1,5 +1,4 @@
-﻿using MdsCommon.Controls;
-using Metapsi;
+﻿using Metapsi;
 using Metapsi.Dom;
 using Metapsi.Html;
 using Metapsi.Hyperapp;
@@ -16,7 +15,7 @@ using System.Runtime.CompilerServices;
 
 
 
-namespace MdsCommon.HtmlControls
+namespace MdsCommon.Controls
 {
 
     //public interface IHasStringValue
@@ -27,20 +26,20 @@ namespace MdsCommon.HtmlControls
     //public interface IHasOnInputEvent { }
     //public interface IHasClearEvent { }
 
-    public class Filter
-    {
-        public string Value { get; set; } = string.Empty;
-    }
+    //public class Filter
+    //{
+    //    public string Value { get; set; } = string.Empty;
+    //}
 
-    public class FilterDefinition : IControlDefinition<Filter>
-    {
-        public ControlDefinition<Filter> Container { get; set; }
-        public ControlDefinition<Filter> Input { get; set; }
-        public ControlDefinition<Filter> ClearButton { get; set; }
-        public ControlDefinition<Filter> ClearIcon { get; set; }
+    //public class FilterDefinition : IControlDefinition<Filter>
+    //{
+    //    public ControlDefinition<Filter> Container { get; set; }
+    //    public ControlDefinition<Filter> Input { get; set; }
+    //    public ControlDefinition<Filter> ClearButton { get; set; }
+    //    public ControlDefinition<Filter> ClearIcon { get; set; }
 
-        public Func<LayoutBuilder, Var<Filter>, Var<IVNode>> GetRenderer() => Container.GetRenderer();
-    }
+    //    public Func<LayoutBuilder, Var<Filter>, Var<IVNode>> GetRenderer() => Container.GetRenderer();
+    //}
 
     public static partial class Control
     {
@@ -97,6 +96,7 @@ namespace MdsCommon.HtmlControls
                             b.Svg(Metapsi.Heroicons.Outline.XCircle));
                     }));
         }
+    }
 
         //public static FilterDefinition DefaultFilter()
         //{
@@ -404,6 +404,6 @@ namespace MdsCommon.HtmlControls
         //        }));
         //    });
         //}
-    }
+    //}
 }
 

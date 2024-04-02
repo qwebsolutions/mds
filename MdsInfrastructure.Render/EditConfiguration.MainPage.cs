@@ -187,33 +187,36 @@ namespace MdsInfrastructure.Render
                 b.SetClass("flex flex-col w-full bg-white rounded shadow");
             },
             b.Tabs(
-                b =>
-                {
-                    b.AddTab(
-                        "Configuration",
-                        b => b.Call(EditConfiguration.TabConfiguration, clientModel));
+                b.Toolbar(
+                    b =>
+                    {
 
-                    b.AddTab(
-                        "Services",
-                        b => b.Call(EditConfiguration.TabServices, clientModel).As<IVNode>());
+                    },
+                    menuDropdown,
+                    deployLink,
+                    saveButton),
+                b.TabPair(b.Const("Configuration"),b.Call(EditConfiguration.TabConfiguration, clientModel)),
+                b.TabPair(b.Const("Services"),b.Call(EditConfiguration.TabServices, clientModel)),
+                b.TabPair(b.Const("Applications"), b.Call(EditConfiguration.TabApplications, clientModel)),
+                b.TabPair(b.Const("Variables"), b.Call(EditConfiguration.TabVariables, clientModel))),
 
-                    b.AddTab(
-                        "Applications",
-                        b => b.Call(EditConfiguration.TabApplications, clientModel).As<IVNode>());
-
-                    b.AddTab(
-                        "Variables",
-                        b => b.Call(EditConfiguration.TabVariables, clientModel).As<IVNode>());
-
-                    b.AddToolbarCommand(b => menuDropdown);
-                    b.AddToolbarCommand(b => deployLink.As<IVNode>());
-                    b.AddToolbarCommand(b => saveButton.As<IVNode>());
-
-                }),
             SaveConflictPopup(b, clientModel),
             MergeFailedPopup(b, clientModel),
             MergeSuccessPopup(b, clientModel),
             CurrentConfigurationJsonPopup(b, clientModel));
+        }
+
+        public static Var<TabControl.TabPair> TabPair(this LayoutBuilder b, string headerText, Var<IVNode> content)
+        {
+            return b.TabPair(b.Const(headerText), content);
+        }
+
+        public static Var<TabControl.TabPair> TabPair(this LayoutBuilder b, Var<string> headerText, Var<IVNode> content)
+        {
+            var tabPair = b.NewObj<TabControl.TabPair>();
+            b.Set(tabPair, x => x.TabHeader, b.T(headerText));
+            b.Set(tabPair, x => x.TabContent, content);
+            return tabPair;
         }
 
         private static Var<bool> HasChanges(SyntaxBuilder b, Var<EditConfigurationPage> model)
@@ -225,13 +228,12 @@ namespace MdsInfrastructure.Render
 
         public static Var<IVNode> MessagesList(this LayoutBuilder b, Var<List<string>> messages)
         {
-            return b.H(
-                "div",
-                (b, props) =>
+            return b.HtmlDiv(
+                b =>
                 {
-                    b.AddClass(props, "flex flex-col gap-2 text-sm");
+                    b.AddClass("flex flex-col gap-2 text-sm");
                 },
-                b.Map(messages, (b, message) => b.H("span", (b, props) => { }, b.TextSpan(message))));
+                b.Map(messages, (b, message) => b.HtmlSpan(b => { }, b.TextSpan(message))));
         }
 
         public static Var<IVNode> CurrentConfigurationJsonPopup(
@@ -253,29 +255,26 @@ namespace MdsInfrastructure.Render
 
             var copyButton = (LayoutBuilder b) =>
             {
-                return b.SlNode(
-                    "sl-copy-button",
-                    (b, props) =>
+                return b.SlCopyButton(
+                    b =>
                     {
-                        b.SetDynamic(props, DynamicProperty.String("copy-label"), b.Const("Copy configuration JSON"));
-                        b.SetDynamic(props, DynamicProperty.String("value"), b.Get(model, x => x.CurrentConfigurationSimplifiedJson));
+                        b.SetCopyLabel(b.Const("Copy configuration JSON"));
+                        b.SetValue(b.Get(model, x => x.CurrentConfigurationSimplifiedJson));
                     });
             };
 
-            return b.SlNode(
-                "sl-dialog",
-                (b, props) =>
+            return b.SlDialog(
+                b =>
                 {
-                    b.SetDynamic(props, Html.id, b.Const(IdCurrentJsonPopup));
+                    b.SetId(b.Const(IdCurrentJsonPopup));
                 },
                 b.DialogHeader("Your configuration file", Metapsi.Heroicons.Outline.Clipboard, "text-sky-500"),
-                b.SlNode(
-                    "sl-textarea",
-                    (b, props) =>
+                b.SlTextarea(
+                    b =>
                     {
-                        b.SetDynamic(props, DynamicProperty.Bool("readonly"), b.Const(true));
-                        b.SetDynamic(props, DynamicProperty.Int("rows"), b.Const(10));
-                        b.SetDynamic(props, DynamicProperty.String("value"), b.Get(model, x => x.CurrentConfigurationSimplifiedJson));
+                        b.SetReadonly();
+                        b.SetRows(10);
+                        b.SetValue(b.Get(model, x => x.CurrentConfigurationSimplifiedJson));
                     }),
                 b.DialogFooter(
                     "You can use this JSON to upload configuration by hand",
@@ -327,11 +326,10 @@ namespace MdsInfrastructure.Render
                 },
                 b.TextSpan("Merge"));
 
-            return b.SlNode(
-                "sl-dialog",
-                (b, props) =>
+            return b.SlDialog(
+                b =>
                 {
-                    b.SetDynamic(props, Html.id, b.Const(IdSaveConflictPopup));
+                    b.SetId(b.Const(IdSaveConflictPopup));
                 },
                 b.DialogHeader("Configuration conflict", Metapsi.Heroicons.Solid.ExclamationTriangle, "text-yellow-600"),
                 b.MessagesList(b.Get(model, x => x.SaveConfigurationResponse.ConflictMessages)),
@@ -345,11 +343,10 @@ namespace MdsInfrastructure.Render
             Var<EditConfigurationPage> model)
         {
             return
-                b.SlNode(
-                    "sl-dialog",
-                    (b, props) =>
+                b.SlDialog(
+                    b  =>
                     {
-                        b.SetDynamic(props, Html.id, b.Const(IdMergeSuccessPopup));
+                        b.SetId(b.Const(IdMergeSuccessPopup));
                     },
                     b.DialogHeader("Merge success", Metapsi.Heroicons.Solid.CheckCircle, "text-green-600"),
                     b.MessagesList(b.Get(model, x => x.MergeConfigurationResponse.SuccessMessages)),
@@ -385,12 +382,11 @@ namespace MdsInfrastructure.Render
                 b.MessagesList(b.Get(model, x => x.MergeConfigurationResponse.ConflictMessages)),
                 b.DialogFooter(
                     "You can edit your configuration or you can copy it and merge by hand",
-                    b.SlNode(
-                        "sl-copy-button",
-                        (b, props) =>
+                    b.SlCopyButton(
+                        b=>
                         {
-                            b.SetDynamic(props, DynamicProperty.String("copy-label"), b.Const("Copy configuration JSON"));
-                            b.SetDynamic(props, DynamicProperty.String("value"), b.Get(model, x => x.MergeConfigurationResponse.ConfigurationJson));
+                            b.SetCopyLabel(b.Const("Copy configuration JSON"));
+                            b.SetValue(b.Get(model, x => x.MergeConfigurationResponse.ConfigurationJson));
                         }),
                     b.HtmlButton(
                         b =>
@@ -407,12 +403,11 @@ namespace MdsInfrastructure.Render
 
         public static Var<IVNode> DialogHeader(this LayoutBuilder b, string label, string svg, string color)
         {
-            return b.H(
-                "div",
-                (b, props) =>
+            return b.HtmlDiv(
+                b =>
                 {
-                    b.AddClass(props, "flex flex-row items-center gap-2");
-                    b.SetDynamic(props, DynamicProperty.String("slot"), b.Const("label"));
+                    b.AddClass("flex flex-row items-center gap-2");
+                    b.SetSlot("label");
                 },
                 b.TextSpan(label),
                 b.Svg(svg, $"{color} w-5 h-5"));
@@ -421,26 +416,23 @@ namespace MdsInfrastructure.Render
         public static Var<IVNode> DialogFooter(this LayoutBuilder b, string text, params Var<IVNode>[] buttons)
         {
             return
-                b.H(
-                    "div",
-                    (b, props) =>
+                b.HtmlDiv(
+                    b =>
                     {
-                        b.SetDynamic(props, DynamicProperty.String("slot"), b.Const("footer"));
-                        b.AddClass(props, "flex flex-row items-center justify-between");
+                        b.SetSlot("footer");
+                        b.AddClass("flex flex-row items-center justify-between");
                     },
-                    b.H(
-                        "div",
-                        (b, props) =>
+                    b.HtmlDiv(
+                        b =>
                         {
-                            b.AddClass(props, "text-xs text-gray-600 text-left");
+                            b.AddClass("text-xs text-gray-600 text-left");
                         },
                         b.TextSpan(text)),
-                    b.H(
-                        "div",
-                        (b, props) =>
+                    b.HtmlDiv(
+                        b =>
                         {
                             // To make the buttons smaller at end
-                            b.AddClass(props, "flex flex-row gap-2 justify-end");
+                            b.AddClass("flex flex-row gap-2 justify-end");
                         },
                         buttons));
         }

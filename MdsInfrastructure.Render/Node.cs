@@ -67,6 +67,7 @@ namespace MdsInfrastructure.Render
 
         public static Var<IVNode> RenderNodesList(this LayoutBuilder b, Var<M.List> clientModel)
         {
+
             throw new NotImplementedException();
 
             //var addUrl = b.Const("Not implemented");

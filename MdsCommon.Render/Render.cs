@@ -51,19 +51,22 @@ namespace MdsCommon
                                 b.SetClass("p-8 text-gray-800");
                             },
                             b.Get(clientModel, x => x.LoginMessage)),
-                        b.MdsInputText(
+                        b.HtmlInput(
                             b=>
                             {
                                 b.BindTo(clientModel, x => x.Credentials, x => x.UserName);
+                                b.SetClass("hyper-input");
                                 b.SetPlaceholder("User name");
                             }),
-                        b.MdsInputText(b =>
+                        b.HtmlInput(b =>
                         {
                             b.BindTo(clientModel, x => x.Credentials, x => x.Password);
-                            b.SetTypePassword();
-                            b.SetPasswordToggle();
+                            b.SetType("password");
+                            //b.SetTypePassword();
+                            //b.SetPasswordToggle();
                             b.SetPlaceholder("Password");
-                            b.OnEnterKey(b.MakeAction((SyntaxBuilder b, Var<SignInPage> state) =>
+                            b.SetClass("hyper-input");
+                            b.Cast<IHasInputTextEvent>().OnEnterKey(b.MakeAction((SyntaxBuilder b, Var<SignInPage> state) =>
                             {
                                 return b.MakeStateWithEffects(state, b.MakeEffect(b.Def((SyntaxBuilder b, Var<HyperType.Dispatcher<SignInPage>> dispatcher) =>
                                 {

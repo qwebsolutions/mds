@@ -16,27 +16,10 @@ namespace MdsInfrastructure.Render
             var toolbar = b.Toolbar(b => { }, b.OkButton(MainPage, x => x.EditServiceId));
 
             var tabs = b.Tabs(
-                clientModel,
-                b.Const("serviceTabs"),
                 toolbar,
-                new TabRenderer()
-                {
-                    TabHeader = b => b.TextSpan("Service"),
-                    TabContent = b => b.Call(TabService, clientModel),
-                    TabPageCode = "Service"
-                },
-                new TabRenderer()
-                {
-                    TabHeader = b => b.TextSpan("Parameters"),
-                    TabContent = b => b.Call(TabParameters, clientModel),
-                    TabPageCode = "Parameters"
-                },
-                new TabRenderer()
-                {
-                    TabHeader = b => b.TextSpan("Notes"),
-                    TabContent = b => b.Call(TabNotes, clientModel),
-                    TabPageCode = "Notes"
-                });
+                b.TabPair("Service", b.Call(TabService, clientModel)),
+                b.TabPair("Parameters", b.Call(TabParameters, clientModel)),
+                b.TabPair("Notes", b.Call(TabNotes, clientModel)));
 
             return tabs;
         }

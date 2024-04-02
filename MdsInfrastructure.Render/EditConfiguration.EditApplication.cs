@@ -11,9 +11,6 @@ namespace MdsInfrastructure.Render
     {
         public static Var<IVNode> EditApplication(this LayoutBuilder b, Var<EditConfigurationPage> clientModel)
         {
-            var appId = b.Get(clientModel, x => x.EditApplicationId);
-            var app = b.Get(clientModel, appId, (x, appId) => x.Configuration.Applications.Single(x => x.Id == appId));
-
             var toolbar = b.Toolbar(
                 b =>
                 {
@@ -26,7 +23,14 @@ namespace MdsInfrastructure.Render
                     b.AddClass("rounded bg-white drop-shadow");
                 },
                 toolbar,
-                ("Application name", b.BoundInput(clientModel, appId, (x, appId) => x.Configuration.Applications.Single(x => x.Id == appId), x => x.Name, b.Const(""))));
+                ("Application name", b.MdsInputText(b => b.BindTo(clientModel, GetSelectedApplication, x => x.Name))));
+        }
+
+        public static Var<Application> GetSelectedApplication(this SyntaxBuilder b, Var<EditConfigurationPage> clientModel)
+        {
+            var appId = b.Get(clientModel, x => x.EditApplicationId);
+            var app = b.Get(clientModel, appId, (x, appId) => x.Configuration.Applications.Single(x => x.Id == appId));
+            return app;
         }
     }
 }
