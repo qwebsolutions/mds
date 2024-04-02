@@ -137,7 +137,6 @@ namespace MdsInfrastructure.Render
             {
                 return b.View(
                     clientModel,
-                    EditConfigurationViews.AreaName,
                     EditConfiguration.MainPage,
                     EditConfiguration.EditApplication,
                     EditConfiguration.EditNote,
@@ -260,17 +259,9 @@ namespace MdsInfrastructure.Render
 
     public static class EditConfigurationViews
     {
-        public const string AreaName = nameof(EditConfigurationViews);
-
-        public static Var<EditConfigurationPage> EditView(this SyntaxBuilder b, Var<EditConfigurationPage> page, Var<string> viewName)
-        {
-            b.SwapView(page, b.Const(AreaName), viewName);
-            return b.Clone(page);
-        }
-
         public static Var<EditConfigurationPage> EditView<TModel>(this SyntaxBuilder b, Var<EditConfigurationPage> page, Func<LayoutBuilder, Var<TModel>, Var<IVNode>> viewRenderer)
         {
-            b.SwapView(page, b.Const(AreaName), b.GetViewName(viewRenderer));
+            b.SwapView(viewRenderer);
             return b.Clone(page);
         }
     }

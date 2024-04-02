@@ -159,6 +159,11 @@ namespace MdsCommon.Controls
                                     b => tableBuilder.SetTdProps(b, row, column),
                                     b.Call(tableBuilder.CreateDataCell, row, column)))))));
         }
+
+        public static Var<IVNode> DataTable<TRow>(this LayoutBuilder b, DataTableBuilder<TRow> tableBuilder, Var<List<TRow>> rows, params string[] columns)
+        {
+            return b.DataTable(tableBuilder, rows, b.Const(columns.ToList()));
+        }
     }
 
     //public static class DataTable

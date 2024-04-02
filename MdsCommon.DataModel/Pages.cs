@@ -21,7 +21,6 @@ namespace MdsCommon
     }
 
     public class ListInfrastructureEventsPage :
-        Metapsi.Ui.IHasSidePanel,
         Metapsi.Ui.IHasUser
     {
         public List<InfrastructureEvent> InfrastructureEvents { get; set; } = new();

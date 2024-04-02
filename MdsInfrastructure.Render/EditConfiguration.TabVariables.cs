@@ -163,7 +163,7 @@ namespace MdsInfrastructure.Render
             });
             b.Push(b.Get(clientModel, x => x.Configuration.InfrastructureVariables), newVar);
             b.Set(clientModel, x => x.EditVariableId, newId);
-            return b.EditView(clientModel, b.GetViewName<EditConfigurationPage>(EditConfiguration.EditVariable));
+            return b.EditView<EditConfigurationPage>(clientModel, EditConfiguration.EditVariable);
         }
     }
 }

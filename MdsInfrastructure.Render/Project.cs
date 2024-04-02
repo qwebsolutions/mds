@@ -26,7 +26,7 @@ namespace MdsInfrastructure.Render
                         Main = new Header.Title() { Operation = "Projects" },
                         User = serverModel.User
                     })), 
-                    b.Render(clientModel)).As<IVNode>();
+                    b.Render(clientModel));
             }
         }
 
@@ -43,8 +43,7 @@ namespace MdsInfrastructure.Render
 
         public static Var<IVNode> Render(this LayoutBuilder b, Var<ListProjectsPage> clientModel)
         {
-            var sidePanel = b.SidePanel<ListProjectsPage>(
-                clientModel,
+            var sidePanel = b.SidePanel(
                 b =>
                 {
                     var project = b.Get(clientModel, x => x.SelectedProject);
@@ -58,7 +57,10 @@ namespace MdsInfrastructure.Render
                         },
                         b.TextSpan(b.Get(project, x => x.Name)),
                         b.HtmlDiv(
-                            b => { },
+                            b =>
+                            {
+                                b.SetClass("flex flex-col gap-4");
+                            },
                             b.Map(versions, (b, version) =>
                             {
                                 var versionId = b.Get(version, x => x.Id);
@@ -119,7 +121,52 @@ namespace MdsInfrastructure.Render
                             })));
                 });
 
-            throw new System.NotImplementedException();
+            var projectTableBuilder = MdsDefaultBuilder.DataTable<MdsCommon.Project>();
+            projectTableBuilder.OverrideDataCell(
+                "Project name",
+                (b, project) =>
+                {
+                    return b.HtmlA(
+                        b =>
+                        {
+                            b.SetClass("underline text-sky-500");
+                            b.SetHref(b.Const("javascript:void(0);"));
+                            b.OnClickAction((SyntaxBuilder b, Var<ListProjectsPage> state) =>
+                            {
+                                b.Set(state, x => x.SelectedProject, project);
+                                b.ShowSidePanel();
+                                return b.Clone(state);
+                            });
+                        },
+                        b.TextSpan(b.Get(project, x => x.Name)));
+                });
+            projectTableBuilder.OverrideDataCell(
+                "Versions",
+                (b, project) =>
+                {
+                    var projectId = b.Get(project, x => x.Id);
+                    var versions = b.Get(clientModel, projectId, (x, projectId) => x.ProjectsList.SelectMany(x => x.Versions).Where(x => x.ProjectId == projectId).Count());
+                    return b.TextSpan(b.AsString(versions));
+                });
+
+            return b.HtmlDiv(
+                b =>
+                {
+                    // The side panel must not be inside the main panel
+                    // because it's FIXED position gets broken by...
+                    // ... the parent DROP SHADOW!
+                },
+                sidePanel,
+                b.MdsMainPanel(
+                    b =>
+                    {
+                    },
+                    b.ValidationPanel(clientModel),
+                    b.DataTable(
+                        projectTableBuilder,
+                        b.Get(clientModel, x => x.ProjectsList),
+                        "Project name",
+                        "Versions")));
 
             //var renderCell = b.RenderCell<MdsCommon.Project>((b, row, col) =>
             //{

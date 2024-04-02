@@ -60,6 +60,15 @@ public static partial class Control
             });
     }
 
+    public static Var<IVNode> MdsMainPanel(this LayoutBuilder b, Action<PropsBuilder<HtmlDiv>> buildProps, params Var<IVNode>[] children)
+    {
+        return b.HtmlDiv(b =>
+        {
+            b.SetClass("p-4 bg-white rounded drop-shadow");
+            buildProps(b);
+        }, children);
+    }
+
     //public static Var<IVNode> DropDown(this LayoutBuilder b, Var<List<Metapsi.ChoicesJs.Choice>> choices)
     //{
     //    b.AddStylesheet("MdsCommon.Controls.Choices.css");

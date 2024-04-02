@@ -17,13 +17,63 @@ namespace MdsCommon
             b.AddModuleStylesheet();
 
             var sidePanel = b.SidePanel(
-            clientModel,
-            b => b.EventPanel(
-                b.Get(clientModel, x => x.SelectedEvent)));
+                b => b.EventPanel(b.Get(clientModel, x => x.SelectedEvent)));
 
-            b.Comment("After side panel");
+            var eventsTableBuilder = MdsDefaultBuilder.DataTable<InfrastructureEvent>();
 
-            throw new System.NotImplementedException();
+            eventsTableBuilder.OverrideHeaderCell(nameof(InfrastructureEvent.ShortDescription), b => b.T("Description"));
+
+            eventsTableBuilder.OverrideDataCell(
+                nameof(InfrastructureEvent.Timestamp),
+                (b, row) =>
+                {
+                    var date = b.Get(row, x => x.Timestamp);
+                    var dateStringLocale = b.ItalianFormat(date);
+
+                    return b.Link(
+                        dateStringLocale,
+                        b.MakeAction<ListInfrastructureEventsPage>(
+                        (b, clientModel) =>
+                        {
+                            b.Set(clientModel, x => x.SelectedEvent, row);
+                            b.ShowSidePanel();
+                            return b.Clone(clientModel);
+                        }));
+                });
+            eventsTableBuilder.OverrideDataCell(
+                nameof(InfrastructureEvent.Criticality),
+                (b, row) =>
+                {
+                    var criticality = b.Get(row, x => x.Criticality);
+
+                    return b.HtmlSpan(
+                        b =>
+                        {
+                        },
+                        b.TextSpan(criticality),
+                        b.AlertBadge(criticality));
+                });
+
+
+            return b.HtmlDiv(
+                b =>
+                {
+
+                },
+                sidePanel,
+                b.MdsMainPanel(
+                    b =>
+                    {
+
+                    },
+                    b.DataTable(
+                        eventsTableBuilder,
+                        b.Get(clientModel, x => x.InfrastructureEvents),
+                        nameof(InfrastructureEvent.Timestamp),
+                        nameof(InfrastructureEvent.Criticality),
+                        nameof(InfrastructureEvent.Source),
+                        nameof(InfrastructureEvent.ShortDescription)
+                        )));
 
             //var renderCell = b.Def((LayoutBuilder b, Var<InfrastructureEvent> row, Var<DataTable.Column> col) =>
             //{

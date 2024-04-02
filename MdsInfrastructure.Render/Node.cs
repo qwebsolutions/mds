@@ -8,6 +8,7 @@ using System;
 using MdsCommon.Controls;
 using System.Diagnostics.Contracts;
 using Metapsi.Html;
+using Metapsi.Dom;
 
 namespace MdsInfrastructure.Render
 {
@@ -67,8 +68,89 @@ namespace MdsInfrastructure.Render
 
         public static Var<IVNode> RenderNodesList(this LayoutBuilder b, Var<M.List> clientModel)
         {
+            var nodesGridBuilder = MdsDefaultBuilder.DataGrid<InfrastructureNode>();
 
-            throw new NotImplementedException();
+            nodesGridBuilder.CreateToolbarActions = b =>
+            {
+                return b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("flex flex-row");
+                        b.OnClickAction((SyntaxBuilder b, Var<M.List> clientModel) =>
+                        {
+                            b.CallOnObject(b.Window(), "alert", b.Const("Adding nodes is not supported at the moment"));
+                            return b.Clone(clientModel);
+                        });
+                    },
+                    b.HtmlButton(
+                        b =>
+                        {
+                            b.AddPrimaryButtonStyle();
+                        },
+                        b.T("Add node")));
+            };
+
+            nodesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(InfrastructureNode.NodeName), (b) => b.T("Name"));
+            nodesGridBuilder.DataTableBuilder.OverrideDataCell(
+                nameof(InfrastructureNode.NodeName),
+                (b, node) =>
+                {
+                    var nodeNameRef = b.Ref(b.Get(node, x => x.NodeName));
+                    b.If(b.IsEmpty(b.GetRef(nodeNameRef)), b => b.SetRef(nodeNameRef, b.Const("(not set)")));
+                    var nameLink = b.Link(b.GetRef(nodeNameRef), b.Url<Routes.Node.Edit, Guid>(b.Get(node, x => x.Id)));
+                    return nameLink;
+                });
+
+            nodesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(InfrastructureNode.MachineIp), (b) => b.T("IP"));
+
+            nodesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(InfrastructureNode.UiPort), (b) => b.T("Controller UI"));
+            nodesGridBuilder.DataTableBuilder.OverrideDataCell(
+                nameof(InfrastructureNode.UiPort),
+                (b, node) =>
+                {
+                    var machineIp = b.Get(node, x => x.MachineIp);
+                    var uiPort = b.Get(node, x => x.UiPort);
+                    var uiUrl = b.Concat(b.Const("http://"), machineIp, b.Const(":"), b.AsString(uiPort));
+                    return b.HtmlA(
+                        b =>
+                        {
+                            b.SetClass("flex flex-row gap-2");
+                            b.UnderlineBlue();
+                            b.SetHref(uiUrl);
+                        },
+                        b.T(uiUrl),
+                        b.Svg(Metapsi.Heroicons.Mini.ArrowTopRightOnSquare, "w-5 h-5"));
+                });
+
+            nodesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(InfrastructureNode.EnvironmentTypeId), (b) => b.T("Type"));
+            nodesGridBuilder.DataTableBuilder.OverrideDataCell(
+                nameof(InfrastructureNode.EnvironmentTypeId),
+                (b, node) =>
+                {
+                    var envTypes = b.Get(clientModel, x => x.EnvironmentTypes);
+                    var envTypeId = b.Get(node, x => x.EnvironmentTypeId);
+                    var envType = b.Get(envTypes, envTypeId, (envTypes, envTypeId) => envTypes.SingleOrDefault(y => y.Id == envTypeId));
+                    var envTypeLabel = b.If(
+                        b.HasObject(envType),
+                        b => b.Get(envType, x => x.Name),
+                        b => b.Const("(not selected)"));
+
+                    return b.T(envTypeLabel);
+                });
+
+            return
+                b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("drop-shadow p-4 rounded bg-white");
+                    },
+                b.DataGrid(
+                    nodesGridBuilder,
+                    b.Get(clientModel, x => x.InfrastructureNodes),
+                    nameof(InfrastructureNode.NodeName),
+                    nameof(InfrastructureNode.MachineIp),
+                    nameof(InfrastructureNode.UiPort),
+                    nameof(InfrastructureNode.EnvironmentTypeId)));
 
             //var addUrl = b.Const("Not implemented");
 

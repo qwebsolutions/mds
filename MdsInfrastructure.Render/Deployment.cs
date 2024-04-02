@@ -35,9 +35,29 @@ namespace MdsInfrastructure.Render
                 Render(b, serverModel)).As<IVNode>();
             }
 
-
             public Var<IVNode> Render(LayoutBuilder b, DeploymentHistory serverModel)
             {
+                var deploymentsTableBuilder = MdsDefaultBuilder.DataTable<MdsInfrastructure.Deployment>();
+                deploymentsTableBuilder.OverrideHeaderCell(
+                    nameof(MdsInfrastructure.Deployment.Timestamp),
+                    b => b.T("Deployment timestamp"));
+                deploymentsTableBuilder.OverrideDataCell(
+                    nameof(MdsInfrastructure.Deployment.Timestamp),
+                    (b, deployment) =>
+                    {
+                        var dateStringLocale = b.ItalianFormat(b.Get(deployment, x => x.Timestamp));
+                        return b.Link(dateStringLocale, b.Url<Routes.Deployment.Review, Guid>(b.Get(deployment, x => x.Id)));
+                    });
+
+                deploymentsTableBuilder.OverrideHeaderCell(nameof(MdsInfrastructure.Deployment.ConfigurationName), b => b.T("Configuration name"));
+
+                return b.MdsMainPanel(b => { },
+                    b.DataTable(
+                        deploymentsTableBuilder,
+                        b.Const(serverModel.Deployments.ToList()),
+                        nameof(MdsInfrastructure.Deployment.Timestamp),
+                        nameof(MdsInfrastructure.Deployment.ConfigurationName)));
+
                 throw new NotImplementedException();
                 //var rc = b.RenderCell<MdsInfrastructure.Deployment>((b, row, col) =>
                 //{

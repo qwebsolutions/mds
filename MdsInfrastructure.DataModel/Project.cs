@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace MdsInfrastructure
 {
-    public class ListProjectsPage : IHasSidePanel, IHasLoadingPanel, IHasValidationPanel
+    public class ListProjectsPage : IHasLoadingPanel, IHasValidationPanel
     {
         public List<Project> ProjectsList { get; set; }
         public List<InfrastructureConfiguration> AllConfigurationHeaders { get; set; }

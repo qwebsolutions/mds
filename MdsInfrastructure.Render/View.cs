@@ -13,45 +13,10 @@ namespace MdsInfrastructure
         public static Reference<string> RendererName = new Reference<string>() { Value = string.Empty };
 
         public static Var<IVNode> View<TModel>(
-            LayoutBuilder b,
-            Var<TModel> clientModel,
-            Var<List<Func<TModel, IVNode>>> renderers)
-        {
-            var currentViewRef = b.GlobalRef(RendererName);
-            b.If(
-                b.Not(
-                    b.HasValue(
-                        b.GetRef(currentViewRef))),
-                b =>
-                {
-                    b.SetRef(currentViewRef, b.Get();
-                });
-
-            var currentViewName = b.GetRef(currentViewRef);
-
-            var outNode = b.Ref<IVNode>(b.TextSpan("View error"));
-
-            foreach (var renderer in renderers)
-            {
-                b.If(
-                    b.AreEqual(
-                        b.Const(renderer.Method.Name),
-                        currentViewName),
-                    b =>
-                    {
-                        b.SetRef(outNode, renderer(b, clientModel));
-                    });
-            }
-
-            return b.GetRef(outNode);
-        }
-
-        public static Var<IVNode> View<TModel>(
-            LayoutBuilder b,
+            this LayoutBuilder b,
             Var<TModel> clientModel,
             params Func<LayoutBuilder, Var<TModel>, Var<IVNode>>[] renderers)
         {
-
             var currentViewRef = b.GlobalRef(RendererName);
             b.If(
                 b.Not(
@@ -59,32 +24,33 @@ namespace MdsInfrastructure
                         b.GetRef(currentViewRef))),
                 b =>
                 {
-                    b.SetRef(currentViewRef, b.Const(defaultViewName));
+                    b.SetRef(currentViewRef, b.GetViewName(renderers.First()));
                 });
 
             var currentViewName = b.GetRef(currentViewRef);
 
-            var outNode = b.Ref<IVNode>(b.TextSpan("View error"));
+            var contentRenderer = b.Ref(b.Def((LayoutBuilder b, Var<TModel> model) => b.TextSpan("View error")));
 
             foreach (var renderer in renderers)
             {
                 b.If(
                     b.AreEqual(
-                        b.Const(renderer.Method.Name),
+                        b.GetViewName(renderer),
                         currentViewName),
                     b =>
                     {
-                        b.SetRef(outNode, renderer(b, clientModel));
+                        b.Log(nameof(currentViewName), currentViewName);
+                        b.SetRef(contentRenderer, b.Def(renderer));
                     });
             }
 
-            return b.GetRef(outNode);
+            return b.Call(b.GetRef(contentRenderer), clientModel);
         }
 
-        public static void SwapView<TModel>(this SyntaxBuilder b, Var<TModel> model, Var<string> areaName, Var<string> viewRenderer)
+        public static void SwapView<TModel>(this SyntaxBuilder b, Func<LayoutBuilder, Var<TModel>, Var<IVNode>> renderer)
         {
-            b.Log("viewRenderer", viewRenderer);
-            b.SetRef(b.GlobalRef(RendererName), viewRenderer);
+            //b.Log("viewRenderer", viewRenderer);
+            b.SetRef(b.GlobalRef(RendererName), b.GetViewName(renderer));
         }
 
         public static Var<string> GetViewName<TModel>(this SyntaxBuilder b, Func<LayoutBuilder, Var<TModel>, Var<IVNode>> renderer)
