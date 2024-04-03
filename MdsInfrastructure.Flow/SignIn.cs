@@ -52,6 +52,8 @@ public static class SignIn
 
             var principal = new System.Security.Claims.ClaimsPrincipal(identity);
             await httpContext.SignInAsync(principal);
+            if (string.IsNullOrEmpty(returnUrl))
+                returnUrl = "/";
             return Results.Redirect(returnUrl);
         }
     }

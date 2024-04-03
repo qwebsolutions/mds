@@ -13,9 +13,9 @@ using Metapsi.Ui;
 
 namespace MdsLocal
 {
-    class Program
+    public class Program
     {
-        static async Task Main(string[] args)
+        public static async Task Main(string[] args)
         {
             DateTime start = DateTime.UtcNow;
 
@@ -62,17 +62,37 @@ namespace MdsLocal
 
             InputArguments arguments = Mds.ParametersAs<InputArguments>(parameters);
 
-            Metapsi.Sqlite.IdConverter.Register();
+            int uiPort = 0;
+
+            if (parameters.ContainsKey("UiPort"))
+            {
+                uiPort = int.Parse(parameters["UiPort"]);
+            }
+
+            var localReferences = await SetupLocalController(arguments, uiPort, start);
+
+            var application = localReferences.ApplicationSetup.Revive();
+            //h.State.WebApplication.Lifetime.ApplicationStopped.Register(async () =>
+            //{
+            //    Console.WriteLine("Stop triggered from web app");
+            //    await application.Suspend();
+            //});
+            await application.SuspendComplete;
+        }
+
+        public static async Task<WebServer.References> SetupLocalController(InputArguments arguments, int uiPort, DateTime start)
+        {
+            Metapsi.Sqlite.Converters.RegisterAll();
 
             var localReferences = MdsLocalApplication.Setup(arguments, start);
 
             WebServer.References webServer = null;
 
-            if (parameters.ContainsKey("UiPort"))
+            if (uiPort != 0)
             {
                 webServer = localReferences.ApplicationSetup.AddWebServer(
                     localReferences.ImplementationGroup,
-                    int.Parse(parameters["UiPort"]),
+                    uiPort,
                     arguments.WebRootPath);
             }
             else
@@ -135,13 +155,7 @@ namespace MdsLocal
                 };
             }, WebServer.Authorization.Public);
 
-            var application = localReferences.ApplicationSetup.Revive();
-            //h.State.WebApplication.Lifetime.ApplicationStopped.Register(async () =>
-            //{
-            //    Console.WriteLine("Stop triggered from web app");
-            //    await application.Suspend();
-            //});
-            await application.SuspendComplete;
+            return webServer;
         }
     }
 }
