@@ -22,15 +22,12 @@ namespace MdsInfrastructure.Render
             public override Var<IVNode> OnRender(LayoutBuilder b, M.List serverModel, Var<M.List> clientModel)
             {
                 b.AddModuleStylesheet();
+
+                var headerProps = b.GetHeaderProps(b.Const("Nodes"), b.Const(string.Empty), b.Get(clientModel, x => x.User));
+
                 return b.Layout(
                     b.InfraMenu(nameof(Routes.Node), serverModel.User.IsSignedIn()),
-                    b.Render(
-                        b.Const(
-                            new Header.Props()
-                            {
-                                Main = new Header.Title() { Operation = "Nodes" },
-                                User = serverModel.User,
-                            })),
+                    b.Render(headerProps),
                     b.RenderNodesList(clientModel)).As<IVNode>();
             }
         }
@@ -46,16 +43,14 @@ namespace MdsInfrastructure.Render
             {
                 var nodeName = b.Get(clientModel, x => x.InfrastructureNode.NodeName);
 
-                var header = b.NewObj(new Header.Props()
-                {
-                    Main = new Header.Title() { Operation = "Edit node" },
-                    User = serverModel.User,
-                });
-                b.Set(b.Get(header, x => x.Main), x => x.Entity, nodeName);
+                var headerProps = b.GetHeaderProps(
+                    b.Const("Edit node"),
+                    nodeName,
+                    b.Get(clientModel, x => x.User));
 
                 var layout = b.Layout(
                     b.InfraMenu(nameof(Routes.Node), serverModel.User.IsSignedIn()),
-                    b.Render(header),
+                    b.Render(headerProps),
                     b.RenderEditNodePage(clientModel));
 
                 b.AddModuleStylesheet();

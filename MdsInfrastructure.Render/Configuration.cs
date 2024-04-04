@@ -12,26 +12,26 @@ namespace MdsInfrastructure.Render
 {
     public static class Configuration
     {
-        public class List : MixedHyperPage<ListConfigurationsPage, ConfigurationHeadersList>
+        public class List : MixedHyperPage<ListConfigurationsPage, ListConfigurationsPage>
         {
-            public override ConfigurationHeadersList ExtractClientModel(ListConfigurationsPage serverData)
+            public override ListConfigurationsPage ExtractClientModel(ListConfigurationsPage serverData)
             {
-                return serverData.ConfigurationHeadersList;
+                return serverData;
             }
 
-            public override Var<IVNode> OnRender(LayoutBuilder b, ListConfigurationsPage serverModel, Var<ConfigurationHeadersList> clientModel)
+            public override Var<IVNode> OnRender(LayoutBuilder b, ListConfigurationsPage serverModel, Var<ListConfigurationsPage> clientModel)
             {
                 b.AddModuleStylesheet();
 
                 return b.Layout(
                         b.InfraMenu(nameof(MdsInfrastructure.Routes.Configuration),
                         serverModel.User.IsSignedIn()),
-                        b.Render(b.Const(new Header.Props()
-                        {
-                            Main = new Header.Title() { Operation = "Configurations" },
-                            User = serverModel.User,
-                        })),
-                        Render(b, clientModel)).As<IVNode>();
+                        b.Render(
+                            b.GetHeaderProps(
+                                b.Const("Configurations"),
+                                b.Const(string.Empty),
+                                b.Get(clientModel, x => x.User))),
+                        Render(b, b.Get(clientModel, x => x.ConfigurationHeadersList))).As<IVNode>();
             }
 
             private static Var<HyperNode> Render(LayoutBuilder b, Var<ConfigurationHeadersList> clientModel)
@@ -95,16 +95,17 @@ namespace MdsInfrastructure.Render
             {
                 b.AddModuleStylesheet();
 
+
+                var headerProps = b.GetHeaderProps(
+                    b.Const("Edit configuration"),
+                    b.Const(string.Empty),
+                    b.Get(clientModel, x => x.User));
+
                 return b.Layout(
                         b.InfraMenu(nameof(MdsInfrastructure.Routes.Configuration),
                         serverModel.User.IsSignedIn()),
-                        b.Render(b.Const(new Header.Props()
-                        {
-                            Main = new Header.Title() { Operation = "Edit configuration" },
-                            User = serverModel.User,
-                        })),
+                        b.Render(headerProps),
                         Render(b, clientModel)).As<IVNode>();
-                //Render(b, clientModel));
             }
 
             public override Var<HyperType.StateWithEffects> OnInit(SyntaxBuilder b, Var<EditConfigurationPage> model)
@@ -139,15 +140,15 @@ namespace MdsInfrastructure.Render
             {
                 b.AddModuleStylesheet();
 
+                var headerProps = b.GetHeaderProps(
+                    b.Const("Review configuration"),
+                    b.Const(string.Empty),
+                    b.Get(clientModel, x => x.User));
+
                 return b.Layout(
                     b.InfraMenu(nameof(Configuration),
                     serverModel.User.IsSignedIn()),
-                    b.Render(
-                        b.Const(new Header.Props()
-                        {
-                            Main = new Header.Title() { Operation = "Review configuration" },
-                            User = serverModel.User
-                        })),
+                    b.Render(headerProps),
                     RenderDeploymentConfiguration(b, serverModel.Snapshot, serverModel.SavedConfiguration)).As<IVNode>();
             }
 

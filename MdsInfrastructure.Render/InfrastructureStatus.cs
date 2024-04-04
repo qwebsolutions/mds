@@ -21,15 +21,11 @@ namespace MdsInfrastructure.Render
         {
             b.AddModuleStylesheet();
 
+            var headerProps = b.GetHeaderProps(b.Const("Infrastructure status"), b.Const(string.Empty), b.Get(clientModel, x => x.User));
+
             return b.Layout(
                 b.InfraMenu(nameof(Routes.Status), serverModel.User.IsSignedIn()),
-                b.Render(
-                    b.Const(
-                        new MdsCommon.Header.Props()
-                        {
-                            Main = new MdsCommon.Header.Title() { Operation = "Infrastructure status" },
-                            User = serverModel.User
-                        })),
+                b.Render(headerProps),
                 Render(b, serverModel)).As<IVNode>();
         }
 

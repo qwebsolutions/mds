@@ -23,16 +23,13 @@ namespace MdsInfrastructure.Render
             {
                 b.AddModuleStylesheet();
 
+                var headerProps = b.GetHeaderProps(b.Const("Deployments"), b.Const(string.Empty), b.Get(clientModel, x => x.User));
+
                 return b.Layout(
                     b.InfraMenu(nameof(Routes.Deployment), serverModel.User.IsSignedIn()),
-                    b.Render(b.Const(new Header.Props()
-                    {
-                        Main = new Header.Title() { Operation = "Deployments" },
-                        User = serverModel.User
-                    })),
+                    b.Render(headerProps),
                 Render(b, serverModel)).As<IVNode>();
             }
-
 
             public Var<HyperNode> Render(LayoutBuilder b, DeploymentHistory serverModel)
             {
@@ -70,12 +67,14 @@ namespace MdsInfrastructure.Render
                 b.AddModuleStylesheet();
 
                 var selectedDeployment = serverModel.Deployment.Timestamp.ItalianFormat();
-                var layout = b.Layout(b.InfraMenu(nameof(Routes.Deployment), serverModel.User.IsSignedIn()),
-                b.Render(b.Const(new Header.Props()
-                {
-                    Main = new Header.Title() { Operation = "Deployment", Entity = selectedDeployment },
-                    User = serverModel.User
-                })),
+
+                var headerProps = b.GetHeaderProps(b.Const("Deployment"), b.Const(selectedDeployment), b.Get(clientModel, x => x.User));
+
+                var layout = b.Layout(
+                    b.InfraMenu(
+                        nameof(Routes.Deployment),
+                        serverModel.User.IsSignedIn()),
+                b.Render(headerProps),
                 b.ReviewDeployment(serverModel.ChangesReport));
                 return layout.As<IVNode>();
             }
@@ -93,15 +92,17 @@ namespace MdsInfrastructure.Render
                 b.AddModuleStylesheet();
 
                 var selectedDeployment = serverModel.Deployment.Timestamp.ItalianFormat();
+
+                var headerProps = b.GetHeaderProps(
+                    b.Const("Review deployment"),
+                    b.Const(selectedDeployment),
+                    b.Get(clientModel, x => x.User));
+
                 var layout = b.Layout(
                     b.InfraMenu(
                         nameof(Routes.Deployment),
                         serverModel.User.IsSignedIn()),
-                        b.Render(b.Const(new Header.Props()
-                        {
-                            Main = new Header.Title() { Operation = "Review deployment", Entity = selectedDeployment },
-                            User = serverModel.User
-                        })),
+                        b.Render(headerProps),
                         RenderDeploymentReport(b, serverModel.ChangesReport, serverModel.SavedConfiguration));
                 return layout.As<IVNode>();
             }

@@ -18,13 +18,14 @@ namespace MdsInfrastructure.Render
 
             public override Var<IVNode> OnRender(LayoutBuilder b, ListProjectsPage serverModel, Var<ListProjectsPage> clientModel)
             {
+                var headerProps = b.GetHeaderProps(
+                    b.Const("Projects"),
+                    b.Const(string.Empty),
+                    b.Get(clientModel, x => x.User));
+
                 return b.Layout(
                     b.InfraMenu(nameof(Routes.Project), serverModel.User.IsSignedIn()),
-                    b.Render(b.Const(new Header.Props()
-                    {
-                        Main = new Header.Title() { Operation = "Projects" },
-                        User = serverModel.User
-                    })), b.Render(clientModel)).As<IVNode>();
+                    b.Render(headerProps), b.Render(clientModel)).As<IVNode>();
             }
         }
 
