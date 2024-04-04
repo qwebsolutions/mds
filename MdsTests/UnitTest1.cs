@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 namespace MdsTests;
 
 [TestClass]
-public class UnitTest1
+public class TestScenarios
 {
     private static HttpClient httpClient = new HttpClient(new HttpClientHandler()
     {
@@ -220,7 +220,7 @@ public class UnitTest1
     }
 
     private static async Task UploadBinaries(
-        string binariesManagerBaseUrl, 
+        string binariesManagerBaseUrl,
         string projectName,
         string version,
         string revision,
@@ -239,5 +239,68 @@ public class UnitTest1
         requestContent.Add(new StringContent(target), "target");
 
         await httpClient.PostAsync(new Uri(new Uri(binariesManagerBaseUrl), "/UploadBinaries"), requestContent);
+    }
+
+    [TestMethod]
+    public async Task ConvertOldDateFormat()
+    {
+        Metapsi.Sqlite.Converters.RegisterAll();
+
+        const string localNodeName = "ms-test-node-convert-datetime";
+
+        var dateTimeConversionOriginalDbsFolder = "c:\\github\\qwebsolutions\\mds\\MdsTests\\LocalDateTimeConversionStart";
+
+        var mdsFolder = "c:\\github\\qwebsolutions\\mds\\MdsTests\\mds\\";
+        if (System.IO.Directory.Exists(mdsFolder))
+        {
+            System.IO.Directory.Delete(mdsFolder, true);
+        }
+        System.IO.Directory.CreateDirectory(mdsFolder);
+
+        var cleanStartFolder = "c:\\github\\qwebsolutions\\mds\\MdsTests\\CleanStart";
+
+        var infraCleanDbPath = System.IO.Path.Combine(cleanStartFolder, "MdsInfrastructure.db");
+        var infraDbPath = System.IO.Path.Combine(mdsFolder, "MdsInfrastructure.db");
+        System.IO.File.Copy(infraCleanDbPath, infraDbPath, true);
+
+        await DeclareLocalNode(mdsFolder, localNodeName, "127.0.0.1");
+
+        var infraReferences = await MdsInfrastructure.Program.SetupGlobalController(new MdsInfrastructure.MdsInfrastructureApplication.InputArguments()
+        {
+            AdminPassword = "admin!",
+            AdminUserName = "admin",
+            InfrastructureName = "mstest",
+            UiPort = 9125,
+            DbPath = System.IO.Path.Combine(mdsFolder, "MdsInfrastructure.db"),
+            NodeCommandOutputChannel = "",
+            BroadcastDeploymentOutputChannel = "161.35.193.157/ms-test.BroadcastDeployment",
+            HealthStatusInputChannel = "161.35.193.157/ms-test.HealthStatus",
+            BuildManagerUrl = "http://localhost:5011"
+        }, DateTime.UtcNow);
+
+        infraReferences.ApplicationSetup.Revive();
+
+        await Task.Delay(5000);
+
+
+        var localCleanDbPath = System.IO.Path.Combine(dateTimeConversionOriginalDbsFolder, "MdsLocal.db");
+        var localDbPath = System.IO.Path.Combine(mdsFolder, "MdsLocal.db");
+        System.IO.File.Copy(localCleanDbPath, localDbPath, true);
+
+        await MdsLocal.Program.ReplaceOldDateTimeFormat(localDbPath);
+
+        var localControllerRefs = await MdsLocal.Program.SetupLocalController(new MdsLocal.InputArguments()
+        {
+            DbPath = System.IO.Path.Combine(mdsFolder, "MdsLocal.db"),
+            NodeName = localNodeName,
+            InfrastructureApiUrl = "http://localhost:9125/api/",
+            ServicesBasePath = System.IO.Path.Combine(mdsFolder, "services"),
+            BuildTarget = "win10-x64",
+            ServicesDataPath = System.IO.Path.Combine(mdsFolder, "data")
+        }, 0, DateTime.UtcNow);
+
+        var app = localControllerRefs.ApplicationSetup.Revive();
+
+        await app.SuspendComplete;
     }
 }
