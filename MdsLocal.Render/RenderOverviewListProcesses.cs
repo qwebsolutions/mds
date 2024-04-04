@@ -5,10 +5,9 @@ using Metapsi.Hyperapp;
 using System.Linq;
 using Metapsi;
 using MdsCommon.Controls;
-using MdsCommon.HtmlControls;
 using Metapsi.Shoelace;
-using System.ComponentModel;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+using Metapsi.Html;
+using System.Collections.Generic;
 
 namespace MdsLocal
 {
@@ -23,23 +22,6 @@ namespace MdsLocal
             b.Set(headerProps, x => x.User, b.Const<User>(new User() { Name = "Hardcoded user" }));
             b.Set(headerProps, x => x.UseSignIn, b.Const(false));
 
-            var clientRows = b.Get(model, x => x.Processes);
-
-            var view = b.Div("flex flex-col space-y-4");
-
-            b.If(
-                b.Get(model, x => x.Warnings.Any()),
-                b =>
-                {
-                    b.Foreach(
-                        b.Get(model, x => x.Warnings),
-                        (b, w) =>
-                        {
-                            var warningContainer = b.Add(view, b.Div("border border-solid border-red-300 bg-red-100 text-red-300 rounded w-full p-2 mb-4 drop-shadow transition-all"));
-                            b.Add(warningContainer, b.Text(w));
-                        });
-                });
-
             var localSettings = b.Get(model, x => x.LocalSettings);
             var title = b.Concat(
                 b.Const($"Node: "),
@@ -49,85 +31,82 @@ namespace MdsLocal
                 b.Const(" infrastructure API: "),
                 b.Get(localSettings, x => x.InfrastructureApiUrl));
 
-            b.Add(view, b.InfoPanel(
-                b.Const(Panel.Style.Info),
-                b => b.Text(title),
-                b => b.Text(b.Get(model, x => x.OverviewText))));
-
-            var processes = b.Get(model, x => x.Processes);
-
-            b.OnModel(
-                model,
-                (bParent, context) =>
+            var view = b.HtmlDiv(
+                b =>
                 {
-                    var b = new LayoutBuilder(bParent);
-
-                    var dataGrid = b.DataGrid<ProcessRow>(
-                        b =>
-                        {
-                            b.OnTable(b =>
+                    b.SetClass("flex flex-col space-y-4");
+                },
+                b.Optional(
+                    b.Get(model, x => x.Warnings.Any()),
+                    b =>
+                    {
+                        return b.HtmlDiv(
+                            b =>
                             {
-                                b.FillFrom(processes, exceptColumns: new()
+                                b.SetClass("w-full flex flex-col gap-4");
+                            },
+                            b.Map(
+                                b.Get(model, x => x.Warnings),
+                                (b, w) =>
                                 {
-                                    nameof(ProcessRow.HasError)
-                                });
-
-                                b.SetCommonStyle();
-                            });
-
-                            b.AddHoverRowAction<OverviewPage, ProcessRow>(KillProcessAction, Metapsi.Heroicons.Solid.ArrowPath, (b, data, props) =>
-                            {
-                                b.AddClass(props, "w-8 h-8 text-red-500");
-                            }, 
-                            visible: (b, row) =>
-                            {
-                                return b.Get(row, x => x.Pid != "Not running");
-                            });
-                        });
-
-                    b.Add(view, b.AddClass(dataGrid, "p-4 bg-white"));
-                });
-
-            //var rc = b.Def((LayoutBuilder b, Var<ProcessRow> serviceSnapshot, Var<DataTable.Column> col) =>
-            //{
-            //    Var<string> serviceName = b.Get(serviceSnapshot, x => x.ServiceName);
-            //    Var<string> columnName = b.Get(col, x => x.Name);
-
-            //    return b.VPadded4(b.Text(b.GetProperty<string>(serviceSnapshot, columnName)));
-            //});
-
-            //b.If(
-            //    b.Get(model, model => model.FullLocalStatus.LocalServiceSnapshots.Any()),
-            //    b =>
-            //    {
-            //        var props = b.NewObj<DataTable.Props<ProcessRow>>(b =>
-            //        {
-            //            b.AddColumn(nameof(ProcessRow.ServiceName), "Service name");
-            //            b.AddColumn(nameof(ProcessRow.ProjectName), "Project name");
-            //            b.AddColumn(nameof(ProcessRow.ProjectVersion), "Project version");
-            //            b.AddColumn(nameof(ProcessRow.Pid), "Process ID");
-            //            b.AddColumn(nameof(ProcessRow.UsedRam), "Working set (RAM, MB)");
-            //            b.AddColumn(nameof(ProcessRow.RunningSince), "Running since");
-            //            b.SetRows(clientRows);
-            //            b.SetRenderCell(rc);
-            //        });
-
-            //        b.Set(props, x => x.CreateRow, b.Def((LayoutBuilder b, Var<ProcessRow> row) =>
-            //        {
-            //            Var<ProcessRow> processRow = row.As<ProcessRow>();
-            //            return b.If(b.Get(processRow, x => x.HasError), b => b.Node("tr", "bg-red-500"), b => b.Node("tr"));
-            //        }));
-
-            //        b.Add(view, b.DataTable(props));
-            //    });
-
-
-            b.Add(view, KillProcessPopup(b, model));
+                                    return b.HtmlDiv(
+                                        b =>
+                                        {
+                                            b.SetClass("border border-solid border-red-300 bg-red-100 text-red-300 rounded w-full p-2 mb-4 drop-shadow transition-all");
+                                        },
+                                        b.T(w));
+                                }));
+                    }),
+                b.InfoPanel(
+                    b.Const(Panel.Style.Info),
+                    b => b.T(title),
+                    b => b.T(b.Get(model, x => x.OverviewText))),
+                ProcessesGrid(b, model),
+                KillProcessPopup(b, model));
 
             return b.Layout(
                 b.LocalMenu(nameof(Overview)),
                 b.Render(headerProps),
-                view).As<IVNode>();
+                view);
+        }
+
+        private Var<IVNode> ProcessesGrid(LayoutBuilder b, Var<OverviewPage> model)
+        {
+            var processes = b.Get(model, x => x.Processes);
+
+            var processesGridBuilder = MdsDefaultBuilder.DataGrid<ProcessRow>();
+
+            processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.ServiceName), b => b.T("Service name"));
+            processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.ProjectName), b => b.T("Project name"));
+            processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.ProjectVersion), b => b.T("Project version"));
+            processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.Pid), b => b.T("Process ID"));
+            processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.UsedRam), b => b.T("Working set (RAM, MB)"));
+            processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.RunningSince), b => b.T("Running since"));
+            processesGridBuilder.DataTableBuilder.AddTrProps(
+                (b, process) =>
+                {
+                    b.If(b.Get(process, x => x.HasError),
+                        b =>
+                        {
+                            b.AddClass("bg-red-500");
+                        });
+                });
+
+            processesGridBuilder.AddRowAction(
+                (b, row) =>
+                {
+                    return b.Optional(
+                        b.Get(row, x => x.Pid != "Not running"),
+                        b => b.RowIconAction(
+                            b =>
+                            {
+                                b.OnClickAction(b.MakeActionDescriptor<OverviewPage, ProcessRow>(KillProcessAction, row));
+                            },
+                            b.Svg(Metapsi.Heroicons.Solid.ArrowPath, "w-8 h-8 text-red-500")));
+                });
+
+            var columns = DataTable.GetColumns<ProcessRow>().ToList().Except(new List<string>() { nameof(ProcessRow.HasError) });
+            return b.DataGrid(processesGridBuilder, processes, columns.ToArray());
         }
 
         private Var<OverviewPage> KillProcessAction(SyntaxBuilder b, Var<OverviewPage> model, Var<ProcessRow> processData)
@@ -143,24 +122,22 @@ namespace MdsLocal
             Var<OverviewPage> model)
         {
             return
-                b.SlNode(
-                    "sl-dialog",
-                    (b, props) =>
+                b.SlDialog(
+                    b =>
                     {
-                        b.SetDynamic(props, Html.id, b.Const(IdKillProcessPopup));
+                        b.SetId(IdKillProcessPopup);
                     },
                     b.DialogHeader("Restart process?"),
                     b.T(b.Concat(b.Const("Are you sure you want to restart "), b.Get(model, x=>x.RestartProcess.ServiceName), b.Const("?"))),
                     b.DialogFooter(
                         "The process will be forcefully killed and then automatically restarted",
-                        b.H(
-                            "button",
-                            (b, props) =>
+                        b.HtmlButton(
+                            b =>
                             {
-                                b.AddButtonStyle(props);
-                                b.AddClass(props, "bg-red-500");
+                                b.AddButtonStyle();
+                                b.AddClass("bg-red-500");
 
-                                b.OnClickAction(props, b.MakeAction((SyntaxBuilder b, Var<OverviewPage> model) =>
+                                b.OnClickAction(b.MakeAction((SyntaxBuilder b, Var<OverviewPage> model) =>
                                 {
                                     b.HideDialog(b.Const(IdKillProcessPopup));
                                     var process = b.Get(model, x => x.RestartProcess);
@@ -200,12 +177,11 @@ namespace MdsLocal
     {
         public static Var<IVNode> DialogHeader(this LayoutBuilder b, string label)
         {
-            return b.H(
-                "div",
-                (b, props) =>
+            return b.HtmlDiv(
+                b =>
                 {
-                    b.AddClass(props, "flex flex-row items-center gap-2");
-                    b.SetDynamic(props, DynamicProperty.String("slot"), b.Const("label"));
+                    b.AddClass("flex flex-row items-center gap-2");
+                    b.SetSlot("label");
                 },
                 b.T(label));
         }
@@ -213,26 +189,23 @@ namespace MdsLocal
         public static Var<IVNode> DialogFooter(this LayoutBuilder b, string text, params Var<IVNode>[] buttons)
         {
             return
-                b.H(
-                    "div",
-                    (b, props) =>
+                b.HtmlDiv(
+                    b =>
                     {
-                        b.SetDynamic(props, DynamicProperty.String("slot"), b.Const("footer"));
-                        b.AddClass(props, "flex flex-row items-center justify-between");
+                        b.SetSlot("footer");
+                        b.AddClass("flex flex-row items-center justify-between");
                     },
-                    b.H(
-                        "div",
-                        (b, props) =>
+                    b.HtmlDiv(
+                        b =>
                         {
-                            b.AddClass(props, "text-xs text-gray-600 text-left");
+                            b.AddClass("text-xs text-gray-600 text-left");
                         },
                         b.T(text)),
-                    b.H(
-                        "div",
-                        (b, props) =>
+                    b.HtmlDiv(
+                        b =>
                         {
                             // To make the buttons smaller at end
-                            b.AddClass(props, "flex flex-row gap-2 justify-end");
+                            b.AddClass("flex flex-row gap-2 justify-end");
                         },
                         buttons));
         }

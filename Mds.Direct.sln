@@ -63,6 +63,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Html", "..\metapsi\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.TomSelect", "..\metapsi\Metapsi.TomSelect\Metapsi.TomSelect.csproj", "{FDBB6E19-10F3-4405-95AA-7BD4E30C7EF3}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsLocal.Direct", "MdsLocal\MdsLocal.Direct.csproj", "{D9492594-7732-4449-BF89-1E23FB84104F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsLocal.Render.Direct", "MdsLocal.Render\MdsLocal.Render.Direct.csproj", "{1FD34E57-477E-40F3-88E1-8766054A3F92}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -189,6 +193,14 @@ Global
 		{FDBB6E19-10F3-4405-95AA-7BD4E30C7EF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FDBB6E19-10F3-4405-95AA-7BD4E30C7EF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FDBB6E19-10F3-4405-95AA-7BD4E30C7EF3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D9492594-7732-4449-BF89-1E23FB84104F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D9492594-7732-4449-BF89-1E23FB84104F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D9492594-7732-4449-BF89-1E23FB84104F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D9492594-7732-4449-BF89-1E23FB84104F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1FD34E57-477E-40F3-88E1-8766054A3F92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1FD34E57-477E-40F3-88E1-8766054A3F92}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1FD34E57-477E-40F3-88E1-8766054A3F92}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1FD34E57-477E-40F3-88E1-8766054A3F92}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -98,7 +98,7 @@ namespace MdsLocal
             webServer.RegisterStaticFiles(typeof(MdsCommon.Render).Assembly);
             webServer.RegisterStaticFiles(typeof(MdsCommon.Controls.Controls).Assembly);
             webServer.RegisterStaticFiles(typeof(SyntaxBuilder).Assembly);
-            webServer.RegisterStaticFiles(typeof(HyperNode).Assembly);
+            webServer.RegisterStaticFiles(typeof(Metapsi.Hyperapp.IVNode).Assembly);
             webServer.RegisterStaticFiles(typeof(Metapsi.Dom.DomElement).Assembly);
 
             webServer.WebApplication.MapGet("/", () => Results.Redirect(WebServer.Url<Overview.ListProcesses>())).AllowAnonymous().ExcludeFromDescription();

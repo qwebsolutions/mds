@@ -14,10 +14,7 @@
 		<ProjectReference Include="..\MdsLocal.DataModel\MdsLocal.DataModel.Direct.csproj" />
 		<ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.Direct.csproj" />
 		<ProjectReference Include="..\MdsCommon.Db\MdsCommon.Db.Direct.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="DataModel\" />
+		<ProjectReference Include="..\MdsLocal.Render\MdsLocal.Render.Direct.csproj" />
 	</ItemGroup>
 
 </Project>

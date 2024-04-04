@@ -127,9 +127,9 @@ namespace MdsCommon.Controls
             };
         }
 
-        public static Var<IVNode> RowIconAction(this LayoutBuilder b, Action<PropsBuilder<HtmlDiv>> buildContainer, Var<IVNode> child)
+        public static Var<IVNode> RowIconAction(this LayoutBuilder b, Action<PropsBuilder<HtmlButton>> buildContainer, Var<IVNode> child)
         {
-            return b.HtmlDiv(
+            return b.HtmlButton(
                 b =>
                 {
                     b.SetClass("flex rounded bg-gray-200 w-10 h-10 p-1 cursor-pointer justify-center items-center opacity-50 hover:opacity-100");
@@ -138,7 +138,7 @@ namespace MdsCommon.Controls
                 child);
         }
 
-        public static Var<IVNode> DeleteRowIconAction(this LayoutBuilder b, Action<PropsBuilder<HtmlDiv>> buildContainer)
+        public static Var<IVNode> DeleteRowIconAction(this LayoutBuilder b, Action<PropsBuilder<HtmlButton>> buildContainer)
         {
             return b.RowIconAction(b =>
             {

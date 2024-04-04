@@ -7,6 +7,8 @@ using System;
 using Metapsi;
 using MdsCommon.Controls;
 using static MdsLocal.SyncHistory;
+using Metapsi.Html;
+using System.Collections.Specialized;
 
 namespace MdsLocal
 {
@@ -22,38 +24,32 @@ namespace MdsLocal
 
             return b.Layout(
                 b.LocalMenu(nameof(SyncHistory)),
-                b.Render(headerProps), Render2(b, dataModel)).As<IVNode>();
+                b.Render(headerProps), Render(b, dataModel));
         }
 
-        public static Var<IVNode> Render2(LayoutBuilder b, Var<SyncHistory.DataModel> dataModel)
+        private static Var<IVNode> Render(LayoutBuilder b, Var<SyncHistory.DataModel> dataModel)
         {
-            var view = b.Div("flex flex-col");
+            return b.HtmlDiv(
+                b =>
+                {
+                    b.SetClass("flex flex-col");
+                },
+                SyncHistoryTable(b, dataModel));
+        }
 
-            var clientRows = b.Get(dataModel, x => x.SyncHistory);
+        private static Var<IVNode> SyncHistoryTable(LayoutBuilder b, Var<SyncHistory.DataModel> model)
+        {
+            var tableBuilder = MdsDefaultBuilder.DataTable<SyncResult>();
+            tableBuilder.OverrideHeaderCell(nameof(SyncResult.Trigger), b => b.T("Sync trigger"));
+            tableBuilder.OverrideHeaderCell(nameof(SyncResult.ResultCode), b => b.T("Result"));
+            tableBuilder.OverrideDataCell(nameof(SyncResult.Timestamp), (b, syncResult) => b.T(b.ItalianFormat(b.Get(syncResult, x => x.Timestamp))));
 
-            var renderCell = b.Def((LayoutBuilder b, Var<SyncResult> serviceSnapshot, Var<DataTable.Column> col) =>
-            {
-                Var<string> columnName = b.Get(col, x => x.Name);
-
-                var cell = b.Switch(columnName,
-                    b => b.Text(b.GetProperty<string>(serviceSnapshot, columnName)),
-                    (nameof(SyncResult.Timestamp), b => b.Text(b.ItalianFormat(b.Get(serviceSnapshot, x => x.Timestamp)))));
-
-                return b.VPadded4(cell);
-            });
-
-            var props = b.NewObj<DataTable.Props<SyncResult>>(b =>
-            {
-                b.AddColumn(nameof(SyncResult.Timestamp));
-                b.AddColumn(nameof(SyncResult.Trigger), "Sync trigger");
-                b.AddColumn(nameof(SyncResult.ResultCode), "Result");
-                b.SetRows(clientRows);
-                b.SetRenderCell(renderCell);
-            });
-
-            b.Add(view, b.DataTable(props));
-
-            return view;
+            return b.DataTable(
+                tableBuilder,
+                b.Get(model, x => x.SyncHistory),
+                nameof(SyncResult.Timestamp),
+                nameof(SyncResult.Trigger),
+                nameof(SyncResult.ResultCode));
         }
     }
 }
