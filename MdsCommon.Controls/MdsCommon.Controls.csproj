@@ -15,9 +15,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Metapsi.ChoicesJs" Version="*" />
-	  <PackageReference Include="Metapsi.Heroicons" Version="*" />
-	  <PackageReference Include="Metapsi.Hyperapp" Version="*" />
+	  <PackageReference Include="Metapsi.ChoicesJs" Version="0.5.0" />
+	  <PackageReference Include="Metapsi.Heroicons" Version="0.5.0" />
+	  <PackageReference Include="Metapsi.Hyperapp" Version="0.5.0" />
 	</ItemGroup>
 
 </Project>
