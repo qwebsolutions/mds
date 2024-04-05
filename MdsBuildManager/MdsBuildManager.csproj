@@ -8,7 +8,6 @@
 
   <ItemGroup>
     <PackageReference Include="Dapper" Version="2.0.35" />
-    <PackageReference Include="Google.Protobuf" Version="3.6.0" />
     <PackageReference Include="Metapsi.Redis" Version="*" />
     <PackageReference Include="Metapsi.Runtime" Version="*" />
     <PackageReference Include="Microsoft.AspNet.WebHooks.Receivers.VSTS" Version="1.2.2" />
