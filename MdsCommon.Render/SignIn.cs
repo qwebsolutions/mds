@@ -66,7 +66,7 @@ namespace MdsCommon
                             b.SetTypePassword();
                             b.SetPasswordToggle();
                             //b.SetClass("hyper-input");
-                            b.Cast<IHasInputTextEvent>().OnEnterKey(b.MakeAction((SyntaxBuilder b, Var<SignInPage> state) =>
+                            b.OnEnterKey(b.MakeAction((SyntaxBuilder b, Var<SignInPage> state) =>
                             {
                                 return b.MakeStateWithEffects(state, b.MakeEffect(b.Def((SyntaxBuilder b, Var<HyperType.Dispatcher<SignInPage>> dispatcher) =>
                                 {
