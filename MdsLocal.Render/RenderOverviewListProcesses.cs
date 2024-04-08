@@ -54,13 +54,13 @@ namespace MdsLocal
                                         {
                                             b.SetClass("border border-solid border-red-300 bg-red-100 text-red-300 rounded w-full p-2 mb-4 drop-shadow transition-all");
                                         },
-                                        b.T(w));
+                                        b.Text(w));
                                 }));
                     }),
                 b.InfoPanel(
                     b.Const(Panel.Style.Info),
-                    b => b.T(title),
-                    b => b.T(b.Get(model, x => x.OverviewText))),
+                    b => b.Text(title),
+                    b => b.Text(b.Get(model, x => x.OverviewText))),
                 ProcessesGrid(b, model),
                 KillProcessPopup(b, model));
 
@@ -76,12 +76,12 @@ namespace MdsLocal
 
             var processesGridBuilder = MdsDefaultBuilder.DataGrid<ProcessRow>();
 
-            processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.ServiceName), b => b.T("Service name"));
-            processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.ProjectName), b => b.T("Project name"));
-            processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.ProjectVersion), b => b.T("Project version"));
-            processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.Pid), b => b.T("Process ID"));
-            processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.UsedRam), b => b.T("Working set (RAM, MB)"));
-            processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.RunningSince), b => b.T("Running since"));
+            processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.ServiceName), b => b.Text("Service name"));
+            processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.ProjectName), b => b.Text("Project name"));
+            processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.ProjectVersion), b => b.Text("Project version"));
+            processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.Pid), b => b.Text("Process ID"));
+            processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.UsedRam), b => b.Text("Working set (RAM, MB)"));
+            processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.RunningSince), b => b.Text("Running since"));
             processesGridBuilder.DataTableBuilder.AddTrProps(
                 (b, process) =>
                 {
@@ -128,7 +128,7 @@ namespace MdsLocal
                         b.SetId(IdKillProcessPopup);
                     },
                     b.DialogHeader("Restart process?"),
-                    b.T(b.Concat(b.Const("Are you sure you want to restart "), b.Get(model, x=>x.RestartProcess.ServiceName), b.Const("?"))),
+                    b.Text(b.Concat(b.Const("Are you sure you want to restart "), b.Get(model, x=>x.RestartProcess.ServiceName), b.Const("?"))),
                     b.DialogFooter(
                         "The process will be forcefully killed and then automatically restarted",
                         b.HtmlButton(
@@ -169,7 +169,7 @@ namespace MdsLocal
                                                     })))));
                                 }));
                             },
-                            b.T("Restart"))));
+                            b.Text("Restart"))));
         }
     }
 
@@ -183,7 +183,7 @@ namespace MdsLocal
                     b.AddClass("flex flex-row items-center gap-2");
                     b.SetSlot("label");
                 },
-                b.T(label));
+                b.Text(label));
         }
 
         public static Var<IVNode> DialogFooter(this LayoutBuilder b, string text, params Var<IVNode>[] buttons)
@@ -200,7 +200,7 @@ namespace MdsLocal
                         {
                             b.AddClass("text-xs text-gray-600 text-left");
                         },
-                        b.T(text)),
+                        b.Text(text)),
                     b.HtmlDiv(
                         b =>
                         {

@@ -59,14 +59,14 @@ namespace MdsInfrastructure.Render
                         {
                             b.SetClass("py-2 px-4 rounded shadow bg-sky-500 text-white");
                         },
-                        b.T("Add configuration")));
+                        b.Text("Add configuration")));
             };
 
             gridBuilder.DataTableBuilder.OverrideHeaderCell(
                 nameof(InfrastructureConfiguration.InfrastructureServices),
                 b =>
                 {
-                    return b.T("Services");
+                    return b.Text("Services");
                 });
 
             gridBuilder.DataTableBuilder.OverrideDataCell(
@@ -80,7 +80,7 @@ namespace MdsInfrastructure.Render
                             b.UnderlineBlue();
                             b.SetHref(b.Url<Routes.Configuration.Edit, Guid>(b.Get(row, x => x.Id)));
                         },
-                        b.T(b.Get(row, x => x.Name)));
+                        b.Text(b.Get(row, x => x.Name)));
                 });
 
             gridBuilder.DataTableBuilder.OverrideDataCell(
@@ -88,7 +88,7 @@ namespace MdsInfrastructure.Render
                 (b, row) =>
                 {
                     var count = b.AsString(b.Get(row, x => x.InfrastructureServices.Count()));
-                    return b.StyledSpan("py-4", b.T(count));
+                    return b.StyledSpan("py-4", b.Text(count));
                 });
 
             var dataGrid = b.DataGrid(

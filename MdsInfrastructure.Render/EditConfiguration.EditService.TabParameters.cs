@@ -126,14 +126,14 @@ namespace MdsInfrastructure.Render
                 {
                     var typeId = b.Get(parameter, x => x.ParameterTypeId);
                     var typeLabel = b.Get(clientModel, typeId, (x, typeId) => x.ParameterTypes.SingleOrDefault(x => x.Id == typeId, new ParameterType() { Description = "(not selected)" }).Description);
-                    return b.T(typeLabel);
+                    return b.Text(typeLabel);
                 });
 
             parametersGrid.DataTableBuilder.OverrideDataCell(
                 "Value",
                 (b, parameter) =>
                 {
-                    return b.T(b.Call(GetParameterValue, clientModel, parameter));
+                    return b.Text(b.Call(GetParameterValue, clientModel, parameter));
                 });
 
             parametersGrid.CreateToolbarActions = (b) =>
@@ -149,7 +149,7 @@ namespace MdsInfrastructure.Render
                             b.AddPrimaryButtonStyle();
                             b.OnClickAction<EditConfigurationPage, HtmlButton>(AddParameter);
                         },
-                        b.T("Add parameter")),
+                        b.Text("Add parameter")),
                     b.Filter(clientModel, x => x.ParametersFilter));
             };
 

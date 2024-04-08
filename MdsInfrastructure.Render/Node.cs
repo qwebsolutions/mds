@@ -87,10 +87,10 @@ namespace MdsInfrastructure.Render
                         {
                             b.AddPrimaryButtonStyle();
                         },
-                        b.T("Add node")));
+                        b.Text("Add node")));
             };
 
-            nodesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(InfrastructureNode.NodeName), (b) => b.T("Name"));
+            nodesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(InfrastructureNode.NodeName), (b) => b.Text("Name"));
             nodesGridBuilder.DataTableBuilder.OverrideDataCell(
                 nameof(InfrastructureNode.NodeName),
                 (b, node) =>
@@ -101,9 +101,9 @@ namespace MdsInfrastructure.Render
                     return nameLink;
                 });
 
-            nodesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(InfrastructureNode.MachineIp), (b) => b.T("IP"));
+            nodesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(InfrastructureNode.MachineIp), (b) => b.Text("IP"));
 
-            nodesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(InfrastructureNode.UiPort), (b) => b.T("Controller UI"));
+            nodesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(InfrastructureNode.UiPort), (b) => b.Text("Controller UI"));
             nodesGridBuilder.DataTableBuilder.OverrideDataCell(
                 nameof(InfrastructureNode.UiPort),
                 (b, node) =>
@@ -118,11 +118,11 @@ namespace MdsInfrastructure.Render
                             b.UnderlineBlue();
                             b.SetHref(uiUrl);
                         },
-                        b.T(uiUrl),
+                        b.Text(uiUrl),
                         b.Svg(Metapsi.Heroicons.Mini.ArrowTopRightOnSquare, "w-5 h-5"));
                 });
 
-            nodesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(InfrastructureNode.EnvironmentTypeId), (b) => b.T("Type"));
+            nodesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(InfrastructureNode.EnvironmentTypeId), (b) => b.Text("Type"));
             nodesGridBuilder.DataTableBuilder.OverrideDataCell(
                 nameof(InfrastructureNode.EnvironmentTypeId),
                 (b, node) =>
@@ -135,7 +135,7 @@ namespace MdsInfrastructure.Render
                         b => b.Get(envType, x => x.Name),
                         b => b.Const("(not selected)"));
 
-                    return b.T(envTypeLabel);
+                    return b.Text(envTypeLabel);
                 });
 
             return

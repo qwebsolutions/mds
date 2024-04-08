@@ -213,7 +213,7 @@ namespace MdsInfrastructure.Render
         public static Var<TabControl.TabPair> TabPair(this LayoutBuilder b, Var<string> headerText, Var<IVNode> content)
         {
             var tabPair = b.NewObj<TabControl.TabPair>();
-            b.Set(tabPair, x => x.TabHeader, b.T(headerText));
+            b.Set(tabPair, x => x.TabHeader, b.Text(headerText));
             b.Set(tabPair, x => x.TabContent, content);
             return tabPair;
         }

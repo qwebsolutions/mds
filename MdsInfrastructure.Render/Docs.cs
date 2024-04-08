@@ -407,7 +407,7 @@ namespace MdsInfrastructure.Render
                     b.HtmlSpan(b =>
                     {
                         b.SetId(controlId);
-                    }, b.T(port.ToString())));
+                    }, b.Text(port.ToString())));
 
                 foreach (var service in summary.GetClientServices(currentService.MachineIp, port))
                 {

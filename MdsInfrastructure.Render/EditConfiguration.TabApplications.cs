@@ -49,7 +49,7 @@ namespace MdsInfrastructure.Render
                         b.AddPrimaryButtonStyle();
                         b.OnClickAction<EditConfigurationPage, HtmlButton>(OnAddApplication);
                     },
-                    b.T("Add application")),
+                    b.Text("Add application")),
                 b.Filter(clientModel, x => x.ApplicationsFilter)
                 );
             };

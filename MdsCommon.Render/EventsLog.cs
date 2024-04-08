@@ -21,7 +21,7 @@ namespace MdsCommon
 
             var eventsTableBuilder = MdsDefaultBuilder.DataTable<InfrastructureEvent>();
 
-            eventsTableBuilder.OverrideHeaderCell(nameof(InfrastructureEvent.ShortDescription), b => b.T("Description"));
+            eventsTableBuilder.OverrideHeaderCell(nameof(InfrastructureEvent.ShortDescription), b => b.Text("Description"));
 
             eventsTableBuilder.OverrideDataCell(
                 nameof(InfrastructureEvent.Timestamp),

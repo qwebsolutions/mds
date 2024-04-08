@@ -40,9 +40,9 @@ namespace MdsLocal
         private static Var<IVNode> SyncHistoryTable(LayoutBuilder b, Var<SyncHistory.DataModel> model)
         {
             var tableBuilder = MdsDefaultBuilder.DataTable<SyncResult>();
-            tableBuilder.OverrideHeaderCell(nameof(SyncResult.Trigger), b => b.T("Sync trigger"));
-            tableBuilder.OverrideHeaderCell(nameof(SyncResult.ResultCode), b => b.T("Result"));
-            tableBuilder.OverrideDataCell(nameof(SyncResult.Timestamp), (b, syncResult) => b.T(b.ItalianFormat(b.Get(syncResult, x => x.Timestamp))));
+            tableBuilder.OverrideHeaderCell(nameof(SyncResult.Trigger), b => b.Text("Sync trigger"));
+            tableBuilder.OverrideHeaderCell(nameof(SyncResult.ResultCode), b => b.Text("Result"));
+            tableBuilder.OverrideDataCell(nameof(SyncResult.Timestamp), (b, syncResult) => b.Text(b.ItalianFormat(b.Get(syncResult, x => x.Timestamp))));
 
             return b.DataTable(
                 tableBuilder,

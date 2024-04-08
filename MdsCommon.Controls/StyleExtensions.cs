@@ -32,7 +32,7 @@ public static class StyleExtensions
 
     public static Var<IVNode> TextSpan(this LayoutBuilder b, Var<string> text)
     {
-        return b.StyledSpan("", b.T(text));
+        return b.StyledSpan("", b.Text(text));
     }
 
     public static Var<IVNode> TextSpan(this LayoutBuilder b, string text)

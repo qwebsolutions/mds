@@ -20,9 +20,9 @@ namespace MdsInfrastructure.Render
             var filteredVariables = b.FilterList(allVariables, b.Get(clientModel, x => x.VariablesFilter));
 
             var gridBuilder = MdsDefaultBuilder.DataGrid<InfrastructureVariable>();
-            gridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(InfrastructureVariable.VariableName), b => b.T("Variable name"));
+            gridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(InfrastructureVariable.VariableName), b => b.Text("Variable name"));
             gridBuilder.DataTableBuilder.OverrideDataCell(nameof(InfrastructureVariable.VariableName), (b, variable) => b.RenderVariableNameCell(variable));
-            gridBuilder.DataTableBuilder.OverrideHeaderCell("value", b => b.T("Variable value"));
+            gridBuilder.DataTableBuilder.OverrideHeaderCell("value", b => b.Text("Variable value"));
 
             gridBuilder.CreateToolbarActions = b =>
             {
@@ -36,7 +36,7 @@ namespace MdsInfrastructure.Render
                         b.AddPrimaryButtonStyle();
                         b.OnClickAction<EditConfigurationPage, HtmlButton>(OnAddVariable);
                     },
-                    b.T("Add variable")),
+                    b.Text("Add variable")),
                 b.Filter(clientModel, x => x.VariablesFilter));
             };
 

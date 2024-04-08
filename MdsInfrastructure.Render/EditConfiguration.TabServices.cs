@@ -135,7 +135,7 @@ namespace MdsInfrastructure.Render
                         {
                             b.SetClass("py-2 px-4 rounded shadow bg-sky-500 text-white");
                         },
-                        b.T("Add service")),
+                        b.Text("Add service")),
                     b.Filter(clientModel, x => x.ServicesFilter));
                         
             };

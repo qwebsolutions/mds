@@ -52,10 +52,10 @@ namespace MdsInfrastructure.Render
                             b.AddPrimaryButtonStyle();
                             b.OnClickAction(addCommand);
                         },
-                        b.T("Add note")));
+                        b.Text("Add note")));
             };
 
-            gridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(InfrastructureServiceNote.NoteTypeId), b => b.T("Note type"));
+            gridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(InfrastructureServiceNote.NoteTypeId), b => b.Text("Note type"));
             gridBuilder.DataTableBuilder.OverrideDataCell(
                 nameof(InfrastructureServiceNote.NoteTypeId),
                 (b, note) =>
@@ -90,7 +90,7 @@ namespace MdsInfrastructure.Render
                                 ParameterName = "(not set)"
                             }).ParameterName),
                         b => b.Get(note, x => x.Reference));
-                    return b.T(reference);
+                    return b.Text(reference);
                 });
 
             gridBuilder.AddRowAction((b, note) =>

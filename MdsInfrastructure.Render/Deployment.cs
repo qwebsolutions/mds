@@ -40,7 +40,7 @@ namespace MdsInfrastructure.Render
                 var deploymentsTableBuilder = MdsDefaultBuilder.DataTable<MdsInfrastructure.Deployment>();
                 deploymentsTableBuilder.OverrideHeaderCell(
                     nameof(MdsInfrastructure.Deployment.Timestamp),
-                    b => b.T("Deployment timestamp"));
+                    b => b.Text("Deployment timestamp"));
                 deploymentsTableBuilder.OverrideDataCell(
                     nameof(MdsInfrastructure.Deployment.Timestamp),
                     (b, deployment) =>
@@ -49,7 +49,7 @@ namespace MdsInfrastructure.Render
                         return b.Link(dateStringLocale, b.Url<Routes.Deployment.Review, Guid>(b.Get(deployment, x => x.Id)));
                     });
 
-                deploymentsTableBuilder.OverrideHeaderCell(nameof(MdsInfrastructure.Deployment.ConfigurationName), b => b.T("Configuration name"));
+                deploymentsTableBuilder.OverrideHeaderCell(nameof(MdsInfrastructure.Deployment.ConfigurationName), b => b.Text("Configuration name"));
 
                 return b.MdsMainPanel(b => { },
                     b.DataTable(
