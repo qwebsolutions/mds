@@ -19,7 +19,7 @@
 }
 
 body{
-	font-family: poppins;
+	/*font-family: poppins;*/
 	@apply overflow-hidden;
 }
 

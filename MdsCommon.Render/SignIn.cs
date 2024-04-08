@@ -5,6 +5,7 @@ using Metapsi.Dom;
 using Metapsi.Html;
 using System.ComponentModel;
 using Metapsi.Shoelace;
+using Metapsi;
 
 namespace MdsCommon
 {
@@ -15,7 +16,6 @@ namespace MdsCommon
             Var<SignInPage> clientModel)
         {
             b.AddModuleStylesheet();
-
             return b.HtmlDiv(
                 b =>
                 {
@@ -51,21 +51,22 @@ namespace MdsCommon
                                 b.SetClass("p-8 text-gray-800");
                             },
                             b.Get(clientModel, x => x.LoginMessage)),
-                        b.MdsInputText(
+                        b.SlInput(
                             b=>
                             {
+                                b.AddClass("w-full");
+                                b.SetTypeText();
                                 b.SetLabel("User name");
                                 b.BindTo(clientModel, x => x.Credentials, x => x.UserName);
-                                //b.SetClass("hyper-input");
                                 b.SetPlaceholder("User name");
                             }),
-                        b.MdsInputText(b =>
+                        b.SlInput(b =>
                         {
+                            b.AddClass("w-full");
                             b.SetLabel("Password");
                             b.BindTo(clientModel, x => x.Credentials, x => x.Password);
                             b.SetTypePassword();
                             b.SetPasswordToggle();
-                            //b.SetClass("hyper-input");
                             b.OnEnterKey(b.MakeAction((SyntaxBuilder b, Var<SignInPage> state) =>
                             {
                                 return b.MakeStateWithEffects(state, b.MakeEffect(b.Def((SyntaxBuilder b, Var<HyperType.Dispatcher<SignInPage>> dispatcher) =>
