@@ -2,6 +2,8 @@ bin
 obj
 dyn
 logs
+mds
+tests
 appSettings.json
 *csproj.user
 launchSettings.json
