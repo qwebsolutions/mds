@@ -32,7 +32,7 @@ namespace MdsInfrastructure.Render
                             Main = new Header.Title() { Operation = "Configurations" },
                             User = serverModel.User,
                         })),
-                        Render(b, clientModel));
+                        Render(b, b.Get(clientModel, x => x.ConfigurationHeadersList)));
             }
 
             private static Var<IVNode> Render(LayoutBuilder b, Var<ConfigurationHeadersList> clientModel)

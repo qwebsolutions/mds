@@ -497,21 +497,8 @@ namespace MdsInfrastructure
             webServerRefs.RegisterStaticFiles(typeof(MdsCommon.Controls.Control).Assembly);
             webServerRefs.RegisterStaticFiles(typeof(Metapsi.Dom.ClickTarget).Assembly);
             webServerRefs.RegisterStaticFiles(typeof(Metapsi.TomSelect.Control).Assembly);
-            
-            {
-                var app = references.ApplicationSetup.Revive();
-                webServerRefs.WebApplication.Lifetime.ApplicationStopping.Register(async () =>
-                {
-                    Console.WriteLine("Shutdown started");
-                    await Task.Delay(10000);
-                });
-                webServerRefs.WebApplication.Lifetime.ApplicationStopped.Register(async () =>
-                {
-                    Console.WriteLine("Stop triggered from web app");
-                    await app.Suspend();
-                });
-                await app.SuspendComplete;
-            }
+
+            return webServerRefs;
         }
 
         private static async Task<(ConversionResult, InfrastructureConfiguration)> ConvertSimplified(CommandContext commandContext, Simplified.Configuration input)

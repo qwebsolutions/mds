@@ -40,10 +40,9 @@ namespace MdsInfrastructure.Render
                 b.SlMenu(
                     b =>
                     {
-                        b.OnSlSelect(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<object> args) =>
+                        b.OnSlSelect(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<SlSelectEventArgs> args) =>
                         {
-                            var item = b.GetDynamic(args, new DynamicProperty<object>("item"));
-                            var selectedValue = b.GetDynamic(item, new DynamicProperty<string>("value"));
+                            var selectedValue = b.Get(args, x => x.item.value);
 
                             var showCurrentJson = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
                             {
