@@ -17,10 +17,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Metapsi.Redis" Version="0.5.0" />
-		<PackageReference Include="Metapsi.Web" Version="0.5.0" />
-		<PackageReference Include="Metapsi.Ui" Version="0.5.0" />
-		<PackageReference Include="Metapsi.Mds" Version="0.5.0" />
+		<PackageReference Include="Metapsi.Redis" Version="0.7.3" />
+		<PackageReference Include="Metapsi.Web" Version="0.7.3" />
+		<PackageReference Include="Metapsi.Ui" Version="0.7.3" />
+		<PackageReference Include="Metapsi.Mds" Version="0.7.3" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="7.0.0" />
 	</ItemGroup>
 

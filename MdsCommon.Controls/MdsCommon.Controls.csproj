@@ -15,11 +15,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Metapsi.Heroicons" Version="*" />
-	  <PackageReference Include="Metapsi.Html" Version="*" />
-	  <PackageReference Include="Metapsi.Hyperapp" Version="*" />
-	  <PackageReference Include="Metapsi.Shoelace" Version="*" />
-	  <PackageReference Include="Metapsi.TomSelect" Version="*" />
+	  <PackageReference Include="Metapsi.Heroicons" Version="0.7.3" />
+	  <PackageReference Include="Metapsi.Html" Version="0.7.3" />
+	  <PackageReference Include="Metapsi.Hyperapp" Version="0.7.3" />
+	  <PackageReference Include="Metapsi.Shoelace" Version="0.7.3" />
+	  <PackageReference Include="Metapsi.TomSelect" Version="0.7.3" />
 	</ItemGroup>
 
 </Project>
