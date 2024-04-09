@@ -21,15 +21,11 @@ namespace MdsInfrastructure.Render
 
             return b.Layout(
                 b.InfraMenu(nameof(Routes.Status), serverData.InfrastructureStatus.User.IsSignedIn()),
-                b.Render(b.Const(new Header.Props()
-                {
-                    Main = new Header.Title()
-                    {
-                        Operation = "Application status",
-                        Entity = serverData.ApplicationName
-                    },
-                    User = serverData.InfrastructureStatus.User,
-                })),
+                b.Render(
+                    b.GetHeaderProps(
+                        b.Const("Application status"),
+                        b.Const(serverData.ApplicationName),
+                        b.Get(clientModel, x=>x.InfrastructureStatus.User))),
                 Render(
                     b,
                     serverData.InfrastructureStatus,

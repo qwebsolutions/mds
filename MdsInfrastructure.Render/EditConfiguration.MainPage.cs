@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Metapsi.Shoelace;
 using MdsCommon;
 using Microsoft.Extensions.Options;
+using Metapsi.Dom;
 using Metapsi.Html;
 
 namespace MdsInfrastructure.Render
@@ -39,9 +40,10 @@ namespace MdsInfrastructure.Render
                 b.SlMenu(
                     b =>
                     {
-                        b.OnSlSelect(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<SlSelectEventArgs> args) =>
+                        b.OnSlSelect(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<object> args) =>
                         {
-                            var selectedValue = b.Get(args, x => x.item.value);
+                            var item = b.GetDynamic(args, new DynamicProperty<object>("item"));
+                            var selectedValue = b.GetDynamic(item, new DynamicProperty<string>("value"));
 
                             var showCurrentJson = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
                             {
@@ -254,12 +256,15 @@ namespace MdsInfrastructure.Render
 
             var copyButton = (LayoutBuilder b) =>
             {
-                return b.SlCopyButton(
+                return b.Optional(
+                    b.GetProperty<bool>(b.Window(), b.Const("isSecureContext")),
                     b =>
-                    {
-                        b.SetCopyLabel(b.Const("Copy configuration JSON"));
-                        b.SetValue(b.Get(model, x => x.CurrentConfigurationSimplifiedJson));
-                    });
+                    b.SlCopyButton(
+                        b =>
+                        {
+                            b.SetCopyLabel(b.Const("Copy configuration JSON"));
+                            b.SetValue(b.Get(model, x => x.CurrentConfigurationSimplifiedJson));
+                        }));
             };
 
             return b.SlDialog(

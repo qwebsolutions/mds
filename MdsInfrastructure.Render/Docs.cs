@@ -25,12 +25,17 @@ namespace MdsInfrastructure.Render
             {
                 b.AddModuleStylesheet();
 
-                return b.Layout(b.InfraMenu(nameof(Routes.Status), serverModel.User.IsSignedIn()),
-                b.Render(b.Const(new Header.Props()
-                {
-                    Main = new Header.Title() { Operation = "Docs", Entity = serverModel.ServiceSummary.ServiceName },
-                    User = serverModel.User
-                })), b.Render(serverModel.InfrastructureSummary, serverModel.ServiceSummary)).As<IVNode>();
+                var headerProps = b.GetHeaderProps(
+                    b.Const("Docs"),
+                    b.Const(serverModel.ServiceSummary.ServiceName),
+                    b.Get(clientModel, x => x.User));
+
+                return b.Layout(
+                    b.InfraMenu(
+                        nameof(Routes.Status),
+                        serverModel.User.IsSignedIn()),
+                    b.Render(headerProps),
+                    b.Render(serverModel.InfrastructureSummary, serverModel.ServiceSummary)).As<IVNode>();
             }
         }
 
@@ -45,14 +50,17 @@ namespace MdsInfrastructure.Render
             {
                 b.AddModuleStylesheet();
 
+                var headerProps = b.GetHeaderProps(
+                    b.Const("Docs"),
+                    b.Const(serverModel.ServiceSummary.ServiceName),
+                    b.Get(clientModel, x => x.User));
+
                 return b.Layout(
-                    b.InfraMenu(nameof(Routes.Project),
-                    serverModel.User.IsSignedIn()),
-                    b.Render(b.Const(new Header.Props()
-                    {
-                        Main = new Header.Title() { Operation = "Docs", Entity = serverModel.ServiceSummary.ServiceName },
-                        User = serverModel.User
-                    })), b.RenderRedisMap(serverModel.InfrastructureSummary, serverModel.ServiceSummary)).As<IVNode>();
+                    b.InfraMenu(
+                        nameof(Routes.Project),
+                        serverModel.User.IsSignedIn()),
+                    b.Render(headerProps),
+                    b.RenderRedisMap(serverModel.InfrastructureSummary, serverModel.ServiceSummary)).As<IVNode>();
             }
         }
 

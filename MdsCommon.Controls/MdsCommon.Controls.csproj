@@ -15,12 +15,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Metapsi.ChoicesJs" Version="*" />
 	  <PackageReference Include="Metapsi.Heroicons" Version="*" />
-	  <PackageReference Include="Metapsi.Html" Version="0.6.1" />
+	  <PackageReference Include="Metapsi.Html" Version="*" />
 	  <PackageReference Include="Metapsi.Hyperapp" Version="*" />
-	  <PackageReference Include="Metapsi.Shoelace" Version="0.6.1" />
-	  <PackageReference Include="Metapsi.TomSelect" Version="0.6.1" />
+	  <PackageReference Include="Metapsi.Shoelace" Version="*" />
+	  <PackageReference Include="Metapsi.TomSelect" Version="*" />
 	</ItemGroup>
 
 </Project>

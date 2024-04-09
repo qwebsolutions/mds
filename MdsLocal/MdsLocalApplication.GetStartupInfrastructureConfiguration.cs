@@ -57,8 +57,6 @@ namespace MdsLocal
             state.InfrastructureConfiguration.NodeCommandInputChannel = infraConfig.NodeCommandInputChannel;
             state.InfrastructureConfiguration.NodeUiPort = infraConfig.NodeUiPort;
 
-            commandContext.Logger.LogInfo($"state config: {Metapsi.Serialize.ToJson(state)}");
-
             commandContext.PostEvent(new Event.GlobalControllerReached()
             {
                 InfrastructureConfiguration = infraConfig

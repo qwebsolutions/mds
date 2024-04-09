@@ -23,14 +23,16 @@ namespace MdsBuildManager
             InputArguments inputArguments = InputArguments.GetInputArguments(Environment.GetCommandLineArgs()[1]);
             var refs = await StartBuildController(args, inputArguments);
 
-            await BindStop(refs, refs.Application);
-            
-            await refs.Application.SuspendComplete;
+            var app = refs.ApplicationSetup.Revive();
+
+            await BindStop(refs, app);
+
+            await app.SuspendComplete;
         }
 
         public class BuildControllerReferences
         {
-            public Application Application { get; set; }
+            public ApplicationSetup ApplicationSetup { get; set; }
             public WebService.State WebService { get; set; }
         }
 
@@ -117,11 +119,9 @@ namespace MdsBuildManager
                 NotifyBinariesAvailable(e);
             });
 
-            var app = setup.Revive();
-
             return new BuildControllerReferences()
             {
-                Application = app,
+                ApplicationSetup = setup,
                 WebService = webService
             };
         }

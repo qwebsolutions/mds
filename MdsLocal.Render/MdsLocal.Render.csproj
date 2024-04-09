@@ -5,11 +5,11 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Metapsi.Heroicons" Version="*" />
-		<PackageReference Include="Metapsi.Hyperapp" Version="*" />
-		<PackageReference Include="Metapsi.JavaScript" Version="*" />
-		<PackageReference Include="Metapsi.Module" Version="*" />
-		<PackageReference Include="Metapsi.Shoelace" Version="*" />
+		<PackageReference Include="Metapsi.Heroicons" Version="0.5.0" />
+		<PackageReference Include="Metapsi.Hyperapp" Version="0.5.0" />
+		<PackageReference Include="Metapsi.JavaScript" Version="0.5.0" />
+		<PackageReference Include="Metapsi.Module" Version="0.5.0" />
+		<PackageReference Include="Metapsi.Shoelace" Version="0.5.0" />
 	</ItemGroup>
 	
 	<ItemGroup>

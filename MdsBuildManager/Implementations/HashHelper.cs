@@ -99,7 +99,7 @@ namespace MdsBuildManager
         public async Task AddNewBinaries(System.Data.IDbTransaction dbTransaction, string base64Hash, string binaryPath)
         {
             await dbTransaction.Connection.ExecuteAsync("insert into Binaries (Id, Base64Hash,BinaryPath) values (@Id, @Base64Hash,@BinaryPath)",
-                new { Id = Guid.NewGuid().ToString(), Base64Hash = base64Hash, binaryPath = binaryPath }, dbTransaction);
+                new { Id = Guid.NewGuid().ToString(), Base64Hash = base64Hash, BinaryPath = binaryPath }, dbTransaction);
         }
 
         public async Task CreateDbSchema()

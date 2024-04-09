@@ -18,12 +18,17 @@ namespace MdsInfrastructure.Render
         {
             b.AddModuleStylesheet();
 
-            return b.Layout(b.InfraMenu(nameof(Routes.Status), serverData.InfrastructureStatus.User.IsSignedIn()),
-                b.Render(b.Const(new Header.Props()
-                {
-                    Main = new Header.Title() { Operation = "Node status" },
-                    User = serverData.InfrastructureStatus.User,
-                })), RenderNodeStatus(b, serverData.InfrastructureStatus, serverData.NodeName)).As<IVNode>();
+            var headerProps = b.GetHeaderProps(
+                b.Const("Node status"),
+                b.Get(clientModel, x => x.NodeName),
+                b.Get(clientModel, x => x.InfrastructureStatus.User));
+
+            return b.Layout(
+                b.InfraMenu(
+                    nameof(Routes.Status),
+                    serverData.InfrastructureStatus.User.IsSignedIn()),
+                b.Render(headerProps),
+                RenderNodeStatus(b, serverData.InfrastructureStatus, serverData.NodeName)).As<IVNode>();
         }
 
         public static Var<IVNode> RenderNodeStatus(

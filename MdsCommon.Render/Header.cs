@@ -91,5 +91,21 @@ namespace MdsCommon
                 titleArea,
                 signInArea);
         }
+
+        public static Var<MdsCommon.Header.Props> GetHeaderProps(
+            this LayoutBuilder b,
+            Var<string> operation,
+            Var<string> entity,
+            Var<Metapsi.Ui.User> user)
+        {
+            var headerTitle = b.NewObj<Header.Title>();
+            b.Set(headerTitle, x => x.Operation, operation);
+            b.Set(headerTitle, x => x.Entity, entity);
+
+            var headerProps = b.NewObj<Header.Props>();
+            b.Set(headerProps, x => x.Main, headerTitle);
+            b.Set(headerProps, x => x.User, user);
+            return headerProps;
+        }
     }
 }

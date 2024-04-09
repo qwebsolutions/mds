@@ -25,13 +25,11 @@ namespace MdsInfrastructure.Render
             {
                 b.AddModuleStylesheet();
 
+                var headerProps = b.GetHeaderProps(b.Const("Deployments"), b.Const(string.Empty), b.Get(clientModel, x => x.User));
+
                 return b.Layout(
                     b.InfraMenu(nameof(Routes.Deployment), serverModel.User.IsSignedIn()),
-                    b.Render(b.Const(new Header.Props()
-                    {
-                        Main = new Header.Title() { Operation = "Deployments" },
-                        User = serverModel.User
-                    })),
+                    b.Render(headerProps),
                 Render(b, serverModel)).As<IVNode>();
             }
 
@@ -58,26 +56,6 @@ namespace MdsInfrastructure.Render
                         nameof(MdsInfrastructure.Deployment.Timestamp),
                         nameof(MdsInfrastructure.Deployment.ConfigurationName)));
 
-                throw new NotImplementedException();
-                //var rc = b.RenderCell<MdsInfrastructure.Deployment>((b, row, col) =>
-                //{
-                //    var dateStringLocale = b.ItalianFormat(b.Get(row, x => x.Timestamp));
-                //    return b.VPadded4(b.If(b.AreEqual(b.Get(col, x => x.Name), b.Const("timestamp")),
-                //        b => b.Link(dateStringLocale, b.Url<Routes.Deployment.Review, Guid>(b.Get(row, x => x.Id))),
-                //        b => b.Text(b.Get(row, x => x.ConfigurationName))));
-                //});
-
-                //var props = b.NewObj<DataTable.Props<MdsInfrastructure.Deployment>>(b =>
-                //{
-                //    b.AddColumn("timestamp", "Deployment timestamp");
-                //    b.AddColumn("name", "Configuration name");
-                //    b.SetRows(b.Const(serverModel.Deployments.ToList()));
-                //    b.SetRenderCell(rc);
-                //});
-
-                //var table = b.DataTable(props);
-                //b.AddClass(table, "drop-shadow");
-                //return table;
             }
         }
 
@@ -93,12 +71,14 @@ namespace MdsInfrastructure.Render
                 b.AddModuleStylesheet();
 
                 var selectedDeployment = serverModel.Deployment.Timestamp.ItalianFormat();
-                var layout = b.Layout(b.InfraMenu(nameof(Routes.Deployment), serverModel.User.IsSignedIn()),
-                b.Render(b.Const(new Header.Props()
-                {
-                    Main = new Header.Title() { Operation = "Deployment", Entity = selectedDeployment },
-                    User = serverModel.User
-                })),
+
+                var headerProps = b.GetHeaderProps(b.Const("Deployment"), b.Const(selectedDeployment), b.Get(clientModel, x => x.User));
+
+                var layout = b.Layout(
+                    b.InfraMenu(
+                        nameof(Routes.Deployment),
+                        serverModel.User.IsSignedIn()),
+                b.Render(headerProps),
                 b.ReviewDeployment(serverModel.ChangesReport));
                 return layout.As<IVNode>();
             }
@@ -116,15 +96,17 @@ namespace MdsInfrastructure.Render
                 b.AddModuleStylesheet();
 
                 var selectedDeployment = serverModel.Deployment.Timestamp.ItalianFormat();
+
+                var headerProps = b.GetHeaderProps(
+                    b.Const("Review deployment"),
+                    b.Const(selectedDeployment),
+                    b.Get(clientModel, x => x.User));
+
                 var layout = b.Layout(
                     b.InfraMenu(
                         nameof(Routes.Deployment),
                         serverModel.User.IsSignedIn()),
-                        b.Render(b.Const(new Header.Props()
-                        {
-                            Main = new Header.Title() { Operation = "Review deployment", Entity = selectedDeployment },
-                            User = serverModel.User
-                        })),
+                        b.Render(headerProps),
                         RenderDeploymentReport(b, serverModel.ChangesReport, serverModel.SavedConfiguration));
                 return layout.As<IVNode>();
             }

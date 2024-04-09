@@ -34,9 +34,9 @@ using System.Reflection;
 
 namespace MdsInfrastructure
 {
-    class Program
+    public class Program
     {
-        static async Task Main(string[] args)
+        public static async Task Main(string[] args)
         {
             DateTime start = DateTime.UtcNow;
 
@@ -44,8 +44,6 @@ namespace MdsInfrastructure
             {
                 throw new Exception("Provide input configuration file!");
             }
-
-            Metapsi.Sqlite.Converters.RegisterAll();
 
             string inputFileName = args[0];
             var inputFullPath = Mds.GetParametersFilePath(inputFileName);
@@ -84,22 +82,42 @@ namespace MdsInfrastructure
                 }
             });
 
-
             MdsInfrastructureApplication.InputArguments arguments = Mds.ParametersAs<MdsInfrastructureApplication.InputArguments>(parameters);
+
+            var webServerRefs = await SetupGlobalController(arguments, start);
+
+            var app = webServerRefs.ApplicationSetup.Revive();
+            webServerRefs.WebApplication.Lifetime.ApplicationStopping.Register(async () =>
+            {
+                Console.WriteLine("Shutdown started");
+                await Task.Delay(10000);
+            });
+            webServerRefs.WebApplication.Lifetime.ApplicationStopped.Register(async () =>
+            {
+                Console.WriteLine("Stop triggered from web app");
+                await app.Suspend();
+            });
+
+            await app.SuspendComplete;
+        }
+
+        public static async Task<WebServer.References> SetupGlobalController(MdsInfrastructureApplication.InputArguments arguments, DateTime start)
+        {
+            Metapsi.Sqlite.Converters.RegisterAll();
 
             var references = MdsInfrastructureApplication.Setup(arguments, start);
 
             var webServerRefs = references.ApplicationSetup.AddWebServer(
-                references.ImplementationGroup, 
-                arguments.UiPort, 
-                arguments.WebRootPath, 
-                AddServices, 
+                references.ImplementationGroup,
+                arguments.UiPort,
+                arguments.WebRootPath,
+                AddServices,
                 app =>
-            {
-                //app.UseAuthorization();
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            });
+                {
+                    //app.UseAuthorization();
+                    app.UseSwagger();
+                    app.UseSwaggerUI();
+                });
 
             webServerRefs.RegisterStaticFiles(typeof(Program).Assembly);
 
@@ -425,29 +443,29 @@ namespace MdsInfrastructure
                     }).RequireAuthorization();
 
                 api.MapPost("/signin", async (CommandContext commandContext, HttpContext httpContext, InputCredentials inputCredentials) =>
+                {
+                    var adminCredentials = await commandContext.Do(MdsCommon.Api.GetAdminCredentials);
+
+                    if (inputCredentials.UserName != adminCredentials.AdminUserName || inputCredentials.Password != adminCredentials.AdminPassword)
                     {
-                        var adminCredentials = await commandContext.Do(MdsCommon.Api.GetAdminCredentials);
+                        var queryString = httpContext.Request.QueryString.Value;
 
-                        if (inputCredentials.UserName != adminCredentials.AdminUserName || inputCredentials.Password != adminCredentials.AdminPassword)
-                        {
-                            var queryString = httpContext.Request.QueryString.Value;
+                        return Results.Unauthorized();
+                    }
 
-                            return Results.Unauthorized();
-                        }
-
-                        var claims = new List<Claim>
+                    var claims = new List<Claim>
                         {
                             new Claim(ClaimTypes.NameIdentifier, inputCredentials.UserName),
                             new Claim(ClaimTypes.Name, inputCredentials.UserName)
                         };
 
-                        //var identity = new ClaimsIdentity(claims, "LDAP");
-                        var identity = new ClaimsIdentity(claims, "OIDC");
+                    //var identity = new ClaimsIdentity(claims, "LDAP");
+                    var identity = new ClaimsIdentity(claims, "OIDC");
 
-                        var principal = new System.Security.Claims.ClaimsPrincipal(identity);
-                        await httpContext.SignInAsync(principal);
-                        return Results.Ok();
-                    });
+                    var principal = new System.Security.Claims.ClaimsPrincipal(identity);
+                    await httpContext.SignInAsync(principal);
+                    return Results.Ok();
+                });
 
                 app.MapGet("/signin-redirect", (HttpContext httpContext) =>
                 {

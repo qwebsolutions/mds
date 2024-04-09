@@ -5,11 +5,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Metapsi.Runtime" Version="*" />
-		<PackageReference Include="Metapsi.Web" Version="*" />
-		<PackageReference Include="Metapsi.Web.Contracts" Version="*" />
-		<PackageReference Include="Metapsi.Mds" Version="*" />
-		<PackageReference Include="Metapsi.Sqlite" Version="*" />
+		<PackageReference Include="Metapsi.Runtime" Version="0.5.0" />
+		<PackageReference Include="Metapsi.Web" Version="0.5.0" />
+		<PackageReference Include="Metapsi.Web.Contracts" Version="0.5.0" />
+		<PackageReference Include="Metapsi.Mds" Version="0.5.0" />
+		<PackageReference Include="Metapsi.Sqlite" Version="0.5.0" />
 	</ItemGroup>
 
 	<ItemGroup>

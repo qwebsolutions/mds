@@ -10,12 +10,14 @@ using static Metapsi.Hyperapp.HyperType;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Metapsi.Ui;
+using Dapper;
+using Metapsi.Sqlite;
 
 namespace MdsLocal
 {
-    class Program
+    public class Program
     {
-        static async Task Main(string[] args)
+        public static async Task Main(string[] args)
         {
             DateTime start = DateTime.UtcNow;
 
@@ -62,17 +64,73 @@ namespace MdsLocal
 
             InputArguments arguments = Mds.ParametersAs<InputArguments>(parameters);
 
-            Metapsi.Sqlite.IdConverter.Register();
+            int uiPort = 0;
+
+            if (parameters.ContainsKey("UiPort"))
+            {
+                uiPort = int.Parse(parameters["UiPort"]);
+            }
+
+            await ReplaceOldDateTimeFormat(arguments.DbPath);
+
+            var localReferences = await SetupLocalController(arguments, uiPort, start);
+
+            var application = localReferences.ApplicationSetup.Revive();
+            //h.State.WebApplication.Lifetime.ApplicationStopped.Register(async () =>
+            //{
+            //    Console.WriteLine("Stop triggered from web app");
+            //    await application.Suspend();
+            //});
+            await application.SuspendComplete;
+        }
+
+        public static async Task ReplaceOldDateTimeFormat(string fullDbPath)
+        {
+            var replaceSql = async (
+                OpenTransaction t,
+                string tableName,
+                string dateTimeField) =>
+            {
+                var allRecords = await t.Connection.QueryAsync<(string Id, string Timestamp)>($"select Id, {dateTimeField} from {tableName}", transaction: t.Transaction);
+                foreach (var record in allRecords)
+                {
+                    // Do not update if format is already correct
+                    if (record.Timestamp.Contains(" "))
+                    {
+                        var snapshotTimestamp = DateTime.Parse(record.Timestamp, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind);
+                        snapshotTimestamp = DateTime.SpecifyKind(snapshotTimestamp, DateTimeKind.Utc);
+                        await t.Connection.ExecuteAsync(
+                            $"update {tableName} set {dateTimeField}=@timestamp where Id=@Id",
+                            new { 
+                                Id = record.Id,
+                                timestamp = snapshotTimestamp.ToString("O", System.Globalization.CultureInfo.InvariantCulture) },
+                            transaction: t.Transaction);
+                    }
+                }
+            };
+
+            await Metapsi.Sqlite.Db.WithCommit(fullDbPath,
+                async t =>
+                {
+                    await replaceSql(t, nameof(InfrastructureEvent), nameof(InfrastructureEvent.Timestamp));
+                    await replaceSql(t, nameof(ServiceConfigurationSnapshot), nameof(ServiceConfigurationSnapshot.SnapshotTimestamp));
+                    await replaceSql(t, nameof(SyncResult), nameof(SyncResult.Timestamp));
+                });
+        }
+
+        public static async Task<WebServer.References> SetupLocalController(InputArguments arguments, int uiPort, DateTime start)
+        {
+            Metapsi.Sqlite.Converters.RegisterAll();
 
             var localReferences = MdsLocalApplication.Setup(arguments, start);
 
             WebServer.References webServer = null;
 
-            if (parameters.ContainsKey("UiPort"))
+            if (uiPort != 0)
             {
                 webServer = localReferences.ApplicationSetup.AddWebServer(
                     localReferences.ImplementationGroup,
-                    int.Parse(parameters["UiPort"]),
+                    uiPort,
                     arguments.WebRootPath);
             }
             else
@@ -135,13 +193,7 @@ namespace MdsLocal
                 };
             }, WebServer.Authorization.Public);
 
-            var application = localReferences.ApplicationSetup.Revive();
-            //h.State.WebApplication.Lifetime.ApplicationStopped.Register(async () =>
-            //{
-            //    Console.WriteLine("Stop triggered from web app");
-            //    await application.Suspend();
-            //});
-            await application.SuspendComplete;
+            return webServer;
         }
     }
 }

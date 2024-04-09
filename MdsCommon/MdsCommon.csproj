@@ -6,10 +6,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Metapsi.Runtime" Version="*" />
-	  <PackageReference Include="Metapsi.Ui" Version="*" />
+	  <PackageReference Include="Metapsi.Runtime" Version="0.5.0" />
+	  <PackageReference Include="Metapsi.Ui" Version="0.5.0" />
 	  <PackageReference Include="Metapsi.Web" Version="0.1.3" />
-	  <PackageReference Include="Metapsi.Web.Contracts" Version="*" />
+	  <PackageReference Include="Metapsi.Web.Contracts" Version="0.5.0" />
 	</ItemGroup>
 
 	<ItemGroup>
