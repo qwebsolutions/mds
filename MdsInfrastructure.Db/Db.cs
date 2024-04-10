@@ -358,17 +358,25 @@ namespace MdsInfrastructure
             return await Metapsi.Sqlite.Db.WithRollback(fullDbPath,
                 async c =>
                 {
-                    var snapshotRecordWithSameHash = await c.Transaction.LoadRecords(
-                        (ServiceConfigurationSnapshot x) => x.Hash,
-                        hash);
+                    try
+                    {
+                        var snapshotRecordWithSameHash = await c.Transaction.LoadRecords(
+                            (ServiceConfigurationSnapshot x) => x.Hash,
+                            hash);
 
-                    if (snapshotRecordWithSameHash.Any())
-                    {
-                        return await c.Transaction.LoadStructure(ServiceConfigurationSnapshot.Data, snapshotRecordWithSameHash.Single().Id);
+                        if (snapshotRecordWithSameHash.Any())
+                        {
+                            return await c.Transaction.LoadStructure(ServiceConfigurationSnapshot.Data, snapshotRecordWithSameHash.Single().Id);
+                        }
+                        else
+                        {
+                            return null;
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        return null;
+                        Console.WriteLine("LoadServiceSnapshotByHash exception hash = " + hash);
+                        throw;
                     }
                 });
         }
