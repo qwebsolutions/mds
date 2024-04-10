@@ -289,13 +289,13 @@ namespace MdsInfrastructure.Render
             // There are no changes in project version, so probably just in parameters
             if (serviceChange.ProjectName.OldValue == serviceChange.ProjectName.NewValue && serviceChange.ProjectVersionTag.OldValue == serviceChange.ProjectVersionTag.NewValue)
             {
-                var operationSummary = b.HtmlSpanText(
+                operationsSummary = b.HtmlSpanText(
                     b => b.SetClass("grid w-full justify-end"),
                     $"Restart {serviceChange.ProjectName.NewValue} {serviceChange.ProjectVersionTag.NewValue} on {serviceChange.NodeName.NewValue}");
             }
             else
             {
-                var operationSummary = b.HtmlSpanText(
+                operationsSummary = b.HtmlSpanText(
                     b => b.SetClass("grid w-full justify-end"),
                     $"Upgrade {serviceChange.ProjectName.NewValue} from {serviceChange.ProjectVersionTag.OldValue} to {serviceChange.ProjectVersionTag.NewValue} on {serviceChange.NodeName.NewValue}");
             }
