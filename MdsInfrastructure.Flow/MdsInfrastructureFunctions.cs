@@ -180,7 +180,7 @@ public static partial class MdsInfrastructureFunctions
         }
         using (var hash = System.Security.Cryptography.MD5.Create())
         {
-            string builderValue = stringBuilder.ToString();
+            string builderValue = stringBuilder.ToString().Replace("\r", string.Empty); // To have the same value on windows & linux.
             var hashBytes = hash.ComputeHash(System.Text.Encoding.UTF8.GetBytes(builderValue));
             return System.Convert.ToBase64String(hashBytes);
         }

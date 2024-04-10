@@ -366,7 +366,10 @@ namespace MdsInfrastructure
 
                         if (snapshotRecordWithSameHash.Any())
                         {
-                            return await c.Transaction.LoadStructure(ServiceConfigurationSnapshot.Data, snapshotRecordWithSameHash.Single().Id);
+                            // Take First(), not Single(), to compensate for the many bugs this hash thing had and maybe still has
+                            var first = snapshotRecordWithSameHash.OrderByDescending(x => x.SnapshotTimestamp).First();
+
+                            return await c.Transaction.LoadStructure(ServiceConfigurationSnapshot.Data, first.Id);
                         }
                         else
                         {
