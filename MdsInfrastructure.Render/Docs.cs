@@ -25,6 +25,11 @@ namespace MdsInfrastructure.Render
             {
                 b.AddModuleStylesheet();
 
+                b.AddScript(typeof(Docs).Assembly, "cy.js", "module");
+                b.AddScript(typeof(Docs).Assembly, "cytoscape.min.js");
+                b.AddScript(typeof(Docs).Assembly, "connect.js", "module");
+                b.AddScript(typeof(Docs).Assembly, "leader-line.min.js");
+
                 var headerProps = b.GetHeaderProps(
                     b.Const("Docs"),
                     b.Const(serverModel.ServiceSummary.ServiceName),
@@ -36,31 +41,6 @@ namespace MdsInfrastructure.Render
                         serverModel.User.IsSignedIn()),
                     b.Render(headerProps),
                     b.Render(serverModel.InfrastructureSummary, serverModel.ServiceSummary)).As<IVNode>();
-            }
-        }
-
-        public class RedisMap : MixedHyperPage<M.RedisMap, M.RedisMap>
-        {
-            public override M.RedisMap ExtractClientModel(M.RedisMap serverModel)
-            {
-                return serverModel;
-            }
-
-            public override Var<IVNode> OnRender(LayoutBuilder b, M.RedisMap serverModel, Var<M.RedisMap> clientModel)
-            {
-                b.AddModuleStylesheet();
-
-                var headerProps = b.GetHeaderProps(
-                    b.Const("Docs"),
-                    b.Const(serverModel.ServiceSummary.ServiceName),
-                    b.Get(clientModel, x => x.User));
-
-                return b.Layout(
-                    b.InfraMenu(
-                        nameof(Routes.Project),
-                        serverModel.User.IsSignedIn()),
-                    b.Render(headerProps),
-                    b.RenderRedisMap(serverModel.InfrastructureSummary, serverModel.ServiceSummary)).As<IVNode>();
             }
         }
 
@@ -78,8 +58,6 @@ namespace MdsInfrastructure.Render
             string fromSide = "right",
             string toSide = "left")
         {
-            b.AddScript("leader-line.min.js");
-
             b.AddSubscription(
                 "leaderLineSub",
                 (SyntaxBuilder b, Var<object> state) =>

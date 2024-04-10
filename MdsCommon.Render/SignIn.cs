@@ -6,6 +6,7 @@ using Metapsi.Html;
 using System.ComponentModel;
 using Metapsi.Shoelace;
 using Metapsi;
+using System;
 
 namespace MdsCommon
 {
@@ -28,11 +29,13 @@ namespace MdsCommon
                         // center
                         b.SetClass("flex flex-row justify-center items-center");
                     },
-                    b.HtmlDiv(
+                    b.HtmlForm(
                         b =>
                         {
-                            // container
-                            b.SetClass("flex flex-col items-center gap-4 shadow p-8 rounded bg-white");
+                            b.SetId("credentials-form");
+                            b.SetAttribute("method", "POST");
+                            b.SetAttribute("action", b.Concat(b.Const("/signin/credentials"), b.Const("?ReturnUrl="), b.Get(clientModel, x => x.ReturnUrl)));
+                            b.SetClass("flex flex-col items-center gap-4 shadow p-8 rounded bg-white w-96");
                         },
                         b.Optional(
                             b.HasValue(b.Get(clientModel, x => x.ErrorMessage)),
@@ -48,55 +51,57 @@ namespace MdsCommon
                         b.HtmlSpanText(
                             b =>
                             {
-                                b.SetClass("p-8 text-gray-800");
+                                b.SetClass("p-8 text-gray-600 font-semibold");
                             },
                             b.Get(clientModel, x => x.LoginMessage)),
-                        b.SlInput(
-                            b=>
+                        b.SignInField(
+                            "User name",
+                            b =>
                             {
-                                b.AddClass("w-full");
-                                b.SetTypeText();
-                                b.SetLabel("User name");
+                                b.SetAttribute("autocomplete", "username");
+                                b.SetId("name");
                                 b.BindTo(clientModel, x => x.Credentials, x => x.UserName);
-                                b.SetPlaceholder("User name");
                             }),
-                        b.SlInput(b =>
-                        {
-                            b.AddClass("w-full");
-                            b.SetLabel("Password");
-                            b.BindTo(clientModel, x => x.Credentials, x => x.Password);
-                            b.SetTypePassword();
-                            b.SetPasswordToggle();
-                            b.OnEnterKey(b.MakeAction((SyntaxBuilder b, Var<SignInPage> state) =>
+                        b.SignInField(
+                            "Password",
+                            b =>
                             {
-                                return b.MakeStateWithEffects(state, b.MakeEffect(b.Def((SyntaxBuilder b, Var<HyperType.Dispatcher<SignInPage>> dispatcher) =>
-                                {
-                                    var form = b.GetElementById(b.Const("credentials-form"));
-                                    b.CallExternal("form", "Submit", form);
-                                })));
-                            }));
-                        }),
+                                b.SetType("password");
+                                b.BindTo(clientModel, x => x.Credentials, x => x.Password);
+                            }),
                         b.HtmlDiv(
                             b =>
                             {
                                 b.SetClass("flex flex-row justify-end w-full pt-8");
                             },
-                            b.HtmlForm(
+                            b.HtmlButton(
                                 b =>
                                 {
-                                    b.SetId("credentials-form");
-                                    b.SetAttribute("method", "POST");
-                                    b.SetAttribute("action", b.Concat(b.Const("/signin/credentials"), b.Const("?ReturnUrl="), b.Get(clientModel, x => x.ReturnUrl)));
-                                    //b.SetAttribute("action", b.Get(clientModel, x => x.ReturnUrl));
+                                    b.SetClass("rounded text-white py-2 px-4 shadow bg-sky-500");
                                 },
-                                b.HtmlButton(
-                                    b =>
-                                    {
-                                        b.SetClass("rounded text-white py-2 px-4 shadow bg-sky-500");
-                                    },
-                                    b.TextSpan("Sign in")),
+                                b.TextSpan("Sign in")),
                                 b.HiddenPayload(b.Get(clientModel, x => x.Credentials))))
-                        )));
+                        ));
+        }
+
+        private static Var<IVNode> SignInField(this LayoutBuilder b, string label, Action<PropsBuilder<HtmlInput>> buildInput)
+        {
+            return b.HtmlDiv(
+                b =>
+                {
+                    b.SetClass("flex flex-col w-full gap-2");
+                },
+                b.HtmlSpanText(
+                    b =>
+                    {
+                        b.SetClass("font-sm text-gray-600");
+                    },
+                    label),
+                b.HtmlInput(b =>
+                {
+                    b.SetClass("h-10 w-full rounded outline-none px-4 focus:ring-4 ring-sky-200 border border-gray-400");
+                    buildInput(b);
+                }));
         }
     }
 

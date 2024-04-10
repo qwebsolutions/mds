@@ -118,6 +118,7 @@ namespace MdsInfrastructure.Render
             MdsInfrastructure.ChangesReport serverModel,
             InfrastructureConfiguration infrastructureConfiguration)
         {
+            StaticFiles.Add(typeof(Render.Deployment).Assembly, "nowork.png");
             var serviceChanges = serverModel.ServiceChanges;
             if (!serviceChanges.Any() || serviceChanges.All(x => x.ServiceChangeType == ChangeType.None))
             {

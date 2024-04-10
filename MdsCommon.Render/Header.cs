@@ -13,6 +13,7 @@ namespace MdsCommon
         public static Var<IVNode> Render(this LayoutBuilder b, Var<MdsCommon.Header.Props> props)
         {
             b.AddModuleStylesheet();
+            StaticFiles.Add(typeof(HeaderRenderer).Assembly, "Poppins-Regular.ttf");
 
             var mainOperation =  b.Get(props, x => x.Main.Operation);
             var mainEntity = b.Get(props, x => x.Main.Entity);

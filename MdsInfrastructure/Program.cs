@@ -119,8 +119,6 @@ namespace MdsInfrastructure
                     app.UseSwaggerUI();
                 });
 
-            webServerRefs.RegisterStaticFiles(typeof(Program).Assembly);
-
             {
                 var app = webServerRefs.WebApplication;
 
@@ -487,17 +485,7 @@ namespace MdsInfrastructure
 
 
             Register.Everything(webServerRefs);
-            //webServerRefs.AddInfraUi();
             webServerRefs.WebApplication.AddInfraApi(arguments);
-            webServerRefs.RegisterStaticFiles(typeof(MdsInfrastructure.MdsInfra).Assembly);
-            webServerRefs.RegisterStaticFiles(typeof(MdsCommon.Header).Assembly);
-            webServerRefs.RegisterStaticFiles(typeof(Metapsi.Hyperapp.Browser).Assembly);
-            webServerRefs.RegisterStaticFiles(typeof(Metapsi.Syntax.SyntaxBuilder).Assembly);
-            webServerRefs.RegisterStaticFiles(typeof(MdsCommon.HeaderRenderer).Assembly);
-            webServerRefs.RegisterStaticFiles(typeof(MdsCommon.Controls.Control).Assembly);
-            webServerRefs.RegisterStaticFiles(typeof(Metapsi.Dom.ClickTarget).Assembly);
-            webServerRefs.RegisterStaticFiles(typeof(Metapsi.TomSelect.Control).Assembly);
-
             return webServerRefs;
         }
 

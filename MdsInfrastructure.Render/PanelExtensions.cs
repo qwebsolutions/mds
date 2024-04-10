@@ -41,6 +41,7 @@ namespace MdsInfrastructure.Render
                         b =>
                         {
                             b.SetClass("w-8 h-9 pl-2");
+                            StaticFiles.Add(typeof(PanelExtensions).Assembly, "server-icon.png");
                             b.SetSrc("/server-icon.png");
                         }));
             };

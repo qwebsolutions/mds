@@ -21,6 +21,7 @@
 	<ItemGroup>
 		<None Remove="embedded\connect.js" />
 		<None Remove="embedded\cy.js" />
+		<None Remove="embedded\cytoscape.min.js" />
 		<None Remove="embedded\leader-line.min.js" />
 	</ItemGroup>
 
@@ -38,6 +39,7 @@
 	<ItemGroup>
 		<EmbeddedResource Include="embedded\connect.js" LogicalName="connect.js" />
 		<EmbeddedResource Include="embedded\cy.js" LogicalName="cy.js" />
+		<EmbeddedResource Include="embedded\cytoscape.min.js" LogicalName="cytoscape.min.js"/>
 		<EmbeddedResource Include="embedded\leader-line.min.js" LogicalName="leader-line.min.js" />
 		<EmbeddedResource Include="embedded\MdsInfrastructure.Render.css" LogicalName="MdsInfrastructure.Render.css" />
 		<EmbeddedResource Include="embedded\nowork.png" LogicalName="nowork.png" />
