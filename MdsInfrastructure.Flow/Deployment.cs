@@ -69,16 +69,6 @@ namespace MdsInfrastructure.Flow
                     Deployment = currentDeployment,
                     User = httpContext.User()
                 });
-                //return Page.Response(changesReport, (b, clientModel) =>
-                //{
-                //    var layout = b.Layout(b.InfraMenu(nameof(Configuration), requestData.User().IsSignedIn()),
-                //        b.Render(b.Const(new Header.Props()
-                //        {
-                //            Main = new Header.Title() { Operation = "Review deployment", Entity = currentDeployment.Timestamp.ItalianFormat() },
-                //            User = requestData.User()
-                //        })), RenderDeploymentReport(b, changesReport, savedConfiguration));
-                //    return layout;
-                //});
             }
         }
     }
