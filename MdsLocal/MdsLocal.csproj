@@ -16,11 +16,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Metapsi.Hyperapp" Version="0.7.3" />
-		<PackageReference Include="Metapsi.Redis" Version="0.7.3" />
-		<PackageReference Include="Metapsi.Web" Version="0.7.3" />
-		<PackageReference Include="Metapsi.Mds" Version="0.7.3" />
-		<PackageReference Include="Metapsi.Timer" Version="0.7.3" />
+		<PackageReference Include="Metapsi.Hyperapp" Version="$(MetapsiVersion)" />
+		<PackageReference Include="Metapsi.Redis" Version="$(MetapsiVersion)" />
+		<PackageReference Include="Metapsi.Web" Version="$(MetapsiVersion)" />
+		<PackageReference Include="Metapsi.Mds" Version="$(MetapsiVersion)" />
+		<PackageReference Include="Metapsi.Timer" Version="$(MetapsiVersion)" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -15,8 +15,6 @@
 		<ProjectReference Include="..\MdsLocal.DataModel\MdsLocal.DataModel.Direct.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<EmbeddedResource Include="embedded\MdsLocal.Render.css" LogicalName="MdsLocal.Render.css" />
-	</ItemGroup>
+	<Import Project="embedded/Embedded.target"/>
 
 </Project>

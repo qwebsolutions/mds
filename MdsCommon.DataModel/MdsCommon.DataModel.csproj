@@ -7,8 +7,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Metapsi.Runtime" Version="0.7.3" />
-	  <PackageReference Include="Metapsi.Ui" Version="0.7.3" />
-	  <PackageReference Include="Metapsi.Web.Contracts" Version="0.7.3" />
+	  <PackageReference Include="Metapsi.Runtime" Version="$(MetapsiVersion)" />
+	  <PackageReference Include="Metapsi.Ui" Version="$(MetapsiVersion)" />
+	  <PackageReference Include="Metapsi.Web.Contracts" Version="$(MetapsiVersion)" />
 	</ItemGroup>
 </Project>

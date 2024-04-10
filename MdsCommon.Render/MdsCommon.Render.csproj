@@ -1,21 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Metapsi.Hyperapp" Version="0.7.3" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\MdsCommon.Controls\MdsCommon.Controls.csproj" />
-    <ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.csproj" />
-  </ItemGroup>
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+	</PropertyGroup>
 
 	<ItemGroup>
-		<EmbeddedResource Include="embedded\Poppins-Regular.ttf" LogicalName="Poppins-Regular.ttf"></EmbeddedResource>
-		<EmbeddedResource Include="embedded\MdsCommon.Render.css" LogicalName="MdsCommon.Render.css"></EmbeddedResource>
+		<PackageReference Include="Metapsi.Hyperapp" Version="$(MetapsiVersion)" />
 	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\MdsCommon.Controls\MdsCommon.Controls.csproj" />
+		<ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.csproj" />
+	</ItemGroup>
+
+	<Import Project="embedded/Embedded.target"/>
 
 </Project>

@@ -12,18 +12,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<None Remove="embedded\form.js" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<ProjectReference Include="..\..\metapsi\Metapsi.Hyperapp\Metapsi.Hyperapp.csproj" />
 		<ProjectReference Include="..\MdsCommon.Controls\MdsCommon.Controls.Direct.csproj" />
 		<ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.Direct.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<EmbeddedResource Include="embedded\Poppins-Regular.ttf" LogicalName="Poppins-Regular.ttf"></EmbeddedResource>
-		<EmbeddedResource Include="embedded\MdsCommon.Render.css" LogicalName="MdsCommon.Render.css"></EmbeddedResource>
-	</ItemGroup>
+	<Import Project="embedded/Embedded.target"/>
 
 </Project>

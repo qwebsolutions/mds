@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<ItemGroup>
+		<EmbeddedResource Include="embedded\MdsCommon.Controls.css" LogicalName="MdsCommon.Controls.css" />
+		<EmbeddedResource Include="embedded\MdsCommon.TomSelect.css" LogicalName="MdsCommon.TomSelect.css" />
+	</ItemGroup>
+
+</Project>

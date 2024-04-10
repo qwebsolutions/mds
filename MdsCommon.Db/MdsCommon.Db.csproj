@@ -6,7 +6,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Metapsi.SQLite" Version="0.7.3" />
+	  <PackageReference Include="Metapsi.SQLite" Version="$(MetapsiVersion)" />
 	</ItemGroup>
 
 	<ItemGroup>

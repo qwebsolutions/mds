@@ -5,10 +5,10 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Metapsi.Hyperapp" Version="0.7.3" />
-		<PackageReference Include="Metapsi.Shoelace" Version="0.7.3" />
-		<PackageReference Include="Metapsi.Web" Version="0.7.3" />
-		<PackageReference Include="Metapsi.Ui" Version="0.7.3" />
+		<PackageReference Include="Metapsi.Hyperapp" Version="$(MetapsiVersion)" />
+		<PackageReference Include="Metapsi.Shoelace" Version="$(MetapsiVersion)" />
+		<PackageReference Include="Metapsi.Web" Version="$(MetapsiVersion)" />
+		<PackageReference Include="Metapsi.Ui" Version="$(MetapsiVersion)" />
 	</ItemGroup>
 
   <ItemGroup>
@@ -16,32 +16,6 @@
     <ProjectReference Include="..\MdsInfrastructure.DataModel\MdsInfrastructure.DataModel.csproj" />
   </ItemGroup>
 
-	<ItemGroup>
-		<Compile Remove="tailwind\**" />
-		<EmbeddedResource Remove="tailwind\**" />
-		<None Remove="tailwind\**" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Compile Remove="EditConfiguration.EditPage.cs" />
-		<Compile Remove="EditConfiguration.Form.cs" />
-		<Compile Remove="EditConfiguration.ReviewConfiguration.cs" />
-		<Compile Remove="EditConfiguration.Save.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<None Remove="embedded\connect.js" />
-		<None Remove="embedded\cy.js" />
-		<None Remove="embedded\leader-line.min.js" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<EmbeddedResource Include="embedded\connect.js" LogicalName="connect.js" />
-		<EmbeddedResource Include="embedded\cy.js" LogicalName="cy.js" />
-		<EmbeddedResource Include="embedded\leader-line.min.js" LogicalName="leader-line.min.js" />
-		<EmbeddedResource Include="embedded\MdsInfrastructure.Render.css" LogicalName="MdsInfrastructure.Render.css" />
-		<EmbeddedResource Include="embedded\nowork.png" LogicalName="nowork.png" />
-		<EmbeddedResource Include="embedded\server-icon.png" LogicalName="server-icon.png" />
-	</ItemGroup>	
+	<Import Project="embedded/Embedded.target"/>
 	
 </Project>

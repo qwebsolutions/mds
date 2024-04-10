@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<ItemGroup>
+		<EmbeddedResource Include="windows_scripts\curl.exe" LogicalName="curl.exe" />
+		<EmbeddedResource Include="windows_scripts\curl-ca-bundle.crt" LogicalName="curl-ca-bundle.crt" />
+		<EmbeddedResource Include="windows_scripts\check.bat" LogicalName="check.bat" />
+		<EmbeddedResource Include="windows_scripts\upload.bat" LogicalName="upload.bat" />
+	</ItemGroup>
+
+</Project>

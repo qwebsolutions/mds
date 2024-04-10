@@ -1,25 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<None Remove="embedded\MdsCommon.Controls.Choices.css" />
-	</ItemGroup>
+	<Import Project="embedded/Embedded.target"/>
 
 	<ItemGroup>
-		<EmbeddedResource Include="embedded\MdsCommon.Controls.Choices.css" LogicalName="MdsCommon.Controls.Choices.css" />
-		<EmbeddedResource Include="embedded\MdsCommon.Controls.css" LogicalName="MdsCommon.Controls.css" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <PackageReference Include="Metapsi.Heroicons" Version="0.7.3" />
-	  <PackageReference Include="Metapsi.Html" Version="0.7.3" />
-	  <PackageReference Include="Metapsi.Hyperapp" Version="0.7.3" />
-	  <PackageReference Include="Metapsi.Shoelace" Version="0.7.3" />
-	  <PackageReference Include="Metapsi.TomSelect" Version="0.7.3" />
+	  <PackageReference Include="Metapsi.Heroicons" Version="$(MetapsiVersion)" />
+	  <PackageReference Include="Metapsi.Html" Version="$(MetapsiVersion)" />
+	  <PackageReference Include="Metapsi.Hyperapp" Version="$(MetapsiVersion)" />
+	  <PackageReference Include="Metapsi.Shoelace" Version="$(MetapsiVersion)" />
+	  <PackageReference Include="Metapsi.TomSelect" Version="$(MetapsiVersion)" />
 	</ItemGroup>
 
 </Project>
