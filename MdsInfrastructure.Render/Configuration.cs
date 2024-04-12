@@ -199,7 +199,7 @@ namespace MdsInfrastructure.Render
                 return b.HtmlDiv(
                    b =>
                    {
-                       b.SetClass("flex flex-col w-full");
+                       b.SetClass("flex flex-col w-full gap-4");
                    },
                    b.Toolbar(
                        b =>
