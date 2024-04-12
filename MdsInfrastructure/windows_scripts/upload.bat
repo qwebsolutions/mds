@@ -12,7 +12,7 @@ IF %ERRORLEVEL% NEQ 0 (
   goto :EOF
 )
 
-git rev-parse --is-inside-work-tree>usegit.txt
+git rev-parse --is-inside-work-tree 2>nul >usegit.txt
 set /p usegit=<usegit.txt
 del usegit.txt
 if "%useGit%"=="true" (

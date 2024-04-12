@@ -117,7 +117,7 @@ namespace MdsInfrastructure
 
                 foreach (var parameterBinding in parameterBindings)
                 {
-                    if (!configuration.Variables.Any(x => x.Name == parameterBinding.Name))
+                    if (!configuration.Variables.Any(x => x.Name == parameterBinding.VariableName))
                     {
                         validationErrors.Add($"Service {service.Name} does not use a valid variable {parameterBinding.VariableName} for parameter {parameterBinding.Name}");
                     }
@@ -383,7 +383,7 @@ namespace MdsInfrastructure
             if (infrastructureVariable == null)
                 return null;
 
-            return infrastructureVariable.VariableValue;
+            return infrastructureVariable.VariableName;
         }
 
         public static JsonSerializerOptions SerializerOptions = new JsonSerializerOptions()
