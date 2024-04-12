@@ -112,6 +112,33 @@ namespace MdsInfrastructure.Render
             }
         }
 
+        public static Var<IVNode> DeployNowButton<TModel>(this LayoutBuilder b, Var<Guid> configurationId)
+            where TModel : IApiSupportState
+        {
+            return b.HtmlButton(
+                b =>
+                {
+                    b.SetClass("bg-red-500 rounded px-4 py-2 text-white");
+                    b.OnClickAction(b.MakeAction((SyntaxBuilder b, Var<TModel> model) =>
+                    {
+                        return b.MakeStateWithEffects(
+                            b.ShowPanel(model),
+                            b.MakeEffect(
+                                b.Def(
+                                    b.Request(
+                                        Frontend.ConfirmDeployment,
+                                        configurationId,
+                                        
+                                        b.MakeAction((SyntaxBuilder b, Var<DeploymentPreview> model, Var<Frontend.ConfirmDeploymentResponse> response) =>
+                                        {
+                                            b.SetUrl(b.Const("/"));
+                                            return model;
+                                        }))
+                                    )));
+                    }));
+                },
+                b.TextSpan("Deploy now"));
+        }
 
         public static Var<IVNode> RenderDeploymentReport(
             this LayoutBuilder b,
@@ -162,27 +189,7 @@ namespace MdsInfrastructure.Render
                                 b.Set(x => x.Href, reviewConfigurationUrl);
                                 b.Set(x => x.SvgIcon, swapIcon);
                             }),
-                        b.HtmlButton(b =>
-                        {
-                            b.SetClass("bg-red-500 rounded px-4 py-2 text-white");
-                            b.OnClickAction(b.MakeAction((SyntaxBuilder b, Var<DeploymentPreview> model) =>
-                            {
-                                return b.MakeStateWithEffects(
-                                    b.ShowPanel(model),
-                                    b.MakeEffect(
-                                        b.Def(
-                                            b.Request(
-                                                Frontend.ConfirmDeployment,
-                                                b.Get(model, x => x.SavedConfiguration.Id),
-                                                b.MakeAction((SyntaxBuilder b, Var<DeploymentPreview> model, Var<Frontend.ConfirmDeploymentResponse> response) =>
-                                                {
-                                                    b.SetUrl(b.Const("/"));
-                                                    return model;
-                                                }))
-                                            )));
-                            }));
-                        },
-                        b.TextSpan("Deploy now"))),
+                        b.DeployNowButton<DeploymentPreview>(b.Const(infrastructureConfiguration.Id))),
                     b.ChangesReport(serviceChanges));
 
                 return view;

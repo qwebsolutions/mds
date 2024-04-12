@@ -34,7 +34,7 @@ namespace MdsCommon.Controls
             return b.HtmlDiv(
                 b =>
                 {
-                    b.SetClass("flex flex-row space-x-4 items-center p4-4");
+                    b.SetClass("flex flex-row space-x-4 items-center py-4");
                     buildProps(b);
                 },
                 children);

@@ -27,5 +27,6 @@ namespace MdsInfrastructure
         public List<MdsCommon.ServiceConfigurationSnapshot> Snapshot { get; set; } = new();
         public Metapsi.Ui.User User { get; set; } = new();
         public ApiSupport ApiSupport { get; set; } = new();
+        public string FilterValue { get; set; } = string.Empty;
     }
 }

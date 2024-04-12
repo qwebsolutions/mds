@@ -39,7 +39,7 @@ namespace MdsInfrastructure.Render
             {
                 var rows = b.Get(clientModel, x => x.ConfigurationHeaders.OrderBy(x => x.Name).ToList());
                 return b.StyledDiv(
-                    "rounded bg-white drop-shadow p-4", 
+                    "rounded bg-white drop-shadow p-4",
                     b.ListConfigurationsGrid(rows));
             }
         }
@@ -92,7 +92,7 @@ namespace MdsInfrastructure.Render
                 });
 
             var dataGrid = b.DataGrid(
-                gridBuilder, 
+                gridBuilder,
                 rows,
                 b.Const(
                     new System.Collections.Generic.List<string>()
@@ -167,7 +167,7 @@ namespace MdsInfrastructure.Render
                     b.InfraMenu(nameof(Configuration),
                     serverModel.User.IsSignedIn()),
                     b.Render(headerProps),
-                    RenderDeploymentConfiguration(b, serverModel.Snapshot, serverModel.SavedConfiguration)).As<IVNode>();
+                    RenderDeploymentConfiguration(b, clientModel, serverModel.Snapshot, serverModel.SavedConfiguration)).As<IVNode>();
             }
 
             public class ConfigurationRow
@@ -179,82 +179,57 @@ namespace MdsInfrastructure.Render
 
             public Var<IVNode> RenderDeploymentConfiguration(
                 LayoutBuilder b,
+                Var<ReviewConfigurationPage> clientModel,
                 System.Collections.Generic.List<MdsCommon.ServiceConfigurationSnapshot> infrastructureSnapshot,
                 InfrastructureConfiguration infrastructureConfiguration)
             {
-                throw new NotImplementedException();
-                //var view = b.Div();
 
-                //var deploymentReportUrl = b.Url<Routes.Deployment.ConfigurationPreview, Guid>(b.Const(infrastructureConfiguration.Id));
-                ////var confirmDeploymentUrl = b.Url(ConfirmDeployment, b.Const(infrastructureConfiguration.Id));
+                System.Collections.Generic.List<ConfigurationRow> configurationRows = new();
+                foreach (ServiceConfigurationSnapshot serviceSnapshot in infrastructureSnapshot.OrderBy(x => x.ServiceName))
+                {
+                    configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = "Node", Value = serviceSnapshot.NodeName });
+                    configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = "Project", Value = serviceSnapshot.ProjectName });
+                    configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = "Version", Value = serviceSnapshot.ProjectVersionTag });
+                    foreach (var param in serviceSnapshot.ServiceConfigurationSnapshotParameters)
+                    {
+                        configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = param.ParameterName, Value = param.DeployedValue });
+                    }
+                }
 
-                //var swapIcon = Icon.Swap;
-
-                //var deployNowButton = b.Node(
-                //    "button",
-                //    "bg-red-500 rounded px-4 py-2 text-white",
-                //    b => b.Text("Deploy now"));
-
-                //b.SetOnClick(deployNowButton, b.MakeAction((SyntaxBuilder b, Var<ReviewConfigurationPage> model) =>
-                //{
-                //    return b.MakeStateWithEffects(
-                //        b.ShowPanel(model),
-                //        b.MakeEffect(
-                //            b.Def(
-                //                b.Request(
-                //                Frontend.ConfirmDeployment,
-                //                b.Get(model, x => x.SavedConfiguration.Id),
-                //                b.MakeAction((SyntaxBuilder b, Var<ReviewConfigurationPage> model, Var<Frontend.ConfirmDeploymentResponse> response) =>
-                //                {
-                //                    b.SetUrl(b.Const("/"));
-                //                    return model;
-                //                })))
-                //        ));
-                //}));
-
-                //var toolbar = b.Add(view,
-                //    b.Toolbar(
-                //        b => b.NavigateButton(b =>
-                //        {
-                //            b.Set(x => x.Label, "Review deployment actions");
-                //            b.Set(x => x.Href, deploymentReportUrl);
-                //            b.Set(x => x.SvgIcon, swapIcon);
-                //        }),
-                //        b => deployNowButton));
-
-                //b.AddClass(toolbar, "justify-end");
-
-                //System.Collections.Generic.List<ConfigurationRow> configurationRows = new();
-                //foreach (ServiceConfigurationSnapshot serviceSnapshot in infrastructureSnapshot.OrderBy(x => x.ServiceName))
-                //{
-                //    configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = "Node", Value = serviceSnapshot.NodeName });
-                //    configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = "Project", Value = serviceSnapshot.ProjectName });
-                //    configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = "Version", Value = serviceSnapshot.ProjectVersionTag });
-                //    foreach (var param in serviceSnapshot.ServiceConfigurationSnapshotParameters)
-                //    {
-                //        configurationRows.Add(new ConfigurationRow() { ServiceName = serviceSnapshot.ServiceName, Property = param.ParameterName, Value = param.DeployedValue });
-                //    }
-                //}
-
-                //var rc = b.Def((LayoutBuilder b, Var<ConfigurationRow> row, Var<DataTable.Column> column) =>
-                //{
-                //    return b.VPadded4(b.TextSpan(b.GetProperty<string>(row, b.Get(column, x => x.Name))));
-                //});
-
-                //var dataTableProps = b.NewObj<DataTable.Props<ConfigurationRow>>(b =>
-                //{
-                //    b.SetRows(b.Const(configurationRows.ToList()));
-                //    b.AddColumn(nameof(ConfigurationRow.ServiceName), "Service name");
-                //    b.AddColumn(nameof(ConfigurationRow.Property));
-                //    b.AddColumn(nameof(ConfigurationRow.Value));
-                //    b.SetRenderCell(rc);
-                //});
-
-                //b.Add(view, b.DataTable(dataTableProps));
-
-                //return view;
+                return b.HtmlDiv(
+                   b =>
+                   {
+                       b.SetClass("flex flex-col w-full");
+                   },
+                   b.Toolbar(
+                       b =>
+                       {
+                           b.AddClass("justify-end");
+                       },
+                       b.HtmlA(
+                           b =>
+                           {
+                               b.SetClass("rounded flex flex-row gap-2 items-center py-2 px-4 shadow text-white bg-sky-500");
+                               b.SetHref(b.Url<Routes.Deployment.ConfigurationPreview, Guid>(b.Const(infrastructureConfiguration.Id)));
+                           },
+                           b.Svg(Icon.Swap, "w-5 h-5"),
+                           b.Text("Review deployment actions")),
+                       b.DeployNowButton<ReviewConfigurationPage>(b.Const(infrastructureConfiguration.Id))),
+                   b.HtmlDiv(
+                       b =>
+                       {
+                           b.SetClass("flex flex-col gap-2 w-full bg-white p-8 rounded shadow");
+                       },
+                       b.HtmlDiv(
+                           b =>
+                           {
+                               b.SetClass("flex flex-row justify-end");
+                           },
+                           b.Filter(clientModel, x => x.FilterValue)),
+                       b.DataTable(
+                           MdsDefaultBuilder.DataTable<ConfigurationRow>(),
+                           b.FilterList(b.Const(configurationRows), b.Get(clientModel, x => x.FilterValue)))));
             }
-
         }
     }
 
