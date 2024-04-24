@@ -51,8 +51,6 @@ namespace MdsInfrastructure.Render
 
         public static Var<EditConfigurationPage> OnRemoveService(SyntaxBuilder b, Var<EditConfigurationPage> page, Var<InfrastructureServiceRow> row)
         {
-            b.Log("OnRemoveService page", page);
-            b.Log("OnRemoveService row", row);
             var serviceId = b.Get(row, x => x.Id);
             var serviceRemoved = b.Get(page, serviceId, (x, serviceId) => x.Configuration.InfrastructureServices.Where(x => x.Id != serviceId).ToList());
             b.Set(b.Get(page, x => x.Configuration), x => x.InfrastructureServices, serviceRemoved);
@@ -133,6 +131,7 @@ namespace MdsInfrastructure.Render
                     b.HtmlButton(
                         b =>
                         {
+                            b.OnClickAction<EditConfigurationPage, HtmlButton>(OnAddService);
                             b.SetClass("py-2 px-4 rounded shadow bg-sky-500 text-white");
                         },
                         b.Text("Add service")),
