@@ -181,7 +181,7 @@ namespace MdsInfrastructure
                 {
                     try
                     {
-                        var lastSavedConfiguration = await commandContext.Do(Backend.LoadCurrentConfiguration);
+                        var lastSavedConfiguration = await commandContext.Do(Backend.LoadConfiguration, input.EditedConfiguration.Id);
 
                         ExternalConfiguration externalConfiguration = new ExternalConfiguration()
                         {
@@ -354,6 +354,13 @@ namespace MdsInfrastructure
                                 await writer.FlushAsync();
                             }
 
+                            ZipArchiveEntry configurationIdTxt = archive.CreateEntry("configuration_id.txt");
+                            using (StreamWriter writer = new StreamWriter(configurationIdTxt.Open()))
+                            {
+                                await writer.WriteAsync($"{edited.Id}");
+                                await writer.FlushAsync();
+                            }
+
                             ZipArchiveEntry credentialsJson = archive.CreateEntry("credentials.json");
                             using (StreamWriter writer = new StreamWriter(credentialsJson.Open()))
                             {
@@ -382,10 +389,10 @@ namespace MdsInfrastructure
                 }).RequireAuthorization();
 
                 api.MapGet(
-                    "/configuration",
-                    async (CommandContext commandContext, HttpContext httpContext) =>
+                    "/configuration/{id}",
+                    async (CommandContext commandContext, HttpContext httpContext, Guid id) =>
                     {
-                        var lastSavedConfiguration = await commandContext.Do(Backend.LoadCurrentConfiguration);
+                        var lastSavedConfiguration = await commandContext.Do(Backend.LoadConfiguration, id);
 
                         ExternalConfiguration externalConfiguration = new ExternalConfiguration()
                         {
