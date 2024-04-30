@@ -395,4 +395,13 @@ namespace MdsInfrastructure
             Encoder = JavaScriptEncoder.Create(UnicodeRanges.All)
         };
     }
+
+
+    public class ExternalConfiguration
+    {
+        public List<InfrastructureNode> Nodes { get; set; } = new();
+        public List<NoteType> NoteTypes { get; set; } = new();
+        public List<MdsCommon.Project> Projects { get; set; } = new();
+        public List<ParameterType> ParameterTypes { get; set; } = new();
+    }
 }

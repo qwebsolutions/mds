@@ -131,7 +131,24 @@ namespace MdsInfrastructure
                 {
                     try
                     {
-                        var lastSavedConfiguration = await commandContext.Do(Backend.LoadCurrentConfiguration);
+                        ExternalConfiguration externalConfiguration = new ExternalConfiguration()
+                        {
+                            Nodes = await commandContext.Do(Backend.LoadAllNodes),
+                            NoteTypes = await commandContext.Do(Backend.GetAllNoteTypes),
+                            ParameterTypes = await commandContext.Do(Backend.GetAllParameterTypes),
+                            Projects = await commandContext.Do(Backend.LoadAllProjects)
+                        };
+
+                        var validationMessages = input.InfrastructureConfiguration.ValidateConfiguration(externalConfiguration);
+                        if (validationMessages.Any())
+                        {
+                            return new SaveConfigurationResponse()
+                            {
+                                SaveValidationMessages = validationMessages
+                            };
+                        }
+
+                        var lastSavedConfiguration = await commandContext.Do(Backend.LoadConfiguration, input.InfrastructureConfiguration.Id);
                         var initialConfiguration = Metapsi.Serialize.FromJson<InfrastructureConfiguration>(input.OriginalJson);
 
                         var sneakyEdits = Conflict.GetConfigurationChanges(initialConfiguration, lastSavedConfiguration);
@@ -267,7 +284,7 @@ namespace MdsInfrastructure
 
                 api.MapPost("/windows-scripts", async (CommandContext commandContext, HttpContext httpContext, InfrastructureConfiguration edited) =>
                 {
-                    var lastSavedConfiguration = await commandContext.Do(Backend.LoadCurrentConfiguration);
+                    var lastSavedConfiguration = await commandContext.Do(Backend.LoadConfiguration, edited.Id);
 
                     ExternalConfiguration externalConfiguration = new ExternalConfiguration()
                     {
@@ -999,13 +1016,5 @@ namespace MdsInfrastructure
         {
             return edited;
         }
-    }
-
-    public class ExternalConfiguration
-    {
-        public List<InfrastructureNode> Nodes { get; set; } = new();
-        public List<NoteType> NoteTypes { get; set; } = new();
-        public List<MdsCommon.Project> Projects { get; set; } = new();
-        public List<ParameterType> ParameterTypes { get; set; } = new();
     }
 }

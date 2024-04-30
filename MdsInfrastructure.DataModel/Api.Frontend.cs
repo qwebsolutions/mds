@@ -15,6 +15,7 @@ namespace MdsInfrastructure
     public class SaveConfigurationResponse : ApiResponse
     {
         public List<string> ConflictMessages { get; set; } = new List<string>();
+        public List<string> SaveValidationMessages { get; set; } = new List<string>();
     }
 
     public class MergeConfigurationInput

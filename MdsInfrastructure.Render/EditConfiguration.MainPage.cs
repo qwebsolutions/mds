@@ -17,6 +17,7 @@ namespace MdsInfrastructure.Render
 {
     public static partial class EditConfiguration
     {
+        public const string IdSaveValidationFailedPopup = "id-save-validation-failed";
         public const string IdCurrentJsonPopup = "id-current-json";
         public const string IdSaveConflictPopup = "id-save-conflict";
         public const string IdMergeSuccessPopup = "id-merge-success";
@@ -146,17 +147,26 @@ namespace MdsInfrastructure.Render
                                         b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<SaveConfigurationResponse> response) =>
                                         {
                                             b.Set(page, x => x.SaveConfigurationResponse, response);
-                                            return b.If(b.Get(response, x => x.ConflictMessages.Any()), b =>
-                                            {
-                                                b.ShowDialog(b.Const(IdSaveConflictPopup));
-                                                return b.Clone(page);
-                                            },
-                                            b =>
-                                            {
-                                                b.Set(page, x => x.InitialConfiguration, b.Serialize(b.Get(page, x => x.Configuration)));
-                                                b.HideDialog(b.Const(IdSaveConflictPopup));
-                                                return b.Clone(page);
-                                            });
+
+                                            return b.If(
+                                                b.Get(response, x => x.SaveValidationMessages.Any()),
+                                                b =>
+                                                {
+                                                    b.ShowDialog(b.Const(IdSaveValidationFailedPopup));
+                                                    return b.Clone(page);
+                                                },
+                                                b => b.If(
+                                                    b.Get(response, x => x.ConflictMessages.Any()), b =>
+                                                    {
+                                                        b.ShowDialog(b.Const(IdSaveConflictPopup));
+                                                        return b.Clone(page);
+                                                    },
+                                                    b =>
+                                                    {
+                                                        b.Set(page, x => x.InitialConfiguration, b.Serialize(b.Get(page, x => x.Configuration)));
+                                                        b.HideDialog(b.Const(IdSaveConflictPopup));
+                                                        return b.Clone(page);
+                                                    }));
                                         })))));
                     }));
                 },
@@ -181,9 +191,6 @@ namespace MdsInfrastructure.Render
                 },
                 b.TextSpan("Deploy"));
 
-
-
-
             return b.HtmlDiv(b =>
             {
                 b.SetClass("flex flex-col w-full bg-white rounded shadow");
@@ -197,11 +204,11 @@ namespace MdsInfrastructure.Render
                     menuDropdown,
                     deployLink,
                     saveButton),
-                b.TabPair(b.Const("Configuration"),b.Call(EditConfiguration.TabConfiguration, clientModel)),
-                b.TabPair(b.Const("Services"),b.Call(EditConfiguration.TabServices, clientModel)),
+                b.TabPair(b.Const("Configuration"), b.Call(EditConfiguration.TabConfiguration, clientModel)),
+                b.TabPair(b.Const("Services"), b.Call(EditConfiguration.TabServices, clientModel)),
                 b.TabPair(b.Const("Applications"), b.Call(EditConfiguration.TabApplications, clientModel)),
                 b.TabPair(b.Const("Variables"), b.Call(EditConfiguration.TabVariables, clientModel))),
-
+            SaveValidationFailedPopup(b, clientModel),
             SaveConflictPopup(b, clientModel),
             MergeFailedPopup(b, clientModel),
             MergeSuccessPopup(b, clientModel),
@@ -284,6 +291,36 @@ namespace MdsInfrastructure.Render
                 b.DialogFooter(
                     "You can use this JSON to upload configuration by hand",
                     b.Call(copyButton),
+                    b.Call(okButton)));
+        }
+
+
+        public static Var<IVNode> SaveValidationFailedPopup(
+            LayoutBuilder b,
+            Var<EditConfigurationPage> model)
+        {
+            var okButton = (LayoutBuilder b) =>
+            b.HtmlButton(
+                b =>
+                {
+                    b.AddPrimaryButtonStyle();
+                    b.OnClickAction(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> model) =>
+                    {
+                        b.HideDialog(b.Const(IdSaveValidationFailedPopup));
+                        return b.Clone(model);
+                    }));
+                },
+                b.TextSpan("OK"));
+
+            return b.SlDialog(
+                b =>
+                {
+                    b.SetId(b.Const(IdSaveValidationFailedPopup));
+                },
+                b.DialogHeader("Cannot save", Metapsi.Heroicons.Solid.ExclamationTriangle, "text-yellow-600"),
+                b.MessagesList(b.Get(model, x => x.SaveConfigurationResponse.SaveValidationMessages)),
+                b.DialogFooter(
+                    "",
                     b.Call(okButton)));
         }
 

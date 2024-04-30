@@ -13,19 +13,6 @@ public static partial class MdsInfrastructureFunctions
         return await commandContext.Do(Backend.LoadAllConfigurationHeaders);
     }
 
-    //public static string GetConfigurationCellValue(ConfigurationHeadersList dataModel, InfrastructureConfiguration configurationHeader, string fieldName)
-    //{
-    //    if (fieldName == "ServicesCount")
-    //    {
-    //        return dataModel.Services.Where(x => x.ConfigurationHeaderId == configurationHeader.Id).Count().ToString();
-    //    }
-
-    //    if (fieldName == nameof(InfrastructureConfiguration.Name))
-    //        return configurationHeader.Name;
-
-    //    return string.Empty;
-    //}
-
     public static async Task<EditConfigurationPage> InitializeEditConfiguration(
         CommandContext commandContext,
         InfrastructureConfiguration configuration)
@@ -186,4 +173,81 @@ public static partial class MdsInfrastructureFunctions
         }
     }
 
+    public static List<string> ValidateConfiguration(this InfrastructureConfiguration configuration, ExternalConfiguration externalConfiguration)
+    {
+        List<string> validationErrors = new List<string>();
+
+        validationErrors.AddRange(Simplified.GetDuplicates(configuration.InfrastructureServices, x => x.ServiceName, "Service"));
+        validationErrors.AddRange(Simplified.GetDuplicates(configuration.Applications, x => x.Name, "Application"));
+        validationErrors.AddRange(Simplified.GetDuplicates(configuration.InfrastructureVariables, x => x.VariableName, "Variable"));
+
+        foreach (var service in configuration.InfrastructureServices)
+        {
+            if (string.IsNullOrEmpty(service.ServiceName))
+            {
+                validationErrors.Add($"Empty service name!");
+            }
+
+            if (validationErrors.Any())
+            {
+                return validationErrors;
+            }
+        }
+         
+        foreach (var service in configuration.InfrastructureServices)
+        {
+            foreach (var c in System.IO.Path.GetInvalidFileNameChars())
+            {
+                if (service.ServiceName.Contains(c))
+                {
+                    validationErrors.Add($"Service {service.ServiceName} cannot contain " + c);
+                }
+            }
+
+
+            if (!configuration.Applications.Select(x => x.Id).Contains(service.ApplicationId))
+            {
+                validationErrors.Add($"Service {service.ServiceName} does not use a valid application");
+            }
+
+            var serviceProject = externalConfiguration.Projects.SingleOrDefault(x => x.Id == service.ProjectId);
+
+            if (serviceProject == null)
+            {
+                validationErrors.Add($"Service {service.ServiceName} does not use a valid project");
+            }
+            else
+            {
+                if (!serviceProject.Versions.Any(x => x.Id == service.ProjectVersionId))
+                {
+                    validationErrors.Add($"Service {service.ServiceName} does not use a valid project version");
+                }
+            }
+
+            validationErrors.AddRange(Simplified.GetDuplicates(service.InfrastructureServiceParameterDeclarations, x => x.ParameterName, "Parameter"));
+
+            foreach (var parameter in service.InfrastructureServiceParameterDeclarations)
+            {
+                if (string.IsNullOrEmpty(parameter.ParameterName))
+                {
+                    validationErrors.Add($"Service {service.ServiceName} uses an unnamed parameter");
+                }
+
+                if (parameter.InfrastructureServiceParameterBindings.Any())
+                {
+                    if (!configuration.InfrastructureVariables.Select(x => x.Id).Contains(parameter.InfrastructureServiceParameterBindings.First().InfrastructureVariableId))
+                    {
+                        validationErrors.Add($"Service {service.ServiceName} does not use a valid variable for parameter {parameter.ParameterName}");
+                    }
+                }
+            }
+
+            if (!externalConfiguration.Nodes.Any(x => x.Id == service.InfrastructureNodeId))
+            {
+                validationErrors.Add($"Service {service.ServiceName} does not use a valid node");
+            }
+        }
+
+        return validationErrors;
+    }
 }
