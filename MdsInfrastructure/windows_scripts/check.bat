@@ -6,15 +6,16 @@ if not exist infra_url.txt (
 )
 
 set /p baseUrl=<infra_url.txt
+set /p configurationId=<configuration_id.txt
 curl -H "Content-Type: application/json" -d @credentials.json --cookie-jar cookies.txt --fail-with-body --silent -S %baseUrl%/api/signin 
 IF %ERRORLEVEL% NEQ 0 (
   ECHO ERROR: Unable to login to %baseUrl%
   goto :cleanup
 )
 del configuration.current.json
-curl --cookie cookies.txt -o configuration.current.json --fail-with-body --silent %baseUrl%/api/configuration
+curl --cookie cookies.txt -o configuration.current.json --fail-with-body --silent %baseUrl%/api/configuration/%configurationId%
 IF %ERRORLEVEL% NEQ 0 (
-  ECHO ERROR: Unable to retrieve configuration.current.json from %baseUrl%/api/configuration
+  ECHO ERROR: Unable to retrieve configuration.current.json from %baseUrl%/api/configuration/%configurationId%
   goto :cleanup
 )
 
