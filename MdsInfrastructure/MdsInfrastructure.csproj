@@ -8,9 +8,13 @@
 
 	<ItemGroup>
 		<Content Remove="infraargs.json" />
+		<Content Remove="infraargs.octav.json" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Include="infraargs.octav.json">
+		  <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+		</None>
 		<None Include="infraargs.json">
 			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
 		</None>
@@ -33,6 +37,6 @@
 		<ProjectReference Include="..\Metapsi.HttpServer\Metapsi.HttpServer.csproj" />
 	</ItemGroup>
 
-	<Import Project="windows_scripts/Embedded.target"/>
+	<Import Project="windows_scripts/Embedded.target" />
 
 </Project>

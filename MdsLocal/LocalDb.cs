@@ -67,6 +67,21 @@ namespace MdsLocal
             return syncHistory.OrderByDescending(x => x.Timestamp);
         }
 
+        public static async Task<SyncResult> LoadFullSyncResult(string fullDbPath, Guid id)
+        {
+            var fullSyncResult = await Db.WithRollback(fullDbPath, async c =>
+            {
+                var syncResult = await c.Transaction.LoadRecord<SyncResult>(id);
+
+                var log = await c.Connection.QueryAsync<SyncResultLog>($"select * from [{nameof(SyncResultLog)}] where {nameof(SyncResultLog.SyncResultId)} == @id", new { id }, c.Transaction);
+                syncResult.Log.AddRange(log.OrderBy(x => x.Index));
+
+                return syncResult;
+            });
+
+            return fullSyncResult;
+        }
+
         public static async Task SetNewConfiguration(
             string fullDbPath,
             List<MdsCommon.ServiceConfigurationSnapshot> localControllerConfiguration)
@@ -97,11 +112,20 @@ namespace MdsLocal
             {
                 conn.Open();
                 var transaction = conn.BeginTransaction();
-
                 Metapsi.Sqlite.DbAccess.Save(syncResult, transaction);
+
+                await transaction.CreateTableIfNotExists<SyncResultLog>(f =>
+                {
+                    if (f.FieldName == nameof(SyncResultLog.Id))
+                    {
+                        f.Definition = "ID STRING PRIMARY KEY";
+                    }
+                });
+                Metapsi.Sqlite.DbAccess.SaveCollection(nameof(SyncResultLog.SyncResultId), syncResult.Log, transaction);
                 await transaction.CommitAsync();
             }
         }
+
 
         //public static async Task<RecordCollection<RunningServiceProcess>> LoadAllServiceProcessesFromDbPath(string fullDbPath, string nodeName)
         //{

@@ -15,6 +15,7 @@ public static class Program
     {
         var serviceSetup = Metapsi.Mds.ServiceSetup.New();
         var parameters = serviceSetup.ParametersAs<InputArguments>();
+        Console.WriteLine("Started "+ Process.GetCurrentProcess().ProcessName);
 
         await Task.Delay(TimeSpan.FromSeconds(parameters.CrashAfterSeconds));
 

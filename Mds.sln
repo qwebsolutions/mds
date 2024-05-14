@@ -37,6 +37,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsTests", "MdsTests\MdsTes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsTests.CrashTestService", "MdsTests.CrashTestService\MdsTests.CrashTestService.csproj", "{0189F2F2-551F-4149-8D81-F2B8631D8326}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Metapsi.Mds", "..\metapsi\Metapsi.Mds\Metapsi.Mds.csproj", "{64E4AA62-173E-4C3F-BAF8-5BF1359AF4DB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +113,10 @@ Global
 		{0189F2F2-551F-4149-8D81-F2B8631D8326}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0189F2F2-551F-4149-8D81-F2B8631D8326}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0189F2F2-551F-4149-8D81-F2B8631D8326}.Release|Any CPU.Build.0 = Release|Any CPU
+		{64E4AA62-173E-4C3F-BAF8-5BF1359AF4DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{64E4AA62-173E-4C3F-BAF8-5BF1359AF4DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{64E4AA62-173E-4C3F-BAF8-5BF1359AF4DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{64E4AA62-173E-4C3F-BAF8-5BF1359AF4DB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

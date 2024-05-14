@@ -93,46 +93,64 @@ namespace MdsLocal
                 var previousConfig = previous.SingleOrDefault(x => x.ServiceName == serviceName);
                 var nextConfig = next.SingleOrDefault(x => x.ServiceName == serviceName);
 
-                List<Guid> completelyIdenticalIds = new List<Guid>();
-
-                if (previousConfig != null && nextConfig != null && previousConfig.Id == nextConfig.Id)
+                if (previousConfig != null && nextConfig == null)
                 {
-                    completelyIdenticalIds.Add(previousConfig.Id);
+                    localServicesDiff.RemovedServices.Add(previousConfig);
                 }
 
-                localServicesDiff.IdenticalServices.AddRange(next.Where(x => completelyIdenticalIds.Contains(x.Id)));
-                localServicesDiff.Parameters.AddRange(next.SelectMany(x=>x.ServiceConfigurationSnapshotParameters).Where(x => completelyIdenticalIds.Contains(x.ServiceConfigurationSnapshotId)));
+                if (previousConfig == null && nextConfig != null)
+                {
+                    localServicesDiff.AddedServices.Add(nextConfig);
+                }
+
+                if (previousConfig != null && nextConfig != null)
+                {
+                    var diff = Diff.Anything(previousConfig, nextConfig);
+                }
             }
 
-            // ADDED
-
-            IEnumerable<string> addedNames = next.Select(x => x.ServiceName).Except(previous.Select(x => x.ServiceName));
-
-            foreach (string addedName in addedNames)
-            {
-                var addedService = next.Single(x => x.ServiceName == addedName);
-                localServicesDiff.AddedServices.Add(addedService);
-                localServicesDiff.Parameters.AddRange(next.SelectMany(x => x.ServiceConfigurationSnapshotParameters).Where(x => x.ServiceConfigurationSnapshotId == addedService.Id));
-            }
-
-            IEnumerable<string> removedNames = previous.Select(x => x.ServiceName).Except(next.Select(x => x.ServiceName));
-            foreach (string removedName in removedNames)
-            {
-                var removedService = previous.Single(x => x.ServiceName == removedName);
-                localServicesDiff.RemovedServices.Add(removedService);
-                localServicesDiff.Parameters.AddRange(previous.SelectMany(x => x.ServiceConfigurationSnapshotParameters).Where(x => x.ServiceConfigurationSnapshotId == removedService.Id));
-            }
-
-            IEnumerable<string> commonNames = previous.Select(x => x.ServiceName).Intersect(next.Select(x => x.ServiceName));
-            IEnumerable<string> changedServiceNames = commonNames.Except(localServicesDiff.IdenticalServices.Select(x => x.ServiceName));
-
-            foreach (string changedServiceName in changedServiceNames)
-            {
-                var changedService = next.Single(x => x.ServiceName == changedServiceName);
-                localServicesDiff.ChangedServices.Add(changedService);
-                localServicesDiff.Parameters.AddRange(next.SelectMany(x => x.ServiceConfigurationSnapshotParameters).Where(x => x.ServiceConfigurationSnapshotId == changedService.Id));
-            }
             return localServicesDiff;
+
+            //    List<Guid> completelyIdenticalIds = new List<Guid>();
+
+            //    if (previousConfig != null && nextConfig != null && previousConfig.Id == nextConfig.Id)
+            //    {
+            //        completelyIdenticalIds.Add(previousConfig.Id);
+            //    }
+
+            //    localServicesDiff.IdenticalServices.AddRange(next.Where(x => completelyIdenticalIds.Contains(x.Id)));
+            //    localServicesDiff.Parameters.AddRange(next.SelectMany(x=>x.ServiceConfigurationSnapshotParameters).Where(x => completelyIdenticalIds.Contains(x.ServiceConfigurationSnapshotId)));
+            //}
+
+            //// ADDED
+
+            //IEnumerable<string> addedNames = next.Select(x => x.ServiceName).Except(previous.Select(x => x.ServiceName));
+
+            //foreach (string addedName in addedNames)
+            //{
+            //    var addedService = next.Single(x => x.ServiceName == addedName);
+            //    localServicesDiff.AddedServices.Add(addedService);
+            //    localServicesDiff.Parameters.AddRange(next.SelectMany(x => x.ServiceConfigurationSnapshotParameters).Where(x => x.ServiceConfigurationSnapshotId == addedService.Id));
+            //}
+
+            //IEnumerable<string> removedNames = previous.Select(x => x.ServiceName).Except(next.Select(x => x.ServiceName));
+            //foreach (string removedName in removedNames)
+            //{
+            //    var removedService = previous.Single(x => x.ServiceName == removedName);
+            //    localServicesDiff.RemovedServices.Add(removedService);
+            //    localServicesDiff.Parameters.AddRange(previous.SelectMany(x => x.ServiceConfigurationSnapshotParameters).Where(x => x.ServiceConfigurationSnapshotId == removedService.Id));
+            //}
+
+            //IEnumerable<string> commonNames = previous.Select(x => x.ServiceName).Intersect(next.Select(x => x.ServiceName));
+            //IEnumerable<string> changedServiceNames = commonNames.Except(localServicesDiff.IdenticalServices.Select(x => x.ServiceName));
+
+            //foreach (string changedServiceName in changedServiceNames)
+            //{
+            //    var changedService = next.Single(x => x.ServiceName == changedServiceName);
+            //    localServicesDiff.ChangedServices.Add(changedService);
+            //    localServicesDiff.Parameters.AddRange(next.SelectMany(x => x.ServiceConfigurationSnapshotParameters).Where(x => x.ServiceConfigurationSnapshotId == changedService.Id));
+            //}
+            //return localServicesDiff;
         }
 
         public static bool HasAnyUpdate(this LocalServicesConfigurationDiff localServicesDiff)

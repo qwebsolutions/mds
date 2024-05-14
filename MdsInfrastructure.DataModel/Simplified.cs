@@ -213,7 +213,7 @@ namespace MdsInfrastructure
                     Id = existingService.Id,
                     ServiceName = service.Name,
                     ApplicationId = result.Applications.Single(x => x.Name == service.Application).Id,
-                    Enabled = service.Enabled,
+                    EnabledTemporaryRename = service.Enabled,
                     InfrastructureNodeId = externalConfiguration.Nodes.Single(x => x.NodeName == service.Node).Id,
                 };
 
@@ -344,7 +344,7 @@ namespace MdsInfrastructure
             return new Service()
             {
                 Application = configuration.Applications.Single(x => x.Id == infrastructureService.ApplicationId).Name,
-                Enabled = infrastructureService.Enabled,
+                Enabled = infrastructureService.EnabledTemporaryRename,
                 Name = infrastructureService.ServiceName,
                 Node = externalConfiguration.Nodes.Single(x => x.Id == infrastructureService.InfrastructureNodeId).NodeName,
                 Notes = infrastructureService.InfrastructureServiceNotes.Select(x => new Note()

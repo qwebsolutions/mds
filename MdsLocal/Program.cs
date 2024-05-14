@@ -71,7 +71,7 @@ namespace MdsLocal
                 uiPort = int.Parse(parameters["UiPort"]);
             }
 
-            await ReplaceOldDateTimeFormat(arguments.DbPath);
+            await Migrate.All(arguments.DbPath);
 
             var localReferences = await SetupLocalController(arguments, uiPort, start);
 
@@ -84,39 +84,6 @@ namespace MdsLocal
             await application.SuspendComplete;
         }
 
-        public static async Task ReplaceOldDateTimeFormat(string fullDbPath)
-        {
-            var replaceSql = async (
-                OpenTransaction t,
-                string tableName,
-                string dateTimeField) =>
-            {
-                var allRecords = await t.Connection.QueryAsync<(string Id, string Timestamp)>($"select Id, {dateTimeField} from {tableName}", transaction: t.Transaction);
-                foreach (var record in allRecords)
-                {
-                    // Do not update if format is already correct
-                    if (record.Timestamp.Contains(" "))
-                    {
-                        var snapshotTimestamp = DateTime.Parse(record.Timestamp, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind);
-                        snapshotTimestamp = DateTime.SpecifyKind(snapshotTimestamp, DateTimeKind.Utc);
-                        await t.Connection.ExecuteAsync(
-                            $"update {tableName} set {dateTimeField}=@timestamp where Id=@Id",
-                            new { 
-                                Id = record.Id,
-                                timestamp = snapshotTimestamp.ToString("O", System.Globalization.CultureInfo.InvariantCulture) },
-                            transaction: t.Transaction);
-                    }
-                }
-            };
-
-            await Metapsi.Sqlite.Db.WithCommit(fullDbPath,
-                async t =>
-                {
-                    await replaceSql(t, nameof(InfrastructureEvent), nameof(InfrastructureEvent.Timestamp));
-                    await replaceSql(t, nameof(ServiceConfigurationSnapshot), nameof(ServiceConfigurationSnapshot.SnapshotTimestamp));
-                    await replaceSql(t, nameof(SyncResult), nameof(SyncResult.Timestamp));
-                });
-        }
 
         public static async Task<WebServer.References> SetupLocalController(InputArguments arguments, int uiPort, DateTime start)
         {
@@ -185,6 +152,18 @@ namespace MdsLocal
                 {
                     Model = reloadedModel,
                 };
+            }, WebServer.Authorization.Public);
+
+            api.MapRequest(Frontend.LoadFullSyncResult, async (CommandContext commandContext, HttpContext httpContext, Guid syncResultId) =>
+            {
+
+                var fullSyncResult = await LocalDb.LoadFullSyncResult(arguments.DbPath, syncResultId);
+
+                return new FullSyncResultResponse()
+                {
+                    SyncResult = fullSyncResult
+                };
+
             }, WebServer.Authorization.Public);
 
             return webServer;

@@ -12,10 +12,11 @@
 		<ProjectReference Include="..\..\metapsi\Metapsi.Shoelace\Metapsi.Shoelace.csproj" />
 		<ProjectReference Include="..\..\metapsi\Metapsi.TomSelect\Metapsi.TomSelect.csproj" />
 		<ProjectReference Include="..\..\metapsi\Metapsi.Web.Contracts\Metapsi.Web.Contracts.csproj" />
+		<ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.Direct.csproj" />
 		<ProjectReference Include="..\MdsCommon.Render\MdsCommon.Render.Direct.csproj" />
 		<ProjectReference Include="..\MdsInfrastructure.DataModel\MdsInfrastructure.DataModel.Direct.csproj" />
 	</ItemGroup>
 
-	<Import Project="embedded/Embedded.target"/>
+	<Import Project="embedded/Embedded.target" />
 
 </Project>

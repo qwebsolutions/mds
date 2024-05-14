@@ -1,4 +1,7 @@
 ﻿using Metapsi;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace MdsLocal
 {
@@ -17,26 +20,58 @@ namespace MdsLocal
         [DataItemField("ae4a17c6-f711-4448-a000-fd036c87fc11")]
         [ScalarTypeName("String")]
         public System.String ResultCode { get; set; } = System.String.Empty;
+
+        public List<SyncResultLog> Log { get; set; } = new();
     }
 
-    ///// <summary>
-    ///// 
-    ///// </summary>
-    //[DataItem("9f30ad03-ab18-4d32-865c-bb606b7ed16d")]
-    //public partial class SyncUpdatedConfiguration : IRecord
-    //{
-    //    [DataItemField("3cea89f2-599b-4f25-98da-a4cf80f24253")]
-    //    [ScalarTypeName("Id")]
-    //    public System.Guid Id { get; set; } = System.Guid.NewGuid();
-    //    [DataItemField("66e29758-8201-41f7-a556-1250bfeedfcb")]
-    //    [ScalarTypeName("Id")]
-    //    public System.Guid SyncResultId { get; set; }
+    public static class SyncResultLogType
+    {
+        public const string Error = "error";
+        public const string Warning = "warning";
+        public const string Info = "info";
+    }
 
-    //    [DataItemField("64de7309-6615-41b4-948d-ad0a725320c9")]
-    //    [ScalarTypeName("String")]
-    //    public System.String SerializedConfiguration { get; set; } = System.String.Empty;
-    //}
+    public class SyncResultLog : IRecord
+    {
+        public System.Guid Id { get; set; } = System.Guid.NewGuid();
+        public int Index { get; set; }
+        public System.Guid SyncResultId { get; set; }
+        public string TimestampIso { get; set; } = DateTime.UtcNow.Roundtrip();
+        public string Type { get; set; }
+        public string Message { get; set; } = string.Empty;
+    }
 
+    public static class SyncResultExtensions
+    {
+        private static SyncResultLog AddLog(this SyncResult syncResult, string type, string message)
+        {
+            var log = new SyncResultLog()
+            {
+                Type = type,
+                SyncResultId = syncResult.Id,
+                Message = message,
+                Index = syncResult.Log.Any() ? syncResult.Log.Max(x => x.Index) : 1
+            };
+
+            syncResult.Log.Add(log);
+            return log;
+        }
+
+        public static SyncResultLog AddError(this SyncResult syncResult, string message)
+        {
+            return syncResult.AddLog(SyncResultLogType.Error, message);
+        }
+
+        public static SyncResultLog AddWarning(this SyncResult syncResult, string message)
+        {
+            return syncResult.AddLog(SyncResultLogType.Warning, message);
+        }
+
+        public static SyncResultLog AddInfo(this SyncResult syncResult, string message)
+        {
+            return syncResult.AddLog(SyncResultLogType.Info, message);
+        }
+    }
 
     /// <summary>
     /// Data about the project binaries, as retrieved from the repository. Project binaries are then 'installed' as ServiceBinaries (using service configuration)

@@ -220,7 +220,6 @@ namespace MdsLocal
                 return await MdsCommon.Db.LoadAllInfrastructureEvents(fullDbPath);
             });
 
-
             implementationGroup.MapCommand(MdsLocalApplication.StoreSyncResult, async (rc, syncResult) =>
             {
                 await LocalDb.RegisterSyncResult(fullDbPath, syncResult);

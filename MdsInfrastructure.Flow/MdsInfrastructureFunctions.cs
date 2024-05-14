@@ -96,7 +96,8 @@ public static partial class MdsInfrastructureFunctions
             ProjectName = project.Name,
             ProjectVersionTag = project.Versions.Single(x => x.Id == service.ProjectVersionId).VersionTag,
             ServiceName = service.ServiceName,
-            SnapshotTimestamp = DateTime.UtcNow
+            SnapshotTimestamp = DateTime.UtcNow,
+            Enabled = service.EnabledTemporaryRename
         };
 
         foreach (var serviceParameter in service.InfrastructureServiceParameterDeclarations)

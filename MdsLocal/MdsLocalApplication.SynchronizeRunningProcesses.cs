@@ -20,10 +20,21 @@ namespace MdsLocal
 
         public static async Task SynchronizeRunningProcesses(CommandContext commandContext, State state)
         {
-            Event.ProcessesSynchronized processesSynchronized = new Event.ProcessesSynchronized();
-
             var localKnownConfiguration = await commandContext.Do(GetLocalKnownConfiguration);
+            var fakeDiff = DiffServices(localKnownConfiguration, localKnownConfiguration);
+
+            await SynchronizeRunningProcesses(commandContext, state, fakeDiff, new SyncResult());
+        }
+
+        public static async Task SynchronizeRunningProcesses(CommandContext commandContext, State state, LocalServicesConfigurationDiff configurationDiff, SyncResult syncResult)
+        {
+            Event.ProcessesSynchronized processesSynchronized = new Event.ProcessesSynchronized();
+            syncResult.AddInfo("Reloading local configuration after update ...");
+            var localKnownConfiguration = await commandContext.Do(GetLocalKnownConfiguration);
+            syncResult.AddInfo("Reloaded");
             var serviceProcesses = await commandContext.Do(GetRunningProcesses);
+
+            syncResult.AddInfo($"{serviceProcesses.Count} running processes identified for node {state.NodeName}");
 
             // Stop services that are running, but should not be, because they are removed or have different configuration
 
@@ -36,20 +47,37 @@ namespace MdsLocal
                 // Completely removed, stop
                 if (serviceConfiguration == null)
                 {
+                    syncResult.AddInfo($"{serviceProcess.ServiceName} not included in the new configuration. Attempting stop ...");
                     processesSynchronized.Stopped.Add(serviceProcess.ServiceName);
                     await commandContext.Do(StopProcess, serviceProcess);
+                    syncResult.AddInfo($"Service {serviceProcess.FullExePath} (PID {serviceProcess.Pid}) stopped");
                     commandContext.Logger.LogDebug($"SynchronizeRunningProcesses: {serviceProcess.ServiceName} stopped");
                 }
                 else
                 {
+                    var changedService = configurationDiff.ChangedServices.SingleOrDefault(x => x.Next.ServiceName == serviceProcess.ServiceName);
+
+                    if (changedService != null)
+                    {
+                        syncResult.AddInfo($"Service {serviceProcess.ServiceName} changed, attempting stop...");
+                        // Configuration changed, should be reinstalled
+                        processesSynchronized.Stopped.Add(serviceProcess.ServiceName);
+                        await commandContext.Do(StopProcess, serviceProcess);
+                        syncResult.AddInfo($"Service {serviceProcess.ServiceName} stopped");
+                        commandContext.Logger.LogDebug($"SynchronizeRunningProcesses: {serviceProcess.ServiceName} stopped");
+                    }
+
+                    /*
                     var serviceVersion = GetServiceVersionData(state.ServicesBasePath, serviceConfiguration.ServiceName);
                     if (serviceVersion.ConfigurationId != serviceConfiguration.Id.ToString())
                     {
+                        if(configurationDiff.ChangedServices.Contains())
+
                         // Configuration changed, should be reinstalled
                         processesSynchronized.Stopped.Add(serviceProcess.ServiceName);
                         await commandContext.Do(StopProcess, serviceProcess);
                         commandContext.Logger.LogDebug($"SynchronizeRunningProcesses: {serviceProcess.ServiceName} stopped");
-                    }
+                    }*/
                 }
             }
 
@@ -63,26 +91,39 @@ namespace MdsLocal
 
                     var serviceConfiguration = localKnownConfiguration.SingleOrDefault(x => x.ServiceName == serviceName);
 
+                    string serviceFullPath = System.IO.Path.Combine(state.ServicesBasePath, serviceName);
+
                     // Deleted, so remove directory
                     if (serviceConfiguration == null)
                     {
-                        DeleteServiceFolder(state.ServicesBasePath, serviceName);
+                        syncResult.AddInfo($"Attempting to remove directory {serviceFullPath} ...");
+                        DeleteServiceFolder(commandContext, state.ServicesBasePath, serviceName);
+                        syncResult.AddInfo($"Removed");
                     }
                     else
                     {
                         // If service folder is not valid (partially removed or misconfigured by hand)
                         if (!System.IO.File.Exists(GetMdsParametersPath(state.ServicesBasePath, serviceName)))
                         {
-                            DeleteServiceFolder(state.ServicesBasePath, serviceName);
+                            syncResult.AddWarning($"directory {serviceFullPath} seems to be misconfigured, configuration files are missing");
+                            syncResult.AddInfo($"Attempting to remove directory {serviceFullPath} ...");
+                            DeleteServiceFolder(commandContext, state.ServicesBasePath, serviceName);
+                            syncResult.AddInfo($"Removed");
                         }
                         else
                         {
-                            var serviceVersion = GetServiceVersionData(state.ServicesBasePath, serviceName);
-
-                            // Configuration changed, so remove directory, will be recreated
-                            if (serviceVersion.ConfigurationId != serviceConfiguration.Id.ToString())
+                            var changedService = configurationDiff.ChangedServices.SingleOrDefault(x => x.Next.ServiceName == serviceName);
+                            if (changedService != null)
                             {
-                                DeleteServiceFolder(state.ServicesBasePath, serviceName);
+                                if (changedService.Previous.ProjectVersionTag != changedService.Next.ProjectVersionTag)
+                                {
+                                    syncResult.AddInfo($"Binaries changed for {serviceName}");
+                                    syncResult.AddInfo($"Previous version {changedService.Previous.ProjectVersionTag}");
+                                    syncResult.AddInfo($"Nex version {changedService.Next.ProjectVersionTag}");
+                                    syncResult.AddInfo($"Attempting to remove directory {serviceFullPath} ...");
+                                    DeleteServiceFolder(commandContext, state.ServicesBasePath, serviceName);
+                                    syncResult.AddInfo($"Removed");
+                                }
                             }
                         }
                     }
@@ -101,25 +142,35 @@ namespace MdsLocal
 
                 if (!SameVersionIsInstalled(state.ServicesBasePath, serviceConfiguration))
                 {
+                    string serviceFullPath = System.IO.Path.Combine(state.ServicesBasePath, serviceConfiguration.ServiceName);
+                    syncResult.AddInfo($"Installing binaries in {serviceFullPath}...");
                     commandContext.Logger.LogDebug($"PrepareServiceBinaries {serviceConfiguration.ServiceName}");
                     await PrepareServiceBinaries(commandContext, state, serviceConfiguration);
+                    syncResult.AddInfo($"Done");
                     await CreateMdsParametersFile(state, serviceConfiguration);
+                    syncResult.AddInfo($"Creating internal databases for service {serviceConfiguration.ServiceName}...");
                     Metapsi.Mds.CreateServiceCommandDbFile(Metapsi.Mds.GetServiceCommandDbFile(state.BaseDataFolder, serviceConfiguration.ServiceName));
                     Metapsi.Mds.ClearServiceCommands(Metapsi.Mds.GetServiceCommandDbFile(state.BaseDataFolder, serviceConfiguration.ServiceName));
+                    syncResult.AddInfo($"Done");
                 }
 
+                syncResult.AddInfo($"Creating parameters file {GetServiceParametersPath(state.ServicesBasePath, serviceConfiguration)}");
                 // Overwrite parameters file anyway, is simpler & probably faster than checking if it is changed
                 await CreateAlgorithmParametersFile(state, serviceConfiguration);
                 commandContext.PostEvent(new Event.ServiceSetupComplete()
                 {
-                    ServiceSnapshot= serviceConfiguration
+                    ServiceSnapshot = serviceConfiguration
                 });
+
+                syncResult.AddInfo($"Service {serviceConfiguration.ServiceName} installed");
 
                 // If not running (was previously stopped if configuration is changed)
                 if (!serviceProcesses.Any(x => x.ServiceName == serviceConfiguration.ServiceName))
                 {
                     processesSynchronized.Started.Add(serviceConfiguration.ServiceName);
+                    syncResult.AddInfo($"Starting service {serviceConfiguration.ServiceName} ...");
                     await StartService(commandContext, state, serviceConfiguration.ServiceName);
+                    syncResult.AddInfo($"Service {serviceConfiguration.ServiceName} started");
                 }
             }
 

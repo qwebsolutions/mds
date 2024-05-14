@@ -11,7 +11,7 @@ namespace MdsInfrastructure
         public System.Guid ProjectId { get; set; }
         public System.Guid ProjectVersionId { get; set; }
         public System.Guid InfrastructureNodeId { get; set; }
-        public System.Boolean Enabled { get; set; }
+        public System.Boolean EnabledTemporaryRename { get; set; }
         public System.Guid ApplicationId { get; set; }
         public System.Guid ConfigurationHeaderId { get; set; }
 

@@ -1,4 +1,5 @@
 ﻿using Metapsi;
+using System.Collections.Generic;
 
 namespace MdsLocal
 {
@@ -12,18 +13,32 @@ namespace MdsLocal
         public RecordCollection<MdsLocal.SyncResult> SyncResults { get; set; } = new RecordCollection<MdsLocal.SyncResult>();
     }
 
-    /// <summary>
-    /// Configuration changes as detected by the synchronization mechanism
-    /// </summary>
-    [DataStructure("7cbbf409-b36e-4ced-842e-eba3ac8e6cd8")]
-    public partial class LocalServicesConfigurationDiff : IDataStructure
+    public class ChangedService
     {
-        public RecordCollection<MdsCommon.ServiceConfigurationSnapshot> AddedServices { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshot>();
-        public RecordCollection<MdsCommon.ServiceConfigurationSnapshot> RemovedServices { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshot>();
-        public RecordCollection<MdsCommon.ServiceConfigurationSnapshot> ChangedServices { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshot>();
-        public RecordCollection<MdsCommon.ServiceConfigurationSnapshot> IdenticalServices { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshot>();
-        public RecordCollection<MdsCommon.ServiceConfigurationSnapshotParameter> Parameters { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshotParameter>();
+        public MdsCommon.ServiceConfigurationSnapshot Previous { get; set; }
+        public MdsCommon.ServiceConfigurationSnapshot Next { get; set; }
     }
+
+    public class LocalServicesConfigurationDiff
+    {
+        public List<MdsCommon.ServiceConfigurationSnapshot> IdenticalServices { get; set; } = new List<MdsCommon.ServiceConfigurationSnapshot>();
+        public List<MdsCommon.ServiceConfigurationSnapshot> AddedServices { get; set; } = new List<MdsCommon.ServiceConfigurationSnapshot>();
+        public List<MdsCommon.ServiceConfigurationSnapshot> RemovedServices { get; set; } = new List<MdsCommon.ServiceConfigurationSnapshot>();
+        public List<ChangedService> ChangedServices { get; set; } = new List<ChangedService>();
+    }
+
+    ///// <summary>
+    ///// Configuration changes as detected by the synchronization mechanism
+    ///// </summary>
+    //[DataStructure("7cbbf409-b36e-4ced-842e-eba3ac8e6cd8")]
+    //public partial class LocalServicesConfigurationDiff : IDataStructure
+    //{
+    //    public RecordCollection<MdsCommon.ServiceConfigurationSnapshot> AddedServices { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshot>();
+    //    public RecordCollection<MdsCommon.ServiceConfigurationSnapshot> RemovedServices { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshot>();
+    //    public RecordCollection<MdsCommon.ServiceConfigurationSnapshot> ChangedServices { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshot>();
+    //    public RecordCollection<MdsCommon.ServiceConfigurationSnapshot> IdenticalServices { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshot>();
+    //    public RecordCollection<MdsCommon.ServiceConfigurationSnapshotParameter> Parameters { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshotParameter>();
+    //}
 
 
     /// <summary>
@@ -37,17 +52,17 @@ namespace MdsLocal
     }
 
 
-    /// <summary>
-    /// Triggered when the local configuration has any change 
-    /// </summary>
-    [DataStructure("e0ab876c-5b28-4684-9693-76811a798f68")]
-    public partial class ConfigurationChanged : IDataStructure, IData
-    {
-        public LocalServicesConfigurationDiff LocalServicesConfigurationDiff { get; set; }
-        //public RecordCollection<MdsCommon.ServiceConfigurationSnapshot> AddedServices { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshot>();
-        //public RecordCollection<MdsCommon.ServiceConfigurationSnapshot> RemovedServices { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshot>();
-        //public RecordCollection<MdsCommon.ServiceConfigurationSnapshot> ChangedServices { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshot>();
-        //public RecordCollection<MdsCommon.ServiceConfigurationSnapshot> IdenticalServices { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshot>();
-        //public RecordCollection<MdsCommon.ServiceConfigurationSnapshotParameter> Parameters { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshotParameter>();
-    }
+    ///// <summary>
+    ///// Triggered when the local configuration has any change 
+    ///// </summary>
+    //[DataStructure("e0ab876c-5b28-4684-9693-76811a798f68")]
+    //public partial class ConfigurationChanged : IDataStructure, IData
+    //{
+    //    public LocalServicesConfigurationDiff LocalServicesConfigurationDiff { get; set; }
+    //    //public RecordCollection<MdsCommon.ServiceConfigurationSnapshot> AddedServices { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshot>();
+    //    //public RecordCollection<MdsCommon.ServiceConfigurationSnapshot> RemovedServices { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshot>();
+    //    //public RecordCollection<MdsCommon.ServiceConfigurationSnapshot> ChangedServices { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshot>();
+    //    //public RecordCollection<MdsCommon.ServiceConfigurationSnapshot> IdenticalServices { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshot>();
+    //    //public RecordCollection<MdsCommon.ServiceConfigurationSnapshotParameter> Parameters { get; set; } = new RecordCollection<MdsCommon.ServiceConfigurationSnapshotParameter>();
+    //}
 }

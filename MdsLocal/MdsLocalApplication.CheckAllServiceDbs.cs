@@ -77,7 +77,12 @@ namespace MdsLocal
             {
                 await connection.OpenAsync();
                 var transaction = await connection.BeginTransactionAsync();
-                notProcessed.AddRange(await transaction.Connection.QueryAsync<LogEntry>("select * from Log where Processed=0 order by Id", transaction: transaction));
+
+                var tableExists = await transaction.Connection.QueryAsync("SELECT name FROM sqlite_master WHERE type='table' AND name='Log';", transaction: transaction);
+                if (tableExists.Any())
+                {
+                    notProcessed.AddRange(await transaction.Connection.QueryAsync<LogEntry>("select * from Log where Processed=0 order by Id", transaction: transaction));
+                }
                 await transaction.RollbackAsync();
             }
 
