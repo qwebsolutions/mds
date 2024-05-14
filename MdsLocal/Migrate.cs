@@ -11,32 +11,19 @@ namespace MdsLocal
     {
         public static async Task All(string fullDbPath)
         {
+            using (var connection = Metapsi.Sqlite.Db.ToConnection(fullDbPath))
+            {
+                await MdsCommon.Db.SetWalMode(connection);
+            }
+
             await Metapsi.Sqlite.Db.WithCommit(
                 fullDbPath,
                 async t =>
                 {
-                    await AddSnapshotEnabledField(t);
+                    await MdsCommon.Db.AddSnapshotEnabledField(t);
+                    await MdsCommon.Db.DropSnapshotHashField(t);
                     await ReplaceOldDateTimeFormat(t);
                 });
-        }
-
-        /// <summary>
-        /// Added May 2024
-        /// </summary>
-        /// <param name="t"></param>
-        /// <returns></returns>
-        public static async Task AddSnapshotEnabledField(OpenTransaction t)
-        {
-            await t.Transaction.Migrate<ServiceConfigurationSnapshot>(async (transaction, diff) =>
-            {
-                if (diff.ExpectedFieldIsMissing(nameof(ServiceConfigurationSnapshot.Enabled)))
-                {
-                    var expectedEnabled = diff.ExpectedField(nameof(ServiceConfigurationSnapshot.Enabled));
-                    expectedEnabled.dflt_value = "1";
-                    var columnDefinition = expectedEnabled.ColumnDefinition();
-                    await t.Connection.ExecuteAsync($"ALTER TABLE {Ddl.QuoteIdentifier(nameof(ServiceConfigurationSnapshot))} ADD {columnDefinition}");
-                }
-            });
         }
 
         public static async Task ReplaceOldDateTimeFormat(OpenTransaction t)

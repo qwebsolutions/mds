@@ -71,8 +71,6 @@ namespace MdsLocal
                 uiPort = int.Parse(parameters["UiPort"]);
             }
 
-            await Migrate.All(arguments.DbPath);
-
             var localReferences = await SetupLocalController(arguments, uiPort, start);
 
             var application = localReferences.ApplicationSetup.Revive();
@@ -88,6 +86,8 @@ namespace MdsLocal
         public static async Task<WebServer.References> SetupLocalController(InputArguments arguments, int uiPort, DateTime start)
         {
             Metapsi.Sqlite.Converters.RegisterAll();
+
+            await Migrate.All(arguments.DbPath);
 
             var localReferences = MdsLocalApplication.Setup(arguments, start);
 

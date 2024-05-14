@@ -20,6 +20,7 @@ namespace MdsInfrastructure
         public ServicePropertyChange NodeName { get; set; } = new ServicePropertyChange();
         public ServicePropertyChange ProjectName { get; set; } = new ServicePropertyChange();
         public ServicePropertyChange ProjectVersionTag { get; set; } = new ServicePropertyChange();
+        public ServicePropertyChange Enabled { get; set; } = new ServicePropertyChange();
 
         //public List<ServicePropertyChange> ServiceConfigurationChanges { get; set; } = new List<ServicePropertyChange>();
         public List<ServicePropertyChange> ServiceParameterChanges { get; set; } = new List<ServicePropertyChange>();
@@ -77,6 +78,7 @@ namespace MdsInfrastructure
         {
             List<ServicePropertyChange> servicePropertyChanges = new List<ServicePropertyChange>();
 
+            AddServicePropertyChange(servicePropertyChanges, before, after, x => x.Enabled);
             AddServicePropertyChange(servicePropertyChanges, before, after, x => x.ApplicationName);
             AddServicePropertyChange(servicePropertyChanges, before, after, x => x.NodeName);
             AddServicePropertyChange(servicePropertyChanges, before, after, x => x.ProjectName);
@@ -174,9 +176,10 @@ namespace MdsInfrastructure
                         return new ServiceChange()
                         {
                             ServiceChangeType = ChangeType.Added,
+                            Enabled = GetServicePropertyChange(before, after, x => x.Enabled),
                             NodeName = GetServicePropertyChange(before, after, x => x.NodeName),
-                            ProjectName = GetServicePropertyChange(before, after, x=> x.ProjectName),
-                            ProjectVersionTag = GetServicePropertyChange(before, after, x=>x.ProjectVersionTag),
+                            ProjectName = GetServicePropertyChange(before, after, x => x.ProjectName),
+                            ProjectVersionTag = GetServicePropertyChange(before, after, x => x.ProjectVersionTag),
                             ServiceName = after.ServiceName,
                             ServiceParameterChanges = GetParameterChanges(before, after)
                         };
@@ -187,6 +190,7 @@ namespace MdsInfrastructure
                         return new ServiceChange()
                         {
                             ServiceChangeType = ChangeType.Removed,
+                            Enabled = GetServicePropertyChange(before, after, x => x.Enabled),
                             NodeName = GetServicePropertyChange(before, after, x => x.NodeName),
                             ProjectName = GetServicePropertyChange(before, after, x => x.ProjectName),
                             ProjectVersionTag = GetServicePropertyChange(before, after, x => x.ProjectVersionTag),
@@ -215,6 +219,7 @@ namespace MdsInfrastructure
                             return new ServiceChange()
                             {
                                 ServiceChangeType = ChangeType.Changed,
+                                Enabled = GetServicePropertyChange(before, after, x=>x.Enabled),
                                 ServiceName = before.ServiceName,
                                 NodeName = GetServicePropertyChange(before, after, x => x.NodeName),
                                 ProjectName = GetServicePropertyChange(before, after, x => x.ProjectName),

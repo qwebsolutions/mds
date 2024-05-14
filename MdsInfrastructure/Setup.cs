@@ -286,8 +286,7 @@ namespace MdsInfrastructure
             implementationGroup.MapRequest(Backend.LoadLastConfigurationDeployment, httpClient);
             implementationGroup.MapCommand(Backend.ConfirmDeployment, httpClient);
             
-            // This was painful. Always remember. 04.04.2024. 1 AM
-            implementationGroup.MapRequest(Backend.LoadServiceSnapshotByHash, async (rc, hash) => await Db.LoadServiceSnapshotByHash(fullDbPath, hash));
+            implementationGroup.MapRequest(Backend.LoadIdenticalSnapshot, async (rc, snapshot) => await Db.LoadIdenticalSnapshot(fullDbPath, snapshot));
             implementationGroup.MapRequest(Backend.LoadEnvironmentTypes, httpClient);
             implementationGroup.MapRequest(Backend.LoadHealthStatus, httpClient);
             implementationGroup.MapRequest(Backend.GetAllParameterTypes, httpClient);

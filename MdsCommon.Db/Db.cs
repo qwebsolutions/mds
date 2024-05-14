@@ -74,5 +74,54 @@ namespace MdsCommon
                 await transaction.Connection.ExecuteAsync(deleteOlderThanAcceptedStatement, new { lastAcceptedTimestamp = lastAcceptedTimestamp }, transaction);
             }
         }
+
+        /// <summary>
+        /// Added May 2024
+        /// </summary>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        public static async Task SetWalMode(SQLiteConnection connection)
+        {
+            await connection.ExecuteAsync("PRAGMA journal_mode=WAL;");
+        }
+
+        /// <summary>
+        /// Added May 2024
+        /// </summary>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        public static async Task AddSnapshotEnabledField(OpenTransaction t)
+        {
+            await t.Transaction.Migrate<ServiceConfigurationSnapshot>(async (transaction, diff) =>
+            {
+                if (diff.ExpectedFieldIsMissing(nameof(ServiceConfigurationSnapshot.Enabled)))
+                {
+                    var expectedEnabled = diff.ExpectedField(nameof(ServiceConfigurationSnapshot.Enabled));
+                    expectedEnabled.dflt_value = "1";
+                    var columnDefinition = expectedEnabled.ColumnDefinition();
+                    await t.Connection.ExecuteAsync(
+                        $"ALTER TABLE {Ddl.QuoteIdentifier(nameof(ServiceConfigurationSnapshot))} ADD {columnDefinition}",
+                        transaction: transaction);
+                }
+            });
+        }
+
+        /// <summary>
+        /// Added May 2024
+        /// </summary>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        public static async Task DropSnapshotHashField(OpenTransaction t)
+        {
+            await t.Transaction.Migrate<ServiceConfigurationSnapshot>(async (transaction, diff) =>
+            {
+                if (diff.UnusedFieldIsPresent("Hash"))
+                {
+                    await t.Connection.ExecuteAsync(
+                        $"ALTER TABLE {Ddl.QuoteIdentifier(nameof(ServiceConfigurationSnapshot))} DROP 'Hash'",
+                        transaction: transaction);
+                }
+            });
+        }
     }
 }

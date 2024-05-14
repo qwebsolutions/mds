@@ -200,7 +200,7 @@ namespace MdsInfrastructure
                 fullStatus.StatusValues.Add(new StatusValue()
                 {
                     CurrentValue = serviceStatus.UsedRamMb.ToString(),
-                    GeneralStatus = GeneralStatus.Danger,
+                    GeneralStatus = GeneralStatus.Warning,
                     Message = "RAM usage is high!",
                     Name = ServiceUsedRam,
                     NormalValue = LimitServiceUsedRam.ToString()

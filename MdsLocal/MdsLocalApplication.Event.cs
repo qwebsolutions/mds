@@ -1,4 +1,5 @@
-﻿using Metapsi;
+﻿using MdsCommon;
+using Metapsi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -86,28 +87,84 @@ namespace MdsLocal
                 previous = new List<MdsCommon.ServiceConfigurationSnapshot>();
             }
 
-            HashSet<string> allServiceNames = previous.Select(x => x.ServiceName).Union(next.Select(x => x.ServiceName)).ToHashSet();
+            var previousServiceData = previous.Select(x => x.GetServiceData());
+            var nextServiceData = next.Select(x => x.GetServiceData());
 
-            foreach (var serviceName in allServiceNames)
+            var servicesHeadersDiff = Diff.CollectionsByKey(previousServiceData, nextServiceData, x => x.ServiceName);
+
+            foreach (var justInFirst in servicesHeadersDiff.JustInFirst)
             {
-                var previousConfig = previous.SingleOrDefault(x => x.ServiceName == serviceName);
-                var nextConfig = next.SingleOrDefault(x => x.ServiceName == serviceName);
+                var removedService = previous.Single(x => x.ServiceName == justInFirst.ServiceName);
+                localServicesDiff.RemovedServices.Add(removedService);
+            }
 
-                if (previousConfig != null && nextConfig == null)
+            foreach (var justInSecond in servicesHeadersDiff.JustInSecond)
+            {
+                var addedService = next.Single(x => x.ServiceName == justInSecond.ServiceName);
+                localServicesDiff.AddedServices.Add(addedService);
+            }
+
+            // If they are already different by header, they are different enough
+            foreach (var stillExistingService in servicesHeadersDiff.Different)
+            {
+                var previousService = previous.Single(x => x.ServiceName == stillExistingService.InFirst.ServiceName);
+                var nextService = next.Single(x => x.ServiceName == stillExistingService.InSecond.ServiceName);
+
+                localServicesDiff.ChangedServices.Add(new ChangedService()
                 {
-                    localServicesDiff.RemovedServices.Add(previousConfig);
+                    Previous = previousService,
+                    Next = nextService
+                });
+            }
+
+            // No header changes, compare parameters
+            foreach (var stillExistingService in servicesHeadersDiff.Common)
+            {
+                var previousService = previous.Single(x => x.ServiceName == stillExistingService.ServiceName);
+                var nextService = next.Single(x => x.ServiceName == stillExistingService.ServiceName);
+
+                var previousParametersData = previousService.ServiceConfigurationSnapshotParameters.Select(x => x.GetServiceParameterData());
+                var nextParametersData = nextService.ServiceConfigurationSnapshotParameters.Select(x => x.GetServiceParameterData());
+
+                var parameterChanges = Diff.CollectionsByKey(previousParametersData, nextParametersData, x => x.ParameterName);
+
+                if (parameterChanges.Any())
+                {
+                    localServicesDiff.ChangedServices.Add(new ChangedService()
+                    {
+                        Previous = previousService,
+                        Next = nextService
+                    });
                 }
-
-                if (previousConfig == null && nextConfig != null)
+                else
                 {
-                    localServicesDiff.AddedServices.Add(nextConfig);
-                }
-
-                if (previousConfig != null && nextConfig != null)
-                {
-                    var diff = Diff.Anything(previousConfig, nextConfig);
+                    localServicesDiff.IdenticalServices.Add(nextService);
                 }
             }
+
+
+            //HashSet<string> allServiceNames = previous.Select(x => x.ServiceName).Union(next.Select(x => x.ServiceName)).ToHashSet();
+
+            //foreach (var serviceName in allServiceNames)
+            //{
+            //    var previousConfig = previous.SingleOrDefault(x => x.ServiceName == serviceName);
+            //    var nextConfig = next.SingleOrDefault(x => x.ServiceName == serviceName);
+
+            //    if (previousConfig != null && nextConfig == null)
+            //    {
+            //        localServicesDiff.RemovedServices.Add(previousConfig);
+            //    }
+
+            //    if (previousConfig == null && nextConfig != null)
+            //    {
+            //        localServicesDiff.AddedServices.Add(nextConfig);
+            //    }
+
+            //    if (previousConfig != null && nextConfig != null)
+            //    {
+            //        var diff = Diff.Anything(previousConfig, nextConfig);
+            //    }
+            //}
 
             return localServicesDiff;
 

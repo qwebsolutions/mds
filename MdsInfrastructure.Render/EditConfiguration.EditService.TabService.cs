@@ -57,7 +57,7 @@ namespace MdsInfrastructure.Render
             var mathingEnvironment = b.Get(clientModel, versionSystems, (clientModel, versionSystems) => clientModel.EnvironmentTypes.Where(x => versionSystems.Contains(x.OsType)));
             var matchingEnvironmentIds = b.Get(mathingEnvironment, x => x.Select(x => x.Id));
             var matchingNodes = b.Get(clientModel, matchingEnvironmentIds, (m, envIds) => m.InfrastructureNodes.Where(x => envIds.Contains(x.EnvironmentTypeId)).ToList());
-            var serviceEnabled = b.Get(service, x => x.EnabledTemporaryRename);
+            var serviceEnabled = b.Get(service, x => x.Enabled);
 
             return b.HtmlDiv(
                 b =>

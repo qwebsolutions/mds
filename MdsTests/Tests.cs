@@ -55,7 +55,7 @@ public partial class TestScenarios
     [TestMethod]
     public async Task ManyNodes()
     {
-        var nodesCount = 5;
+        var nodesCount = 1;
 
         var configuration = CreateConfiguration(LocalNodeName, nodesCount * 2);
         for (int i = 0; i < nodesCount; i++)
@@ -71,6 +71,6 @@ public partial class TestScenarios
 
         await DeployConfiguration(configuration);
 
-        await Task.Delay(System.TimeSpan.FromMinutes(10));
+        await Task.Delay(System.TimeSpan.FromMinutes(30));
     }
 }

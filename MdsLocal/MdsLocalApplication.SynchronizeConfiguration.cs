@@ -69,7 +69,7 @@ namespace MdsLocal
                 {
                     if (localServicesDiff.HasAnyUpdate())
                     {
-                        foreach(var serviceDiff in localServicesDiff.AddedServices)
+                        foreach (var serviceDiff in localServicesDiff.AddedServices)
                         {
                             syncResult.AddInfo($"New service detected: {serviceDiff.ServiceName}");
                         }
@@ -110,6 +110,10 @@ namespace MdsLocal
                         //    LocalServicesConfigurationDiff = localServicesDiff
                         //};
                         //commandContext.PostEvent(configurationChanged);
+                    }
+                    else
+                    {
+                        syncResult.AddInfo($"No changes detected");
                     }
                 }
 

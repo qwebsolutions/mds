@@ -13,6 +13,7 @@ namespace MdsLocal
         public RecordCollection<MdsLocal.SyncResult> SyncResults { get; set; } = new RecordCollection<MdsLocal.SyncResult>();
     }
 
+
     public class ChangedService
     {
         public MdsCommon.ServiceConfigurationSnapshot Previous { get; set; }

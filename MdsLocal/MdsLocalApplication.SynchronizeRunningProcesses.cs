@@ -29,9 +29,9 @@ namespace MdsLocal
         public static async Task SynchronizeRunningProcesses(CommandContext commandContext, State state, LocalServicesConfigurationDiff configurationDiff, SyncResult syncResult)
         {
             Event.ProcessesSynchronized processesSynchronized = new Event.ProcessesSynchronized();
-            syncResult.AddInfo("Reloading local configuration after update ...");
+            //syncResult.AddInfo("Reloading local configuration after update ...");
             var localKnownConfiguration = await commandContext.Do(GetLocalKnownConfiguration);
-            syncResult.AddInfo("Reloaded");
+            //syncResult.AddInfo("Reloaded");
             var serviceProcesses = await commandContext.Do(GetRunningProcesses);
 
             syncResult.AddInfo($"{serviceProcesses.Count} running processes identified for node {state.NodeName}");
@@ -59,7 +59,14 @@ namespace MdsLocal
 
                     if (changedService != null)
                     {
-                        syncResult.AddInfo($"Service {serviceProcess.ServiceName} changed, attempting stop...");
+                        if (!changedService.Next.Enabled)
+                        {
+                            syncResult.AddInfo($"Service {serviceProcess.ServiceName} disabled, attempting stop...");
+                        }
+                        else
+                        {
+                            syncResult.AddInfo($"Service {serviceProcess.ServiceName} configuration changed, attempting stop...");
+                        }
                         // Configuration changed, should be reinstalled
                         processesSynchronized.Stopped.Add(serviceProcess.ServiceName);
                         await commandContext.Do(StopProcess, serviceProcess);
@@ -119,7 +126,7 @@ namespace MdsLocal
                                 {
                                     syncResult.AddInfo($"Binaries changed for {serviceName}");
                                     syncResult.AddInfo($"Previous version {changedService.Previous.ProjectVersionTag}");
-                                    syncResult.AddInfo($"Nex version {changedService.Next.ProjectVersionTag}");
+                                    syncResult.AddInfo($"Next version {changedService.Next.ProjectVersionTag}");
                                     syncResult.AddInfo($"Attempting to remove directory {serviceFullPath} ...");
                                     DeleteServiceFolder(commandContext, state.ServicesBasePath, serviceName);
                                     syncResult.AddInfo($"Removed");
@@ -154,23 +161,51 @@ namespace MdsLocal
                     syncResult.AddInfo($"Done");
                 }
 
-                syncResult.AddInfo($"Creating parameters file {GetServiceParametersPath(state.ServicesBasePath, serviceConfiguration)}");
-                // Overwrite parameters file anyway, is simpler & probably faster than checking if it is changed
-                await CreateAlgorithmParametersFile(state, serviceConfiguration);
-                commandContext.PostEvent(new Event.ServiceSetupComplete()
+                if (!configurationDiff.IdenticalServices.Any(x => x.ServiceName == serviceConfiguration.ServiceName))
                 {
-                    ServiceSnapshot = serviceConfiguration
-                });
+                    // For sure create if service is added
+                    var createParametersFile = configurationDiff.AddedServices.Any(x=>x.ServiceName == serviceConfiguration.ServiceName);
+                    if (!createParametersFile)
+                    {
+                        var changedService = configurationDiff.ChangedServices.SingleOrDefault(x => x.Next.ServiceName == serviceConfiguration.ServiceName);
+                        if (changedService != null)
+                        {
+                            var prevParametersData = changedService.Previous.ServiceConfigurationSnapshotParameters.Select(x => x.GetServiceParameterData());
+                            var nextParametersData = changedService.Next.ServiceConfigurationSnapshotParameters.Select(x => x.GetServiceParameterData());
 
-                syncResult.AddInfo($"Service {serviceConfiguration.ServiceName} installed");
+                            var parametersDiff = Diff.CollectionsByKey(prevParametersData, nextParametersData, x => x.ParameterName);
+                            if (parametersDiff.Any())
+                            {
+                                // Create if parameters are actually different
+                                createParametersFile = true;
+                            }
+                        }
+                    }
+
+                    if (createParametersFile)
+                    {
+                        syncResult.AddInfo($"Creating parameters file {GetServiceParametersPath(state.ServicesBasePath, serviceConfiguration)}");
+                        // Overwrite parameters file anyway, is simpler & probably faster than checking if it is changed
+                        await CreateAlgorithmParametersFile(state, serviceConfiguration);
+                        commandContext.PostEvent(new Event.ServiceSetupComplete()
+                        {
+                            ServiceSnapshot = serviceConfiguration
+                        });
+
+                        syncResult.AddInfo($"Service {serviceConfiguration.ServiceName} configured");
+                    }
+                }
 
                 // If not running (was previously stopped if configuration is changed)
                 if (!serviceProcesses.Any(x => x.ServiceName == serviceConfiguration.ServiceName))
                 {
-                    processesSynchronized.Started.Add(serviceConfiguration.ServiceName);
-                    syncResult.AddInfo($"Starting service {serviceConfiguration.ServiceName} ...");
-                    await StartService(commandContext, state, serviceConfiguration.ServiceName);
-                    syncResult.AddInfo($"Service {serviceConfiguration.ServiceName} started");
+                    if (serviceConfiguration.Enabled)
+                    {
+                        processesSynchronized.Started.Add(serviceConfiguration.ServiceName);
+                        syncResult.AddInfo($"Starting service {serviceConfiguration.ServiceName} ...");
+                        await StartService(commandContext, state, serviceConfiguration.ServiceName);
+                        syncResult.AddInfo($"Service {serviceConfiguration.ServiceName} started");
+                    }
                 }
             }
 

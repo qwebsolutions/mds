@@ -138,13 +138,28 @@ namespace MdsInfrastructure.Render
             var applicationServices = deployment.GetDeployedServices().Where(x => x.ApplicationName == applicationName);
 
             int dangerServicesCount = 0;
+            var warningServicesCount = 0;
 
             foreach (var service in applicationServices)
             {
                 var serviceStatus = StatusExtensions.GetServiceStatus(deployment, healthStatus, service, allInfrastructureEvents);
-                if (serviceStatus.StatusValues.Any(x => x.GeneralStatus == GeneralStatus.Danger || x.GeneralStatus == GeneralStatus.NoData))
+                if (serviceStatus.Entity.Enabled)
                 {
-                    dangerServicesCount++;
+                    if (serviceStatus.StatusValues.Any(x => x.GeneralStatus == GeneralStatus.Danger || x.GeneralStatus == GeneralStatus.NoData))
+                    {
+                        dangerServicesCount++;
+                    }
+                    else
+                    {
+                        if (serviceStatus.StatusValues.Any(x => x.GeneralStatus == GeneralStatus.Warning))
+                        {
+                            warningServicesCount++;
+                        }
+                    }
+                }
+                else
+                {
+                    warningServicesCount++;
                 }
             }
 
@@ -159,6 +174,16 @@ namespace MdsInfrastructure.Render
                     },
                     b.TextSpan($"{applicationServices.Count()} services ({dangerServicesCount} in error)"));
                 panelStyling = Panel.Style.Error;
+            }
+            else if (warningServicesCount > 0)
+            {
+                statusLabel = b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("font-bold");
+                    },
+                    b.TextSpan($"{applicationServices.Count()} services"));
+                panelStyling = Panel.Style.Warning;
             }
            
             return b.HtmlA(
@@ -181,10 +206,11 @@ namespace MdsInfrastructure.Render
         {
             FullStatus<MdsCommon.ServiceConfigurationSnapshot> serviceStatus = StatusExtensions.GetServiceStatus(deployment, healthStatus, service, allInfrastructureEvents);
 
-            //InfrastructureService service = serviceStatus.Entity;
-            //InfrastructureNode node = infrastructureConfiguration.InfrastructureNodes.ById(service.InfrastructureNodeId);
-
-            if (serviceStatus.StatusValues.Any(x => x.GeneralStatus == GeneralStatus.NoData))
+            if (!serviceStatus.Entity.Enabled)
+            {
+                return b.InfoPanel(Panel.Style.Warning, $"Service: {service.ServiceName}", "Disabled", b.Const(Route.Path<Routes.Docs.Service, string>(service.ServiceName)));
+            }
+            else if (serviceStatus.StatusValues.Any(x => x.GeneralStatus == GeneralStatus.NoData))
             {
                 string serviceInfo = $"Infrastructure node: {service.NodeName}, service data not available!";
                 return b.InfoPanel(Panel.Style.Error, $"Service: {service.ServiceName}", serviceInfo, b.Const(Route.Path<Routes.Docs.Service, string>(service.ServiceName)));

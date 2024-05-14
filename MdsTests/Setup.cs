@@ -155,10 +155,18 @@ public partial class TestScenarios
         await UploadBinaries(
             MdsBinariesApiUrl,
             TestProjectName,
-            "0.1",
+            "0.2",
             "0fb5d33167268a188bb44d575073ccb0ce61f1b5",
             "win-x64",
             System.IO.Path.Combine(CleanStartFolder, "MdsTests.CrashTestService.0fb5d33167268a188bb44d575073ccb0ce61f1b5.zip"));
+
+        await UploadBinaries(
+            MdsBinariesApiUrl,
+            TestProjectName,
+            "0.1",
+            "e9e58d251de5d3b4612acb9a03fc7dea1d184773",
+            "win-x64",
+            System.IO.Path.Combine(CleanStartFolder, "MdsTests.CrashTestService.e9e58d251de5d3b4612acb9a03fc7dea1d184773.zip"));
     }
 
     private static async Task StartInfraController()
@@ -232,7 +240,7 @@ public partial class TestScenarios
                     Name = "DoesNotCrash" + i,
                     Node = localNodeName,
                     Project = TestProjectName,
-                    Version = "0.1",
+                    Version = "0.2",
                     Parameters = new()
                     {
                         new Simplified.Parameter()

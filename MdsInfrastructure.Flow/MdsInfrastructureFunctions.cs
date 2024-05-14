@@ -62,7 +62,7 @@ public static partial class MdsInfrastructureFunctions
         substitutionValues["InfrastructureName"] = infrastructureName;
 
         List<MdsCommon.ServiceConfigurationSnapshot> configurationSnapshot = new List<MdsCommon.ServiceConfigurationSnapshot>();
-        foreach (var serviceName in infrastructureConfiguration.InfrastructureServices.Where(x => x.Enabled).Select(x => x.ServiceName))
+        foreach (var serviceName in infrastructureConfiguration.InfrastructureServices.Select(x => x.ServiceName))
         {
             var serviceSnapshot = await TakeServiceSnapshot(
                 commandContext,
@@ -97,7 +97,7 @@ public static partial class MdsInfrastructureFunctions
             ProjectVersionTag = project.Versions.Single(x => x.Id == service.ProjectVersionId).VersionTag,
             ServiceName = service.ServiceName,
             SnapshotTimestamp = DateTime.UtcNow,
-            Enabled = service.EnabledTemporaryRename
+            Enabled = service.Enabled
         };
 
         foreach (var serviceParameter in service.InfrastructureServiceParameterDeclarations)
@@ -120,57 +120,17 @@ public static partial class MdsInfrastructureFunctions
             serviceConfigurationSnapshotParameter.DeployedValue = Metapsi.Mds.SubstituteVariables(serviceConfigurationSnapshotParameter.ConfiguredValue, substitutionValues);
         }
 
-        string hash = GetHash(snapshot);
-
-        var existingSnapshot = await commandContext.Do(Backend.LoadServiceSnapshotByHash, hash);
+        var existingSnapshot = await commandContext.Do(Backend.LoadIdenticalSnapshot, snapshot);
 
         // Does not already exist, so return this one
         if (existingSnapshot == null)
         {
-            snapshot.Hash = hash;
             return snapshot;
         }
         else
         {
-            // Return the already existing one, preserving the original ID
+            // Return the already existing one, preserving the original IDs
             return existingSnapshot;
-        }
-    }
-
-    public static string GetHash(MdsCommon.ServiceConfigurationSnapshot serviceSnapshot)
-    {
-        // Cannot serialize the data structure, as the IDs will be always different
-        // Cannot set IDs to Guid.Empty, as the collection will not accept duplicate keys
-        // So, just add as most data as possible to a string builder
-        System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
-
-
-        // Set fields that are always different to fixed values
-        var serializedService = serviceSnapshot.Clone();
-        serializedService.Id = Guid.Empty;
-        serializedService.SnapshotTimestamp = DateTime.MinValue;
-        serializedService.ServiceConfigurationSnapshotParameters.Clear();
-
-        // Application name is not relevant in deployment
-        serializedService.ApplicationName = String.Empty;
-
-        stringBuilder.AppendLine(Metapsi.Serialize.ToJson(serializedService));
-
-        foreach (var parameter in serviceSnapshot.ServiceConfigurationSnapshotParameters.OrderBy(x => x.ParameterName))
-        {
-            var serializedParameter = parameter.Clone();
-            serializedParameter.Id = Guid.Empty;
-            serializedParameter.ServiceConfigurationSnapshotId = Guid.Empty;
-            serializedParameter.ParameterTypeId = Guid.Empty; // If parameter type changes, the deployment is not affected
-            serializedParameter.ConfiguredValue = String.Empty; // If configured value changes, the deployed value could still be the same
-
-            stringBuilder.AppendLine(Metapsi.Serialize.ToJson(serializedParameter));
-        }
-        using (var hash = System.Security.Cryptography.MD5.Create())
-        {
-            string builderValue = stringBuilder.ToString().Replace("\r", string.Empty); // To have the same value on windows & linux.
-            var hashBytes = hash.ComputeHash(System.Text.Encoding.UTF8.GetBytes(builderValue));
-            return System.Convert.ToBase64String(hashBytes);
         }
     }
 

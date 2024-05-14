@@ -352,36 +352,62 @@ namespace MdsInfrastructure
                 return await c.Transaction.LoadActiveDeployment();
             });
         }
-
-        public static async Task<MdsCommon.ServiceConfigurationSnapshot> LoadServiceSnapshotByHash(string fullDbPath, string hash)
+        public static async Task<MdsCommon.ServiceConfigurationSnapshot> LoadIdenticalSnapshot(string fullDbPath, MdsCommon.ServiceConfigurationSnapshot expectedSnapshot)
         {
             return await Metapsi.Sqlite.Db.WithRollback(fullDbPath,
                 async c =>
                 {
-                    try
+
+                    var fieldNames = Ddl.FieldNames(expectedSnapshot).Except(new List<string>() { nameof(ServiceConfigurationSnapshot.Id), nameof(ServiceConfigurationSnapshot.SnapshotTimestamp) });
+
+                    var whereFields = string.Join(" and ", fieldNames.Select(x => $"{Ddl.QuoteIdentifier(x)}=@{x}"));
+
+                    var headQuery = $"select * from {nameof(ServiceConfigurationSnapshot)} where {whereFields}";
+
+                    var multipleSnapshotsWithSameHeaderData = await c.Connection.QueryAsync<MdsCommon.ServiceConfigurationSnapshot>(headQuery, expectedSnapshot, c.Transaction);
+
+                    // If there is no snapshot with same header data, for sure parameters are not relevant anymore
+                    if (!multipleSnapshotsWithSameHeaderData.Any())
                     {
-                        var snapshotRecordWithSameHash = await c.Transaction.LoadRecords(
-                            (ServiceConfigurationSnapshot x) => x.Hash,
-                            hash);
+                        return null;
+                    }
 
-                        if (snapshotRecordWithSameHash.Any())
-                        {
-                            // Take First(), not Single(), to compensate for the many bugs this hash thing had and maybe still has
-                            var first = snapshotRecordWithSameHash.OrderByDescending(x => x.SnapshotTimestamp).First();
+                    foreach (var savedSnapshotHeader in multipleSnapshotsWithSameHeaderData)
+                    {
+                        var savedFullSnapshot = await c.Transaction.LoadStructure(ServiceConfigurationSnapshot.Data, savedSnapshotHeader.Id);
 
-                            return await c.Transaction.LoadStructure(ServiceConfigurationSnapshot.Data, first.Id);
-                        }
-                        else
+                        if (MatchesAllParameters(savedFullSnapshot, expectedSnapshot))
                         {
-                            return null;
+                            return savedFullSnapshot;
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("LoadServiceSnapshotByHash exception hash = " + hash);
-                        throw;
-                    }
+
+                    return null;
                 });
+        }
+
+        private static bool MatchesAllParameters(ServiceConfigurationSnapshot saved, ServiceConfigurationSnapshot expected)
+        {
+            var parametersDiff = Diff.CollectionsByKey(saved.ServiceConfigurationSnapshotParameters, expected.ServiceConfigurationSnapshotParameters, x => x.ParameterName);
+
+            if (parametersDiff.JustInFirst.Any())
+                return false;
+
+            if (parametersDiff.JustInSecond.Any())
+                return false;
+
+            // parametersDiff.Common will not return anything, as their IDs are different
+
+            foreach (var snapshotParameter in parametersDiff.Different)
+            {
+                // snapshotParameter.ParameterTypeId is not relevant for deployment
+                // snapshotParameter.ConfiguredValue is not relevant for deployment
+
+                if (snapshotParameter.InFirst.DeployedValue != snapshotParameter.InSecond.DeployedValue)
+                    return false;
+            }
+
+            return true;
         }
 
         private class LastDeployedChange

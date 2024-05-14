@@ -105,6 +105,8 @@ namespace MdsInfrastructure
         {
             Metapsi.Sqlite.Converters.RegisterAll();
 
+            await Migrate.All(arguments.DbPath);
+
             var references = MdsInfrastructureApplication.Setup(arguments, start);
 
             var webServerRefs = references.ApplicationSetup.AddWebServer(
