@@ -18,7 +18,7 @@ namespace MdsLocal
         public override Var<IVNode> OnRender(LayoutBuilder b, Var<OverviewPage> model)
         {
             var headerProps = b.NewObj<Header.Props>();
-            b.Set(headerProps, x => x.Main, b.Const(new Header.Title() { Operation = "Infrastructure events" }));
+            b.Set(headerProps, x => x.Main, b.Const(new Header.Title() { Operation = "Overview" }));
             b.Set(headerProps, x => x.User, b.Const<User>(new User() { Name = "Hardcoded user" }));
             b.Set(headerProps, x => x.UseSignIn, b.Const(false));
 

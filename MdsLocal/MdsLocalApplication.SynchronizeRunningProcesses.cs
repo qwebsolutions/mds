@@ -155,7 +155,7 @@ namespace MdsLocal
                     await PrepareServiceBinaries(commandContext, state, serviceConfiguration);
                     syncResult.AddInfo($"Done");
                     await CreateMdsParametersFile(state, serviceConfiguration);
-                    syncResult.AddInfo($"Creating internal databases for service {serviceConfiguration.ServiceName}...");
+                    syncResult.AddInfo($"Creating infrastructure files for service {serviceConfiguration.ServiceName}...");
                     Metapsi.Mds.CreateServiceCommandDbFile(Metapsi.Mds.GetServiceCommandDbFile(state.BaseDataFolder, serviceConfiguration.ServiceName));
                     Metapsi.Mds.ClearServiceCommands(Metapsi.Mds.GetServiceCommandDbFile(state.BaseDataFolder, serviceConfiguration.ServiceName));
                     syncResult.AddInfo($"Done");

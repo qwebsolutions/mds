@@ -133,6 +133,7 @@ namespace MdsLocal
             catch (Exception ex)
             {
                 commandContext.Logger.LogException(ex, "SynchronizeConfiguration");
+                syncResult.AddError(ex.Message);
             }
             finally
             {

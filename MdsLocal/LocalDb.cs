@@ -39,31 +39,22 @@ namespace MdsLocal
             });
         }
 
-        //public static async Task<MdsCommon.ServiceConfigurationSnapshot> LoadServiceConfiguration(string fullDbPath, string serviceName)
-        //{
-        //    MdsCommon.ServiceConfigurationSnapshot serviceConfiguration = new MdsCommon.ServiceConfigurationSnapshot();
-
-        //    using (SQLiteConnection conn = new SQLiteConnection($"Data Source = {fullDbPath}"))
-        //    {
-        //        conn.Open();
-        //        var transaction = conn.BeginTransaction();
-        //        var s = await transaction.LoadRecords<MdsCommon.ServiceConfigurationSnapshot, string>(x => x.ServiceName, serviceName);
-
-        //        if (s.Any())
-        //        {
-        //            throw new NotImplementedException();
-        //            //serviceConfiguration = await transaction.LoadStructure<MdsCommon.ServiceSnapshot>(s.Single().Id);
-        //        }
-
-        //        await transaction.RollbackAsync();
-        //    }
-
-        //    return serviceConfiguration;
-        //}
-
         public static async Task<IEnumerable<SyncResult>> LoadSyncHistory(string fullDbPath)
         {
-            var syncHistory = await Db.WithRollback(fullDbPath, c => c.Transaction.LoadRecords<SyncResult>());
+            var syncHistory = await Db.WithRollback(
+                fullDbPath,
+                async c =>
+                {
+                    var syncResults = await c.Transaction.LoadRecords<SyncResult>();
+                    foreach (var syncResult in syncResults)
+                    {
+                        var errorsQuery = $"select * from [{nameof(SyncResultLog)}] where {nameof(SyncResultLog.SyncResultId)} = @Id and \"type\" = '{SyncResultLogType.Error}'";
+                        var errors = await c.Connection.QueryAsync<SyncResultLog>(errorsQuery, new { syncResult.Id }, c.Transaction);
+                        syncResult.Log.AddRange(errors);
+                    }
+                    return syncResults;
+                });
+
             return syncHistory.OrderByDescending(x => x.Timestamp);
         }
 
@@ -73,7 +64,7 @@ namespace MdsLocal
             {
                 var syncResult = await c.Transaction.LoadRecord<SyncResult>(id);
 
-                var log = await c.Connection.QueryAsync<SyncResultLog>($"select * from [{nameof(SyncResultLog)}] where {nameof(SyncResultLog.SyncResultId)} == @id", new { id }, c.Transaction);
+                var log = await c.Connection.QueryAsync<SyncResultLog>($"select * from [{nameof(SyncResultLog)}] where {nameof(SyncResultLog.SyncResultId)} = @id", new { id }, c.Transaction);
                 syncResult.Log.AddRange(log.OrderBy(x => x.Index));
 
                 return syncResult;
@@ -126,29 +117,6 @@ namespace MdsLocal
             }
         }
 
-
-        //public static async Task<RecordCollection<RunningServiceProcess>> LoadAllServiceProcessesFromDbPath(string fullDbPath, string nodeName)
-        //{
-        //    using (SQLiteConnection conn = new SQLiteConnection($"Data Source = {fullDbPath}"))
-        //    {
-        //        conn.Open();
-        //        var transaction = conn.BeginTransaction();
-
-        //        var allServiceProcesses = await LoadAllServiceProcesses(transaction, nodeName);
-        //        await transaction.CommitAsync();
-        //        return allServiceProcesses;
-        //    }
-        //}
-
-        ///// <summary>
-        ///// Loads from LocalService + actual running processes
-        ///// </summary>
-        ///// <param name="transaction"></param>
-        ///// <returns></returns>
-        //public static async Task<RecordCollection<RunningServiceProcess>> LoadAllServiceProcesses(SQLiteTransaction transaction, string nodeName)
-        //{
-
-        //}
 
         public static async Task<FullLocalStatus> LoadFullLocalStatus(string fullDbPath, string nodeName)
         {

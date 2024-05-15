@@ -37,7 +37,7 @@ namespace MdsCommon.Controls
                 isAlert,
                 b =>
                 {
-                    return b.Badge(b.Const("ALERT"), b.Const("bg-rose-600"));
+                    return b.Badge(b.Const("ALERT"), b.Const("bg-red-600"));
                 });
         }
     }
