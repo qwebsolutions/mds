@@ -770,10 +770,6 @@ video {
   align-items: center;
 }
 
-.items-baseline {
-  align-items: baseline;
-}
-
 .items-stretch {
   align-items: stretch;
 }
@@ -12228,6 +12224,10 @@ video {
 
 .line-through {
   text-decoration-line: line-through;
+}
+
+.accent-sky-600 {
+  accent-color: #0284c7;
 }
 
 .opacity-50 {

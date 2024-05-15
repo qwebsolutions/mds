@@ -9,11 +9,23 @@ namespace MdsInfrastructure
         public List<Project> ProjectsList { get; set; }
         public List<InfrastructureConfiguration> AllConfigurationHeaders { get; set; }
         public List<InfrastructureService> InfrastructureServices { get; set; }
+        public List<BinariesRepositoryEntry> Binaries { get; set; } = new();
         public bool ShowSidePanel { get; set; }
         public Project SelectedProject { get; set; }
         public bool IsLoading { get; set; }
         public string ValidationMessage { get; set; }
 
         public Metapsi.Ui.User User { get; set; }
+
+        public string SearchKeyword { get; set; }
+    }
+
+    public class BinariesRepositoryEntry
+    {
+        public bool Selected { get; set; }
+        public string ProjectName { get; set; }
+        public string ProjectVersion { get; set; }
+        public string Target { get; set; }
+        public string BuildNumber { get; set; }
     }
 }
