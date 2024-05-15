@@ -36,7 +36,6 @@ namespace MdsLocal
 
             MdsCommon.PathParameter.SetRelativeToFolder(inputFileFolder, parameters, nameof(InputArguments.DbPath));
             MdsCommon.PathParameter.SetRelativeToFolder(inputFileFolder, parameters, nameof(InputArguments.LogFilePath));
-            MdsCommon.PathParameter.SetRelativeToFolder(inputFileFolder, parameters, nameof(InputArguments.WebRootPath));
             MdsCommon.PathParameter.SetRelativeToFolder(inputFileFolder, parameters, nameof(InputArguments.BinariesRepositoryFolder));
             MdsCommon.PathParameter.SetRelativeToFolder(inputFileFolder, parameters, nameof(InputArguments.ServicesBasePath));
             MdsCommon.PathParameter.SetRelativeToFolder(inputFileFolder, parameters, nameof(InputArguments.ServicesDataPath));
@@ -49,7 +48,6 @@ namespace MdsLocal
                 nameof(InputArguments.InfrastructureApiUrl),
                 nameof(InputArguments.NodeName),
                 nameof(InputArguments.ServicesBasePath),
-                nameof(InputArguments.WebRootPath),
                 nameof(InputArguments.ServicesDataPath)
             },
             async (logMessage) =>
@@ -97,14 +95,12 @@ namespace MdsLocal
             {
                 webServer = localReferences.ApplicationSetup.AddWebServer(
                     localReferences.ImplementationGroup,
-                    uiPort,
-                    arguments.WebRootPath);
+                    uiPort);
             }
             else
             {
                 webServer = localReferences.ApplicationSetup.AddWebServer(
-                    localReferences.ImplementationGroup,
-                    webRootPath: arguments.WebRootPath);
+                    localReferences.ImplementationGroup);
 
                 localReferences.ApplicationSetup.MapEvent<MdsLocalApplication.Event.GlobalControllerReached>(
                     e =>

@@ -9,7 +9,6 @@
         public string BinariesRepositoryFolder { get; set; }
         public string ServicesBasePath { get; set; }
         public string BuildTarget { get; set; }
-        public string WebRootPath { get; set; }
         public string ServicesDataPath { get; set; }
     }
 }

@@ -54,7 +54,6 @@ namespace MdsInfrastructure
 
             MdsCommon.PathParameter.SetRelativeToFolder(inputFileFolder, parameters, nameof(MdsInfrastructureApplication.InputArguments.DbPath));
             MdsCommon.PathParameter.SetRelativeToFolder(inputFileFolder, parameters, nameof(MdsInfrastructureApplication.InputArguments.LogFilePath));
-            MdsCommon.PathParameter.SetRelativeToFolder(inputFileFolder, parameters, nameof(MdsInfrastructureApplication.InputArguments.WebRootPath));
 
             await Mds.ValidateMissingParameters(parameters, new List<string>()
             {
@@ -69,7 +68,6 @@ namespace MdsInfrastructure
                 nameof(MdsInfrastructureApplication.InputArguments.NodeCommandOutputChannel),
                 nameof(MdsInfrastructureApplication.InputArguments.InfrastructureName),
                 nameof(MdsInfrastructureApplication.InputArguments.UiPort),
-                nameof(MdsInfrastructureApplication.InputArguments.WebRootPath),
                 nameof(MdsInfrastructureApplication.InputArguments.LogFilePath)
             },
             async (logMessage) =>
@@ -112,9 +110,8 @@ namespace MdsInfrastructure
             var webServerRefs = references.ApplicationSetup.AddWebServer(
                 references.ImplementationGroup,
                 arguments.UiPort,
-                arguments.WebRootPath,
-                AddServices,
-                app =>
+                buildServices: AddServices,
+                buildApp: app =>
                 {
                     //app.UseAuthorization();
                     app.UseSwagger();

@@ -167,18 +167,22 @@ namespace MdsLocal
                     var createParametersFile = configurationDiff.AddedServices.Any(x=>x.ServiceName == serviceConfiguration.ServiceName);
                     if (!createParametersFile)
                     {
-                        var changedService = configurationDiff.ChangedServices.SingleOrDefault(x => x.Next.ServiceName == serviceConfiguration.ServiceName);
-                        if (changedService != null)
+                        // Compare with installed parameters, not previous configuration parameters
+                        // to avoid stale parameters in case some previous deployment failed
+                        var installedParameters = GetInstalledParameters(state, serviceConfiguration);
+                        var installedParametersData = installedParameters.Select(x => new ServiceParameterData()
                         {
-                            var prevParametersData = changedService.Previous.ServiceConfigurationSnapshotParameters.Select(x => x.GetServiceParameterData());
-                            var nextParametersData = changedService.Next.ServiceConfigurationSnapshotParameters.Select(x => x.GetServiceParameterData());
+                            ParameterName = x.Key,
+                            DeployedValue = x.Value
+                        });
 
-                            var parametersDiff = Diff.CollectionsByKey(prevParametersData, nextParametersData, x => x.ParameterName);
-                            if (parametersDiff.Any())
-                            {
-                                // Create if parameters are actually different
-                                createParametersFile = true;
-                            }
+                        var newConfigurationParameters = serviceConfiguration.ServiceConfigurationSnapshotParameters.Select(x => x.GetServiceParameterData());
+
+                        var parametersDiff = Diff.CollectionsByKey(installedParametersData, newConfigurationParameters, x => x.ParameterName);
+                        if (parametersDiff.Any())
+                        {
+                            // Create if parameters are actually different
+                            createParametersFile = true;
                         }
                     }
 

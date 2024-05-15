@@ -485,10 +485,15 @@ namespace MdsInfrastructure
             return lastDeployment.GetDeployedServices().Where(x => x.NodeName == nodeName).ToList();
         }
 
+        private static long healthStatusTotalMs = 0;
+        private static int healthStatusCalls = 0;
+
         public static async Task StoreHealthStatus(
             string fullDbPath,
             MdsCommon.MachineStatus healthStatus)
         {
+            System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
+
             await Metapsi.Sqlite.Db.WithCommit(fullDbPath, async c =>
             {
                 var nodeName = new List<string>() { healthStatus.NodeName };
@@ -502,24 +507,11 @@ namespace MdsInfrastructure
                 await c.Transaction.InsertStructure(healthStatus, MachineStatus.Data.ChildrenNodes);
             });
 
-            //using (SQLiteConnection conn = new SQLiteConnection($"Data Source = {fullDbPath}"))
-            //{
-            //    conn.Open();
-            //    var transaction = conn.BeginTransaction();
-
-            //    string nodeName = healthStatus.MachineStatus.First().NodeName;
-
-            //    var prevStatuses = await transaction.LoadRecords<MachineStatus, string>(x => x.NodeName, nodeName);
-            //    await transaction.DeleteRecords<MachineStatus, Guid>(x => x.Id, prevStatuses.Select(x => x.Id));
-            //    await transaction.DeleteRecords<ServiceStatus, Guid>(x => x.MachineStatusId, prevStatuses.Select(x => x.Id));
-
-            //    var diff = Diff.Structures(new NodeStatus(), healthStatus);
-            //    transaction.SaveChanges(diff);
-            //    await transaction.CommitAsync();
-            //    Console.WriteLine("StoreHealthStatus.CommitAsync()");
-            //}
-
-            //return healthStatus;
+            System.Diagnostics.Debug.WriteLine($"Store health status: {sw.ElapsedMilliseconds} ms");
+            healthStatusTotalMs += sw.ElapsedMilliseconds;
+            healthStatusCalls++;
+            System.Diagnostics.Debug.WriteLine($"Store health status total: {healthStatusTotalMs} ms");
+            System.Diagnostics.Debug.WriteLine($"Store health status calls: {healthStatusCalls}");
         }
 
         public static async Task<MdsCommon.ServiceConfigurationSnapshot> LoadServiceConfiguration(
