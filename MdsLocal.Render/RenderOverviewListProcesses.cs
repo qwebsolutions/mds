@@ -61,7 +61,7 @@ namespace MdsLocal
                     b.Const(Panel.Style.Info),
                     b => b.Text(title),
                     b => b.Text(b.Get(model, x => x.OverviewText))),
-                ProcessesGrid(b, model),
+                b.MdsMainPanel(b => { }, ProcessesGrid(b, model)),
                 KillProcessPopup(b, model));
 
             return b.Layout(
@@ -82,21 +82,44 @@ namespace MdsLocal
             processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.Pid), b => b.Text("Process ID"));
             processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.UsedRam), b => b.Text("Working set (RAM, MB)"));
             processesGridBuilder.DataTableBuilder.OverrideHeaderCell(nameof(ProcessRow.RunningSince), b => b.Text("Running since"));
-            processesGridBuilder.DataTableBuilder.AddTrProps(
-                (b, process) =>
+            processesGridBuilder.DataTableBuilder.OverrideDataCell(nameof(ProcessRow.ServiceName),
+                (b, row) =>
                 {
-                    b.If(b.Get(process, x => x.HasError),
+                    return b.HtmlDiv(
                         b =>
                         {
-                            b.AddClass("bg-red-500");
-                        });
+                            b.SetClass("flex flex-row gap-1");
+                        },
+                        b.Text(b.Get(row, x => x.ServiceName)),
+                        b.Optional(
+                            b.Get(row, x => x.Disabled),
+                            b => b.Badge(b.Const("disabled"), b.Const("bg-orange-600"))),
+                        b.Optional(
+                            b.Get(row, x => !x.Disabled && !x.Running),
+                            b => b.Badge(b.Const("not running"), b.Const("bg-red-600"))));
                 });
+            //processesGridBuilder.DataTableBuilder.AddTrProps(
+            //    (b, process) =>
+            //    {
+            //        b.If(
+            //            b.Get(process, x => x.Disabled),
+            //            b =>
+            //            {
+            //                b.AddClass("bg-orange-400");
+            //            },
+            //            b => b.If(
+            //                b.Get(process, x => x.HasError),
+            //                b =>
+            //                {
+            //                    b.AddClass("bg-red-400");
+            //                }));
+            //    });
 
             processesGridBuilder.AddRowAction(
                 (b, row) =>
                 {
                     return b.Optional(
-                        b.Get(row, x => x.Pid != "Not running"),
+                        b.Get(row, x => x.Running),
                         b => b.RowIconAction(
                             b =>
                             {
@@ -105,7 +128,7 @@ namespace MdsLocal
                             b.Svg(Metapsi.Heroicons.Solid.ArrowPath, "w-8 h-8 text-red-500")));
                 });
 
-            var columns = DataTable.GetColumns<ProcessRow>().ToList().Except(new List<string>() { nameof(ProcessRow.HasError) });
+            var columns = DataTable.GetColumns<ProcessRow>().ToList().Except(new List<string>() { nameof(ProcessRow.Running), nameof(ProcessRow.Disabled) });
             return b.DataGrid(processesGridBuilder, processes, columns.ToArray());
         }
 
@@ -130,7 +153,7 @@ namespace MdsLocal
                     b.DialogHeader("Restart process?"),
                     b.Text(b.Concat(b.Const("Are you sure you want to restart "), b.Get(model, x=>x.RestartProcess.ServiceName), b.Const("?"))),
                     b.DialogFooter(
-                        "The process will be forcefully killed and then automatically restarted",
+                        "",
                         b.HtmlButton(
                             b =>
                             {

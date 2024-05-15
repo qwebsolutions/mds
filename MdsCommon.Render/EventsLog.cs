@@ -153,7 +153,7 @@ namespace MdsCommon
                 b.HtmlPre(b => { },
                     b.TextSpan(b.Get(e, e => e.FullDescription))));
 
-            return b.HtmlDiv(b => { },
+            return b.MdsMainPanel(b => { },
                 gridLayout,
                 details);
         }

@@ -33,30 +33,32 @@ namespace MdsLocal
             {
                 var serviceProcess = page.ServiceProcesses.SingleOrDefault(x => x.ServiceName == serviceSnapshot.ServiceName);
 
-                var pid = "Not running";
-                var runningStatus = "Not running";
-                string usedRamMb = "0";
-
-                if (serviceProcess != null)
-                {
-                    TimeSpan running = DateTime.UtcNow - serviceProcess.StartTimestampUtc;
-                    TimeSpan rounded = TimeSpan.FromSeconds((int)running.TotalSeconds);
-                    runningStatus = $"{serviceProcess.StartTimestampUtc} ({rounded.ToString("c")})";
-
-                    pid = serviceProcess.Pid.ToString();
-                    usedRamMb = serviceProcess.UsedRamMB.ToString();
-                }
-
-                rows.Add(new ProcessRow()
+                var processRow = new ProcessRow()
                 {
                     ServiceName = serviceSnapshot.ServiceName,
                     ProjectName = serviceSnapshot.ProjectName,
                     ProjectVersion = serviceSnapshot.ProjectVersionTag,
-                    RunningSince = runningStatus,
-                    Pid = pid,
-                    UsedRam = usedRamMb,
-                    HasError = serviceProcess == null
-                });
+                    Disabled = !serviceSnapshot.Enabled
+                };
+
+                if (serviceProcess != null)
+                {
+                    processRow.Running = true;
+                    TimeSpan running = DateTime.UtcNow - serviceProcess.StartTimestampUtc;
+                    TimeSpan rounded = TimeSpan.FromSeconds((int)running.TotalSeconds);
+                    processRow.RunningSince = $"{serviceProcess.StartTimestampUtc} ({rounded.ToString("c")})";
+                    processRow.Pid = serviceProcess.Pid.ToString();
+                    processRow.UsedRam = serviceProcess.UsedRamMB.ToString();
+                }
+                else
+                {
+                    processRow.Running = false;
+                    processRow.Pid = "";
+                    processRow.UsedRam = "";
+                    processRow.RunningSince = "";
+                }
+
+                rows.Add(processRow);
             }
 
             page.Processes = rows;

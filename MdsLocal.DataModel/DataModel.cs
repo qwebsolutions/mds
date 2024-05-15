@@ -32,7 +32,8 @@ namespace MdsLocal
         public string Pid { get; set; }
         public string UsedRam { get; set; }
         public string RunningSince { get; set; }
-        public bool HasError { get; set; } = false;
+        public bool Disabled { get; set; } = false;
+        public bool Running { get; set; } = true;
     }
 
     public partial class OverviewPage : Metapsi.Hyperapp.ApiSupportModel

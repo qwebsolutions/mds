@@ -70,6 +70,10 @@ public partial class TestScenarios
         }
 
         await DeployConfiguration(configuration);
+        await Task.Delay(System.TimeSpan.FromSeconds(60));
+
+        configuration.Services.First().Enabled = false;
+        await DeployConfiguration(configuration);
 
         await Task.Delay(System.TimeSpan.FromMinutes(30));
     }

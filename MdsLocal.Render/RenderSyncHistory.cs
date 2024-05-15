@@ -44,10 +44,10 @@ namespace MdsLocal
                         b.HasObject(selectedResult),
                         b =>
                         {
-                            return SyncLogTable(b, selectedResult);
+                            return b.MdsMainPanel(b => { }, SyncLogTable(b, selectedResult));
                         });
                 }),
-                SyncHistoryTable(b, dataModel));
+                b.MdsMainPanel(b => { }, SyncHistoryTable(b, dataModel)));
         }
 
         private static Var<IVNode> SyncLogTable(LayoutBuilder b, Var<SyncResult> syncResult)
