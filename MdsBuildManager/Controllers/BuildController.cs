@@ -240,6 +240,52 @@ namespace Algorithm
             return Ok(algorithms.OrderBy(a => a.Name));
         }
 
+        [HttpPost("DeleteBuilds")]
+        public async Task<IActionResult> DeleteBuilds([FromBody] List<AlgorithmInfo> toRemoveList)
+        {
+            var allBinaries = await this.hashHelper.GetBinariesData();
+            var allBuildData = await this.hashHelper.GetBuildData();
+
+            foreach (var toRemove in toRemoveList)
+            {
+                var buildData = allBuildData.SingleOrDefault(x => x.ProjectName == toRemove.Name && x.Version == toRemove.Version && x.Target == toRemove.Target);
+
+                if (buildData != null)
+                {
+                    var binary = allBinaries.SingleOrDefault(x => x.Base64Hash == buildData.Base64Hash);
+
+                    if (binary != null)
+                    {
+                        var proceed = false;
+
+                        using (var connection = await hashHelper.OpenNewConnectionAsync())
+                        {
+                            var transaction = connection.BeginTransaction();
+
+                            var rows = await hashHelper.DeleteBinaries(transaction, toRemove);
+                            if (rows > 2)
+                            {
+                                throw new Exception("Multiple builds with same properties where identified. Skipping...");
+                            }
+                            transaction.Commit();
+                            proceed = true;
+                        }
+
+                        if (proceed)
+                        {
+                            if (System.IO.File.Exists(binary.BinaryPath))
+                            {
+                                System.IO.File.Delete(binary.BinaryPath);
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            return Ok();
+        }
+
         private static string ProjectName(string path)
         {
             return System.IO.Path.GetFileName(path).Split(".").First();

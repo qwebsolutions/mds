@@ -36,7 +36,6 @@ namespace MdsLocal
 
             MdsCommon.PathParameter.SetRelativeToFolder(inputFileFolder, parameters, nameof(InputArguments.DbPath));
             MdsCommon.PathParameter.SetRelativeToFolder(inputFileFolder, parameters, nameof(InputArguments.LogFilePath));
-            MdsCommon.PathParameter.SetRelativeToFolder(inputFileFolder, parameters, nameof(InputArguments.WebRootPath));
             MdsCommon.PathParameter.SetRelativeToFolder(inputFileFolder, parameters, nameof(InputArguments.BinariesRepositoryFolder));
             MdsCommon.PathParameter.SetRelativeToFolder(inputFileFolder, parameters, nameof(InputArguments.ServicesBasePath));
             MdsCommon.PathParameter.SetRelativeToFolder(inputFileFolder, parameters, nameof(InputArguments.ServicesDataPath));
@@ -49,7 +48,6 @@ namespace MdsLocal
                 nameof(InputArguments.InfrastructureApiUrl),
                 nameof(InputArguments.NodeName),
                 nameof(InputArguments.ServicesBasePath),
-                nameof(InputArguments.WebRootPath),
                 nameof(InputArguments.ServicesDataPath)
             },
             async (logMessage) =>
@@ -71,8 +69,6 @@ namespace MdsLocal
                 uiPort = int.Parse(parameters["UiPort"]);
             }
 
-            await ReplaceOldDateTimeFormat(arguments.DbPath);
-
             var localReferences = await SetupLocalController(arguments, uiPort, start);
 
             var application = localReferences.ApplicationSetup.Revive();
@@ -84,43 +80,12 @@ namespace MdsLocal
             await application.SuspendComplete;
         }
 
-        public static async Task ReplaceOldDateTimeFormat(string fullDbPath)
-        {
-            var replaceSql = async (
-                OpenTransaction t,
-                string tableName,
-                string dateTimeField) =>
-            {
-                var allRecords = await t.Connection.QueryAsync<(string Id, string Timestamp)>($"select Id, {dateTimeField} from {tableName}", transaction: t.Transaction);
-                foreach (var record in allRecords)
-                {
-                    // Do not update if format is already correct
-                    if (record.Timestamp.Contains(" "))
-                    {
-                        var snapshotTimestamp = DateTime.Parse(record.Timestamp, System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.RoundtripKind);
-                        snapshotTimestamp = DateTime.SpecifyKind(snapshotTimestamp, DateTimeKind.Utc);
-                        await t.Connection.ExecuteAsync(
-                            $"update {tableName} set {dateTimeField}=@timestamp where Id=@Id",
-                            new { 
-                                Id = record.Id,
-                                timestamp = snapshotTimestamp.ToString("O", System.Globalization.CultureInfo.InvariantCulture) },
-                            transaction: t.Transaction);
-                    }
-                }
-            };
-
-            await Metapsi.Sqlite.Db.WithCommit(fullDbPath,
-                async t =>
-                {
-                    await replaceSql(t, nameof(InfrastructureEvent), nameof(InfrastructureEvent.Timestamp));
-                    await replaceSql(t, nameof(ServiceConfigurationSnapshot), nameof(ServiceConfigurationSnapshot.SnapshotTimestamp));
-                    await replaceSql(t, nameof(SyncResult), nameof(SyncResult.Timestamp));
-                });
-        }
 
         public static async Task<WebServer.References> SetupLocalController(InputArguments arguments, int uiPort, DateTime start)
         {
             Metapsi.Sqlite.Converters.RegisterAll();
+
+            await Migrate.All(arguments.DbPath);
 
             var localReferences = MdsLocalApplication.Setup(arguments, start);
 
@@ -130,14 +95,12 @@ namespace MdsLocal
             {
                 webServer = localReferences.ApplicationSetup.AddWebServer(
                     localReferences.ImplementationGroup,
-                    uiPort,
-                    arguments.WebRootPath);
+                    uiPort);
             }
             else
             {
                 webServer = localReferences.ApplicationSetup.AddWebServer(
-                    localReferences.ImplementationGroup,
-                    webRootPath: arguments.WebRootPath);
+                    localReferences.ImplementationGroup);
 
                 localReferences.ApplicationSetup.MapEvent<MdsLocalApplication.Event.GlobalControllerReached>(
                     e =>
@@ -185,6 +148,18 @@ namespace MdsLocal
                 {
                     Model = reloadedModel,
                 };
+            }, WebServer.Authorization.Public);
+
+            api.MapRequest(Frontend.LoadFullSyncResult, async (CommandContext commandContext, HttpContext httpContext, Guid syncResultId) =>
+            {
+
+                var fullSyncResult = await LocalDb.LoadFullSyncResult(arguments.DbPath, syncResultId);
+
+                return new FullSyncResultResponse()
+                {
+                    SyncResult = fullSyncResult
+                };
+
             }, WebServer.Authorization.Public);
 
             return webServer;

@@ -67,6 +67,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsLocal.Direct", "MdsLocal
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsLocal.Render.Direct", "MdsLocal.Render\MdsLocal.Render.Direct.csproj", "{1FD34E57-477E-40F3-88E1-8766054A3F92}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MdsTests.Direct", "MdsTests\MdsTests.Direct.csproj", "{D5BD683A-D7A8-4B27-828E-E029FD7506C7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -201,6 +203,10 @@ Global
 		{1FD34E57-477E-40F3-88E1-8766054A3F92}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1FD34E57-477E-40F3-88E1-8766054A3F92}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1FD34E57-477E-40F3-88E1-8766054A3F92}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D5BD683A-D7A8-4B27-828E-E029FD7506C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D5BD683A-D7A8-4B27-828E-E029FD7506C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D5BD683A-D7A8-4B27-828E-E029FD7506C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D5BD683A-D7A8-4B27-828E-E029FD7506C7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -12,10 +12,6 @@ namespace MdsLocal
 
         public static async Task SynchronizeConfiguration(CommandContext commandContext, State state, string trigger)
         {
-
-            // Previous configuration is compared with up to date configuration to identify upgrade status (changed/unchanged)
-            // Up to date configuration overwrites previous one, if changed.
-
             SyncResult syncResult = new SyncResult()
             {
                 ResultCode = SyncStatusCodes.UpToDate,
@@ -23,84 +19,140 @@ namespace MdsLocal
                 Trigger = trigger
             };
 
-            var nodeConfiguration = await commandContext.Do(GetLocalKnownConfiguration);
-            var upToDateConfiguration = await commandContext.Do(Api.GetUpToDateConfiguration);
-            LocalServicesConfigurationDiff localServicesDiff = null;
-
-            var newCurrentConfiguration = new List<MdsCommon.ServiceConfigurationSnapshot>();
-
-            switch (nodeConfiguration, upToDateConfiguration)
+            try
             {
-                case (null, null):
-                    throw new Exception("Very bad!");
-                case (null, List<MdsCommon.ServiceConfigurationSnapshot> upToDateConfig):
-                    {
-                        newCurrentConfiguration = upToDateConfig;
+                // Previous configuration is compared with up to date configuration to identify upgrade status (changed/unchanged)
+                // Up to date configuration overwrites previous one, if changed.
 
-                        // Everything is changed, so the diff is from empty configuration to first actual one
-                        localServicesDiff = DiffServices(new List<MdsCommon.ServiceConfigurationSnapshot>(), upToDateConfig);
-                    }
-                    break;
-                case (List<MdsCommon.ServiceConfigurationSnapshot> persistedConfig, null):
-                    {
-                        newCurrentConfiguration = persistedConfig;
-                    }
-                    break;
-                case (List<MdsCommon.ServiceConfigurationSnapshot> persistedConfig, List<MdsCommon.ServiceConfigurationSnapshot> upToDateConfig):
-                    {
-                        localServicesDiff = DiffServices(persistedConfig, upToDateConfig);
+                syncResult.AddInfo("Loading local configuration ...");
+                var nodeConfiguration = await commandContext.Do(GetLocalKnownConfiguration);
+                syncResult.AddInfo("Local configuration loaded");
+                syncResult.AddInfo("Retrieving updated configuration ...");
+                var upToDateConfiguration = await commandContext.Do(Api.GetUpToDateConfiguration);
+                syncResult.AddInfo("Updated configuration retrieved");
+                LocalServicesConfigurationDiff localServicesDiff = null;
 
-                        if (localServicesDiff.HasAnyUpdate())
+                var newCurrentConfiguration = new List<MdsCommon.ServiceConfigurationSnapshot>();
+
+                switch (nodeConfiguration, upToDateConfiguration)
+                {
+                    case (null, null):
+                        throw new Exception("No configuration!");
+                    case (null, List<MdsCommon.ServiceConfigurationSnapshot> upToDateConfig):
                         {
-                            syncResult.ResultCode = SyncStatusCodes.Changed;
                             newCurrentConfiguration = upToDateConfig;
+
+                            // Everything is changed, so the diff is from empty configuration to first actual one
+                            localServicesDiff = DiffServices(new List<MdsCommon.ServiceConfigurationSnapshot>(), upToDateConfig);
+                        }
+                        break;
+                    case (List<MdsCommon.ServiceConfigurationSnapshot> persistedConfig, null):
+                        {
+                            newCurrentConfiguration = persistedConfig;
+                        }
+                        break;
+                    case (List<MdsCommon.ServiceConfigurationSnapshot> persistedConfig, List<MdsCommon.ServiceConfigurationSnapshot> upToDateConfig):
+                        {
+                            localServicesDiff = DiffServices(persistedConfig, upToDateConfig);
+
+                            if (localServicesDiff.HasAnyUpdate())
+                            {
+                                syncResult.ResultCode = SyncStatusCodes.Changed;
+                                newCurrentConfiguration = upToDateConfig;
+                            }
+
+                            break;
+                        }
+                }
+
+                if (localServicesDiff != null)
+                {
+                    if (localServicesDiff.HasAnyUpdate())
+                    {
+                        foreach (var serviceDiff in localServicesDiff.AddedServices)
+                        {
+                            syncResult.AddInfo($"New service detected: {serviceDiff.ServiceName}");
                         }
 
-                        break;
+                        foreach (var serviceDiff in localServicesDiff.ChangedServices)
+                        {
+                            syncResult.AddInfo($"Service change detected: {serviceDiff.Previous.ServiceName}");
+                        }
+
+                        foreach (var serviceDiff in localServicesDiff.RemovedServices)
+                        {
+                            syncResult.AddInfo($"Service removal detected: {serviceDiff.ServiceName}");
+                        }
+
+                        syncResult.AddInfo("Saving new configuration ...");
+
+                        // Save configuration
+                        await commandContext.Do(OverwriteLocalConfiguration, upToDateConfiguration);
+
+
+                        syncResult.AddInfo("Configuration saved");
+
+                        // Configuration updated, so dropped services get another chance
+                        state.ServiceCrashEvents.Clear();
+
+                        foreach (var droppedService in state.DroppedServices)
+                        {
+                            syncResult.AddInfo($"Dropped service {droppedService} reset, will attempt restart");
+                        }
+
+                        state.DroppedServices.Clear();
+
+                        // Change sync result from default 'UpToDate' to 'Changed'
+                        syncResult.ResultCode = SyncStatusCodes.Changed;
+
+                        //ConfigurationChanged configurationChanged = new ConfigurationChanged()
+                        //{
+                        //    LocalServicesConfigurationDiff = localServicesDiff
+                        //};
+                        //commandContext.PostEvent(configurationChanged);
                     }
-            }
-
-            if (localServicesDiff != null)
-            {
-                if (localServicesDiff.HasAnyUpdate())
-                {
-                    // Save configuration
-                    await commandContext.Do(OverwriteLocalConfiguration, upToDateConfiguration);
-
-                    // Configuration updated, so dropped services get another chance
-                    state.ServiceCrashEvents.Clear();
-                    state.DroppedServices.Clear();
-
-                    // Change sync result from default 'UpToDate' to 'Changed'
-                    syncResult.ResultCode = SyncStatusCodes.Changed;
-
-                    ConfigurationChanged configurationChanged = new ConfigurationChanged()
+                    else
                     {
-                        LocalServicesConfigurationDiff = localServicesDiff
-                    };
-                    commandContext.PostEvent(configurationChanged);
+                        syncResult.AddInfo($"No changes detected");
+                    }
+                }
+
+                if (upToDateConfiguration != null)
+                {
+                    // Save sync result (either default 'UpToDate', 'Failed' or 'Changed')
+                    //await commandContext.Do(StoreSyncResult, syncResult);
+
+                    commandContext.PostEvent(new Event.ConfigurationSynchronized()
+                    {
+                        ResultCode = syncResult.ResultCode
+                    });
+
+                    await SynchronizeRunningProcesses(commandContext, state, localServicesDiff, syncResult);
                 }
             }
-
-            if (upToDateConfiguration != null)
+            catch (Exception ex)
             {
-                // Save sync result (either default 'UpToDate', 'Failed' or 'Changed')
+                commandContext.Logger.LogException(ex, "SynchronizeConfiguration");
+                syncResult.AddError(ex.Message);
+            }
+            finally
+            {
                 await commandContext.Do(StoreSyncResult, syncResult);
-
-                commandContext.PostEvent(new Event.ConfigurationSynchronized()
-                {
-                    ResultCode = syncResult.ResultCode
-                });
-
-                await SynchronizeRunningProcesses(commandContext, state);
             }
         }
 
-        private static void DeleteServiceFolder(string servicesBasePath, string serviceName)
+        private static void DeleteServiceFolder(CommandContext commandContext, string servicesBasePath, string serviceName)
         {
-            string serviceFullPath = System.IO.Path.Combine(servicesBasePath, serviceName);
-            System.IO.Directory.Delete(serviceFullPath, true);
-            Console.WriteLine($"DeleteServiceFolder {serviceFullPath}");
+            try
+            {
+                string serviceFullPath = System.IO.Path.Combine(servicesBasePath, serviceName);
+                System.IO.Directory.Delete(serviceFullPath, true);
+                Console.WriteLine($"DeleteServiceFolder {serviceFullPath}");
+            }
+            catch (Exception ex)
+            {
+                commandContext.Logger.LogException(ex, "DeleteServiceFolder");
+            }
         }
 
         private static bool SameVersionIsInstalled(string servicesBasePath, MdsCommon.ServiceConfigurationSnapshot serviceConfiguration)

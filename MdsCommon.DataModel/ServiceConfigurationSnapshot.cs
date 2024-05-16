@@ -4,6 +4,8 @@ namespace MdsCommon
 {
     public partial class ServiceConfigurationSnapshot : IRecord
     {
+        public ServiceConfigurationSnapshot() { }
+
         // Record
 
         public System.Guid Id { get; set; } = System.Guid.NewGuid();
@@ -13,7 +15,8 @@ namespace MdsCommon
         public string ProjectName { get; set; } = string.Empty;
         public string ProjectVersionTag { get; set; } = string.Empty;
         public string NodeName { get; set; } = string.Empty;
-        public string Hash { get; set; } = string.Empty;
+        //public string Hash { get; set; } = string.Empty;
+        public bool Enabled { get; set; } = true;
 
         // Data structure
 

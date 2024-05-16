@@ -24,10 +24,11 @@ namespace MdsLocal
             string parametersFullPath = GetServiceParametersPath(state.ServicesBasePath, serviceConfiguration);
             string parameters = GetAlgorithmParametersJson(serviceConfiguration);
 
+            var createFile = false;
+
             if (!System.IO.File.Exists(parametersFullPath))
             {
-                System.IO.File.WriteAllText(parametersFullPath, parameters);
-                return true;
+                createFile = true;
             }
             else
             {
@@ -37,23 +38,33 @@ namespace MdsLocal
 
                 if (previousParameters.Count() != configParameters.Count())
                 {
-                    System.IO.File.WriteAllText(parametersFullPath, parameters);
-                    return true;
+                    createFile = true;
                 }
                 else
                 {
                     foreach (var p in configParameters)
                     {
+                        if (!previousParameters.ContainsKey(p.ParameterName))
+                        {
+                            createFile = true;
+                            break;
+                        }
+                        else
                         if (previousParameters[p.ParameterName] != p.DeployedValue)
                         {
-                            System.IO.File.WriteAllText(parametersFullPath, parameters);
-                            return true;
+                            createFile = true;
+                            break;
                         }
                     }
                 }
             }
 
-            return false;
+            if (createFile)
+            {
+                System.IO.File.WriteAllText(parametersFullPath, parameters);
+            }
+
+            return createFile;
 
         }
 
@@ -137,6 +148,19 @@ namespace MdsLocal
                 ServiceName = localService.ServiceName
             });
             return true;
+        }
+
+        public static Dictionary<string, string> GetInstalledParameters(
+            State state,
+            MdsCommon.ServiceConfigurationSnapshot serviceConfiguration)
+        {
+            string parametersFullPath = GetServiceParametersPath(state.ServicesBasePath, serviceConfiguration);
+
+            if (!System.IO.File.Exists(parametersFullPath))
+                return new Dictionary<string, string>();
+
+            var previousParameters = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(System.IO.File.ReadAllText(parametersFullPath));
+            return previousParameters;
         }
 
         private static string GetAlgorithmParametersJson(MdsCommon.ServiceConfigurationSnapshot serviceConfiguration)

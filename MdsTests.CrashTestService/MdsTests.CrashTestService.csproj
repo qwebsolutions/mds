@@ -5,8 +5,12 @@
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
-  <ItemGroup>
+  <!--<ItemGroup>
     <PackageReference Include="Metapsi.Mds" Version="$(MetapsiVersion)" />
+  </ItemGroup>-->
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\metapsi\Metapsi.Mds\Metapsi.Mds.csproj" />
   </ItemGroup>
 
 </Project>

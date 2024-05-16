@@ -33,17 +33,18 @@ namespace MdsInfrastructure
         public static Request<List<InfrastructureService>> LoadAllServices { get; set; } = new(nameof(LoadAllServices));
         public static Command<ConfirmDeploymentInput> ConfirmDeployment { get; set; } = new(nameof(ConfirmDeployment));
         public static Request<List<ParameterType>> GetAllParameterTypes { get; set; } = new Request<List<ParameterType>>(nameof(GetAllParameterTypes));
-        public static Request<MdsCommon.ServiceConfigurationSnapshot, string> LoadServiceSnapshotByHash { get; set; } = new(nameof(LoadServiceSnapshotByHash));
         public static Request<List<EnvironmentType>> LoadEnvironmentTypes { get; set; } = new(nameof(LoadEnvironmentTypes));
         public static Request<List<MdsCommon.MachineStatus>> LoadHealthStatus { get; set; } = new(nameof(LoadHealthStatus));
         public static Request<List<MdsCommon.AlgorithmInfo>> GetRemoteBuilds { get; set; } = new(nameof(GetRemoteBuilds));
-        public static Request<List<MdsCommon.AlgorithmInfo>, List<MdsCommon.AlgorithmInfo>> RegisterNewBinaries { get; set; } = new(nameof(RegisterNewBinaries));
+        public static Request<List<MdsCommon.AlgorithmInfo>, List<MdsCommon.AlgorithmInfo>> RefreshBinaries { get; set; } = new(nameof(RefreshBinaries));
         public static Request<Deployment, Guid> LoadLastConfigurationDeployment { get; set; } = new(nameof(LoadLastConfigurationDeployment));
         public static Command<string> RestartService { get; set; } = new(nameof(RestartService));
         public static Command<MdsCommon.ProjectVersion> SaveVersionEnabled { get; set; } = new(nameof(SaveVersionEnabled));
         public static Request<string> GetInfrastructureName { get; set; } = new(nameof(GetInfrastructureName));
         public static Request<List<NoteType>> GetAllNoteTypes { get; set; } = new(nameof(GetAllNoteTypes));
         public static Command<MachineStatus> StoreHealthStatus { get; set; } = new(nameof(StoreHealthStatus));
+
+        public static Request<MdsCommon.ServiceConfigurationSnapshot, MdsCommon.ServiceConfigurationSnapshot> LoadIdenticalSnapshot { get; set; } = new(nameof(LoadIdenticalSnapshot));
     }
 
     public class ConfirmDeploymentInput

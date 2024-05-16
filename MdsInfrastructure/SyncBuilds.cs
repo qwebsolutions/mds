@@ -10,7 +10,7 @@ namespace MdsInfrastructure
         public static async Task SyncBuilds(CommandContext commandContext, State state)
         {
             var buildsList = await commandContext.Do(Backend.GetRemoteBuilds);
-            var newBinaries = await commandContext.Do(Backend.RegisterNewBinaries, buildsList);
+            var newBinaries = await commandContext.Do(Backend.RefreshBinaries, buildsList);
 
             if (newBinaries.Any())
             {

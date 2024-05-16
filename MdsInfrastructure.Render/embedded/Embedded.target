@@ -12,6 +12,7 @@
 		<EmbeddedResource Include="embedded\cytoscape.min.js" LogicalName="cytoscape.min.js"/>
 		<EmbeddedResource Include="embedded\leader-line.min.js" LogicalName="leader-line.min.js" />
 		<EmbeddedResource Include="embedded\MdsInfrastructure.Render.css" LogicalName="MdsInfrastructure.Render.css" />
+		<EmbeddedResource Include="embedded\MdsInfrastructure.Render.js" LogicalName="MdsInfrastructure.Render.js" />
 		<EmbeddedResource Include="embedded\nowork.png" LogicalName="nowork.png" />
 		<EmbeddedResource Include="embedded\server-icon.png" LogicalName="server-icon.png" />
 	</ItemGroup>

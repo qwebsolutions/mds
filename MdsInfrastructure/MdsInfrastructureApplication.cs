@@ -64,7 +64,6 @@ namespace MdsInfrastructure
             public string InfrastructureName { get; set; }
             public string BuildManagerUrl { get; set; }
             public string BuildManagerNodeUrl { get; set; } // In case the node needs a different url than the infra. closed ports...
-            public string WebRootPath { get; set; }
 
             public string SmtpHost { get; set; }
             public string From { get; set; }

@@ -98,13 +98,11 @@ namespace MdsInfrastructure
             app.MapRequest(Backend.LoadAllServices, (CommandContext cc, HttpContext http) => Db.LoadAllServices(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
             app.MapCommand(Backend.ConfirmDeployment, (CommandContext cc, HttpContext http, ConfirmDeploymentInput input) => Db.ConfirmDeployment(fullDbPath, input.Snapshots, input.Configuration), WebServer.Authorization.Public, WebServer.SwaggerTryout.Block);
             app.MapRequest(Backend.GetAllParameterTypes, (CommandContext cc, HttpContext http) => Db.LoadParameterTypes(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapRequest(Backend.LoadServiceSnapshotByHash, (CommandContext cc, HttpContext http, String hash) => Db.LoadServiceSnapshotByHash(fullDbPath, hash), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
             app.MapRequest(Backend.LoadEnvironmentTypes, (CommandContext cc, HttpContext http) => Db.LoadEnvironmentTypes(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
             app.MapRequest(Backend.LoadHealthStatus, (CommandContext cc, HttpContext http) => Db.LoadFullInfrastructureHealthStatus(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
             app.MapRequest(Backend.GetInfrastructureName, async (CommandContext cc, HttpContext http) => await Task.FromResult(infrastructureName), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
             app.MapRequest(Backend.GetAllNoteTypes, (CommandContext cc, HttpContext http) => Db.LoadAllNoteTypes(fullDbPath), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
             app.MapCommand(Backend.StoreHealthStatus, (CommandContext cc, HttpContext http, MachineStatus hs) => Db.StoreHealthStatus(fullDbPath, hs), WebServer.Authorization.Public, WebServer.SwaggerTryout.Allow);
-            app.MapRequest(Backend.RegisterNewBinaries, async (CommandContext cc, HttpContext http, List<AlgorithmInfo> algInfo) => await Db.SaveNewBinaries(fullDbPath, algInfo), WebServer.Authorization.Public, WebServer.SwaggerTryout.Block);
             app.MapCommand(Backend.SaveVersionEnabled, (CommandContext cc, HttpContext http, ProjectVersion version) => Db.SaveVersionEnabled(fullDbPath, version), WebServer.Authorization.Public, WebServer.SwaggerTryout.Block);
             app.MapRequest(MdsCommon.Api.GetInfrastructureNodeSettings,
                 async (CommandContext cc, HttpContext http, string nodeName) =>

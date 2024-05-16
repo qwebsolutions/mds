@@ -39,6 +39,21 @@ namespace MdsInfrastructure
         public string Json { get; set; }
     }
 
+    public class RemoveBuildsRequest
+    {
+        public List<BinariesRepositoryEntry> ToRemove { get; set; } = new List<BinariesRepositoryEntry>();
+    }
+
+    public class RemoveBuildsResponse: ApiResponse
+    {
+        public List<BinariesRepositoryEntry> Removed { get; set; } = new List<BinariesRepositoryEntry>();
+    }
+
+    public class ReloadListProjectsPageModel : ApiResponse
+    {
+        public ListProjectsPage Model { get; set; } = new();
+    }
+
     public static class Frontend
     {
         public static Request<SaveConfigurationResponse, SaveConfigurationInput> SaveConfiguration { get; set; } = new(nameof(SaveConfiguration));
@@ -48,5 +63,7 @@ namespace MdsInfrastructure
         public class ConfirmDeploymentResponse : ApiResponse { }
         public static Request<ConfirmDeploymentResponse, Guid> ConfirmDeployment { get; set; } = new(nameof(ConfirmDeployment));
 
+        public static Request<RemoveBuildsResponse, RemoveBuildsRequest> RemoveBuilds { get; set; } = new(nameof(RemoveBuilds));
+        public static Request<ReloadListProjectsPageModel> ReloadListProjectsPageModel { get; set; } = new(nameof(ReloadListProjectsPageModel));
     }
 }

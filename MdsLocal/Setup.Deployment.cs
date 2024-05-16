@@ -1,4 +1,5 @@
 ﻿using Metapsi;
+using System;
 using System.Linq;
 
 namespace MdsLocal
@@ -14,6 +15,10 @@ namespace MdsLocal
             string binariesRepositoryFolder,
             string buildTarget)
         {
+            const string BinariesCacheTimerName = "CheckBinariesCache";
+
+            var binariesCacheTimer = applicationSetup.AddBusinessState(new Timer.State());
+
             var deploymentListener = applicationSetup.AddBusinessState(new RedisListener.State());
             var binariesRetriever = applicationSetup.AddBusinessState(new ApiBinariesRetriever.State()
             {
@@ -32,7 +37,26 @@ namespace MdsLocal
                     e.Using(deploymentListener, implementationGroup).EnqueueCommand(
                         RedisListener.StartListening,
                         new Metapsi.RedisChannel(infrastructureConfiguration.BroadcastDeploymentInputChannel));
+
+                    e.Using(binariesCacheTimer, implementationGroup).EnqueueCommand(
+                        Metapsi.Timer.SetTimer,
+                        new Metapsi.Timer.Command.Set()
+                        {
+                            Name = BinariesCacheTimerName,
+                            IntervalMilliseconds = Convert.ToInt32(TimeSpan.FromMinutes(1).TotalMilliseconds)
+                        });
                 });
+
+            applicationSetup.MapEventIf<Metapsi.Timer.Event.Tick>(
+                e => e.Name == BinariesCacheTimerName,
+                e =>
+                {
+                    e.Using(binariesRetriever, implementationGroup).EnqueueCommand(ApiBinariesRetriever.CleanupBinaries);
+                });
+
+            applicationSetup.MapEvent<ApplicationIsShuttingDown>(
+                e => e.Using(binariesCacheTimer, implementationGroup).EnqueueCommand(Metapsi.Timer.Shutdown));
+
 
             applicationSetup.MapEventIf<RedisListener.Event.NotificationReceived>(
                 e => e.ChannelName == new RedisChannel(infrastructureConfiguration.BroadcastDeploymentInputChannel).ChannelName,

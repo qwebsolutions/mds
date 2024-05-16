@@ -31,6 +31,8 @@ using Microsoft.AspNetCore.Components.Forms;
 using System.IO.Compression;
 using System.IO;
 using System.Reflection;
+using System.Net.Http;
+using System.Net.Http.Json;
 
 namespace MdsInfrastructure
 {
@@ -54,7 +56,6 @@ namespace MdsInfrastructure
 
             MdsCommon.PathParameter.SetRelativeToFolder(inputFileFolder, parameters, nameof(MdsInfrastructureApplication.InputArguments.DbPath));
             MdsCommon.PathParameter.SetRelativeToFolder(inputFileFolder, parameters, nameof(MdsInfrastructureApplication.InputArguments.LogFilePath));
-            MdsCommon.PathParameter.SetRelativeToFolder(inputFileFolder, parameters, nameof(MdsInfrastructureApplication.InputArguments.WebRootPath));
 
             await Mds.ValidateMissingParameters(parameters, new List<string>()
             {
@@ -69,7 +70,6 @@ namespace MdsInfrastructure
                 nameof(MdsInfrastructureApplication.InputArguments.NodeCommandOutputChannel),
                 nameof(MdsInfrastructureApplication.InputArguments.InfrastructureName),
                 nameof(MdsInfrastructureApplication.InputArguments.UiPort),
-                nameof(MdsInfrastructureApplication.InputArguments.WebRootPath),
                 nameof(MdsInfrastructureApplication.InputArguments.LogFilePath)
             },
             async (logMessage) =>
@@ -105,14 +105,17 @@ namespace MdsInfrastructure
         {
             Metapsi.Sqlite.Converters.RegisterAll();
 
+            HttpClient httpClient = new HttpClient();
+
+            await Migrate.All(arguments.DbPath);
+
             var references = MdsInfrastructureApplication.Setup(arguments, start);
 
             var webServerRefs = references.ApplicationSetup.AddWebServer(
                 references.ImplementationGroup,
                 arguments.UiPort,
-                arguments.WebRootPath,
-                AddServices,
-                app =>
+                buildServices: AddServices,
+                buildApp: app =>
                 {
                     //app.UseAuthorization();
                     app.UseSwagger();
@@ -463,6 +466,71 @@ namespace MdsInfrastructure
                         }
                         return messages;
                     }).RequireAuthorization();
+
+                api.MapRequest(
+                    Frontend.RemoveBuilds,
+                    async (CommandContext commandContext, HttpContext httpContext, RemoveBuildsRequest input) =>
+                    {
+                        try
+                        {
+                            List<AlgorithmInfo> toRemoveAlgorithms = input.ToRemove.Where(x => x.Selected).Select(
+                                x => new AlgorithmInfo()
+                                {
+                                    Name = x.ProjectName,
+                                    BuildNumber = x.BuildNumber,
+                                    Target = x.Target,
+                                    Version = x.ProjectVersion
+                                }).ToList();
+
+                            var url = arguments.BuildManagerUrl + "/DeleteBuilds";
+
+                            var result = await httpClient.PostAsJsonAsync(url, toRemoveAlgorithms);
+
+                            if(result.StatusCode == HttpStatusCode.NotFound)
+                            {
+                                return new RemoveBuildsResponse()
+                                {
+                                    ErrorMessage = "Cannot delete, repository does not support this operation",
+                                    ResultCode = ApiResultCode.Error
+                                };
+                            }
+
+                            result.EnsureSuccessStatusCode();
+
+                            input.ToRemove.ForEach(x => x.Removed = true);
+
+                            return new RemoveBuildsResponse()
+                            {
+                                Removed = input.ToRemove
+                            };
+                        }
+                        catch (Exception ex)
+                        {
+                            commandContext.Logger.LogException(ex);
+                            return new RemoveBuildsResponse()
+                            {
+                                ErrorMessage = "Cannot delete, an error has occured",
+                                ResultCode = ApiResultCode.Error
+                            };
+                        }
+                    }, 
+                    WebServer.Authorization.Require);
+
+                api.MapRequest(
+                    Frontend.ReloadListProjectsPageModel,
+                    async (CommandContext commandContext, HttpContext httpContext) =>
+                    {
+                        // This is called after delete, if new binaries happen to be incoming we don't
+                        // care to notify. We want to refresh the list of removed binaries
+                        var buildsList = await commandContext.Do(Backend.GetRemoteBuilds);
+                        await commandContext.Do(Backend.RefreshBinaries, buildsList);
+
+                        var model = await MdsInfrastructure.Flow.Project.List.LoadAll(commandContext, httpContext, buildsList);
+                        return new ReloadListProjectsPageModel()
+                        {
+                            Model = model
+                        };
+                    }, WebServer.Authorization.Require);
 
                 api.MapPost("/signin", async (CommandContext commandContext, HttpContext httpContext, InputCredentials inputCredentials) =>
                 {

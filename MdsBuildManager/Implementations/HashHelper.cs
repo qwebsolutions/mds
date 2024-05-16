@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using MdsCommon;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -100,6 +101,12 @@ namespace MdsBuildManager
         {
             await dbTransaction.Connection.ExecuteAsync("insert into Binaries (Id, Base64Hash,BinaryPath) values (@Id, @Base64Hash,@BinaryPath)",
                 new { Id = Guid.NewGuid().ToString(), Base64Hash = base64Hash, BinaryPath = binaryPath }, dbTransaction);
+        }
+
+        public async Task<int> DeleteBinaries(System.Data.IDbTransaction dbTransaction, AlgorithmInfo algorithmInfo)
+        {
+            return await dbTransaction.Connection.ExecuteAsync("delete from Build where ProjectName = @ProjectName and Version = @Version and Target = @Target",
+                new { ProjectName = algorithmInfo.Name, Version = algorithmInfo.Version, Target = algorithmInfo.Target }, dbTransaction);
         }
 
         public async Task CreateDbSchema()

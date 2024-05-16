@@ -115,12 +115,43 @@ namespace MdsInfrastructure
         /// <param name="fullDbPath"></param>
         /// <param name="allBinaries"></param>
         /// <returns></returns>
-        public static async Task<List<AlgorithmInfo>> SaveNewBinaries(string fullDbPath, List<MdsCommon.AlgorithmInfo> allBinaries)
+        public static async Task<List<AlgorithmInfo>> RefreshBinaries(string fullDbPath, List<MdsCommon.AlgorithmInfo> allBinaries)
         {
             List<AlgorithmInfo> newBinaries = new List<AlgorithmInfo>();
 
             await Metapsi.Sqlite.Db.WithCommit(fullDbPath, async c =>
             {
+                var allProjects = await c.Transaction.LoadStructures(Project.Data);
+
+                // Delete old entries
+                foreach (var project in allProjects)
+                {
+                    foreach (var version in new List<ProjectVersion>(project.Versions))
+                    {
+                        foreach (var binaries in new List<ProjectVersionBinaries>(version.Binaries))
+                        {
+                            var stillValid = allBinaries.SingleOrDefault(x => x.Name == project.Name && x.Version == version.VersionTag && x.Target == binaries.Target);
+                            if (stillValid == null)
+                            {
+                                await c.Transaction.DeleteRecord(binaries);
+                                version.Binaries.Remove(binaries);
+                            }
+                        }
+                        if (!version.Binaries.Any())
+                        {
+                            await c.Transaction.DeleteRecord(version);
+                            project.Versions.Remove(version);
+                        }
+                    }
+
+                    if (!project.Versions.Any())
+                    {
+                        await c.Transaction.DeleteRecord(project);
+                    }
+                }
+
+                // Add new entries
+
                 foreach (AlgorithmInfo algorithmInfo in allBinaries)
                 {
                     var project = await c.Transaction.LoadRecord((Project x) => x.Name, algorithmInfo.Name);
@@ -352,36 +383,62 @@ namespace MdsInfrastructure
                 return await c.Transaction.LoadActiveDeployment();
             });
         }
-
-        public static async Task<MdsCommon.ServiceConfigurationSnapshot> LoadServiceSnapshotByHash(string fullDbPath, string hash)
+        public static async Task<MdsCommon.ServiceConfigurationSnapshot> LoadIdenticalSnapshot(string fullDbPath, MdsCommon.ServiceConfigurationSnapshot expectedSnapshot)
         {
             return await Metapsi.Sqlite.Db.WithRollback(fullDbPath,
                 async c =>
                 {
-                    try
+
+                    var fieldNames = Ddl.FieldNames(expectedSnapshot).Except(new List<string>() { nameof(ServiceConfigurationSnapshot.Id), nameof(ServiceConfigurationSnapshot.SnapshotTimestamp) });
+
+                    var whereFields = string.Join(" and ", fieldNames.Select(x => $"{Ddl.QuoteIdentifier(x)}=@{x}"));
+
+                    var headQuery = $"select * from {nameof(ServiceConfigurationSnapshot)} where {whereFields}";
+
+                    var multipleSnapshotsWithSameHeaderData = await c.Connection.QueryAsync<MdsCommon.ServiceConfigurationSnapshot>(headQuery, expectedSnapshot, c.Transaction);
+
+                    // If there is no snapshot with same header data, for sure parameters are not relevant anymore
+                    if (!multipleSnapshotsWithSameHeaderData.Any())
                     {
-                        var snapshotRecordWithSameHash = await c.Transaction.LoadRecords(
-                            (ServiceConfigurationSnapshot x) => x.Hash,
-                            hash);
+                        return null;
+                    }
 
-                        if (snapshotRecordWithSameHash.Any())
-                        {
-                            // Take First(), not Single(), to compensate for the many bugs this hash thing had and maybe still has
-                            var first = snapshotRecordWithSameHash.OrderByDescending(x => x.SnapshotTimestamp).First();
+                    foreach (var savedSnapshotHeader in multipleSnapshotsWithSameHeaderData)
+                    {
+                        var savedFullSnapshot = await c.Transaction.LoadStructure(ServiceConfigurationSnapshot.Data, savedSnapshotHeader.Id);
 
-                            return await c.Transaction.LoadStructure(ServiceConfigurationSnapshot.Data, first.Id);
-                        }
-                        else
+                        if (MatchesAllParameters(savedFullSnapshot, expectedSnapshot))
                         {
-                            return null;
+                            return savedFullSnapshot;
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("LoadServiceSnapshotByHash exception hash = " + hash);
-                        throw;
-                    }
+
+                    return null;
                 });
+        }
+
+        private static bool MatchesAllParameters(ServiceConfigurationSnapshot saved, ServiceConfigurationSnapshot expected)
+        {
+            var parametersDiff = Diff.CollectionsByKey(saved.ServiceConfigurationSnapshotParameters, expected.ServiceConfigurationSnapshotParameters, x => x.ParameterName);
+
+            if (parametersDiff.JustInFirst.Any())
+                return false;
+
+            if (parametersDiff.JustInSecond.Any())
+                return false;
+
+            // parametersDiff.Common will not return anything, as their IDs are different
+
+            foreach (var snapshotParameter in parametersDiff.Different)
+            {
+                // snapshotParameter.ParameterTypeId is not relevant for deployment
+                // snapshotParameter.ConfiguredValue is not relevant for deployment
+
+                if (snapshotParameter.InFirst.DeployedValue != snapshotParameter.InSecond.DeployedValue)
+                    return false;
+            }
+
+            return true;
         }
 
         private class LastDeployedChange
@@ -459,10 +516,15 @@ namespace MdsInfrastructure
             return lastDeployment.GetDeployedServices().Where(x => x.NodeName == nodeName).ToList();
         }
 
+        private static long healthStatusTotalMs = 0;
+        private static int healthStatusCalls = 0;
+
         public static async Task StoreHealthStatus(
             string fullDbPath,
             MdsCommon.MachineStatus healthStatus)
         {
+            System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
+
             await Metapsi.Sqlite.Db.WithCommit(fullDbPath, async c =>
             {
                 var nodeName = new List<string>() { healthStatus.NodeName };
@@ -476,24 +538,11 @@ namespace MdsInfrastructure
                 await c.Transaction.InsertStructure(healthStatus, MachineStatus.Data.ChildrenNodes);
             });
 
-            //using (SQLiteConnection conn = new SQLiteConnection($"Data Source = {fullDbPath}"))
-            //{
-            //    conn.Open();
-            //    var transaction = conn.BeginTransaction();
-
-            //    string nodeName = healthStatus.MachineStatus.First().NodeName;
-
-            //    var prevStatuses = await transaction.LoadRecords<MachineStatus, string>(x => x.NodeName, nodeName);
-            //    await transaction.DeleteRecords<MachineStatus, Guid>(x => x.Id, prevStatuses.Select(x => x.Id));
-            //    await transaction.DeleteRecords<ServiceStatus, Guid>(x => x.MachineStatusId, prevStatuses.Select(x => x.Id));
-
-            //    var diff = Diff.Structures(new NodeStatus(), healthStatus);
-            //    transaction.SaveChanges(diff);
-            //    await transaction.CommitAsync();
-            //    Console.WriteLine("StoreHealthStatus.CommitAsync()");
-            //}
-
-            //return healthStatus;
+            System.Diagnostics.Debug.WriteLine($"Store health status: {sw.ElapsedMilliseconds} ms");
+            healthStatusTotalMs += sw.ElapsedMilliseconds;
+            healthStatusCalls++;
+            System.Diagnostics.Debug.WriteLine($"Store health status total: {healthStatusTotalMs} ms");
+            System.Diagnostics.Debug.WriteLine($"Store health status calls: {healthStatusCalls}");
         }
 
         public static async Task<MdsCommon.ServiceConfigurationSnapshot> LoadServiceConfiguration(
