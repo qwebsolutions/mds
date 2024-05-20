@@ -192,22 +192,37 @@ namespace MdsLocal
                 {
                     if (osProcess.ProcessName.StartsWith(MdsLocalApplication.ExePrefix(nodeName)))
                     {
-                        try
+                        var maxRetries = 5;
+                        int retryCount = 0;
+                        while (true)
                         {
-                            string exePath = osProcess.MainModule.FileName;
-
-                            processes.Add(new RunningServiceProcess()
+                            try
                             {
-                                FullExePath = exePath,
-                                ServiceName = MdsLocalApplication.GuessServiceName(nodeName, exePath),
-                                Pid = osProcess.Id,
-                                StartTimestampUtc = osProcess.StartTime.ToUniversalTime(),
-                                UsedRamMB = (int)(osProcess.WorkingSet64 / (1024 * 1024))
-                            });
-                        }
-                        catch (Exception ex)
-                        {
-                            rc.Logger.LogException(ex);
+                                string exePath = osProcess.MainModule.FileName;
+
+                                processes.Add(new RunningServiceProcess()
+                                {
+                                    FullExePath = exePath,
+                                    ServiceName = MdsLocalApplication.GuessServiceName(nodeName, exePath),
+                                    Pid = osProcess.Id,
+                                    StartTimestampUtc = osProcess.StartTime.ToUniversalTime(),
+                                    UsedRamMB = (int)(osProcess.WorkingSet64 / (1024 * 1024))
+                                });
+                                break;
+                            }
+                            catch (Exception ex)
+                            {
+                                retryCount++;
+                                if (retryCount >= maxRetries)
+                                {
+                                    rc.Logger.LogException(ex);
+                                    break;
+                                }
+                                else
+                                {
+                                    await Task.Delay(1000);
+                                }
+                            }
                         }
                     }
                 }
