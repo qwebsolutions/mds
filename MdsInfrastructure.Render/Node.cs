@@ -9,6 +9,7 @@ using MdsCommon.Controls;
 using System.Diagnostics.Contracts;
 using Metapsi.Html;
 using Metapsi.Dom;
+using Metapsi.TomSelect;
 
 namespace MdsInfrastructure.Render
 {
@@ -71,16 +72,12 @@ namespace MdsInfrastructure.Render
                     b =>
                     {
                         b.SetClass("flex flex-row");
-                        b.OnClickAction((SyntaxBuilder b, Var<M.List> clientModel) =>
-                        {
-                            b.CallOnObject(b.Window(), "alert", b.Const("Adding nodes is not supported at the moment"));
-                            return b.Clone(clientModel);
-                        });
                     },
-                    b.HtmlButton(
+                    b.HtmlA(
                         b =>
                         {
-                            b.AddPrimaryButtonStyle();
+                            b.SetClass("rounded flex flex-row items-center py-2 px-4 shadow text-white bg-sky-500");
+                            b.SetHref(b.Url<Routes.Node.Add>());
                         },
                         b.Text("Add node")));
             };
@@ -222,7 +219,7 @@ namespace MdsInfrastructure.Render
             var node = b.Get(clientModel, x => x.InfrastructureNode);
             var envId = b.Get(node, x => x.EnvironmentTypeId);
             var envTypes = b.Get(clientModel, m => m.EnvironmentTypes.ToList());
-            var saveUrl = b.Const("Not implemented");
+            var saveUrl = b.Url<Routes.Node.Save, MdsInfrastructure.InfrastructureNode>();
             var toolbar = b.Toolbar(b => { },
                 b => b.SubmitButton<InfrastructureNode>(b =>
                 {
@@ -240,16 +237,12 @@ namespace MdsInfrastructure.Render
                 toolbar,
                 ("Node name", b.MdsInputText(b => b.BindTo(clientModel, x => x.InfrastructureNode, x => x.NodeName))),
                 ("Machine address", b.MdsInputText(b => b.BindTo(clientModel, x => x.InfrastructureNode, x => x.MachineIp))),
-                ("Node UI port", b.MdsInputText(b => b.BindTo(clientModel, x => x.InfrastructureNode, x => x.UiPort))));
-
-            // TODO: Node env type?!
-
-            //var osChoicesDd = b.DropDown(b.MapChoices(envTypes, x => x.Id, x => x.Name, b.Get(node, x => x.EnvironmentTypeId)));
-            //b.SetOnChoiceSelected<M.EditPage, Guid>(osChoicesDd, (b, state, value) =>
-            //{
-            //    var node = b.Get(clientModel, x => x.InfrastructureNode);
-            //    b.Set(node, x => x.EnvironmentTypeId, value);
-            //});
+                ("Node UI port", b.MdsInputText(b => b.BindTo(clientModel, x => x.InfrastructureNode, x => x.UiPort))),
+                ("System type", b.MdsDropDown(b =>
+                {
+                    b.SetOptions(b.Get(clientModel, x => x.EnvironmentTypes), x => x.Id, x => x.Name);
+                    b.BindTo(clientModel, b.Def((SyntaxBuilder b, Var<M.EditPage> model) => b.Get(model, x => x.InfrastructureNode)), x => x.EnvironmentTypeId, Converter.GuidConverter);
+                })));
 
             return form;
         }

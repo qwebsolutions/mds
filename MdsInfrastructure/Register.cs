@@ -19,6 +19,8 @@ namespace MdsInfrastructure
             refs.WebApplication.RegisterPostHandler<MdsInfrastructure.Flow.SignIn.Credentials, Routes.SignIn.Credentials, MdsCommon.InputCredentials>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Node.List, Routes.Node.List>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Node.Edit, Routes.Node.Edit, Guid>();
+            refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Node.Add, Routes.Node.Add>();
+            refs.WebApplication.RegisterPostHandler<MdsInfrastructure.Flow.Node.Save, Routes.Node.Save, MdsInfrastructure.InfrastructureNode>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Project.List, Routes.Project.List>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Deployment.List, Routes.Deployment.List>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Deployment.Review, Routes.Deployment.Review, Guid>();

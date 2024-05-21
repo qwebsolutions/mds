@@ -29,6 +29,8 @@ namespace MdsInfrastructure.Routes
     {
         public class List : Route.IGet { }
         public class Edit : Route.IGet<Guid> { }
+        public class Add : Route.IGet { }
+        public class Save : Route.IPost<MdsInfrastructure.InfrastructureNode> { }
     }
 
     public class Project

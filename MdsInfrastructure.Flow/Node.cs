@@ -40,4 +40,28 @@ public static class Node
             return Page.Result(editPage);
         }
     }
+
+    public class Add : Metapsi.Http.Get<Routes.Node.Add>
+    {
+        public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext)
+        {
+            M.EditPage editPage = new()
+            {
+                EnvironmentTypes = await commandContext.Do(Backend.LoadEnvironmentTypes),
+                InfrastructureNode = new InfrastructureNode(),
+                User = httpContext.User()
+            };
+
+            return Page.Result(editPage);
+        }
+    }
+
+    public class Save : Metapsi.Http.Post<Routes.Node.Save, MdsInfrastructure.InfrastructureNode>
+    {
+        public override async Task<IResult> OnPost(CommandContext commandContext, HttpContext httpContext, InfrastructureNode p1)
+        {
+            await commandContext.Do(Backend.SaveNode, p1);
+            return Results.Redirect(WebServer.Url<Routes.Node.Edit, Guid>(p1.Id));
+        }
+    }
 }
