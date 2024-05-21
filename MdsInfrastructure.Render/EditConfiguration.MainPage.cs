@@ -50,18 +50,16 @@ namespace MdsInfrastructure.Render
                             var showCurrentJson = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
                             {
                                 return b.MakeStateWithEffects(
-                                    b.ShowPanel(clientModel),
-                                    b.MakeEffect(
-                                        b.Def(
-                                            b.Request(
-                                                Frontend.GetConfigurationJson,
-                                                b.Get(clientModel, x => x.Configuration),
-                                                b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<GetConfigurationJsonResponse> response) =>
-                                                {
-                                                    b.Set(page, x => x.CurrentConfigurationSimplifiedJson, b.Get(response, x => x.Json));
-                                                    b.ShowDialog(b.Const(IdCurrentJsonPopup));
-                                                    return b.Clone(page);
-                                                })))));
+                                    clientModel,
+                                    b.PostRequest(
+                                        Frontend.GetConfigurationJson,
+                                        b.Get(clientModel, x => x.Configuration),
+                                        b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<GetConfigurationJsonResponse> response) =>
+                                        {
+                                            b.Set(page, x => x.CurrentConfigurationSimplifiedJson, b.Get(response, x => x.Json));
+                                            b.ShowDialog(b.Const(IdCurrentJsonPopup));
+                                            return b.Clone(page);
+                                        })));
                             });
 
                             var downloadWindowsScripts = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
@@ -71,7 +69,7 @@ namespace MdsInfrastructure.Render
                                 b.Set(fetchOptions, x => x.body, b.Serialize(b.Get(clientModel, x => x.Configuration)));
                                 b.SetDynamic(b.Get(fetchOptions, x => x.headers), DynamicProperty.String("Content-Type"), b.Const("application/json"));
                                 return b.MakeStateWithEffects(
-                                    b.ShowPanel(clientModel),
+                                    clientModel,
                                     b.MakeEffect(
                                         b.Def((SyntaxBuilder b, Var<HyperType.Dispatcher<EditConfigurationPage>> dispatcher) =>
                                             b.CallExternal("fetch", "DownloadFile",
@@ -81,7 +79,7 @@ namespace MdsInfrastructure.Render
                                                 {
                                                     b.CallExternal("fetch", "DownloadBlob", file, b.Concat(b.Get(clientModel, x => x.Configuration.Name), b.Const(".zip")));
                                                 }),
-                                                b.Def((SyntaxBuilder b, Var<ApiError> not_used) => { b.Log("Error"); b.Log(not_used); })))));
+                                                b.Def((SyntaxBuilder b, Var<ClientSideException> not_used) => { b.Log("Error"); b.Log(not_used); })))));
                             });
 
                             return b.Switch(selectedValue,
@@ -138,36 +136,34 @@ namespace MdsInfrastructure.Render
                         b.Set(saveInput, x => x.OriginalJson, b.Get(model, x => x.InitialConfiguration));
 
                         return b.MakeStateWithEffects(
-                            b.ShowPanel(model),
-                            b.MakeEffect(
-                                b.Def(
-                                    b.Request(
-                                        Frontend.SaveConfiguration,
-                                        saveInput,
-                                        b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<SaveConfigurationResponse> response) =>
-                                        {
-                                            b.Set(page, x => x.SaveConfigurationResponse, response);
+                            model,
+                            b.PostRequest(
+                                Frontend.SaveConfiguration,
+                                saveInput,
+                                b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<SaveConfigurationResponse> response) =>
+                                {
+                                    b.Set(page, x => x.SaveConfigurationResponse, response);
 
-                                            return b.If(
-                                                b.Get(response, x => x.SaveValidationMessages.Any()),
-                                                b =>
-                                                {
-                                                    b.ShowDialog(b.Const(IdSaveValidationFailedPopup));
-                                                    return b.Clone(page);
-                                                },
-                                                b => b.If(
-                                                    b.Get(response, x => x.ConflictMessages.Any()), b =>
-                                                    {
-                                                        b.ShowDialog(b.Const(IdSaveConflictPopup));
-                                                        return b.Clone(page);
-                                                    },
-                                                    b =>
-                                                    {
-                                                        b.Set(page, x => x.InitialConfiguration, b.Serialize(b.Get(page, x => x.Configuration)));
-                                                        b.HideDialog(b.Const(IdSaveConflictPopup));
-                                                        return b.Clone(page);
-                                                    }));
-                                        })))));
+                                    return b.If(
+                                        b.Get(response, x => x.SaveValidationMessages.Any()),
+                                        b =>
+                                        {
+                                            b.ShowDialog(b.Const(IdSaveValidationFailedPopup));
+                                            return b.Clone(page);
+                                        },
+                                        b => b.If(
+                                            b.Get(response, x => x.ConflictMessages.Any()), b =>
+                                            {
+                                                b.ShowDialog(b.Const(IdSaveConflictPopup));
+                                                return b.Clone(page);
+                                            },
+                                            b =>
+                                            {
+                                                b.Set(page, x => x.InitialConfiguration, b.Serialize(b.Get(page, x => x.Configuration)));
+                                                b.HideDialog(b.Const(IdSaveConflictPopup));
+                                                return b.Clone(page);
+                                            }));
+                                })));
                     }));
                 },
                 b.TextSpan("Save"));
@@ -341,29 +337,27 @@ namespace MdsInfrastructure.Render
 
                         return b.MakeStateWithEffects(
                             b.ShowPanel(model),
-                            b.MakeEffect(
-                                b.Def(
-                                    b.Request(
-                                        Frontend.MergeConfiguration,
-                                        mergeConfigurationInput,
-                                        b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<MergeConfigurationResponse> response) =>
+                            b.PostRequest(
+                                Frontend.MergeConfiguration,
+                                mergeConfigurationInput,
+                                b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<MergeConfigurationResponse> response) =>
+                                {
+                                    b.Set(page, x => x.MergeConfigurationResponse, response);
+                                    b.HideDialog(b.Const(IdSaveConflictPopup));
+                                    return b.If(b.Get(response, x => x.ConflictMessages.Any()),
+                                        b =>
                                         {
-                                            b.Set(page, x => x.MergeConfigurationResponse, response);
-                                            b.HideDialog(b.Const(IdSaveConflictPopup));
-                                            return b.If(b.Get(response, x => x.ConflictMessages.Any()),
-                                                b =>
-                                                {
-                                                    b.ShowDialog(b.Const(IdMergeFailedPopup));
-                                                    return b.Clone(page);
-                                                },
-                                                b =>
-                                                {
-                                                    b.Set(page, x => x.Configuration, b.Get(response, x => x.Configuration));
-                                                    b.Set(page, x => x.InitialConfiguration, b.Serialize(b.Get(response, x => x.SourceConfiguration)));
-                                                    b.ShowDialog(b.Const(IdMergeSuccessPopup));
-                                                    return b.Clone(page);
-                                                });
-                                        })))));
+                                            b.ShowDialog(b.Const(IdMergeFailedPopup));
+                                            return b.Clone(page);
+                                        },
+                                        b =>
+                                        {
+                                            b.Set(page, x => x.Configuration, b.Get(response, x => x.Configuration));
+                                            b.Set(page, x => x.InitialConfiguration, b.Serialize(b.Get(response, x => x.SourceConfiguration)));
+                                            b.ShowDialog(b.Const(IdMergeSuccessPopup));
+                                            return b.Clone(page);
+                                        });
+                                })));
                     }));
                 },
                 b.TextSpan("Merge"));

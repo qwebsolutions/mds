@@ -114,7 +114,6 @@ namespace MdsInfrastructure.Render
         }
 
         public static Var<IVNode> DeployNowButton<TModel>(this LayoutBuilder b, Var<Guid> configurationId)
-            where TModel : IApiSupportState
         {
             return b.HtmlButton(
                 b =>
@@ -124,18 +123,15 @@ namespace MdsInfrastructure.Render
                     {
                         return b.MakeStateWithEffects(
                             b.ShowPanel(model),
-                            b.MakeEffect(
-                                b.Def(
-                                    b.Request(
-                                        Frontend.ConfirmDeployment,
-                                        configurationId,
-                                        
-                                        b.MakeAction((SyntaxBuilder b, Var<DeploymentPreview> model, Var<Frontend.ConfirmDeploymentResponse> response) =>
-                                        {
-                                            b.SetUrl(b.Const("/"));
-                                            return model;
-                                        }))
-                                    )));
+                            b.GetRequest(
+                                Frontend.ConfirmDeployment,
+                                configurationId,
+                                b.MakeAction((SyntaxBuilder b, Var<DeploymentPreview> model, Var<Frontend.ConfirmDeploymentResponse> response) =>
+                                {
+                                    b.SetUrl(b.Const("/"));
+                                    return model;
+                                }))
+                            );
                     }));
                 },
                 b.TextSpan("Deploy now"));

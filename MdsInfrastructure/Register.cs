@@ -27,21 +27,21 @@ namespace MdsInfrastructure
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Deployment.Preview, Routes.Deployment.ConfigurationPreview, Guid>();
             refs.WebApplication.RegisterGetHandler<MdsCommon.EventsLogHandler, MdsCommon.Routes.EventsLog.List>();
 
-            refs.RegisterPageBuilder<MdsInfrastructure.Render.InfrastructureStatus, InfrastructureStatus>();
-            refs.RegisterPageBuilder<MdsInfrastructure.Render.ApplicationStatus, ApplicationStatus>();
-            refs.RegisterPageBuilder<MdsInfrastructure.Render.NodeStatus, NodeStatus>();
-            refs.RegisterPageBuilder<MdsInfrastructure.Render.Docs.Service, MdsInfrastructure.Docs.ServicePage>();
-            refs.RegisterPageBuilder<MdsInfrastructure.Render.Configuration.List, MdsInfrastructure.ListConfigurationsPage>();
-            refs.RegisterPageBuilder<MdsInfrastructure.Render.Configuration.Edit, MdsInfrastructure.EditConfigurationPage>();
-            refs.RegisterPageBuilder<MdsInfrastructure.Render.Configuration.Review, MdsInfrastructure.ReviewConfigurationPage>();
-            refs.RegisterPageBuilder<MdsInfrastructure.Render.SignIn.Credentials, SignInPage>();
-            refs.RegisterPageBuilder<MdsInfrastructure.Render.Node.List, MdsInfrastructure.Node.List>();
-            refs.RegisterPageBuilder<MdsInfrastructure.Render.Node.Edit, MdsInfrastructure.Node.EditPage>();
-            refs.RegisterPageBuilder<MdsInfrastructure.Render.Deployment.List, MdsInfrastructure.DeploymentHistory>();
-            refs.RegisterPageBuilder<MdsInfrastructure.Render.Deployment.Review, MdsInfrastructure.DeploymentReview>();
-            refs.RegisterPageBuilder<MdsInfrastructure.Render.Deployment.Preview, MdsInfrastructure.DeploymentPreview>();
-            refs.RegisterPageBuilder<MdsInfrastructure.Render.Project.List, MdsInfrastructure.ListProjectsPage>();
-            refs.RegisterPageBuilder<MdsInfrastructure.RenderInfrastructureEventsList, MdsCommon.ListInfrastructureEventsPage>();
+            refs.WebApplication.UseRenderer<InfrastructureStatus>(new MdsInfrastructure.Render.InfrastructureStatus().Render);
+            refs.WebApplication.UseRenderer<ApplicationStatus>(new MdsInfrastructure.Render.ApplicationStatus().Render);
+            refs.WebApplication.UseRenderer<NodeStatus>(new MdsInfrastructure.Render.NodeStatus().Render);
+            refs.WebApplication.UseRenderer<Docs.ServicePage>(new MdsInfrastructure.Render.Docs.Service().Render);
+            refs.WebApplication.UseRenderer<ListConfigurationsPage>(new MdsInfrastructure.Render.Configuration.List().Render);
+            refs.WebApplication.UseRenderer<EditConfigurationPage>(new MdsInfrastructure.Render.Configuration.Edit().Render);
+            refs.WebApplication.UseRenderer<ReviewConfigurationPage>(new MdsInfrastructure.Render.Configuration.Review().Render);
+            refs.WebApplication.UseRenderer<SignInPage>(new MdsInfrastructure.Render.SignIn.Credentials().Render);
+            refs.WebApplication.UseRenderer<Node.List>(new MdsInfrastructure.Render.Node.List().Render);
+            refs.WebApplication.UseRenderer<Node.EditPage>(new MdsInfrastructure.Render.Node.Edit().Render);
+            refs.WebApplication.UseRenderer<DeploymentHistory>(new MdsInfrastructure.Render.Deployment.List().Render);
+            refs.WebApplication.UseRenderer<DeploymentReview>(new MdsInfrastructure.Render.Deployment.Review().Render);
+            refs.WebApplication.UseRenderer<DeploymentPreview>(new MdsInfrastructure.Render.Deployment.Preview().Render);
+            refs.WebApplication.UseRenderer<ListProjectsPage>(new MdsInfrastructure.Render.Project.List().Render);
+            refs.WebApplication.UseRenderer<ListInfrastructureEventsPage>(new MdsInfrastructure.RenderInfrastructureEventsList().Render);
         }
     }
 }

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 
 namespace MdsLocal
@@ -24,7 +25,7 @@ namespace MdsLocal
         public static References Setup(InputArguments arguments, DateTime start)
         {
 
-            string infrastructureUrl = arguments.InfrastructureApiUrl;
+            string infrastructureApiUrl = arguments.InfrastructureApiUrl.TrimEnd('/') + "/";
             string nodeName = arguments.NodeName;
             string fullDbPath = Metapsi.RelativePath.SearchUpfolder(RelativePath.From.EntryPath, arguments.DbPath);
 
@@ -135,16 +136,17 @@ namespace MdsLocal
             #region Implementation mappings
 
             System.Net.Http.HttpClient apiClient = new System.Net.Http.HttpClient();
-            apiClient.BaseAddress = new Uri(infrastructureUrl);
 
             implementationGroup.MapRequest(Api.GetInfrastructureNodeSettings, async (rc) =>
             {
-                return await apiClient.Request(MdsCommon.Api.GetInfrastructureNodeSettings, arguments.NodeName);
+                var url = infrastructureApiUrl + MdsCommon.Api.GetInfrastructureNodeSettings.Name + "/" + arguments.NodeName;
+                return await apiClient.GetFromJsonAsync<MdsCommon.InfrastructureNodeSettings>(url);
             });
 
             implementationGroup.MapRequest(Api.GetUpToDateConfiguration, async (rc) =>
             {
-                return await apiClient.Request(MdsCommon.Api.GetCurrentNodeSnapshot, arguments.NodeName);
+                var url = infrastructureApiUrl + MdsCommon.Api.GetCurrentNodeSnapshot.Name + "/" + arguments.NodeName;
+                return await apiClient.GetFromJsonAsync<List<MdsCommon.ServiceConfigurationSnapshot>>(url);
             });
 
             implementationGroup.MapRequest(MdsLocalApplication.GetLocalKnownConfiguration, async (rc) =>
@@ -170,7 +172,7 @@ namespace MdsLocal
                 async (rc) => new LocalSettings()
                 {
                     FullDbPath = fullDbPath,
-                    InfrastructureApiUrl = infrastructureUrl,
+                    InfrastructureApiUrl = infrastructureApiUrl,
                     NodeName = nodeName
                 });
 

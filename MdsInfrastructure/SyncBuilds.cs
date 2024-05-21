@@ -27,5 +27,10 @@ namespace MdsInfrastructure
                 });
             }
         }
+
+        public static async Task StoreHealthStatus(CommandContext commandContext, State state, MdsCommon.MachineStatus status)
+        {
+            await commandContext.Do(Backend.StoreHealthStatus, status);
+        }
     }
 }

@@ -108,19 +108,17 @@ namespace MdsLocal
                         {
                             return b.MakeStateWithEffects(
                                 b.ShowLoading(model),
-                                b.MakeEffect(
-                                    b.Def(
-                                        b.Request(
-                                            Frontend.LoadFullSyncResult,
-                                            b.Get(syncResult, x => x.Id),
-                                            b.MakeAction((SyntaxBuilder b, Var<DataModel> page, Var<FullSyncResultResponse> response) =>
-                                            {
-                                                b.Set(page, x => x.SelectedResult, b.Get(response, x => x.SyncResult));
-                                                b.Log(page);
-                                                b.HideLoading(page);
-                                                b.ShowSidePanel();
-                                                return b.Clone(page);
-                                            })))));
+                                b.PostRequest(
+                                    Frontend.LoadFullSyncResult,
+                                    b.Get(syncResult, x => x.Id),
+                                    b.MakeAction((SyntaxBuilder b, Var<DataModel> page, Var<FullSyncResultResponse> response) =>
+                                    {
+                                        b.Set(page, x => x.SelectedResult, b.Get(response, x => x.SyncResult));
+                                        b.Log(page);
+                                        b.HideLoading(page);
+                                        b.ShowSidePanel();
+                                        return b.Clone(page);
+                                    })));
                         });
                     },
                     b.Text(b.ItalianFormat(b.Get(syncResult, x => x.Timestamp))));

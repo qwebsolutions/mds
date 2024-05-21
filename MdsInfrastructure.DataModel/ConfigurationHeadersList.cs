@@ -6,8 +6,6 @@ namespace MdsInfrastructure
     public class ConfigurationHeadersList
     {
         public List<InfrastructureConfiguration> ConfigurationHeaders { get; set; } = new();
-        //public int ServicesCount { get; set; }
-        //public List<InfrastructureService> Services { get; set; } = new();
     }
 
     public class ListConfigurationsPage
@@ -21,12 +19,11 @@ namespace MdsInfrastructure
         public EditConfigurationPage EditConfigurationPage { get; set; } = new();
     }
 
-    public class ReviewConfigurationPage : IApiSupportState
+    public class ReviewConfigurationPage
     {
         public InfrastructureConfiguration SavedConfiguration { get; set; }
         public List<MdsCommon.ServiceConfigurationSnapshot> Snapshot { get; set; } = new();
         public Metapsi.Ui.User User { get; set; } = new();
-        public ApiSupport ApiSupport { get; set; } = new();
         public string FilterValue { get; set; } = string.Empty;
     }
 }

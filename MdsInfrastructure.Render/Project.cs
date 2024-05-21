@@ -95,28 +95,31 @@ namespace MdsInfrastructure.Render
                                             b.Set(version, x => x.Enabled, isChecked);
                                             return b.MakeStateWithEffects(
                                                 b.Clone(state),
-                                                b.MakeEffect(
-                                                    b.Def(
-                                                        b.CallApi<ListProjectsPage, ProjectVersion>(
-                                                            Backend.SaveVersionEnabled,
-                                                            version,
-                                                            (SyntaxBuilder b, Var<ListProjectsPage> state) => b.HideLoading(state),
-                                                            (SyntaxBuilder b, Var<ListProjectsPage> state, Var<ApiError> error) =>
-                                                            {
-                                                                var allVersions = b.Get(clientModel, projectId, (x, projectId) => x.ProjectsList.SelectMany(x => x.Versions).Where(x => x.ProjectId == projectId).ToList());
-                                                                var versionReference = b.Get(allVersions, b.Get(initialVersion, x => x.Id), (allVersions, versionid) => allVersions.Single(x => x.Id == versionid));
-                                                                b.Set(versionReference, x => x.Enabled, b.Get(initialVersion, x => x.Enabled));
-                                                                b.HideLoading(state);
-                                                                return b.Clone(state);
-                                                            }))));
-
+                                                b.Fetch<ListProjectsPage, ProjectVersion>(
+                                                    b.Const("/api/" + Backend.SaveVersionEnabled.Name),
+                                                    b =>
+                                                    {
+                                                        b.SetMethod("POST");
+                                                        b.SetJsonContentTypeHeaders();
+                                                        b.SetBody(version);
+                                                    },
+                                                    b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> state, Var<ProjectVersion> _) => state),
+                                                    b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> state, Var<ClientSideException> error) =>
+                                                    {
+                                                        // Do I really need all this to cancel?
+                                                        var allVersions = b.Get(clientModel, projectId, (x, projectId) => x.ProjectsList.SelectMany(x => x.Versions).Where(x => x.ProjectId == projectId).ToList());
+                                                        var versionReference = b.Get(allVersions, b.Get(initialVersion, x => x.Id), (allVersions, versionid) => allVersions.Single(x => x.Id == versionid));
+                                                        b.Set(versionReference, x => x.Enabled, b.Get(initialVersion, x => x.Enabled));
+                                                        b.HideLoading(state);
+                                                        return b.Clone(state);
+                                                    })));
                                         }),
-                                            checkboxText,
-                                            checkboxText,
-                                            b =>
-                                            {
-                                                b.Set(x => x.Enabled, b.Not(isInUse));
-                                            }),
+                                        checkboxText,
+                                        checkboxText,
+                                        b =>
+                                        {
+                                            b.Set(x => x.Enabled, b.Not(isInUse));
+                                        }),
                                     b.Optional(
                                         isInUse,
                                         b =>
@@ -354,14 +357,14 @@ namespace MdsInfrastructure.Render
             var removeRequest = b.NewObj<RemoveBuildsRequest>();
             b.Push(b.Get(removeRequest, x => x.ToRemove), item);
 
-            b.FetchRequest(
-                Frontend.RemoveBuilds,
+            b.PostJson(
+                b.Const("/api/"+ Frontend.RemoveBuilds.Name),
                 removeRequest,
                 b.Def((SyntaxBuilder b, Var<RemoveBuildsResponse> response) =>
                 {
                     b.Dispatch(dispatch, b.MakeRemoveSuccessAction(response, moveNext));
                 }),
-                b.Def((SyntaxBuilder b, Var<ApiError> error) =>
+                b.Def((SyntaxBuilder b, Var<ClientSideException> error) =>
                 {
                     b.Dispatch(dispatch, b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> model) =>
                     {
@@ -411,69 +414,69 @@ namespace MdsInfrastructure.Render
         {
             return b.MakeEffect((SyntaxBuilder b, Var<HyperType.Dispatcher<ListProjectsPage>> dispatch) =>
             {
-                b.FetchRequest(
-                    Frontend.ReloadListProjectsPageModel,
-                     b.Def((SyntaxBuilder b, Var<ReloadListProjectsPageModel> response) =>
-                     {
-                         b.If(
-                             b.HasValue(
-                                 b.Get(response, x => x.ErrorMessage)),
-                             b =>
-                             {
-                                 // Logical error
+                b.GetJson(
+                    b.Const("/api/"+ Frontend.ReloadListProjectsPageModel.Name),
+                    b.Def((SyntaxBuilder b, Var<ReloadListProjectsPageModel> response) =>
+                    {
+                        b.If(
+                            b.HasValue(
+                                b.Get(response, x => x.ErrorMessage)),
+                            b =>
+                            {
+                                // Logical error
 
-                                 b.Dispatch(dispatch, b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> model) =>
-                                 {
-                                     b.Set(model, x => x.DeleteError, b.Get(response, x => x.ErrorMessage));
-                                     return b.Clone(model);
-                                 }));
-                             },
-                             b =>
-                             {
-                                 b.Dispatch(dispatch, b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> prevModel) =>
-                                 {
-                                     var newModel = b.Get(response, x => x.Model);
-                                     b.Set(newModel, x => x.IsLoading, b.Get(prevModel, x => x.IsLoading));
-                                     b.Set(newModel, x => x.DeleteError, b.Get(prevModel, x => x.DeleteError));
-                                     b.Set(newModel, x => x.ToDeleteBinaries, b.Get(prevModel, x => x.ToDeleteBinaries));
+                                b.Dispatch(dispatch, b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> model) =>
+                                {
+                                    b.Set(model, x => x.DeleteError, b.Get(response, x => x.ErrorMessage));
+                                    return b.Clone(model);
+                                }));
+                            },
+                            b =>
+                            {
+                                b.Dispatch(dispatch, b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> prevModel) =>
+                                {
+                                    var newModel = b.Get(response, x => x.Model);
+                                    b.Set(newModel, x => x.IsLoading, b.Get(prevModel, x => x.IsLoading));
+                                    b.Set(newModel, x => x.DeleteError, b.Get(prevModel, x => x.DeleteError));
+                                    b.Set(newModel, x => x.ToDeleteBinaries, b.Get(prevModel, x => x.ToDeleteBinaries));
                                      
-                                     b.Foreach(
-                                         b.Get(newModel, x => x.Binaries),
-                                         (b, item) =>
-                                         {
-                                             var toDelete = b.SameBinary(b.Get(prevModel, x => x.ToDeleteBinaries), item);
-                                             b.If(
-                                                 b.HasObject(toDelete),
-                                                 b =>
-                                                 {
-                                                     b.Set(item, x => x.Selected, true);
-                                                 });
-                                         });
-                                     return b.If(
-                                         b.Not(
-                                             b.HasValue(b.Get(newModel, x => x.DeleteError))),
-                                         b =>
-                                         {
-                                             b.HideDialog(b.Const(DeleteSelectedDialogId));
-                                             return b.HideLoading(newModel);
-                                         },
-                                         b =>
-                                         {
-                                             return newModel;
-                                         });
-                                 }));
-                             });
-                     }),
-                     b.Def((SyntaxBuilder b, Var<ApiError> error) =>
-                     {
-                         // Actual error, network or something
+                                    b.Foreach(
+                                        b.Get(newModel, x => x.Binaries),
+                                        (b, item) =>
+                                        {
+                                            var toDelete = b.SameBinary(b.Get(prevModel, x => x.ToDeleteBinaries), item);
+                                            b.If(
+                                                b.HasObject(toDelete),
+                                                b =>
+                                                {
+                                                    b.Set(item, x => x.Selected, true);
+                                                });
+                                        });
+                                    return b.If(
+                                        b.Not(
+                                            b.HasValue(b.Get(newModel, x => x.DeleteError))),
+                                        b =>
+                                        {
+                                            b.HideDialog(b.Const(DeleteSelectedDialogId));
+                                            return b.HideLoading(newModel);
+                                        },
+                                        b =>
+                                        {
+                                            return newModel;
+                                        });
+                                }));
+                            });
+                    }),
+                    b.Def((SyntaxBuilder b, Var<ClientSideException> error) =>
+                    {
+                        // Actual error, network or something
 
-                         b.Dispatch(dispatch, b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> model) =>
-                         {
-                             b.Set(model, x => x.DeleteError, b.Get(error, x => x.message));
-                             return b.Clone(model);
-                         }));
-                     }));
+                        b.Dispatch(dispatch, b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> model) =>
+                        {
+                            b.Set(model, x => x.DeleteError, b.Get(error, x => x.message));
+                            return b.Clone(model);
+                        }));
+                    }));
             });
         }
 

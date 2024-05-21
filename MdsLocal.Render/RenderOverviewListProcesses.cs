@@ -173,23 +173,20 @@ namespace MdsLocal
 
                                     return b.MakeStateWithEffects(
                                         b.Clone(model),
-                                        b.MakeEffect(
-                                            b.Def(
-                                                b.Request(
-                                                    Frontend.KillProcessByPid,
-                                                    pid,
-                                                    b.MakeAction((SyntaxBuilder b, Var<OverviewPage> page, Var<ApiResponse> response) =>
-                                                    {
-                                                        return b.MakeStateWithEffects(
-                                                            b.Clone(model),
-                                                            b.MakeEffect(
-                                                                b.Def(
-                                                                    b.Request(Frontend.ReloadProcesses,
-                                                                    b.MakeAction((SyntaxBuilder b, Var<OverviewPage> page, Var<ReloadedOverviewModel> response) =>
-                                                                    {
-                                                                        return b.Get(response, x => x.Model);
-                                                                    })))));
-                                                    })))));
+                                        b.PostRequest(
+                                            Frontend.KillProcessByPid,
+                                            pid,
+                                            b.MakeAction((SyntaxBuilder b, Var<OverviewPage> page, Var<ApiResponse> response) =>
+                                            {
+                                                return b.MakeStateWithEffects(
+                                                    b.Clone(model),
+                                                    b.Request(
+                                                        Frontend.ReloadProcesses,
+                                                        b.MakeAction((SyntaxBuilder b, Var<OverviewPage> page, Var<ReloadedOverviewModel> response) =>
+                                                        {
+                                                            return b.Get(response, x => x.Model);
+                                                        })));
+                                            })));
                                 }));
                             },
                             b.Text("Restart"))));
