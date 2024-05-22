@@ -1,4 +1,5 @@
-﻿using Metapsi;
+﻿using MdsCommon;
+using Metapsi;
 using Metapsi.Ui;
 using System;
 using System.Collections.Generic;
@@ -11,19 +12,19 @@ namespace MdsLocal
         public static Request<List<MdsCommon.ServiceConfigurationSnapshot>> GetUpToDateConfiguration { get; set; } = new(nameof(GetUpToDateConfiguration));
     }
 
-    public class ReloadedOverviewModel : ApiResponse
+    public class ReloadedOverviewModel 
     {
         public OverviewPage Model { get; set; }
     }
 
-    public class FullSyncResultResponse : ApiResponse
+    public class FullSyncResultResponse
     {
         public SyncResult SyncResult { get; set; }
     }
 
     public static class Frontend
     {
-        public static Request<ApiResponse, string> KillProcessByPid { get; set; } = new(nameof(KillProcessByPid));
+        public static Command<string> KillProcessByPid { get; set; } = new(nameof(KillProcessByPid));
         public static Request<ReloadedOverviewModel> ReloadProcesses { get; set; } = new(nameof(ReloadProcesses));
         public static Request<FullSyncResultResponse, Guid> LoadFullSyncResult { get; set; } = new(nameof(LoadFullSyncResult));
     }

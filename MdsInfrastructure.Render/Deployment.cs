@@ -119,20 +119,20 @@ namespace MdsInfrastructure.Render
                 b =>
                 {
                     b.SetClass("bg-red-500 rounded px-4 py-2 text-white");
-                    b.OnClickAction(b.MakeAction((SyntaxBuilder b, Var<TModel> model) =>
+                    b.OnClickAction((SyntaxBuilder b, Var<TModel> model) =>
                     {
                         return b.MakeStateWithEffects(
                             b.ShowPanel(model),
                             b.GetRequest(
                                 Frontend.ConfirmDeployment,
                                 configurationId,
-                                b.MakeAction((SyntaxBuilder b, Var<DeploymentPreview> model, Var<Frontend.ConfirmDeploymentResponse> response) =>
+                                (SyntaxBuilder b, Var<DeploymentPreview> model, Var<Frontend.ConfirmDeploymentResponse> response) =>
                                 {
                                     b.SetUrl(b.Const("/"));
                                     return model;
-                                }))
+                                })
                             );
-                    }));
+                    });
                 },
                 b.TextSpan("Deploy now"));
         }

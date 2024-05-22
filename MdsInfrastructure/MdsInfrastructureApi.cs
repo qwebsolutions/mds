@@ -139,139 +139,106 @@ namespace MdsInfrastructure
                 }).AllowAnonymous();
 
 
-            api.MapPost(Frontend.SaveConfiguration.Name, async (CommandContext commandContext, HttpContext httpContext, SaveConfigurationInput input) =>
+            api.MapPostRequest(Frontend.SaveConfiguration, async (CommandContext commandContext, HttpContext httpContext, SaveConfigurationInput input) =>
             {
-                try
+                ExternalConfiguration externalConfiguration = new ExternalConfiguration()
                 {
-                    ExternalConfiguration externalConfiguration = new ExternalConfiguration()
-                    {
-                        Nodes = await commandContext.Do(Backend.LoadAllNodes),
-                        NoteTypes = await commandContext.Do(Backend.GetAllNoteTypes),
-                        ParameterTypes = await commandContext.Do(Backend.GetAllParameterTypes),
-                        Projects = await commandContext.Do(Backend.LoadAllProjects)
-                    };
+                    Nodes = await commandContext.Do(Backend.LoadAllNodes),
+                    NoteTypes = await commandContext.Do(Backend.GetAllNoteTypes),
+                    ParameterTypes = await commandContext.Do(Backend.GetAllParameterTypes),
+                    Projects = await commandContext.Do(Backend.LoadAllProjects)
+                };
 
-                    var validationMessages = input.InfrastructureConfiguration.ValidateConfiguration(externalConfiguration);
-                    if (validationMessages.Any())
-                    {
-                        return new SaveConfigurationResponse()
-                        {
-                            SaveValidationMessages = validationMessages
-                        };
-                    }
-
-                    var lastSavedConfiguration = await commandContext.Do(Backend.LoadConfiguration, input.InfrastructureConfiguration.Id);
-                    var initialConfiguration = Metapsi.Serialize.FromJson<InfrastructureConfiguration>(input.OriginalJson);
-
-                    var sneakyEdits = Conflict.GetConfigurationChanges(initialConfiguration, lastSavedConfiguration);
-
-                    if (!sneakyEdits.Any())
-                    {
-                        await commandContext.Do(Backend.SaveConfiguration, input.InfrastructureConfiguration);
-                        return new SaveConfigurationResponse() { ResultCode = ApiResultCode.Ok };
-                    }
-                    else
-                    {
-                        return new SaveConfigurationResponse()
-                        {
-                            ConflictMessages = Conflict.BuildDiffMessages(sneakyEdits)
-                        };
-                    }
-                }
-                catch (Exception ex)
+                var validationMessages = input.InfrastructureConfiguration.ValidateConfiguration(externalConfiguration);
+                if (validationMessages.Any())
                 {
                     return new SaveConfigurationResponse()
                     {
-                        ResultCode = ApiResultCode.Error,
-                        ErrorMessage = ex.Message
+                        SaveValidationMessages = validationMessages
+                    };
+                }
+
+                var lastSavedConfiguration = await commandContext.Do(Backend.LoadConfiguration, input.InfrastructureConfiguration.Id);
+                var initialConfiguration = Metapsi.Serialize.FromJson<InfrastructureConfiguration>(input.OriginalJson);
+
+                var sneakyEdits = Conflict.GetConfigurationChanges(initialConfiguration, lastSavedConfiguration);
+
+                if (!sneakyEdits.Any())
+                {
+                    await commandContext.Do(Backend.SaveConfiguration, input.InfrastructureConfiguration);
+                    return new SaveConfigurationResponse();
+                }
+                else
+                {
+                    return new SaveConfigurationResponse()
+                    {
+                        ConflictMessages = Conflict.BuildDiffMessages(sneakyEdits)
                     };
                 }
             }).RequireAuthorization();
 
             api.MapPostRequest(Frontend.MergeConfiguration, async (commandContext, httpContext, input) =>
             {
-                try
+                var lastSavedConfiguration = await commandContext.Do(Backend.LoadConfiguration, input.EditedConfiguration.Id);
+
+                ExternalConfiguration externalConfiguration = new ExternalConfiguration()
                 {
-                    var lastSavedConfiguration = await commandContext.Do(Backend.LoadConfiguration, input.EditedConfiguration.Id);
+                    Nodes = await commandContext.Do(Backend.LoadAllNodes),
+                    NoteTypes = await commandContext.Do(Backend.GetAllNoteTypes),
+                    ParameterTypes = await commandContext.Do(Backend.GetAllParameterTypes),
+                    Projects = await commandContext.Do(Backend.LoadAllProjects)
+                };
 
-                    ExternalConfiguration externalConfiguration = new ExternalConfiguration()
-                    {
-                        Nodes = await commandContext.Do(Backend.LoadAllNodes),
-                        NoteTypes = await commandContext.Do(Backend.GetAllNoteTypes),
-                        ParameterTypes = await commandContext.Do(Backend.GetAllParameterTypes),
-                        Projects = await commandContext.Do(Backend.LoadAllProjects)
-                    };
+                var sourceConfiguration = Metapsi.Serialize.FromJson<InfrastructureConfiguration>(input.SourceConfigurationJson);
 
-                    var sourceConfiguration = Metapsi.Serialize.FromJson<InfrastructureConfiguration>(input.SourceConfigurationJson);
+                var mergeResult = Conflict.Merge(lastSavedConfiguration, sourceConfiguration, input.EditedConfiguration);
 
-                    var mergeResult = Conflict.Merge(lastSavedConfiguration, sourceConfiguration, input.EditedConfiguration);
-
-                    if (mergeResult.ConflictMessages.Any())
-                    {
-                        // If there are conflicts return the edited configuration with no changes
-                        // Also return the JSON that can be used for manual merge
-
-                        var simpleConfiguration = input.EditedConfiguration.Simplify(externalConfiguration);
-                        var simpleConfigurationJson = JsonSerializer.Serialize(simpleConfiguration, Simplified.SerializerOptions);
-
-                        return new MergeConfigurationResponse()
-                        {
-                            ConflictMessages = mergeResult.ConflictMessages,
-                            Configuration = input.EditedConfiguration,
-                            ConfigurationJson = simpleConfigurationJson
-                        };
-                    }
-                    else
-                    {
-                        // If there are no conflicts return the updated configuration and the saved one as new source
-                        return new MergeConfigurationResponse()
-                        {
-                            SuccessMessages = mergeResult.SuccessMessages,
-                            Configuration = mergeResult.ResultConfiguration,
-                            SourceConfiguration = lastSavedConfiguration
-                        };
-                    }
-                }
-                catch (Exception ex)
+                if (mergeResult.ConflictMessages.Any())
                 {
+                    // If there are conflicts return the edited configuration with no changes
+                    // Also return the JSON that can be used for manual merge
+
+                    var simpleConfiguration = input.EditedConfiguration.Simplify(externalConfiguration);
+                    var simpleConfigurationJson = JsonSerializer.Serialize(simpleConfiguration, Simplified.SerializerOptions);
+
                     return new MergeConfigurationResponse()
                     {
-                        ResultCode = ApiResultCode.Error,
-                        ErrorMessage = ex.Message
+                        ConflictMessages = mergeResult.ConflictMessages,
+                        Configuration = input.EditedConfiguration,
+                        ConfigurationJson = simpleConfigurationJson
+                    };
+                }
+                else
+                {
+                    // If there are no conflicts return the updated configuration and the saved one as new source
+                    return new MergeConfigurationResponse()
+                    {
+                        SuccessMessages = mergeResult.SuccessMessages,
+                        Configuration = mergeResult.ResultConfiguration,
+                        SourceConfiguration = lastSavedConfiguration
                     };
                 }
             }).RequireAuthorization();
 
             api.MapGetRequest(Frontend.ConfirmDeployment, async (commandContext, httpContext, configurationId) =>
             {
-                try
+                var savedConfiguration = await commandContext.Do(Backend.LoadConfiguration, configurationId);
+                var serverModel = await MdsInfrastructureFunctions.InitializeEditConfiguration(commandContext, savedConfiguration);
+                var newInfraSnapshot = await MdsInfrastructureFunctions.TakeConfigurationSnapshot(
+                    commandContext,
+                    savedConfiguration,
+                    serverModel.AllProjects,
+                    serverModel.InfrastructureNodes);
+                await commandContext.Do(Backend.ConfirmDeployment, new ConfirmDeploymentInput()
                 {
-                    var savedConfiguration = await commandContext.Do(Backend.LoadConfiguration, configurationId);
-                    var serverModel = await MdsInfrastructureFunctions.InitializeEditConfiguration(commandContext, savedConfiguration);
-                    var newInfraSnapshot = await MdsInfrastructureFunctions.TakeConfigurationSnapshot(
-                        commandContext,
-                        savedConfiguration,
-                        serverModel.AllProjects,
-                        serverModel.InfrastructureNodes);
-                    await commandContext.Do(Backend.ConfirmDeployment, new ConfirmDeploymentInput()
-                    {
-                        Snapshots = newInfraSnapshot,
-                        Configuration = savedConfiguration
-                    });
+                    Snapshots = newInfraSnapshot,
+                    Configuration = savedConfiguration
+                });
 
-                    Backend.Event.BroadcastDeployment broadcastDeployment = new();
-                    commandContext.PostEvent(broadcastDeployment);
+                Backend.Event.BroadcastDeployment broadcastDeployment = new();
+                commandContext.PostEvent(broadcastDeployment);
 
-                    return new Frontend.ConfirmDeploymentResponse() { ResultCode = ApiResultCode.Ok };
-                }
-                catch (Exception ex)
-                {
-                    return new Frontend.ConfirmDeploymentResponse()
-                    {
-                        ResultCode = ApiResultCode.Error,
-                        ErrorMessage = ex.Message
-                    };
-                }
+                return new Frontend.ConfirmDeploymentResponse();
             }).RequireAuthorization();
 
             api.MapPostRequest(Frontend.GetConfigurationJson, async (CommandContext commandContext, HttpContext httpContext, InfrastructureConfiguration edited) =>
@@ -477,48 +444,33 @@ namespace MdsInfrastructure
                 Frontend.RemoveBuilds,
                 async (CommandContext commandContext, HttpContext httpContext, RemoveBuildsRequest input) =>
                 {
-                    try
+
+                    List<AlgorithmInfo> toRemoveAlgorithms = input.ToRemove.Where(x => x.Selected).Select(
+                        x => new AlgorithmInfo()
+                        {
+                            Name = x.ProjectName,
+                            BuildNumber = x.BuildNumber,
+                            Target = x.Target,
+                            Version = x.ProjectVersion
+                        }).ToList();
+
+                    var url = arguments.BuildManagerUrl + "/DeleteBuilds";
+
+                    var result = await httpClient.PostAsJsonAsync(url, toRemoveAlgorithms);
+
+                    if (result.StatusCode == HttpStatusCode.NotFound)
                     {
-                        List<AlgorithmInfo> toRemoveAlgorithms = input.ToRemove.Where(x => x.Selected).Select(
-                            x => new AlgorithmInfo()
-                            {
-                                Name = x.ProjectName,
-                                BuildNumber = x.BuildNumber,
-                                Target = x.Target,
-                                Version = x.ProjectVersion
-                            }).ToList();
-
-                        var url = arguments.BuildManagerUrl + "/DeleteBuilds";
-
-                        var result = await httpClient.PostAsJsonAsync(url, toRemoveAlgorithms);
-
-                        if (result.StatusCode == HttpStatusCode.NotFound)
-                        {
-                            return new RemoveBuildsResponse()
-                            {
-                                ErrorMessage = "Cannot delete, repository does not support this operation",
-                                ResultCode = ApiResultCode.Error
-                            };
-                        }
-
-                        result.EnsureSuccessStatusCode();
-
-                        input.ToRemove.ForEach(x => x.Removed = true);
-
-                        return new RemoveBuildsResponse()
-                        {
-                            Removed = input.ToRemove
-                        };
+                        throw new Exception("Cannot delete, repository does not support this operation");
                     }
-                    catch (Exception ex)
+
+                    result.EnsureSuccessStatusCode();
+
+                    input.ToRemove.ForEach(x => x.Removed = true);
+
+                    return new RemoveBuildsResponse()
                     {
-                        commandContext.Logger.LogException(ex);
-                        return new RemoveBuildsResponse()
-                        {
-                            ErrorMessage = "Cannot delete, an error has occured",
-                            ResultCode = ApiResultCode.Error
-                        };
-                    }
+                        Removed = input.ToRemove
+                    };
                 }).RequireAuthorization();
 
             api.MapGetRequest(

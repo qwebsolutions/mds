@@ -119,29 +119,16 @@ namespace MdsLocal
             webServer.WebApplication.MapGet("/", () => Results.Redirect(WebServer.Url<Overview.ListProcesses>())).AllowAnonymous().ExcludeFromDescription();
 
             var api = webServer.WebApplication.MapGroup("api");
-            api.MapGet(Frontend.KillProcessByPid.Name, async (CommandContext commandContext, HttpContext httpContext, string pid) =>
+            api.MapGetCommand(Frontend.KillProcessByPid, async (CommandContext commandContext, HttpContext httpContext, string pid) =>
             {
-                try
-                {
-                    var intPid = Convert.ToInt32(pid);
-                    var process = System.Diagnostics.Process.GetProcessById(intPid);
-                    process.Kill();
-                    process.WaitForExit(5000);
-                    await Task.Delay(5000);
-
-                    return new ApiResponse();
-                }
-                catch (Exception ex)
-                {
-                    return new ApiResponse()
-                    {
-                        ErrorMessage = ex.Message,
-                        ResultCode = ApiResultCode.Error
-                    };
-                }
+                var intPid = Convert.ToInt32(pid);
+                var process = System.Diagnostics.Process.GetProcessById(intPid);
+                process.Kill();
+                process.WaitForExit(5000);
+                await Task.Delay(5000);
             }).AllowAnonymous();
 
-            api.MapPostRequest(Frontend.ReloadProcesses, async (CommandContext commandContext, HttpContext httpContext) =>
+            api.MapGetRequest(Frontend.ReloadProcesses, async (CommandContext commandContext, HttpContext httpContext) =>
             {
                 var reloadedModel = await ListProcessesHandler.Load(commandContext, httpContext);
                 return new ReloadedOverviewModel()

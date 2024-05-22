@@ -173,14 +173,14 @@ namespace MdsLocal
 
                                     return b.MakeStateWithEffects(
                                         b.Clone(model),
-                                        b.PostRequest(
+                                        b.GetCommand(
                                             Frontend.KillProcessByPid,
                                             pid,
-                                            b.MakeAction((SyntaxBuilder b, Var<OverviewPage> page, Var<ApiResponse> response) =>
+                                            b.MakeAction((SyntaxBuilder b, Var<OverviewPage> page) =>
                                             {
                                                 return b.MakeStateWithEffects(
                                                     b.Clone(model),
-                                                    b.Request(
+                                                    b.GetRequest(
                                                         Frontend.ReloadProcesses,
                                                         b.MakeAction((SyntaxBuilder b, Var<OverviewPage> page, Var<ReloadedOverviewModel> response) =>
                                                         {

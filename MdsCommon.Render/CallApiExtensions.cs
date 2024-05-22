@@ -5,14 +5,31 @@ using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Routing;
 using System;
+using System.Net.Mime;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace MdsCommon;
 
 public static class CallApiExtensions
 {
+    public static Var<HyperType.Effect> GetCommand<TModel, TInput>(
+        this SyntaxBuilder b,
+        Command<TInput> command,
+        Var<TInput> input,
+        Var<HyperType.Action<TModel>> onSuccess)
+    {
+        var uri = b.Concat(b.Const("/api/" + command.Name + "/"), b.AsString(input));
+        return b.Fetch(
+            uri,
+            b => { },
+            onSuccess,
+            b.ShowAlertOnException<TModel>());
+    }
+
     public static Var<HyperType.Effect> PostRequest<TModel, TResponse, TInput>(
         this SyntaxBuilder b,
         Request<TResponse, TInput> request,
@@ -24,6 +41,20 @@ public static class CallApiExtensions
             b.Const(uri),
             input,
             onSuccess,
+            b.ShowAlertOnException<TModel>());
+    }
+
+    public static Var<HyperType.Effect> PostRequest<TModel, TResponse, TInput>(
+        this SyntaxBuilder b,
+        Request<TResponse, TInput> request,
+        Var<TInput> input,
+        System.Func<SyntaxBuilder, Var<TModel>, Var<TResponse>, Var<TModel>> onSuccess)
+    {
+        var uri = "/api/" + request.Name;
+        return b.PostJson(
+            b.Const(uri),
+            input,
+            b.MakeAction(onSuccess),
             b.ShowAlertOnException<TModel>());
     }
 
@@ -53,7 +84,16 @@ public static class CallApiExtensions
             b.ShowAlertOnException<TModel>());
     }
 
-    public static Var<HyperType.Effect> Request<TModel, TResponse>(
+    public static Var<HyperType.Effect> GetRequest<TModel, TResponse>(
+        this SyntaxBuilder b,
+        Request<TResponse, Guid> request,
+        Var<Guid> p1,
+        Func<SyntaxBuilder, Var<TModel>, Var<TResponse>, Var<TModel>> onSuccess)
+    {
+        return b.GetRequest(request, p1, b.MakeAction(onSuccess));
+    }
+
+    public static Var<HyperType.Effect> GetRequest<TModel, TResponse>(
         this SyntaxBuilder b,
         Request<TResponse> request,
         Var<HyperType.Action<TModel, TResponse>> onSuccess)
@@ -77,30 +117,5 @@ public static class CallApiExtensions
     public static Var<TModel> ShowPanel<TModel>(this SyntaxBuilder b, Var<TModel> model)
     {
         return b.Clone(model);
-    }
-
-    public static RouteHandlerBuilder MapGetRequest<TOut>(this IEndpointRouteBuilder endpoint, Request<TOut> request, System.Func<CommandContext, HttpContext, Task<TOut>> handler)
-    {
-        return endpoint.MapGet(request.Name, handler);
-    }
-
-    public static RouteHandlerBuilder MapGetRequest<TOut>(this IEndpointRouteBuilder endpoint, Request<TOut, string> request, System.Func<CommandContext, HttpContext, string, Task<TOut>> handler)
-    {
-        return endpoint.MapGet(request.Name + "/" + "{p1}", async (CommandContext commandContext, HttpContext httpContext, string p1) => await handler(commandContext, httpContext, p1));
-    }
-
-    public static RouteHandlerBuilder MapGetRequest<TOut>(this IEndpointRouteBuilder endpoint, Request<TOut, Guid> request, System.Func<CommandContext, HttpContext, Guid, Task<TOut>> handler)
-    {
-        return endpoint.MapGet(request.Name + "/" + "{p1}", async (CommandContext commandContext, HttpContext httpContext, Guid p1) => await handler(commandContext, httpContext, p1));
-    }
-
-    public static RouteHandlerBuilder MapPostRequest<TIn, TOut>(this IEndpointRouteBuilder endpoint, Request<TOut, TIn> request, System.Func<CommandContext, HttpContext, TIn, Task<TOut>> handler)
-    {
-        return endpoint.MapPost(request.Name, handler);
-    }
-
-    public static RouteHandlerBuilder MapPostRequest<TOut>(this IEndpointRouteBuilder endpoint, Request<TOut> request, System.Func<CommandContext, HttpContext, Task<TOut>> handler)
-    {
-        return endpoint.MapPost(request.Name, handler);
     }
 }

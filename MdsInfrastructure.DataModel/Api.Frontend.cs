@@ -1,4 +1,5 @@
-﻿using Metapsi;
+﻿using MdsCommon;
+using Metapsi;
 using Metapsi.Hyperapp;
 using Metapsi.Ui;
 using System;
@@ -12,7 +13,7 @@ namespace MdsInfrastructure
         public string OriginalJson { get; set; } = string.Empty;
     }
 
-    public class SaveConfigurationResponse : ApiResponse
+    public class SaveConfigurationResponse
     {
         public List<string> ConflictMessages { get; set; } = new List<string>();
         public List<string> SaveValidationMessages { get; set; } = new List<string>();
@@ -24,7 +25,7 @@ namespace MdsInfrastructure
         public InfrastructureConfiguration EditedConfiguration { get; set; }
     }
 
-    public class MergeConfigurationResponse : ApiResponse
+    public class MergeConfigurationResponse
     {
         public List<string> ConflictMessages { get; set; } = new();
         public List<string> SuccessMessages { get; set; } = new();
@@ -34,7 +35,7 @@ namespace MdsInfrastructure
         //public string SourceConfigurationJson { get; set; }
     }
 
-    public class GetConfigurationJsonResponse : ApiResponse
+    public class GetConfigurationJsonResponse
     {
         public string Json { get; set; }
     }
@@ -44,12 +45,12 @@ namespace MdsInfrastructure
         public List<BinariesRepositoryEntry> ToRemove { get; set; } = new List<BinariesRepositoryEntry>();
     }
 
-    public class RemoveBuildsResponse: ApiResponse
+    public class RemoveBuildsResponse
     {
         public List<BinariesRepositoryEntry> Removed { get; set; } = new List<BinariesRepositoryEntry>();
     }
 
-    public class ReloadListProjectsPageModel : ApiResponse
+    public class ReloadListProjectsPageModel
     {
         public ListProjectsPage Model { get; set; } = new();
     }
@@ -60,7 +61,7 @@ namespace MdsInfrastructure
         public static Request<MergeConfigurationResponse, MergeConfigurationInput> MergeConfiguration { get; set; } = new(nameof(MergeConfiguration));
         public static Request<GetConfigurationJsonResponse, InfrastructureConfiguration> GetConfigurationJson { get; set; } = new(nameof(GetConfigurationJson));
 
-        public class ConfirmDeploymentResponse : ApiResponse { }
+        public class ConfirmDeploymentResponse { }
         public static Request<ConfirmDeploymentResponse, Guid> ConfirmDeployment { get; set; } = new(nameof(ConfirmDeployment));
 
         public static Request<RemoveBuildsResponse, RemoveBuildsRequest> RemoveBuilds { get; set; } = new(nameof(RemoveBuilds));

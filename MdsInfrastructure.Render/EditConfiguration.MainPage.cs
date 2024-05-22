@@ -54,20 +54,24 @@ namespace MdsInfrastructure.Render
                                     b.PostRequest(
                                         Frontend.GetConfigurationJson,
                                         b.Get(clientModel, x => x.Configuration),
-                                        b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<GetConfigurationJsonResponse> response) =>
+                                        (SyntaxBuilder b, Var<EditConfigurationPage> page, Var<GetConfigurationJsonResponse> response) =>
                                         {
                                             b.Set(page, x => x.CurrentConfigurationSimplifiedJson, b.Get(response, x => x.Json));
                                             b.ShowDialog(b.Const(IdCurrentJsonPopup));
                                             return b.Clone(page);
-                                        })));
+                                        }));
                             });
 
                             var downloadWindowsScripts = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
                             {
-                                var fetchOptions = b.NewObj<FetchOptions>();
-                                b.Set(fetchOptions, x => x.method, b.Const("POST"));
-                                b.Set(fetchOptions, x => x.body, b.Serialize(b.Get(clientModel, x => x.Configuration)));
-                                b.SetDynamic(b.Get(fetchOptions, x => x.headers), DynamicProperty.String("Content-Type"), b.Const("application/json"));
+                                var fetchOptions = b.SetProps<FetchOptions>(
+                                    b.NewObj<DynamicObject>(),
+                                    b =>
+                                    {
+                                        b.SetMethodPost();
+                                        b.SetBody(b.Get(clientModel, x => x.Configuration));
+                                        b.SetJsonContentTypeHeaders();
+                                    });
                                 return b.MakeStateWithEffects(
                                     clientModel,
                                     b.MakeEffect(

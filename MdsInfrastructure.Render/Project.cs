@@ -391,23 +391,13 @@ namespace MdsInfrastructure.Render
         {
             // If the result contains error, dispatch, move next
 
-            return b.If(
-                b.HasValue(
-                    b.Get(result, x => x.ErrorMessage)),
-                b => b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> model) =>
-                {
-                    b.Set(model, x => x.DeleteError, b.Get(result, x => x.ErrorMessage));
-                    return b.MakeStateWithEffects(
-                        b.Clone(model),
-                        b => b.Call(moveNext));
-                }),
-                b => b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> model) =>
+            return b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> model) =>
                 {
                     b.MarkRemovedInModel(model, result);
                     return b.MakeStateWithEffects(
                         b.Clone(model),
                         b.MakeEffect(moveNext));
-                }));
+                });
         }
 
         public static Var<HyperType.Effect> RefreshModelOnEnd(this SyntaxBuilder b)
@@ -418,54 +408,38 @@ namespace MdsInfrastructure.Render
                     b.Const("/api/"+ Frontend.ReloadListProjectsPageModel.Name),
                     b.Def((SyntaxBuilder b, Var<ReloadListProjectsPageModel> response) =>
                     {
-                        b.If(
-                            b.HasValue(
-                                b.Get(response, x => x.ErrorMessage)),
-                            b =>
-                            {
-                                // Logical error
+                        b.Dispatch(dispatch, b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> prevModel) =>
+                        {
+                            var newModel = b.Get(response, x => x.Model);
+                            b.Set(newModel, x => x.IsLoading, b.Get(prevModel, x => x.IsLoading));
+                            b.Set(newModel, x => x.DeleteError, b.Get(prevModel, x => x.DeleteError));
+                            b.Set(newModel, x => x.ToDeleteBinaries, b.Get(prevModel, x => x.ToDeleteBinaries));
 
-                                b.Dispatch(dispatch, b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> model) =>
+                            b.Foreach(
+                                b.Get(newModel, x => x.Binaries),
+                                (b, item) =>
                                 {
-                                    b.Set(model, x => x.DeleteError, b.Get(response, x => x.ErrorMessage));
-                                    return b.Clone(model);
-                                }));
-                            },
-                            b =>
-                            {
-                                b.Dispatch(dispatch, b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> prevModel) =>
-                                {
-                                    var newModel = b.Get(response, x => x.Model);
-                                    b.Set(newModel, x => x.IsLoading, b.Get(prevModel, x => x.IsLoading));
-                                    b.Set(newModel, x => x.DeleteError, b.Get(prevModel, x => x.DeleteError));
-                                    b.Set(newModel, x => x.ToDeleteBinaries, b.Get(prevModel, x => x.ToDeleteBinaries));
-                                     
-                                    b.Foreach(
-                                        b.Get(newModel, x => x.Binaries),
-                                        (b, item) =>
-                                        {
-                                            var toDelete = b.SameBinary(b.Get(prevModel, x => x.ToDeleteBinaries), item);
-                                            b.If(
-                                                b.HasObject(toDelete),
-                                                b =>
-                                                {
-                                                    b.Set(item, x => x.Selected, true);
-                                                });
-                                        });
-                                    return b.If(
-                                        b.Not(
-                                            b.HasValue(b.Get(newModel, x => x.DeleteError))),
+                                    var toDelete = b.SameBinary(b.Get(prevModel, x => x.ToDeleteBinaries), item);
+                                    b.If(
+                                        b.HasObject(toDelete),
                                         b =>
                                         {
-                                            b.HideDialog(b.Const(DeleteSelectedDialogId));
-                                            return b.HideLoading(newModel);
-                                        },
-                                        b =>
-                                        {
-                                            return newModel;
+                                            b.Set(item, x => x.Selected, true);
                                         });
-                                }));
-                            });
+                                });
+                            return b.If(
+                                b.Not(
+                                    b.HasValue(b.Get(newModel, x => x.DeleteError))),
+                                b =>
+                                {
+                                    b.HideDialog(b.Const(DeleteSelectedDialogId));
+                                    return b.HideLoading(newModel);
+                                },
+                                b =>
+                                {
+                                    return newModel;
+                                });
+                        }));
                     }),
                     b.Def((SyntaxBuilder b, Var<ClientSideException> error) =>
                     {
