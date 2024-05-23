@@ -34,15 +34,15 @@ namespace MdsInfrastructure.Render
 
                             var valueRemoved = b.Get(parameter, paramId, (x, paramId) => x.InfrastructureServiceParameterValues.Where(x => x.InfrastructureServiceParameterDeclarationId != paramId).ToList());
                             b.Set(parameter, x => x.InfrastructureServiceParameterValues, valueRemoved);
-                            b.Modify(parameter, x => x.InfrastructureServiceParameterBindings, b =>
-                            {
-                                b.Add(b =>
-                                {
-                                    b.Set(x => x.Id, newId);
-                                    b.Set(x => x.InfrastructureServiceParameterDeclarationId, paramId);
-                                    b.Set(x => x.InfrastructureVariableId, emptyId);
-                                });
-                            });
+                            b.Push(
+                                b.Get(parameter, x => x.InfrastructureServiceParameterBindings),
+                                b.NewObj<InfrastructureServiceParameterBinding>(
+                                    b =>
+                                    {
+                                        b.Set(x => x.Id, newId);
+                                        b.Set(x => x.InfrastructureServiceParameterDeclarationId, paramId);
+                                        b.Set(x => x.InfrastructureVariableId, emptyId);
+                                    }));
 
                             return b.Clone(clientModel);
                         },
@@ -50,15 +50,13 @@ namespace MdsInfrastructure.Render
                         {
                             var newId = b.NewId();
 
-                            b.Modify(parameter, x => x.InfrastructureServiceParameterValues, b =>
-                            {
-                                b.Add(b =>
+                            b.Push(b.Get(parameter, x => x.InfrastructureServiceParameterValues),
+                                b.NewObj<InfrastructureServiceParameterValue>(b =>
                                 {
                                     b.Set(x => x.Id, newId);
                                     b.Set(x => x.InfrastructureServiceParameterDeclarationId, paramId);
                                     b.Set(x => x.ParameterValue, string.Empty);
-                                });
-                            });
+                                }));
 
                             var bindingsRemoved = b.Get(parameter, paramId, (x, paramId) => x.InfrastructureServiceParameterBindings.Where(x => x.InfrastructureServiceParameterDeclarationId != paramId).ToList());
                             b.Set(parameter, x => x.InfrastructureServiceParameterBindings, bindingsRemoved);
