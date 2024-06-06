@@ -392,6 +392,18 @@ namespace MdsInfrastructure
                 "/configuration",
                 async (CommandContext commandContext, HttpContext httpContext, Simplified.Configuration input) =>
                 {
+                    if (input == null)
+                    {
+                        return new ConversionResult()
+                        {
+                            Errors = new List<string>()
+                            {
+                                "Json file is not valid"
+                            },
+                            Result = "Failed, json file is not valid"
+                        };
+                    }
+
                     var (messages, configuration) = await ConvertSimplified(commandContext, input);
 
                     if (messages.Errors.Any())
@@ -417,6 +429,18 @@ namespace MdsInfrastructure
                 "/checkconfiguration",
                 async (CommandContext commandContext, HttpContext httpContext, Simplified.Configuration input) =>
                 {
+                    if (input == null)
+                    {
+                        return new ConversionResult()
+                        {
+                            Errors = new List<string>()
+                            {
+                                "Json file is not valid"
+                            },
+                            Result = "Failed, json file is not valid"
+                        };
+                    }
+
                     var (messages, configuration) = await ConvertSimplified(commandContext, input);
 
                     if (messages.Errors.Any())
