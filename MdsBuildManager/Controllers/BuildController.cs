@@ -224,15 +224,18 @@ namespace Algorithm
 
                     if (buildData != null)
                     {
-
-                        algorithms.Add(new AlgorithmInfo()
+                        // Avoid duplicates that may have appeared in previus versions or configured by hand
+                        if (!algorithms.Any(x => x.Name == buildData.ProjectName && x.Version == buildData.Version && x.Target == buildData.Target))
                         {
-                            GitHash = buildData.CommitSha,
-                            Name = buildData.ProjectName,
-                            Version = buildData.Version,
-                            BuildNumber = buildData.BuildNumber,
-                            Target = buildData.Target
-                        });
+                            algorithms.Add(new AlgorithmInfo()
+                            {
+                                GitHash = buildData.CommitSha,
+                                Name = buildData.ProjectName,
+                                Version = buildData.Version,
+                                BuildNumber = buildData.BuildNumber,
+                                Target = buildData.Target
+                            });
+                        }
                     }
                 }
             }
