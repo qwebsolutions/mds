@@ -113,9 +113,9 @@ namespace MdsInfrastructure
         /// Stores & returns the algorithm build results for binaries that are not already registered
         /// </summary>
         /// <param name="fullDbPath"></param>
-        /// <param name="allBinaries"></param>
+        /// <param name="remoteBinaries"></param>
         /// <returns></returns>
-        public static async Task<List<AlgorithmInfo>> RefreshBinaries(string fullDbPath, List<MdsCommon.AlgorithmInfo> allBinaries)
+        public static async Task<List<AlgorithmInfo>> RefreshBinaries(string fullDbPath, List<MdsCommon.AlgorithmInfo> remoteBinaries)
         {
             List<AlgorithmInfo> newBinaries = new List<AlgorithmInfo>();
 
@@ -130,7 +130,7 @@ namespace MdsInfrastructure
                     {
                         foreach (var binaries in new List<ProjectVersionBinaries>(version.Binaries))
                         {
-                            var stillValid = allBinaries.SingleOrDefault(x => x.Name == project.Name && x.Version == version.VersionTag && x.Target == binaries.Target);
+                            var stillValid = remoteBinaries.FirstOrDefault(x => x.Name == project.Name && x.Version == version.VersionTag && x.Target == binaries.Target);
                             if (stillValid == null)
                             {
                                 await c.Transaction.DeleteRecord(binaries);
@@ -152,7 +152,7 @@ namespace MdsInfrastructure
 
                 // Add new entries
 
-                foreach (AlgorithmInfo algorithmInfo in allBinaries)
+                foreach (AlgorithmInfo algorithmInfo in remoteBinaries)
                 {
                     var project = await c.Transaction.LoadRecord((Project x) => x.Name, algorithmInfo.Name);
 
