@@ -5,6 +5,11 @@ using System.Collections.Generic;
 
 namespace MdsLocal
 {
+    public class ApiResponse
+    {
+
+    }
+
     public static class Api
     {
         public static Request<MdsCommon.InfrastructureNodeSettings> GetInfrastructureNodeSettings { get; set; } = new(nameof(GetInfrastructureNodeSettings));
@@ -23,7 +28,7 @@ namespace MdsLocal
 
     public static class Frontend
     {
-        public static Request<ApiResponse, string> KillProcessByPid { get; set; } = new(nameof(KillProcessByPid));
+        public static Command<string> KillProcessByPid { get; set; } = new(nameof(KillProcessByPid));
         public static Request<ReloadedOverviewModel> ReloadProcesses { get; set; } = new(nameof(ReloadProcesses));
         public static Request<FullSyncResultResponse, Guid> LoadFullSyncResult { get; set; } = new(nameof(LoadFullSyncResult));
     }

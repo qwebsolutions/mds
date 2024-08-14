@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 
 namespace MdsLocal
@@ -139,12 +140,14 @@ namespace MdsLocal
 
             implementationGroup.MapRequest(Api.GetInfrastructureNodeSettings, async (rc) =>
             {
-                return await apiClient.Request(MdsCommon.Api.GetInfrastructureNodeSettings, arguments.NodeName);
+                return await apiClient.GetFromJsonAsync<MdsCommon.InfrastructureNodeSettings>(
+                    $"{MdsCommon.Api.GetInfrastructureNodeSettings.Name}/{arguments.NodeName}");
             });
 
             implementationGroup.MapRequest(Api.GetUpToDateConfiguration, async (rc) =>
             {
-                return await apiClient.Request(MdsCommon.Api.GetCurrentNodeSnapshot, arguments.NodeName);
+                return await apiClient.GetFromJsonAsync<List<MdsCommon.ServiceConfigurationSnapshot>>(
+                    $"{MdsCommon.Api.GetCurrentNodeSnapshot.Name}/{arguments.NodeName}");
             });
 
             implementationGroup.MapRequest(MdsLocalApplication.GetLocalKnownConfiguration, async (rc) =>

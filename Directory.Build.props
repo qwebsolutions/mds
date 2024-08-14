@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
-    <PropertyGroup>
-		<MetapsiVersion>*</MetapsiVersion>
-    </PropertyGroup>
+
+  <PropertyGroup Condition="$(SolutionFileName) == 'Mds.sln'">
+  	<MetapsiVersion>0.9.0</MetapsiVersion>
+  </PropertyGroup>
+	
+  <PropertyGroup Condition="$(SolutionFileName) == 'Mds.Dev.sln'">
+  	<MetapsiVersion>0.0.0-dev</MetapsiVersion>
+  </PropertyGroup>	
 </Project>

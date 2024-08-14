@@ -6,6 +6,12 @@ using System.Collections.Generic;
 
 namespace MdsInfrastructure
 {
+    public class ApiResponse
+    {
+        public string ResultCode { get; set; }
+        public string ErrorMessage { get; set; }
+    }
+
     public class SaveConfigurationInput
     {
         public InfrastructureConfiguration InfrastructureConfiguration { get; set; }
@@ -54,16 +60,22 @@ namespace MdsInfrastructure
         public ListProjectsPage Model { get; set; } = new();
     }
 
+    public class ToggleVersionEnabledInput
+    {
+        public Guid VersionId { get; set; }
+        public bool IsEnabled { get; set; }
+    }
+
     public static class Frontend
     {
         public static Request<SaveConfigurationResponse, SaveConfigurationInput> SaveConfiguration { get; set; } = new(nameof(SaveConfiguration));
         public static Request<MergeConfigurationResponse, MergeConfigurationInput> MergeConfiguration { get; set; } = new(nameof(MergeConfiguration));
         public static Request<GetConfigurationJsonResponse, InfrastructureConfiguration> GetConfigurationJson { get; set; } = new(nameof(GetConfigurationJson));
 
-        public class ConfirmDeploymentResponse : ApiResponse { }
-        public static Request<ConfirmDeploymentResponse, Guid> ConfirmDeployment { get; set; } = new(nameof(ConfirmDeployment));
+        public static Command<Guid> ConfirmDeployment { get; set; } = new(nameof(ConfirmDeployment));
 
         public static Request<RemoveBuildsResponse, RemoveBuildsRequest> RemoveBuilds { get; set; } = new(nameof(RemoveBuilds));
         public static Request<ReloadListProjectsPageModel> ReloadListProjectsPageModel { get; set; } = new(nameof(ReloadListProjectsPageModel));
+        public static Command<ToggleVersionEnabledInput> ToggleVersionEnabled { get; set; } = new(nameof(ToggleVersionEnabled));
     }
 }

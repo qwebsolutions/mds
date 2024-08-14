@@ -108,19 +108,22 @@ namespace MdsLocal
                         {
                             return b.MakeStateWithEffects(
                                 b.ShowLoading(model),
-                                b.MakeEffect(
-                                    b.Def(
-                                        b.Request(
-                                            Frontend.LoadFullSyncResult,
-                                            b.Get(syncResult, x => x.Id),
-                                            b.MakeAction((SyntaxBuilder b, Var<DataModel> page, Var<FullSyncResultResponse> response) =>
-                                            {
-                                                b.Set(page, x => x.SelectedResult, b.Get(response, x => x.SyncResult));
-                                                b.Log(page);
-                                                b.HideLoading(page);
-                                                b.ShowSidePanel();
-                                                return b.Clone(page);
-                                            })))));
+                                b.GetJson(
+                                    b.GetApiUrl(Frontend.LoadFullSyncResult, b.Get(syncResult, x => x.Id).As<string>()),
+                                    b.MakeAction((SyntaxBuilder b, Var<DataModel> page, Var<FullSyncResultResponse> response) =>
+                                    {
+                                        b.Set(page, x => x.SelectedResult, b.Get(response, x => x.SyncResult));
+                                        b.Log(page);
+                                        b.HideLoading(page);
+                                        b.ShowSidePanel();
+                                        return b.Clone(page);
+                                    }),
+                                    b.MakeAction((SyntaxBuilder b, Var<DataModel> page, Var<ClientSideException> ex) =>
+                                    {
+                                        b.HideLoading(page);
+                                        b.Alert(ex);
+                                        return b.Clone(page);
+                                    })));
                         });
                     },
                     b.Text(b.ItalianFormat(b.Get(syncResult, x => x.Timestamp))));

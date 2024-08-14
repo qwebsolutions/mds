@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace MdsInfrastructure
 {
-    public class ListProjectsPage : IHasLoadingPanel, IHasValidationPanel, IApiSupportState
+    public class ListProjectsPage : IHasLoadingPanel, IHasValidationPanel
     {
         public List<Project> ProjectsList { get; set; }
         public List<InfrastructureConfiguration> AllConfigurationHeaders { get; set; }
@@ -23,8 +23,6 @@ namespace MdsInfrastructure
         public Metapsi.Ui.User User { get; set; }
 
         public string SearchKeyword { get; set; }
-
-        public ApiSupport ApiSupport { get; set; } = new ApiSupport();
 
         public string DeleteError { get; set; } = string.Empty;
     }

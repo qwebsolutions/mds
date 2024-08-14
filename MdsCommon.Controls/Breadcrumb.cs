@@ -13,7 +13,7 @@ namespace MdsCommon.Controls
             this LayoutBuilder b,
             Var<List<Breadcrumb.Link>> links,
             Var<string> currentPage,
-            System.Action<Modifier<Breadcrumb.Props>> optional = null)
+            System.Action<PropsBuilder<Breadcrumb.Props>> optional = null)
         {
             var props = b.NewObj<Breadcrumb.Props>(optional);
             b.Set(props, x => x.Links, links);

@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace MdsInfrastructure
 {
     // TODO: Remove explicit API support
-    public class EditConfigurationPage : IApiSupportState //: IEditPage<EditConfigurationPage>, IHasTabs, IHasValidationPanel
+    public class EditConfigurationPage
     {
         public string CurrentConfigurationSimplifiedJson { get; set; } = string.Empty;
 
@@ -59,8 +59,5 @@ namespace MdsInfrastructure
         }
 
         public string ValidationMessage { get; set; } = string.Empty;
-
-        // TODO: Remove explicit support
-        public ApiSupport ApiSupport { get; set; } = new();
     }
 }

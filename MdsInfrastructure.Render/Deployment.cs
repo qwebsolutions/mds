@@ -114,7 +114,6 @@ namespace MdsInfrastructure.Render
         }
 
         public static Var<IVNode> DeployNowButton<TModel>(this LayoutBuilder b, Var<Guid> configurationId)
-            where TModel : IApiSupportState
         {
             return b.HtmlButton(
                 b =>
@@ -123,19 +122,19 @@ namespace MdsInfrastructure.Render
                     b.OnClickAction(b.MakeAction((SyntaxBuilder b, Var<TModel> model) =>
                     {
                         return b.MakeStateWithEffects(
-                            b.ShowPanel(model),
-                            b.MakeEffect(
-                                b.Def(
-                                    b.Request(
-                                        Frontend.ConfirmDeployment,
-                                        configurationId,
-                                        
-                                        b.MakeAction((SyntaxBuilder b, Var<DeploymentPreview> model, Var<Frontend.ConfirmDeploymentResponse> response) =>
-                                        {
-                                            b.SetUrl(b.Const("/"));
-                                            return model;
-                                        }))
-                                    )));
+                            model,
+                            b.Fetch(
+                                b.GetApiUrl(Frontend.ConfirmDeployment, b.AsString(configurationId)),
+                                b.MakeAction((SyntaxBuilder b, Var<DeploymentPreview> model) =>
+                                {
+                                    b.SetUrl(b.Const("/"));
+                                    return model;
+                                }),
+                                b.MakeAction((SyntaxBuilder b, Var<DeploymentPreview> model, Var<ClientSideException> ex) =>
+                                {
+                                    b.Alert(ex);
+                                    return model;
+                                })));
                     }));
                 },
                 b.TextSpan("Deploy now"));

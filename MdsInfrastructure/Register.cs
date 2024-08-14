@@ -1,5 +1,6 @@
 ﻿using MdsCommon;
 using Metapsi;
+using Metapsi.Html;
 using System;
 
 namespace MdsInfrastructure
@@ -27,10 +28,12 @@ namespace MdsInfrastructure
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Deployment.Preview, Routes.Deployment.ConfigurationPreview, Guid>();
             refs.WebApplication.RegisterGetHandler<MdsCommon.EventsLogHandler, MdsCommon.Routes.EventsLog.List>();
 
+
+
             refs.RegisterPageBuilder<MdsInfrastructure.Render.InfrastructureStatus, InfrastructureStatus>();
             refs.RegisterPageBuilder<MdsInfrastructure.Render.ApplicationStatus, ApplicationStatus>();
             refs.RegisterPageBuilder<MdsInfrastructure.Render.NodeStatus, NodeStatus>();
-            refs.RegisterPageBuilder<MdsInfrastructure.Render.Docs.Service, MdsInfrastructure.Docs.ServicePage>();
+            refs.WebApplication.UseRenderer<MdsInfrastructure.Docs.ServicePage>(MdsInfrastructure.Render.Docs.RenderService);
             refs.RegisterPageBuilder<MdsInfrastructure.Render.Configuration.List, MdsInfrastructure.ListConfigurationsPage>();
             refs.RegisterPageBuilder<MdsInfrastructure.Render.Configuration.Edit, MdsInfrastructure.EditConfigurationPage>();
             refs.RegisterPageBuilder<MdsInfrastructure.Render.Configuration.Review, MdsInfrastructure.ReviewConfigurationPage>();
@@ -42,6 +45,12 @@ namespace MdsInfrastructure
             refs.RegisterPageBuilder<MdsInfrastructure.Render.Deployment.Preview, MdsInfrastructure.DeploymentPreview>();
             refs.RegisterPageBuilder<MdsInfrastructure.Render.Project.List, MdsInfrastructure.ListProjectsPage>();
             refs.RegisterPageBuilder<MdsInfrastructure.RenderInfrastructureEventsList, MdsCommon.ListInfrastructureEventsPage>();
+        }
+
+        public static void RegisterPageBuilder<TRenderer, TModel>(this WebServer.References references)
+            where TRenderer : IPageTemplate<TModel>, new()
+        {
+            references.WebApplication.UseRenderer<TModel>(new TRenderer().Render);
         }
     }
 }

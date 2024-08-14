@@ -151,7 +151,7 @@ namespace MdsLocal
                         b.SetId(IdKillProcessPopup);
                     },
                     b.DialogHeader("Restart process?"),
-                    b.Text(b.Concat(b.Const("Are you sure you want to restart "), b.Get(model, x=>x.RestartProcess.ServiceName), b.Const("?"))),
+                    b.Text(b.Concat(b.Const("Are you sure you want to restart "), b.Get(model, x => x.RestartProcess.ServiceName), b.Const("?"))),
                     b.DialogFooter(
                         "",
                         b.HtmlButton(
@@ -173,23 +173,30 @@ namespace MdsLocal
 
                                     return b.MakeStateWithEffects(
                                         b.Clone(model),
-                                        b.MakeEffect(
-                                            b.Def(
-                                                b.Request(
-                                                    Frontend.KillProcessByPid,
-                                                    pid,
-                                                    b.MakeAction((SyntaxBuilder b, Var<OverviewPage> page, Var<ApiResponse> response) =>
-                                                    {
-                                                        return b.MakeStateWithEffects(
-                                                            b.Clone(model),
-                                                            b.MakeEffect(
-                                                                b.Def(
-                                                                    b.Request(Frontend.ReloadProcesses,
-                                                                    b.MakeAction((SyntaxBuilder b, Var<OverviewPage> page, Var<ReloadedOverviewModel> response) =>
-                                                                    {
-                                                                        return b.Get(response, x => x.Model);
-                                                                    })))));
-                                                    })))));
+                                        b.Fetch(
+                                            b.GetApiUrl(Frontend.KillProcessByPid, pid),
+                                            b => { },
+                                            b.MakeAction((SyntaxBuilder b, Var<OverviewPage> page) =>
+                                            {
+                                                return b.MakeStateWithEffects(
+                                                    b.Clone(model),
+                                                    b.GetJson(
+                                                        b.GetApiUrl(Frontend.ReloadProcesses),
+                                                        b.MakeAction((SyntaxBuilder b, Var<OverviewPage> page, Var<ReloadedOverviewModel> response) =>
+                                                            {
+                                                                return b.Get(response, x => x.Model);
+                                                            }),
+                                                        b.MakeAction((SyntaxBuilder b, Var<OverviewPage> page, Var<ClientSideException> ex) =>
+                                                        {
+                                                            b.Alert(ex);
+                                                            return b.Clone(page);
+                                                        })));
+                                            }),
+                                            b.MakeAction((SyntaxBuilder b, Var<OverviewPage> page, Var<ClientSideException> ex) =>
+                                            {
+                                                b.Alert(ex);
+                                                return b.Clone(page);
+                                            })));
                                 }));
                             },
                             b.Text("Restart"))));

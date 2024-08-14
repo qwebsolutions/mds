@@ -200,15 +200,17 @@ namespace MdsInfrastructure.Render
                 b.Set(x => x.Id, newParameterId);
                 b.Set(x => x.ParameterName, b.Const(""));
                 b.Set(x => x.InfrastructureServiceId, selectedServiceId);
-                b.Update(x => x.InfrastructureServiceParameterValues, b =>
-                {
-                    b.Add(b =>
+            });
+
+            b.Push(
+                b.Get(newParam, x => x.InfrastructureServiceParameterValues),
+                b.NewObj<InfrastructureServiceParameterValue>(
+                    b =>
                     {
                         b.Set(x => x.Id, newValueId);
                         b.Set(x => x.InfrastructureServiceParameterDeclarationId, newParameterId);
-                    });
-                });
-            });
+                    }));
+
             b.Push(parameters, newParam);
             b.Set(clientModel, x => x.EditParameterId, newParameterId);
             return b.EditView<EditConfigurationPage>(clientModel, EditParameter);

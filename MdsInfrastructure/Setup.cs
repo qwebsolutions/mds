@@ -12,8 +12,12 @@ using System.Net.Http.Headers;
 
 namespace MdsInfrastructure
 {
+
+
     public static partial class MdsInfrastructureApplication
     {
+
+
 
 
         //public static string DebugFile = System.IO.Path.Combine(Metapsi.RelativePath.SearchUpfolder(RelativePath.From.EntryPath, "mds"), "mdsinfra.log");
@@ -80,55 +84,8 @@ namespace MdsInfrastructure
 
             #region Execution queue states
 
-            //HttpClient bearerClient = new HttpClient();
-            //bearerClient.DefaultRequestHeaders.Add("client_id", "infrastructure");
-            //bearerClient.DefaultRequestHeaders.Add("scope", "openid");
-            //bearerClient.DefaultRequestHeaders.Add("token_endpoint", "http:/localhost:8080/auth/realms/FI/protocol/openid-connect/token");
-
-
-            //var form = new Dictionary<string, string>
-            //    {
-            //        {"grant_type", "client_credentials"},
-            //        {"client_id", "infrastructure"},
-            //        {"client_secret", "FibgF1vYkYZipQuV2TutW0HbKUNzk9NE"},
-            //        //{"client_id", "calin"},
-            //        //{"client_secret", "calin"},
-            //    };
-
-
-            //var formContent = new FormUrlEncodedContent(form);
-
-//            var body = $"{HttpUtility.UrlEncode("grant_type")}={HttpUtility.UrlEncode("client_credentials")}&{HttpUtility.UrlEncode("scope")}={HttpUtility.UrlEncode("openid")}&client_id=infrastructure";
-
-            //HttpRequestMessage httpRequestMessage = new HttpRequestMessage()
-            //{
-            //    Method = HttpMethod.Post,
-            //    RequestUri = new Uri("http://localhost:8080/realms/FI/protocol/openid-connect/token"),
-            //    Content = formContent // new StringContent(body, new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-www-form-urlencoded"))
-            //};
-
-            //httpRequestMessage.Headers.Add("client_id", "infrastructure");
-
-            //httpRequestMessage.Headers.Add(
-            //    "Authorization",
-            //    "Basic " + Convert.ToBase64String(Encoding.Default.GetBytes("infrastructure").ToArray()) + ":" + Convert.ToBase64String(Encoding.Default.GetBytes("FibgF1vYkYZipQuV2TutW0HbKUNzk9NE")));
-
-            //var content = new StringContent(body);
-            //content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/x-www-form-urlencoded");
-            //content.Headers.Add("Authorization", "Basic " + Convert.ToBase64String(Encoding.Default.GetBytes("infrastructure").ToArray()) + ":" + Convert.ToBase64String(Encoding.Default.GetBytes("abc")));
-
-
-
-            //var plm = await bearerClient.SendAsync(httpRequestMessage);
-
-            //var plm2 = await plm.Content.ReadAsStringAsync();
-
-
-            HttpClient httpClient = new HttpClient();
-            httpClient.BaseAddress = new Uri($"http://localhost:{arguments.UiPort}/api/");
-            //httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", plm2);
-
             MdsInfrastructureApplication.State infrastructure = applicationSetup.AddBusinessState(new MdsInfrastructureApplication.State());
+            var dbTaskQueue = new TaskQueue();
             HttpServer.State httpGateway = applicationSetup.AddBusinessState(new HttpServer.State());
 
             var redisNotifier = applicationSetup.AddBusinessState(new RedisNotifier.State());
@@ -136,10 +93,6 @@ namespace MdsInfrastructure
             var binariesListener = applicationSetup.AddBusinessState(new RedisListener.State());
             var healthListener = applicationSetup.AddBusinessState(new RedisListener.State());
             var eventsListener = applicationSetup.AddBusinessState(new RedisListener.State());
-
-            //            var infrastructureEventsReceiver = applicationSetup.AddRedisReceiver(implementationGroup, new RedisChannel(arguments.InfrastructureEventsInputChannel));
-
-            //implementationGroup.AddInfrastructureEventsToSqlite(fullDbPath);
 
             implementationGroup.MapRequest(MdsCommon.Api.GetAllInfrastructureEvents, async (rc) =>
             {
@@ -193,7 +146,10 @@ namespace MdsInfrastructure
                     var healthStatus = MdsCommon.NodeStatus.FromSerializable(serializableHealthStatus);
                     e.Logger.LogInfo($"HealthStatus notification {Metapsi.Serialize.ToJson(healthStatus)}");
 
-                    await httpClient.Command(Backend.StoreHealthStatus, healthStatus);
+                    e.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
+                    {
+                        await cc.Do(Backend.StoreHealthStatus, healthStatus);
+                    });
                 });
 
             applicationSetup.MapEventIf<RedisListener.Event.NotificationReceived>(
@@ -203,7 +159,11 @@ namespace MdsInfrastructure
                     e.Logger.LogDebug($"Event received on {e.EventData.ChannelName} {e.EventData.Payload}");
 
                     var infraEvent = Metapsi.Serialize.FromJson<InfrastructureEvent>(e.EventData.Payload);
-                    MdsCommon.Db.SaveInfrastructureEvent(fullDbPath, infraEvent);
+
+                    e.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
+                    {
+                        await dbTaskQueue.Enqueue(async () => MdsCommon.Db.SaveInfrastructureEvent(fullDbPath, infraEvent));
+                    });
 
                     if (mailSender != null)
                     {
@@ -227,6 +187,7 @@ namespace MdsInfrastructure
                             e.Logger.LogDebug($"Mail sent: {subject}");
                         }
                     }
+
                 });
 
             applicationSetup.MapEvent<Backend.Event.BroadcastDeployment>(
@@ -267,31 +228,7 @@ namespace MdsInfrastructure
 
             #region Operation mappings
 
-            implementationGroup.MapRequest(Backend.ValidateSchema, httpClient);
-            implementationGroup.MapRequest(Backend.LoadInfraStatus, httpClient);
-            implementationGroup.MapRequest(Backend.LoadAllConfigurationHeaders, httpClient);
-            implementationGroup.MapRequest(Backend.LoadConfiguration, httpClient);
-            implementationGroup.MapCommand(Backend.SaveConfiguration, (CommandRoutingContext cc, InfrastructureConfiguration c) => Db.SaveConfiguration(fullDbPath, c));
-            implementationGroup.MapCommand(Backend.SaveNode, httpClient);
-            implementationGroup.MapCommand(Backend.DeleteConfigurationById, httpClient);
-            implementationGroup.MapRequest(Backend.LoadCurrentDeployment, httpClient);
-            implementationGroup.MapRequest(Backend.LoadCurrentConfiguration, httpClient);
-            implementationGroup.MapRequest(Backend.LoadDeploymentById, httpClient);
-            implementationGroup.MapRequest(Backend.LoadDeploymentsHistory, httpClient);
-            implementationGroup.MapRequest(Backend.LoadAllProjects, httpClient);
-            implementationGroup.MapRequest(Backend.LoadAllNodes, httpClient);
-            implementationGroup.MapRequest(Backend.LoadAllServices, httpClient);
-            implementationGroup.MapRequest(Backend.RefreshBinaries, (RequestRoutingContext cc, List<AlgorithmInfo> algInfo) => Db.RefreshBinaries(fullDbPath, algInfo));
-            implementationGroup.MapCommand(Backend.SaveVersionEnabled, httpClient);
-            implementationGroup.MapRequest(Backend.LoadLastConfigurationDeployment, httpClient);
-            implementationGroup.MapCommand(Backend.ConfirmDeployment, httpClient);
-            
-            implementationGroup.MapRequest(Backend.LoadIdenticalSnapshot, async (rc, snapshot) => await Db.LoadIdenticalSnapshot(fullDbPath, snapshot));
-            implementationGroup.MapRequest(Backend.LoadEnvironmentTypes, httpClient);
-            implementationGroup.MapRequest(Backend.LoadHealthStatus, httpClient);
-            implementationGroup.MapRequest(Backend.GetAllParameterTypes, httpClient);
-            implementationGroup.MapRequest(Backend.GetInfrastructureName, httpClient);
-            implementationGroup.MapRequest(Backend.GetAllNoteTypes, httpClient);
+            implementationGroup.MapBackendApi(dbTaskQueue, fullDbPath, arguments.InfrastructureName);
 
             implementationGroup.MapRequest(MdsCommon.Api.GetAdminCredentials, async (rc) =>
             {
@@ -304,34 +241,38 @@ namespace MdsInfrastructure
 
             implementationGroup.MapCommand(Backend.RestartService, async (rc, serviceName) =>
             {
-                //var serviceConfiguration = await Db.LoadServiceConfiguration(fullDbPath, serviceName);
-                var serviceConfiguration = await httpClient.Request(new Request<ServiceConfigurationSnapshot, string>("LoadServiceConfiguration"), serviceName);
-
-                var service = serviceConfiguration;
-
-                if (service == null)
+                // TODO: Does this even compile?
+                await rc.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
                 {
-                    throw new Exception($"Service {serviceName} not configured");
-                }
+                    var serviceConfiguration = await dbTaskQueue.Enqueue(async () =>
+                    {
+                        return await Db.LoadServiceConfiguration(fullDbPath, serviceName);
+                    });
 
-                //var nodes = await Db.LoadAllNodes(fullDbPath);
-                var nodes = await httpClient.Request(new Request<List<InfrastructureNode>>("LoadAllNodes"));
-                var node = nodes.FirstOrDefault(x => x.NodeName == service.NodeName);
+                    var service = serviceConfiguration;
 
-                if (node == null)
-                {
-                    throw new Exception($"Service {serviceName} misconfigured on node {service.NodeName}");
-                }
+                    if (service == null)
+                    {
+                        throw new Exception($"Service {serviceName} not configured");
+                    }
 
-                var nodeCommandChannel = arguments.NodeCommandOutputChannel.Replace("$NodeName", node.NodeName);
+                    var nodes = await cc.Do(Backend.LoadAllNodes);
+                    var node = nodes.FirstOrDefault(x => x.NodeName == service.NodeName);
 
-                await rc.Using(redisNotifier, implementationGroup).EnqueueCommand(
-                    RedisNotifier.NotifyChannel,
-                    new RedisChannelMessage(
-                        nodeCommandChannel,
-                        "RestartService",
-                        serviceName));
+                    if (node == null)
+                    {
+                        throw new Exception($"Service {serviceName} misconfigured on node {service.NodeName}");
+                    }
 
+                    var nodeCommandChannel = arguments.NodeCommandOutputChannel.Replace("$NodeName", node.NodeName);
+
+                    await rc.Using(redisNotifier, implementationGroup).EnqueueCommand(
+                        RedisNotifier.NotifyChannel,
+                        new RedisChannelMessage(
+                            nodeCommandChannel,
+                            "RestartService",
+                            serviceName));
+                });
             });
 
             implementationGroup.MapRequest(Backend.GetRemoteBuilds,

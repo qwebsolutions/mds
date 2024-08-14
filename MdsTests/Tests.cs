@@ -1,12 +1,33 @@
 ﻿using MdsInfrastructure;
 using MdsLocal;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace MdsTests;
 
 public partial class TestScenarios
 {
+
+    [TestMethod]
+    public async Task CheckOctavsErrors()
+    {
+        string json = "{\r\n  \"Name\": \"Latofres\",\r\n  \"Services\": [],,\r\n  \"Variables\": [\r\n    {\r\n      \"Name\": \"LogChannel\",\r\n      \"Value\": \"$(Redis)/$(InfrastructureName).Logger.Channel\"\r\n    },\r\n    {\r\n      \"Name\": \"Redis\",\r\n      \"Value\": \"192.168.1.16:6379\"\r\n    }\r\n  ],\r\n  \"Applications\": []\r\n}\r\n";
+
+        await Task.Delay(3000);
+
+        await SignIn();
+
+        var response = await httpClient.PostAsync(
+            "http://localhost:9125/api/checkconfiguration", new StringContent("", Encoding.UTF8, "application/json"));
+
+        response.EnsureSuccessStatusCode();
+        
+        await Task.Delay(10000000);
+    }
+
     [TestMethod]
     public async Task RedeployTwoServicesDisableOneOfThem()
     {

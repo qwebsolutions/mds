@@ -7,42 +7,80 @@ using System.Collections.Generic;
 using System.Linq;
 using MdsCommon.Controls;
 using Metapsi.Html;
-using System.ComponentModel;
 using System;
 
 namespace MdsInfrastructure.Render
 {
     public static class Docs
     {
-        public class Service : MixedHyperPage<M.ServicePage, M.ServicePage>
+        public static string RenderService(M.ServicePage serverModel)
         {
-            public override M.ServicePage ExtractClientModel(M.ServicePage serverModel)
+            var document = HtmlBuilder.FromDefault(b =>
             {
-                return serverModel;
-            }
+                var document = b.Document;
+                //document.UseWebComponentsFadeIn();
 
-            public override Var<IVNode> OnRender(LayoutBuilder b, M.ServicePage serverModel, Var<M.ServicePage> clientModel)
-            {
-                b.AddModuleStylesheet();
+                document.Body.AddChild(
+                    b.Hyperapp(
+                        serverModel,
+                        (b, clientModel) =>
+                        {
+                            b.AddModuleStylesheet();
 
-                b.AddScript(typeof(Docs).Assembly, "cy.js", "module");
-                b.AddScript(typeof(Docs).Assembly, "cytoscape.min.js");
-                b.AddScript(typeof(Docs).Assembly, "connect.js", "module");
-                b.AddScript(typeof(Docs).Assembly, "leader-line.min.js");
+                            b.AddScript(typeof(Docs).Assembly, "cy.js", "module");
+                            b.AddScript(typeof(Docs).Assembly, "cytoscape.min.js");
+                            b.AddScript(typeof(Docs).Assembly, "connect.js", "module");
+                            b.AddScript(typeof(Docs).Assembly, "leader-line.min.js");
 
-                var headerProps = b.GetHeaderProps(
-                    b.Const("Docs"),
-                    b.Const(serverModel.ServiceSummary.ServiceName),
-                    b.Get(clientModel, x => x.User));
+                            var headerProps = b.GetHeaderProps(
+                                b.Const("Docs"),
+                                b.Const(serverModel.ServiceSummary.ServiceName),
+                                b.Get(clientModel, x => x.User));
 
-                return b.Layout(
-                    b.InfraMenu(
-                        nameof(Routes.Status),
-                        serverModel.User.IsSignedIn()),
-                    b.Render(headerProps),
-                    b.Render(serverModel.InfrastructureSummary, serverModel.ServiceSummary)).As<IVNode>();
-            }
+                            return b.Layout(
+                                b.InfraMenu(
+                                    nameof(Routes.Status),
+                                    serverModel.User.IsSignedIn()),
+                                b.Render(headerProps),
+                                b.Render(serverModel.InfrastructureSummary, serverModel.ServiceSummary));
+                        },
+                        (SyntaxBuilder b, Var<M.ServicePage> model) =>
+                        {
+                            return b.Listen(
+                                b.Const("afterRender"),
+                                b.MakeAction((SyntaxBuilder b, Var<object> state, Var<object> _payload) =>
+                                {
+                                    b.CallExternal<object>("connect", "update");
+                                    return state;
+                                }));
+                        },
+                        (SyntaxBuilder b, Var<M.ServicePage> model) =>
+                        {
+                            return b.Listen(
+                                    b.Const("afterRender"),
+                                    b.MakeAction((SyntaxBuilder b, Var<object> state, Var<object> _noPayload) =>
+                                    {
+                                        b.CallExternal("cy", "updateCy");
+                                        return state;
+                                    }));
+                        }));
+            });
+
+            return document.ToHtml();
         }
+
+        //public class Service : MixedHyperPage<M.ServicePage, M.ServicePage>
+        //{
+        //    public override M.ServicePage ExtractClientModel(M.ServicePage serverModel)
+        //    {
+        //        return serverModel;
+        //    }
+
+        //    public override Var<IVNode> OnRender(LayoutBuilder b, M.ServicePage serverModel, Var<M.ServicePage> clientModel)
+        //    {
+                
+        //    }
+        //}
 
         public class Connection
         {
@@ -58,15 +96,6 @@ namespace MdsInfrastructure.Render
             string fromSide = "right",
             string toSide = "left")
         {
-            b.AddSubscription(
-                "leaderLineSub",
-                (SyntaxBuilder b, Var<object> state) =>
-                b.Listen(b.Const("afterRender"), b.MakeAction((SyntaxBuilder b, Var<object> state, Var<object> _payload) =>
-                {
-                    b.CallExternal<object>("connect", "update");
-                    return state;
-                })));
-
             var connections = b.CallExternal<List<Connection>>("connect", "getConnectors");
             var c = b.Const(new Connection() { FromId = fromId, ToId = toId, FromSide = fromSide, ToSide = toSide });
             b.Push(connections, c);
@@ -235,7 +264,8 @@ namespace MdsInfrastructure.Render
                 b.StyledDiv(
                     "flex flex-col flex-1", 
                     leftNodes.ToArray()),
-                b.HtmlDiv(b => { /*divToIgnoreSize*/}, right));
+                b.HtmlDiv(b => { /*divToIgnoreSize*/
+    }, right));
         }
 
         public static Var<IVNode> RenderServiceMap(this LayoutBuilder b, InfrastructureSummary summary, ServiceSummary currentService)
@@ -566,18 +596,6 @@ namespace MdsInfrastructure.Render
 
         public static Var<IVNode> RenderRedisMap(this LayoutBuilder b, InfrastructureSummary summary, ServiceSummary serviceSummary)
         {
-            b.AddScript("cytoscape.min.js");
-            b.AddSubscription<object>(
-                "initCy",
-                (SyntaxBuilder b, Var<object> state) =>
-                b.Listen<object, object>(
-                    b.Const("afterRender"),
-                    b.MakeAction((SyntaxBuilder b, Var<object> state, Var<object> _noPayload) =>
-                    {
-                        b.CallExternal("cy", "updateCy");
-                        return state;
-                    })));
-
             var isMaximized = b.CallExternal<bool>("cy", "getMaximized");
 
             var onPlus = b.MakeAction((SyntaxBuilder b, Var<InfrastructureSummary> state) =>
