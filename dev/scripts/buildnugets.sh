@@ -10,7 +10,7 @@ rm ../nugets -rf
 
 echo "Output folder: $outputFolder"
 
-projects=("Metapsi.Runtime" "Metapsi.Hyperapp" "Metapsi.Mds" "Metapsi.Redis" "Metapsi.Ui" "Metapsi.Web.Contracts" "Metapsi.Web" "Metapsi.Html" "Metapsi.Shoelace" "Metapsi.SQLite" "Metapsi.TomSelect" "Metapsi.Dom" "Metapsi.Module" "Metapsi.Timer" "Metapsi.JavaScript" "Metapsi.Heroicons")
+source ./projects.sh
 for p in ${projects[@]}
 do
 	dotnet pack $frameworkRoot/$p -o $outputFolder -c Debug -p:Version="0.0.0-dev"
