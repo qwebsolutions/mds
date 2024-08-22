@@ -1,24 +1,17 @@
 ﻿using Metapsi.Syntax;
 using MdsCommon;
-using Metapsi.Ui;
 using Metapsi.Hyperapp;
-using System.Text;
-using System;
 using Metapsi;
 using MdsCommon.Controls;
 using static MdsLocal.SyncHistory;
 using Metapsi.Html;
-using System.Collections.Specialized;
-using System.Security.Cryptography;
-using Metapsi.Log;
-using Metapsi.Shoelace;
 using System.Linq;
 
 namespace MdsLocal
 {
-    public class RenderSyncHistory : HyperPage<SyncHistory.DataModel>
+    public static class RenderSyncHistory
     {
-        public override Var<IVNode> OnRender(LayoutBuilder b, Var<SyncHistory.DataModel> dataModel)
+        public static Var<IVNode> Render(LayoutBuilder b, Var<SyncHistory.DataModel> dataModel)
         {
             b.AddModuleStylesheet();
             var headerProps = b.NewObj<Header.Props>();
@@ -28,10 +21,10 @@ namespace MdsLocal
 
             return b.Layout(
                 b.LocalMenu(nameof(SyncHistory)),
-                b.Render(headerProps), Render(b, dataModel));
+                b.Render(headerProps), RenderContent(b, dataModel));
         }
 
-        private static Var<IVNode> Render(LayoutBuilder b, Var<SyncHistory.DataModel> dataModel)
+        private static Var<IVNode> RenderContent(LayoutBuilder b, Var<SyncHistory.DataModel> dataModel)
         {
             return b.HtmlDiv(
                 b =>

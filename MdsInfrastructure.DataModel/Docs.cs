@@ -10,14 +10,14 @@ namespace MdsInfrastructure
         {
             public InfrastructureSummary InfrastructureSummary { get; set; }
             public ServiceSummary ServiceSummary { get; set; }
-            public Metapsi.Ui.User User { get; set; }
+            public MdsCommon.User User { get; set; }
         }
 
         public class RedisMap
         {
             public InfrastructureSummary InfrastructureSummary { get; set; }
             public ServiceSummary ServiceSummary { get; set; }
-            public Metapsi.Ui.User User { get; set; }
+            public MdsCommon.User User { get; set; }
         }
 
         public static List<ServiceSummary> GetWriterServices(this InfrastructureSummary summary, string queueName)

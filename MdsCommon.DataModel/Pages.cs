@@ -1,7 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
-using System;
-using Metapsi.Ui;
 
 namespace MdsCommon
 {
@@ -20,13 +17,12 @@ namespace MdsCommon
         public InputCredentials Credentials { get; set; } = new();
     }
 
-    public class ListInfrastructureEventsPage :
-        Metapsi.Ui.IHasUser
+    public class ListInfrastructureEventsPage : IHasUser
     {
         public List<InfrastructureEvent> InfrastructureEvents { get; set; } = new();
         public InfrastructureEvent SelectedEvent { get; set; }
         public bool ShowSidePanel { get; set; }
-        public Metapsi.Ui.User User { get; set; } = new();
+        public User User { get; set; } = new();
 
         public static InfrastructureEvent NoEvent = new InfrastructureEvent() { Id = System.Guid.Empty };
     }

@@ -3,16 +3,9 @@ using Metapsi.Dom;
 using Metapsi.Html;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
-using Metapsi.Ui;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Razor.TagHelpers;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
-
 
 
 namespace MdsCommon.Controls

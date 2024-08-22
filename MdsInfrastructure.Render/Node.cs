@@ -1,7 +1,6 @@
 ﻿using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using MdsCommon;
-using Metapsi.Ui;
 using M = MdsInfrastructure.Node;
 using System.Linq;
 using System;
@@ -15,14 +14,9 @@ namespace MdsInfrastructure.Render
 {
     public static class Node
     {
-        public class List : MixedHyperPage<M.List, M.List>
+        public class List
         {
-            public override MdsInfrastructure.Node.List ExtractClientModel(M.List serverModel)
-            {
-                return serverModel;
-            }
-
-            public override Var<IVNode> OnRender(LayoutBuilder b, M.List serverModel, Var<M.List> clientModel)
+            public static Var<IVNode> Render(LayoutBuilder b, M.List serverModel, Var<M.List> clientModel)
             {
                 b.AddModuleStylesheet();
 
@@ -35,14 +29,9 @@ namespace MdsInfrastructure.Render
             }
         }
 
-        public class Edit : MixedHyperPage<M.EditPage, M.EditPage>
+        public class Edit
         {
-            public override M.EditPage ExtractClientModel(M.EditPage serverModel)
-            {
-                return serverModel;
-            }
-
-            public override Var<IVNode> OnRender(LayoutBuilder b, M.EditPage serverModel, Var<M.EditPage> clientModel)
+            public static Var<IVNode> Render(LayoutBuilder b, M.EditPage serverModel, Var<M.EditPage> clientModel)
             {
                 var nodeName = b.Get(clientModel, x => x.InfrastructureNode.NodeName);
 

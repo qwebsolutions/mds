@@ -1,6 +1,5 @@
 ﻿using Metapsi.Hyperapp;
 using Metapsi.Syntax;
-using Metapsi.Ui;
 using MdsCommon;
 using System.Linq;
 using MdsCommon.Controls;
@@ -8,14 +7,17 @@ using Metapsi.Html;
 
 namespace MdsInfrastructure.Render
 {
-    public class ApplicationStatus : MixedHyperPage<MdsInfrastructure.ApplicationStatus, MdsInfrastructure.ApplicationStatus>
+    public static class ApplicationStatus
     {
-        public override MdsInfrastructure.ApplicationStatus ExtractClientModel(MdsInfrastructure.ApplicationStatus serverData)
+        public static void Render(this HtmlBuilder b, MdsInfrastructure.ApplicationStatus serverModel)
         {
-            return serverData;
+            b.BodyAppend(b.Hyperapp(serverModel, (b, model) =>
+            {
+                return OnRender(b, serverModel, model);
+            }));
         }
 
-        public override Var<IVNode> OnRender(LayoutBuilder b, MdsInfrastructure.ApplicationStatus serverData, Var<MdsInfrastructure.ApplicationStatus> clientModel)
+        public static Var<IVNode> OnRender(LayoutBuilder b, MdsInfrastructure.ApplicationStatus serverData, Var<MdsInfrastructure.ApplicationStatus> clientModel)
         {
             b.AddModuleStylesheet();
 
@@ -33,7 +35,7 @@ namespace MdsInfrastructure.Render
         }
 
 
-        public Var<IVNode> Render(
+        public static Var<IVNode> Render(
             LayoutBuilder b,
             MdsInfrastructure.InfrastructureStatus applicationStatusPage,
             string selectedApplicationName)

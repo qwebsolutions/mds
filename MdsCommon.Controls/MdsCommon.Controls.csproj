@@ -4,14 +4,17 @@
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
-	<Import Project="embedded/Embedded.target"/>
+	<Import Project="embedded/Embedded.target" />
 
 	<ItemGroup>
 	  <PackageReference Include="Metapsi.Heroicons" Version="$(MetapsiVersion)" />
 	  <PackageReference Include="Metapsi.Html" Version="$(MetapsiVersion)" />
-	  <PackageReference Include="Metapsi.Hyperapp" Version="$(MetapsiVersion)" />
 	  <PackageReference Include="Metapsi.Shoelace" Version="$(MetapsiVersion)" />
 	  <PackageReference Include="Metapsi.TomSelect" Version="$(MetapsiVersion)" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.csproj" />
 	</ItemGroup>
 
 </Project>

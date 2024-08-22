@@ -2,8 +2,6 @@
 using Metapsi.Dom;
 using Metapsi.Html;
 using Metapsi.Syntax;
-using Microsoft.AspNetCore.Routing;
-using Metapsi.Ui;
 
 namespace MdsCommon
 {

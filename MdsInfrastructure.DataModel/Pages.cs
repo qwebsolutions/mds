@@ -1,7 +1,6 @@
-﻿using Metapsi;
-using Metapsi.Hyperapp;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using MdsCommon;
 
 namespace MdsInfrastructure
 {
@@ -13,7 +12,7 @@ namespace MdsInfrastructure
         public SaveConfigurationResponse SaveConfigurationResponse { get; set; }= new ();
         public MergeConfigurationResponse MergeConfigurationResponse { get; set; } = new();
 
-        public Metapsi.Ui.User User { get; set; }
+        public User User { get; set; }
 
         public string ServicesFilter { get; set; } = string.Empty;
         public string ApplicationsFilter { get; set; } = string.Empty;

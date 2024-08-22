@@ -2,37 +2,16 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Metapsi.Hyperapp;
 using System.Linq;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.Negotiate;
-using Microsoft.AspNetCore.Authentication.OAuth.Claims;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpLogging;
-using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.HttpOverrides;
-using System.Net;
 using System.Web;
-using System.Text;
-using MdsInfrastructure.Flow;
-using Metapsi.Ui;
-using MdsCommon;
-using System.Diagnostics.Contracts;
-using System.Text.Json;
-using Metapsi.Heroicons;
-using MdsCommon.Controls;
-using static Metapsi.Hyperapp.HyperType;
-using Microsoft.AspNetCore.Components.Forms;
-using System.IO.Compression;
-using System.IO;
-using System.Reflection;
-using System.Net.Http;
-using System.Net.Http.Json;
 
 namespace MdsInfrastructure
 {

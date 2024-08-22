@@ -1,11 +1,4 @@
 ﻿using Metapsi.Html;
-using Metapsi.Hyperapp;
-using Metapsi.Syntax;
-using Microsoft.AspNetCore.Routing.Tree;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 
 namespace MdsCommon.Controls
 {

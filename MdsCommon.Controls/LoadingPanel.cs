@@ -1,7 +1,4 @@
 ﻿using Metapsi.Syntax;
-using System.Linq;
-using Metapsi.Ui;
-using Metapsi.Hyperapp;
 
 namespace MdsCommon.Controls
 {

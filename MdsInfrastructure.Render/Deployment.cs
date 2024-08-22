@@ -3,26 +3,19 @@ using Metapsi;
 using Metapsi.Dom;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
-using Metapsi.Ui;
 using System;
 using System.Linq;
 using MdsCommon.Controls;
 using Metapsi.Html;
 using System.Collections.Generic;
-using System.Drawing;
 
 namespace MdsInfrastructure.Render
 {
     public static class Deployment
     {
-        public class List : MixedHyperPage<DeploymentHistory, DeploymentHistory>
+        public class List
         {
-            public override DeploymentHistory ExtractClientModel(DeploymentHistory serverModel)
-            {
-                return serverModel;
-            }
-
-            public override Var<IVNode> OnRender(LayoutBuilder b, DeploymentHistory serverModel, Var<DeploymentHistory> clientModel)
+            public static Var<IVNode> Render(LayoutBuilder b, DeploymentHistory serverModel, Var<DeploymentHistory> clientModel)
             {
                 b.AddModuleStylesheet();
 
@@ -34,7 +27,7 @@ namespace MdsInfrastructure.Render
                 Render(b, serverModel)).As<IVNode>();
             }
 
-            public Var<IVNode> Render(LayoutBuilder b, DeploymentHistory serverModel)
+            public static Var<IVNode> Render(LayoutBuilder b, DeploymentHistory serverModel)
             {
                 var deploymentsTableBuilder = MdsDefaultBuilder.DataTable<MdsInfrastructure.Deployment>();
                 deploymentsTableBuilder.OverrideHeaderCell(
@@ -60,14 +53,9 @@ namespace MdsInfrastructure.Render
             }
         }
 
-        public class Review : MixedHyperPage<DeploymentReview, DeploymentReview>
+        public class Review
         {
-            public override DeploymentReview ExtractClientModel(DeploymentReview serverModel)
-            {
-                return serverModel;
-            }
-
-            public override Var<IVNode> OnRender(LayoutBuilder b, DeploymentReview serverModel, Var<DeploymentReview> clientModel)
+            public static Var<IVNode> Render(LayoutBuilder b, DeploymentReview serverModel, Var<DeploymentReview> clientModel)
             {
                 b.AddModuleStylesheet();
 
@@ -85,14 +73,9 @@ namespace MdsInfrastructure.Render
             }
         }
 
-        public class Preview : MixedHyperPage<DeploymentPreview, DeploymentPreview>
+        public class Preview
         {
-            public override DeploymentPreview ExtractClientModel(DeploymentPreview serverModel)
-            {
-                return serverModel;
-            }
-
-            public override Var<IVNode> OnRender(LayoutBuilder b, DeploymentPreview serverModel, Var<DeploymentPreview> clientModel)
+            public static Var<IVNode> Render(LayoutBuilder b, DeploymentPreview serverModel, Var<DeploymentPreview> clientModel)
             {
                 b.AddModuleStylesheet();
 

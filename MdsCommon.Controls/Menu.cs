@@ -11,7 +11,7 @@ namespace MdsCommon.Controls
     {
         public class Props
         {
-            public List<Metapsi.Ui.Menu.Entry> Entries { get; set; }
+            public List<MdsCommon.Menu.Entry> Entries { get; set; }
             public string ActiveCode { get; set; }
         }
 

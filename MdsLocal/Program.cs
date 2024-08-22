@@ -1,17 +1,10 @@
 ﻿using Metapsi;
-using Metapsi.Hyperapp;
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Text;
-using Metapsi.Syntax;
 using MdsCommon;
-using static Metapsi.Hyperapp.HyperType;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Metapsi.Ui;
-using Dapper;
-using Metapsi.Sqlite;
 
 namespace MdsLocal
 {
@@ -112,9 +105,9 @@ namespace MdsLocal
             webServer.WebApplication.RegisterGetHandler<ListProcessesHandler, Overview.ListProcesses>();
             webServer.WebApplication.RegisterGetHandler<SyncHistoryHandler, SyncHistory.List>();
             webServer.WebApplication.RegisterGetHandler<MdsCommon.EventsLogHandler, MdsCommon.Routes.EventsLog.List>();
-            webServer.WebApplication.UseRenderer<OverviewPage>(new RenderOverviewListProcesses().Render);
-            webServer.WebApplication.UseRenderer<ListInfrastructureEventsPage>(new RenderInfrastructureEventsList().Render);
-            webServer.WebApplication.UseRenderer<SyncHistory.DataModel>(new RenderSyncHistory().Render);
+            webServer.WebApplication.UseRenderer<OverviewPage>(RenderOverviewListProcesses.Render);
+            webServer.WebApplication.UseRenderer<ListInfrastructureEventsPage>(RenderInfrastructureEventsList.Render);
+            webServer.WebApplication.UseRenderer<SyncHistory.DataModel>(RenderSyncHistory.Render);
 
             webServer.WebApplication.MapGet("/", () => Results.Redirect(WebServer.Url<Overview.ListProcesses>())).AllowAnonymous().ExcludeFromDescription();
 

@@ -1,7 +1,6 @@
 ﻿using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using MdsCommon;
-using Metapsi.Ui;
 using System.Linq;
 using MdsCommon.Controls;
 using Metapsi.Html;
@@ -15,14 +14,9 @@ namespace MdsInfrastructure.Render
     {
         const string DeleteSelectedDialogId = "id-delete-selected-dialog";
 
-        public class List : MixedHyperPage<MdsInfrastructure.ListProjectsPage, MdsInfrastructure.ListProjectsPage>
+        public class List
         {
-            public override ListProjectsPage ExtractClientModel(ListProjectsPage serverModel)
-            {
-                return serverModel;
-            }
-
-            public override Var<IVNode> OnRender(LayoutBuilder b, ListProjectsPage serverModel, Var<ListProjectsPage> clientModel)
+            public static Var<IVNode> Render(LayoutBuilder b, ListProjectsPage serverModel, Var<ListProjectsPage> clientModel)
             {
                 b.AddModuleStylesheet();
                 b.AddScript(typeof(Project).Assembly, "MdsInfrastructure.Render.js", "module");
@@ -525,8 +519,9 @@ namespace MdsInfrastructure.Render
                            {
                                b.OnSlSelect((SyntaxBuilder b, Var<ListProjectsPage> model, Var<SlSelectEventArgs> args) =>
                                {
+                                   var value = b.GetProperty<string>(b.Get(args, x => x.item), "value");
                                    return b.Switch(
-                                       b.Get(args, x => x.item.value),
+                                       value,
                                        b => model,
                                        ("select-filtered", b =>
                                        {

@@ -5,9 +5,9 @@ using Metapsi;
 
 namespace MdsLocal
 {
-    public class RenderInfrastructureEventsList : HyperPage<ListInfrastructureEventsPage>
+    public static class RenderInfrastructureEventsList
     {
-        public override Var<IVNode> OnRender(LayoutBuilder b, Var<ListInfrastructureEventsPage> clientModel)
+        public static Var<IVNode> Render(LayoutBuilder b, Var<ListInfrastructureEventsPage> clientModel)
         {
             b.AddModuleStylesheet();
             var headerProps = b.NewObj<Header.Props>();

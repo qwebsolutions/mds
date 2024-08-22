@@ -1,7 +1,5 @@
-﻿using Metapsi;
-using Metapsi.Hyperapp;
-using Metapsi.Ui;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using MdsCommon;
 
 namespace MdsLocal
 {

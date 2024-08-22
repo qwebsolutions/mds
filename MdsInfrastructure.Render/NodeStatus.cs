@@ -1,20 +1,22 @@
 ﻿using Metapsi.Hyperapp;
 using Metapsi.Syntax;
-using Metapsi.Ui;
 using MdsCommon;
 using System.Linq;
 using MdsCommon.Controls;
+using Metapsi.Html;
 
 namespace MdsInfrastructure.Render
 {
-    public class NodeStatus : MixedHyperPage<MdsInfrastructure.NodeStatus, MdsInfrastructure.NodeStatus>
+    public static class NodeStatus
     {
-        public override MdsInfrastructure.NodeStatus ExtractClientModel(MdsInfrastructure.NodeStatus serverData)
+        public static void Render(this HtmlBuilder b, MdsInfrastructure.NodeStatus serverModel)
         {
-            return serverData;
+            b.BodyAppend(b.Hyperapp(serverModel, (b, model) =>
+            {
+                return OnRender(b, serverModel, model);
+            }));
         }
-
-        public override Var<IVNode> OnRender(LayoutBuilder b, MdsInfrastructure.NodeStatus serverData, Var<MdsInfrastructure.NodeStatus> clientModel)
+        public static Var<IVNode> OnRender(LayoutBuilder b, MdsInfrastructure.NodeStatus serverData, Var<MdsInfrastructure.NodeStatus> clientModel)
         {
             b.AddModuleStylesheet();
 
@@ -57,7 +59,7 @@ namespace MdsInfrastructure.Render
 
             return b.StyledDiv(
                 "flex flex-col space-y-4",
-                b.RenderNodePanel<InfrastructureStatus, InfrastructureStatus>(selectedNode, nodesStatusPage.HealthStatus),
+                b.RenderNodePanel<MdsInfrastructure.InfrastructureStatus, MdsInfrastructure.InfrastructureStatus>(selectedNode, nodesStatusPage.HealthStatus),
                 servicesGroup);
         }
     }

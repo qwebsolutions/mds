@@ -13,7 +13,7 @@ namespace MdsInfrastructure
     public class ListConfigurationsPage
     {
         public ConfigurationHeadersList ConfigurationHeadersList { get; set; } = new();
-        public Metapsi.Ui.User User { get; set; } = new();
+        public MdsCommon.User User { get; set; } = new();
     }
 
     public class AddConfigurationPage 
@@ -25,7 +25,7 @@ namespace MdsInfrastructure
     {
         public InfrastructureConfiguration SavedConfiguration { get; set; }
         public List<MdsCommon.ServiceConfigurationSnapshot> Snapshot { get; set; } = new();
-        public Metapsi.Ui.User User { get; set; } = new();
+        public MdsCommon.User User { get; set; } = new();
         public string FilterValue { get; set; } = string.Empty;
     }
 }

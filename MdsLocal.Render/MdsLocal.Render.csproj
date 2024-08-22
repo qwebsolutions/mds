@@ -5,8 +5,7 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Metapsi.Heroicons" Version="$(MetapsiVersion)" />
-		<PackageReference Include="Metapsi.Hyperapp" Version="$(MetapsiVersion)" />
+		<PackageReference Include="Metapsi.Html" Version="$(MetapsiVersion)" />
 		<PackageReference Include="Metapsi.JavaScript" Version="$(MetapsiVersion)" />
 		<PackageReference Include="Metapsi.Module" Version="$(MetapsiVersion)" />
 		<PackageReference Include="Metapsi.Shoelace" Version="$(MetapsiVersion)" />

@@ -1,6 +1,4 @@
 ﻿using MdsCommon;
-using Metapsi.Hyperapp;
-using Metapsi.Ui;
 using System.Collections.Generic;
 
 namespace MdsInfrastructure
@@ -20,7 +18,7 @@ namespace MdsInfrastructure
         public bool IsLoading { get; set; }
         public string ValidationMessage { get; set; }
 
-        public Metapsi.Ui.User User { get; set; }
+        public User User { get; set; }
 
         public string SearchKeyword { get; set; }
 
