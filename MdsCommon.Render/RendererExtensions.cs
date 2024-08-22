@@ -16,7 +16,7 @@ namespace MdsCommon
                 return HtmlBuilder.FromDefault(b =>
                 {
                     buildDocument(b, model);
-                }).ToString();
+                }).ToHtml();
             });
         }
 
