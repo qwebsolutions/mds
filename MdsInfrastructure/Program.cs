@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using System.Web;
+using Microsoft.AspNetCore.SignalR;
 
 namespace MdsInfrastructure
 {
@@ -97,6 +98,7 @@ namespace MdsInfrastructure
                     //app.UseAuthorization();
                     app.UseSwagger();
                     app.UseSwaggerUI();
+                    app.MapHub<SignalRHub>("/signalRHub").AllowAnonymous();
                 });
 
             {
@@ -177,6 +179,13 @@ namespace MdsInfrastructure
             {
                 options.LoggingFields = HttpLoggingFields.RequestPropertiesAndHeaders;
             });
+
+            builder.Services.AddSignalR()
+                .AddJsonProtocol(
+                options =>
+                {
+                    options.PayloadSerializerOptions.PropertyNamingPolicy = null;
+                });
 
             //builder.Services.AddScoped<DynamicRedirect>();
 
@@ -548,5 +557,11 @@ namespace MdsInfrastructure
         {
             return edited;
         }
+    }
+
+
+    public class SignalRHub : Hub
+    {
+        public static IHubContext<SignalRHub> HubContext { get; set; }
     }
 }

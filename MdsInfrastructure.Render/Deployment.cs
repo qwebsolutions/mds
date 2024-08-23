@@ -8,6 +8,7 @@ using System.Linq;
 using MdsCommon.Controls;
 using Metapsi.Html;
 using System.Collections.Generic;
+using Metapsi.SignalR;
 
 namespace MdsInfrastructure.Render
 {
@@ -55,7 +56,18 @@ namespace MdsInfrastructure.Render
 
         public class Review
         {
-            public static Var<IVNode> Render(LayoutBuilder b, DeploymentReview serverModel, Var<DeploymentReview> clientModel)
+            public static void Render(HtmlBuilder b, DeploymentReview serverModel)
+            {
+                b.BodyAppend(
+                    b.Hyperapp(
+                        b => b.MakeInit(
+                            b.MakeStateWithEffects(
+                                b.Const(serverModel),
+                                b.InitializeSignalREffect("/signalRHub"))),
+                        (LayoutBuilder b, Var<DeploymentReview> model) => RenderClient(b, serverModel, model)));
+            }
+
+            public static Var<IVNode> RenderClient(LayoutBuilder b, DeploymentReview serverModel, Var<DeploymentReview> clientModel)
             {
                 b.AddModuleStylesheet();
 
@@ -247,6 +259,8 @@ namespace MdsInfrastructure.Render
 
         public static Var<IVNode> NewService(this LayoutBuilder b, ServiceChange serviceChange)
         {
+            Refresh from signalR here
+
             var processStatus =
                 serviceChange.Enabled.NewValue == "False" ?
                 b.HtmlDiv(
