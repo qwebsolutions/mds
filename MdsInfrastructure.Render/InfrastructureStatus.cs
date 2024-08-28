@@ -6,6 +6,8 @@ using System.Linq;
 using MdsCommon.Controls;
 using System.Collections.Generic;
 using Metapsi.Html;
+using Metapsi.Dom;
+using Metapsi.SignalR;
 
 namespace MdsInfrastructure.Render
 {
@@ -13,10 +15,30 @@ namespace MdsInfrastructure.Render
     {
         public static void Render(this HtmlBuilder b, MdsInfrastructure.InfrastructureStatus serverModel)
         {
-            b.BodyAppend(b.Hyperapp(serverModel, (b, model) =>
-            {
-                return OnRender(b, serverModel, model);
-            }));
+            b.BodyAppend(b.DeploymentToasts());
+            b.BodyAppend(
+                b.Hyperapp(
+                    (SyntaxBuilder b) => b.MakeInit(
+                        b.MakeStateWithEffects(
+                            b.Const(serverModel),
+                            b.InitializeSignalREffect("/signalRHub"))),
+                    (LayoutBuilder b, Var<MdsInfrastructure.InfrastructureStatus> model) =>
+                    {
+                        return OnRender(b, serverModel, model);
+                    },
+                    (b, model) => b.Listen(b.MakeAction((SyntaxBuilder b, Var<MdsInfrastructure.InfrastructureStatus> model, Var<DeploymentEvent.Started> e) =>
+                    {
+                        b.ShowDeploymentToast(MdsCommon.Controls.Controls.IdDeploymentStartedToast);
+                        return model;
+                    })),
+                    (b, model) => b.Listen(b.MakeAction((SyntaxBuilder b, Var<MdsInfrastructure.InfrastructureStatus> model, Var<DeploymentEvent.Done> e) =>
+                    {
+                        b.ShowDeploymentToast(MdsCommon.Controls.Controls.IdDeploymentSuccessToast);
+                        return b.MakeStateWithEffects(
+                            model,
+                            b.RefreshModelEffect<MdsInfrastructure.InfrastructureStatus>());
+                    }))
+                    ));
         }
 
         public static Var<IVNode> OnRender(LayoutBuilder b, MdsInfrastructure.InfrastructureStatus serverModel, Var<MdsInfrastructure.InfrastructureStatus> clientModel)

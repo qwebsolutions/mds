@@ -1,11 +1,28 @@
 ﻿using MdsCommon;
 using Metapsi;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Routing;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace MdsInfrastructure.Flow;
+
+public static class GetModel
+{
+    public static async Task<InfrastructureStatus> InfrastructureStatus(CommandContext commandContext, HttpContext httpContext)
+    {
+        var statusPage = await Load.Status(commandContext);
+        statusPage.User = httpContext.User();
+        return statusPage;
+    }
+
+    public static void RegisterModelApi(this IEndpointRouteBuilder endpointRouteBuilder)
+    {
+        endpointRouteBuilder.MapGet(nameof(MdsInfrastructure.InfrastructureStatus), InfrastructureStatus).AllowAnonymous();
+    }
+}
 
 public static partial class Status
 {

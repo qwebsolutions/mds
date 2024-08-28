@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using MdsCommon;
 using Metapsi;
 using StackExchange.Redis;
 using System;
@@ -129,6 +130,8 @@ namespace MdsLocal
                 arguments.BuildTarget);
 
             SetupHealth(applicationSetup, implementationGroup, infrastructureConfiguration, mdsLocalApplication, arguments.NodeName);
+
+            SetupDeploymentEvents(applicationSetup, implementationGroup, arguments);
 
             List<string> warnings = new List<string>();
 
@@ -286,6 +289,28 @@ namespace MdsLocal
             }
 
             return warnings;
+        }
+
+        private static void SetupDeploymentEvents(this ApplicationSetup setup, ImplementationGroup ig, InputArguments inputArguments)
+        {
+            var httpEventPoster = setup.AddBusinessState(new HttpClient());
+            var deploymentEventsUrl = inputArguments.InfrastructureApiUrl.Trim('/') + "/deploymentEvent";
+
+            setup.MapEvent<DeploymentEvent.Started>(e =>
+            {
+                e.Using(httpEventPoster, ig).EnqueueCommand(async (cc, state) =>
+                {
+                    await state.PostMessage(deploymentEventsUrl, e.EventData);
+                });
+            });
+
+            setup.MapEvent<DeploymentEvent.Done>(e =>
+            {
+                e.Using(httpEventPoster, ig).EnqueueCommand(async (cc, state) =>
+                {
+                    await state.PostMessage(deploymentEventsUrl, e.EventData);
+                });
+            });
         }
     }
 }

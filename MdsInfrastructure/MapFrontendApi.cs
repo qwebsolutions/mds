@@ -437,7 +437,7 @@ namespace MdsInfrastructure
                     {
                         Model = model
                     };
-                });           
+                });
 
             api.MapGetRequest(MdsCommon.Api.GetInfrastructureNodeSettings,
                     async (CommandContext cc, HttpContext http, string nodeName) =>
@@ -468,6 +468,26 @@ namespace MdsInfrastructure
                 {
                     return await Db.LoadNodeConfiguration(arguments.DbPath, nodeName);
                 });
+
+            var deploymentEvent = api.MapGroup("deploymentEvent");
+
+            deploymentEvent.OnMessage<DeploymentEvent.Started>(async (cc, message) =>
+            {
+                await SignalRHub.HubContext.Clients.All.RaiseEvent(message);
+            });
+
+            deploymentEvent.OnMessage<DeploymentEvent.Done>(async (cc, message) =>
+            {
+                await SignalRHub.HubContext.Clients.All.RaiseEvent(message);
+            });
+
+            deploymentEvent.OnMessage<DeploymentEvent.ServiceStarted>(async (cc, message) =>
+            {
+
+            });
+
+            api.MapGroup("deploymentEvent").MapGet("/", () => "WORKS!");
+            api.MapGroup("model").RegisterModelApi();
         }
 
 

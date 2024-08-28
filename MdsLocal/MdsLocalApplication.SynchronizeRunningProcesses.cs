@@ -28,6 +28,8 @@ namespace MdsLocal
 
         public static async Task SynchronizeRunningProcesses(CommandContext commandContext, State state, LocalServicesConfigurationDiff configurationDiff, SyncResult syncResult)
         {
+            commandContext.PostEvent(new DeploymentEvent.Started());
+
             Event.ProcessesSynchronized processesSynchronized = new Event.ProcessesSynchronized();
             //syncResult.AddInfo("Reloading local configuration after update ...");
             var localKnownConfiguration = await commandContext.Do(GetLocalKnownConfiguration);
@@ -51,6 +53,10 @@ namespace MdsLocal
                     processesSynchronized.Stopped.Add(serviceProcess.ServiceName);
                     await commandContext.Do(StopProcess, serviceProcess);
                     syncResult.AddInfo($"Service {serviceProcess.FullExePath} (PID {serviceProcess.Pid}) stopped");
+                    commandContext.PostEvent(new DeploymentEvent.ServiceStopped()
+                    {
+                        Id = serviceConfiguration.Id
+                    });
                     commandContext.Logger.LogDebug($"SynchronizeRunningProcesses: {serviceProcess.ServiceName} stopped");
                 }
                 else
@@ -71,20 +77,12 @@ namespace MdsLocal
                         processesSynchronized.Stopped.Add(serviceProcess.ServiceName);
                         await commandContext.Do(StopProcess, serviceProcess);
                         syncResult.AddInfo($"Service {serviceProcess.ServiceName} stopped");
+                        commandContext.PostEvent(new DeploymentEvent.ServiceStopped()
+                        {
+                            Id = serviceConfiguration.Id
+                        });
                         commandContext.Logger.LogDebug($"SynchronizeRunningProcesses: {serviceProcess.ServiceName} stopped");
                     }
-
-                    /*
-                    var serviceVersion = GetServiceVersionData(state.ServicesBasePath, serviceConfiguration.ServiceName);
-                    if (serviceVersion.ConfigurationId != serviceConfiguration.Id.ToString())
-                    {
-                        if(configurationDiff.ChangedServices.Contains())
-
-                        // Configuration changed, should be reinstalled
-                        processesSynchronized.Stopped.Add(serviceProcess.ServiceName);
-                        await commandContext.Do(StopProcess, serviceProcess);
-                        commandContext.Logger.LogDebug($"SynchronizeRunningProcesses: {serviceProcess.ServiceName} stopped");
-                    }*/
                 }
             }
 
@@ -214,6 +212,7 @@ namespace MdsLocal
             }
 
             commandContext.PostEvent(processesSynchronized);
+            commandContext.PostEvent(new DeploymentEvent.Done());
         }
     }
 }

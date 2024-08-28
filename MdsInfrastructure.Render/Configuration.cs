@@ -98,7 +98,27 @@ namespace MdsInfrastructure.Render
 
         public class Edit
         {
-            public static Var<IVNode> Render(LayoutBuilder b, EditConfigurationPage serverModel, Var<EditConfigurationPage> clientModel)
+            public static void Render(HtmlBuilder b, EditConfigurationPage serverModel)
+            {
+                b.BodyAppend(
+                    b.Hyperapp(
+                        (SyntaxBuilder b) => b.MakeInit(
+                            b.MakeStateWithEffects(
+                                b.Const(serverModel),
+                                b.MakeEffect(
+                                    (SyntaxBuilder b, Var<HyperType.Dispatcher> dispatch) =>
+                                    {
+                                        b.Dispatch(dispatch, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> model) =>
+                                        {
+                                            var serializedConfiguration = b.Serialize(b.Get(model, x => x.Configuration));
+                                            b.Set(model, x => x.InitialConfiguration, serializedConfiguration);
+                                            return b.Clone(model);
+                                        }));
+                                    }))),
+                        (LayoutBuilder b, Var<EditConfigurationPage> model) => RenderClient(b, serverModel, model)));
+            }
+
+            public static Var<IVNode> RenderClient(LayoutBuilder b, EditConfigurationPage serverModel, Var<EditConfigurationPage> clientModel)
             {
                 b.AddModuleStylesheet();
 
@@ -115,12 +135,12 @@ namespace MdsInfrastructure.Render
                         Render(b, clientModel)).As<IVNode>();
             }
 
-            public static Var<HyperType.StateWithEffects> OnInit(SyntaxBuilder b, Var<EditConfigurationPage> model)
-            {
-                var serializedConfiguration = b.Serialize(b.Get(model, x => x.Configuration));
-                b.Set(model, x => x.InitialConfiguration, serializedConfiguration);
-                return b.MakeStateWithEffects(model);
-            }
+            //public static Var<HyperType.StateWithEffects> OnInit(SyntaxBuilder b, Var<EditConfigurationPage> model)
+            //{
+            //    var serializedConfiguration = b.Serialize(b.Get(model, x => x.Configuration));
+            //    b.Set(model, x => x.InitialConfiguration, serializedConfiguration);
+            //    return b.MakeStateWithEffects(model);
+            //}
 
             private static Var<IVNode> Render(LayoutBuilder b, Var<EditConfigurationPage> clientModel)
             {

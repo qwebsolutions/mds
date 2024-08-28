@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
 using System.Web;
 using Microsoft.AspNetCore.SignalR;
+using Metapsi.SignalR;
 
 namespace MdsInfrastructure
 {
@@ -100,6 +101,8 @@ namespace MdsInfrastructure
                     app.UseSwaggerUI();
                     app.MapHub<SignalRHub>("/signalRHub").AllowAnonymous();
                 });
+
+            SignalRHub.HubContext = webServerRefs.WebApplication.Services.GetService(typeof(IHubContext<SignalRHub>)) as IHubContext<SignalRHub>;
 
             {
                 var app = webServerRefs.WebApplication;
@@ -563,5 +566,17 @@ namespace MdsInfrastructure
     public class SignalRHub : Hub
     {
         public static IHubContext<SignalRHub> HubContext { get; set; }
+    }
+
+    public static class SignalRHubExtensions
+    {
+        public static async Task RaiseEvent<T>(this IClientProxy clientProxy, T eventArgs)
+        {
+            await clientProxy.SendAsync(SignalRExtensions.RaiseEventCode, new RaiseEventArgs<T>()
+            {
+                EventName = typeof(T).Name,
+                EventArgs = eventArgs
+            });
+        }
     }
 }
