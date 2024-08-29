@@ -70,7 +70,8 @@ namespace MdsInfrastructure
         public static Request<MergeConfigurationResponse, MergeConfigurationInput> MergeConfiguration { get; set; } = new(nameof(MergeConfiguration));
         public static Request<GetConfigurationJsonResponse, InfrastructureConfiguration> GetConfigurationJson { get; set; } = new(nameof(GetConfigurationJson));
 
-        public static Command<Guid> ConfirmDeployment { get; set; } = new(nameof(ConfirmDeployment));
+        // pass configuration id, returns deployment id
+        public static Request<Guid, Guid> ConfirmDeployment { get; set; } = new(nameof(ConfirmDeployment));
 
         public static Request<RemoveBuildsResponse, RemoveBuildsRequest> RemoveBuilds { get; set; } = new(nameof(RemoveBuilds));
         public static Request<ReloadListProjectsPageModel> ReloadListProjectsPageModel { get; set; } = new(nameof(ReloadListProjectsPageModel));

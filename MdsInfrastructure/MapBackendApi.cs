@@ -49,7 +49,7 @@ namespace MdsInfrastructure
             MapRequest(Backend.LoadAllNodes, Db.LoadAllNodes);
             MapRequest(Backend.LoadAllServices, Db.LoadAllServices);
             MapRequest1(Backend.RefreshBinaries, Db.RefreshBinaries);
-            ig.MapCommand(Backend.ConfirmDeployment, async (rc, input) => await taskQueue.Enqueue(async () => await Db.ConfirmDeployment(fullDbPath, input.Snapshots, input.Configuration)));
+            ig.MapRequest(Backend.ConfirmDeployment, async (rc, input) => await taskQueue.Enqueue(async () => await Db.ConfirmDeployment(fullDbPath, input.Snapshots, input.Configuration)));
             MapRequest(Backend.GetAllParameterTypes, Db.LoadParameterTypes);
             MapRequest(Backend.LoadEnvironmentTypes, Db.LoadEnvironmentTypes);
             MapRequest(Backend.LoadHealthStatus, Db.LoadFullInfrastructureHealthStatus);

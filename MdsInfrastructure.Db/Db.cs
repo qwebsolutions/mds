@@ -264,7 +264,7 @@ namespace MdsInfrastructure
             //return true;
         }
 
-        public static async Task ConfirmDeployment(
+        public static async Task<Guid> ConfirmDeployment(
             string fullDbPath,
             List<ServiceConfigurationSnapshot> infraSnapshot,
             InfrastructureConfiguration infrastructureConfiguration)
@@ -272,10 +272,13 @@ namespace MdsInfrastructure
             var previousDeployment = await LoadActiveDeployment(fullDbPath);
             var previousServiceConfigurations = previousDeployment.GetDeployedServices();
 
+            Guid deploymentGuid = Guid.NewGuid();
+
             await Metapsi.Sqlite.Db.WithCommit(fullDbPath, async c =>
             {
                 Deployment deployment = new Deployment()
                 {
+                    Id = deploymentGuid,
                     ConfigurationHeaderId = infrastructureConfiguration.Id,
                     ConfigurationName = infrastructureConfiguration.Name,
 
@@ -344,6 +347,8 @@ namespace MdsInfrastructure
                     }
                 }
             });
+
+            return deploymentGuid;
         }
 
         public static async Task<List<NoteType>> LoadAllNoteTypes(

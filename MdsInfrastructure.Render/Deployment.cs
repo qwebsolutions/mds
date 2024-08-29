@@ -116,11 +116,11 @@ namespace MdsInfrastructure.Render
                     {
                         return b.MakeStateWithEffects(
                             model,
-                            b.Fetch(
+                            b.GetJson<DeploymentPreview, Guid>(
                                 b.GetApiUrl(Frontend.ConfirmDeployment, b.AsString(configurationId)),
-                                b.MakeAction((SyntaxBuilder b, Var<DeploymentPreview> model) =>
+                                b.MakeAction((SyntaxBuilder b, Var<DeploymentPreview> model, Var<Guid> deploymentId) =>
                                 {
-                                    b.SetUrl(b.Const("/"));
+                                    b.SetUrl(b.Url<Routes.Deployment.Review, Guid>(deploymentId));
                                     return model;
                                 }),
                                 b.MakeAction((SyntaxBuilder b, Var<DeploymentPreview> model, Var<ClientSideException> ex) =>
@@ -139,7 +139,13 @@ namespace MdsInfrastructure.Render
             Var<InfrastructureConfiguration> infrastructureConfiguration)
         {
             StaticFiles.Add(typeof(Render.Deployment).Assembly, "nowork.png");
-            var hasServiceChanges = b.Get(changesReport, x => !x.ServiceChanges.Any() || x.ServiceChanges.All(x => x.ServiceChangeType == ChangeType.None));
+            var hasServiceChanges = b.If(
+                b.Not(b.Get(changesReport, x => x.ServiceChanges.Any())),
+                b => b.Const(false),
+                b => b.If(
+                    b.Get(changesReport, x => x.ServiceChanges.All(x => x.ServiceChangeType == ChangeType.None)),
+                    b => b.Const(false),
+                    b => b.Const(true)));
 
             return b.If(
                 b.Not(hasServiceChanges),

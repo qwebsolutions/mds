@@ -31,7 +31,7 @@ namespace MdsInfrastructure
         public static Request<List<MdsCommon.Project>> LoadAllProjects { get; set; } = new(nameof(LoadAllProjects));
         public static Request<List<InfrastructureNode>> LoadAllNodes { get; set; } = new(nameof(LoadAllNodes));
         public static Request<List<InfrastructureService>> LoadAllServices { get; set; } = new(nameof(LoadAllServices));
-        public static Command<ConfirmDeploymentInput> ConfirmDeployment { get; set; } = new(nameof(ConfirmDeployment));
+        public static Request<Guid, ConfirmDeploymentInput> ConfirmDeployment { get; set; } = new(nameof(ConfirmDeployment));
         public static Request<List<ParameterType>> GetAllParameterTypes { get; set; } = new Request<List<ParameterType>>(nameof(GetAllParameterTypes));
         public static Request<List<EnvironmentType>> LoadEnvironmentTypes { get; set; } = new(nameof(LoadEnvironmentTypes));
         public static Request<List<MdsCommon.MachineStatus>> LoadHealthStatus { get; set; } = new(nameof(LoadHealthStatus));

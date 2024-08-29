@@ -165,7 +165,7 @@ namespace MdsInfrastructure
                 }
             });
 
-            api.MapGetCommand(Frontend.ConfirmDeployment, async (commandContext, httpContext, configurationId) =>
+            api.MapGetRequest(Frontend.ConfirmDeployment, async (commandContext, httpContext, configurationId) =>
             {
                 var savedConfiguration = await commandContext.Do(Backend.LoadConfiguration, configurationId);
                 var serverModel = await MdsInfrastructureFunctions.InitializeEditConfiguration(commandContext, savedConfiguration);
@@ -174,7 +174,7 @@ namespace MdsInfrastructure
                     savedConfiguration,
                     serverModel.AllProjects,
                     serverModel.InfrastructureNodes);
-                await commandContext.Do(Backend.ConfirmDeployment, new ConfirmDeploymentInput()
+                var deploymentGuid = await commandContext.Do(Backend.ConfirmDeployment, new ConfirmDeploymentInput()
                 {
                     Snapshots = newInfraSnapshot,
                     Configuration = savedConfiguration
@@ -182,6 +182,8 @@ namespace MdsInfrastructure
 
                 Backend.Event.BroadcastDeployment broadcastDeployment = new();
                 commandContext.PostEvent(broadcastDeployment);
+
+                return deploymentGuid;
             });
 
             api.MapPostRequest(Frontend.GetConfigurationJson, async (CommandContext commandContext, HttpContext httpContext, InfrastructureConfiguration edited) =>
