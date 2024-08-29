@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System;
 using MdsCommon.Controls;
 using Metapsi.Html;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 
 namespace MdsInfrastructure.Render
 {
@@ -15,17 +16,31 @@ namespace MdsInfrastructure.Render
 
         public const string RestartIcon = "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" >\r\n  <path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99\" />\r\n</svg>\r\n";
 
-        public static Var<IVNode> RenderNodePanel<TFromPage, TToPage>(
-            this LayoutBuilder b,
-            InfrastructureNode node,
-            List<MdsCommon.MachineStatus> healthStatus)
-        {
-            string nodeName = node.NodeName;
-            string nodeUrl = $"http://{node.MachineIp}:{node.UiPort}";
 
-            Func<LayoutBuilder, Var<IVNode>> nodeHeader = (b) =>
-            {
-                return b.HtmlSpan(
+        public static Var<string> GetStatusBackgroundColorClass(this SyntaxBuilder b, Var<string> statusCode)
+        {
+            return b.Switch(
+                statusCode,
+                b => b.Const(string.Empty),
+                ("warning", b => b.Const("bg-amber-500")),
+                ("error", b => b.Const("bg-red-500")),
+                ("ok", b => b.Const("bg-green-500")));
+        }
+
+        public static Var<IVNode> NodePanel(this LayoutBuilder b, Var<NodePanelModel> nodePanel)
+        {
+            var panel = b.HtmlDiv(
+               b =>
+               {
+                   b.SetClass("flex flex-col rounded-md p-4 shadow-md border border-gray-100 text-gray-100");
+                   b.AddClass(b.GetStatusBackgroundColorClass(b.Get(nodePanel, x => x.NodeStatusCode)));
+               },
+               b.HtmlDiv(
+                   b =>
+                   {
+                       b.SetClass("pb-2");
+                   },
+                   b.HtmlSpan(
                     b =>
                     {
                         b.SetClass("flex flex-row text-white");
@@ -34,169 +49,164 @@ namespace MdsInfrastructure.Render
                         b =>
                         {
                             b.SetClass("hover:underline cursor-pointer font-bold");
-                            b.SetHref(nodeUrl);
+                            b.SetHref(b.Get(nodePanel, x => x.NodeUiUrl));
                         },
-                        b.TextSpan(nodeName)),
+                        b.TextSpan(b.Get(nodePanel, x => x.NodeName)),
                     b.HtmlImg(
                         b =>
                         {
                             b.SetClass("w-8 h-9 pl-2");
                             StaticFiles.Add(typeof(PanelExtensions).Assembly, "server-icon.png");
                             b.SetSrc("/server-icon.png");
-                        }));
-            };
-
-            FullStatus<string> status = StatusExtensions.GetNodeStatus(healthStatus, nodeName);
-
-            if (!healthStatus.Where(x => x.NodeName == nodeName).Any())
-            {
-                return b.InfoPanel(
-                    b.Const(Panel.Style.Error),
-                    nodeHeader,
-                    (b) => b.TextSpan("Could not retrieve status"));
-            }
-            else if (Math.Abs((healthStatus.Where(x => x.NodeName == nodeName).Max(x => x.TimestampUtc) - DateTime.Now).TotalMinutes) > 1)
-            {
-                var timespan = healthStatus.Where(x => x.NodeName == nodeName).Max(x => x.TimestampUtc) - DateTime.Now;
-                return b.InfoPanel(
-                    b.Const(Panel.Style.Error),
-                    nodeHeader,
-                    b => b.TextSpan($"Status not received for {Convert.ToInt32(Math.Abs(timespan.TotalMinutes))} minutes!"));
-            }
-            else if (status.StatusValues.Any(x => x.GeneralStatus == GeneralStatus.NoData))
-            {
-                return b.InfoPanel(
-                    b.Const(Panel.Style.Error),
-                    nodeHeader,
-                    b => b.TextSpan("Data not available!"));
-            }
-            else
-            {
-                var availableHddGb = status.StatusValues.Single(x => x.Name == StatusExtensions.AvailableHddGb);
-                var availableHddPercent = status.StatusValues.Single(x => x.Name == StatusExtensions.AvailableHddPercent);
-
-                var hddInfo = b.HtmlDiv(
-                    b =>
-                    {
-                        if (availableHddGb.GeneralStatus == GeneralStatus.Danger || availableHddPercent.GeneralStatus == GeneralStatus.Danger)
-                        {
-                            b.AddClass(b.Const("font-bold"));
-                        }
-                    }, 
-                    b.TextSpan($"Available HDD: {availableHddGb.CurrentValue} GB ({availableHddPercent.CurrentValue}%)"));
-
-
-                var availableRamGb = status.StatusValues.Single(x => x.Name == StatusExtensions.AvailableRamGb);
-                var availableRamPercent = status.StatusValues.Single(x => x.Name == StatusExtensions.AvailableRamPercent);
-
-                var ramInfo =b.HtmlDiv(
-                    b=>
-                    {
-                        if (availableRamGb.GeneralStatus == GeneralStatus.Danger || availableRamPercent.GeneralStatus == GeneralStatus.Danger)
-                        {
-                            b.AddClass(b.Const("font-bold"));
-                        }
-                    },
-                    b.TextSpan($"Available RAM: {availableRamGb.CurrentValue} GB ({availableRamPercent.CurrentValue}%)"));
-
-                Panel.Style panelStyling = Panel.Style.Ok;
-
-                if (status.StatusValues.Any(x => x.GeneralStatus == GeneralStatus.Danger))
-                {
-                    panelStyling = Panel.Style.Error;
-                }
-
-                var infoPanelContent = b.HtmlDiv(
+                        })))),
+                b.HtmlDiv(
                     b =>
                     {
                         b.SetClass("flex flex-col");
                     },
-                    hddInfo,
-                    ramInfo);
-
-                return b.HtmlA(
-                    b =>
-                    {
-                        b.SetHref(b.Const(Route.Path<Routes.Status.Node, string>(node.NodeName)));
-                    },
-                    b.InfoPanel(
-                        b.Const(panelStyling),
-                        nodeHeader,
-                        b => infoPanelContent));
-            }
-        }
-
-        public static Var<IVNode> RenderApplicationPanel<TFromPage, TToPage>(
-            this LayoutBuilder b,
-            MdsInfrastructure.Deployment deployment,
-            List<MachineStatus> healthStatus,
-            List<InfrastructureEvent> allInfrastructureEvents,
-            string applicationName)
-        {
-            Panel.Style panelStyling = Panel.Style.Ok;
-
-            var applicationServices = deployment.GetDeployedServices().Where(x => x.ApplicationName == applicationName);
-
-            int dangerServicesCount = 0;
-            var warningServicesCount = 0;
-
-            foreach (var service in applicationServices)
-            {
-                var serviceStatus = StatusExtensions.GetServiceStatus(deployment, healthStatus, service, allInfrastructureEvents);
-                if (serviceStatus.Entity.Enabled)
-                {
-                    if (serviceStatus.StatusValues.Any(x => x.GeneralStatus == GeneralStatus.Danger || x.GeneralStatus == GeneralStatus.NoData))
-                    {
-                        dangerServicesCount++;
-                    }
-                    else
-                    {
-                        if (serviceStatus.StatusValues.Any(x => x.GeneralStatus == GeneralStatus.Warning))
+                    b.HtmlSpan(
+                        b =>
                         {
-                            warningServicesCount++;
-                        }
-                    }
-                }
-                else
-                {
-                    warningServicesCount++;
-                }
-            }
+                            b.If(
+                                b.Get(nodePanel, x => x.HddWarning),
+                                b =>
+                                {
+                                    b.AddClass("font-bold");
+                                });
+                        },
+                        b.Text(
+                            b.Concat(
+                                b.Const("Available HDD: "),
+                                b.AsString(b.Get(nodePanel, x => x.AvailableHddGb)),
+                                b.Const(" GB ("),
+                                b.AsString(b.Get(nodePanel, x => x.AvailableHddPercent)),
+                                b.Const("%)")))),
+                    b.HtmlSpan(
+                        b =>
+                        {
+                            b.If(
+                                b.Get(nodePanel, x => x.RamWarning),
+                                b =>
+                                {
+                                    b.AddClass("font-bold");
+                                });
+                        },
+                        b.Text(
+                            b.Concat(
+                                b.Const("Available RAM: "),
+                                b.AsString(b.Get(nodePanel, x => x.AvailableRamGb)),
+                                b.Const(" GB ("),
+                                b.AsString(b.Get(nodePanel, x => x.AvailableRamPercent)),
+                                b.Const("%)"))))));
 
-            Var<IVNode> statusLabel = b.TextSpan($"{applicationServices.Count()} services (all ok)");
-
-            if (dangerServicesCount > 0)
-            {
-                statusLabel = b.HtmlDiv(
-                    b =>
-                    {
-                        b.SetClass("font-bold");
-                    },
-                    b.TextSpan($"{applicationServices.Count()} services ({dangerServicesCount} in error)"));
-                panelStyling = Panel.Style.Error;
-            }
-            else if (warningServicesCount > 0)
-            {
-                statusLabel = b.HtmlDiv(
-                    b =>
-                    {
-                        b.SetClass("font-bold");
-                    },
-                    b.TextSpan($"{applicationServices.Count()} services"));
-                panelStyling = Panel.Style.Warning;
-            }
-           
             return b.HtmlA(
-                b=>
+                b =>
                 {
-                    b.SetHref(b.Const(Route.Path<Routes.Status.Application, string>(applicationName)));
+                    b.SetHref(b.Url<Routes.Status.Node, string>(b.Get(nodePanel, x => x.NodeName)));
                 },
-                b.InfoPanel(
-                b.Const(panelStyling),
-                b => b.TextSpan(applicationName),
-                b => statusLabel));
+                panel);
         }
 
+        public static Var<IVNode> ApplicationPanel(this LayoutBuilder b, Var<ApplicationPanelModel> panelData)
+        {
+            var panel = b.HtmlDiv(
+               b =>
+               {
+                   b.SetClass("flex flex-col rounded-md p-4 shadow-md border border-gray-100 text-gray-100");
+                   b.AddClass(b.GetStatusBackgroundColorClass(b.Get(panelData, x => x.StatusCode)));
+               },
+               b.HtmlSpan(
+                   b =>
+                   {
+                   },
+                   b.Text(b.Get(panelData, x => x.ApplicationName))),
+               b.HtmlSpan(
+                   b =>
+                   {
+
+                   },
+                   b.Text(b.Get(panelData, x => x.StatusText))));
+
+            return b.HtmlA(
+                    b =>
+                    {
+                        b.SetHref(b.Url<Routes.Status.Application, string>(b.Get(panelData, x => x.ApplicationName)));
+                    },
+                    panel);
+        }
+
+        public static Var<IVNode> ServicePanelHeader(this LayoutBuilder b, Var<ServicePanelModel> serviceData)
+        {
+            return b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("flex flex-row");
+                    },
+                    b.HtmlSpan(b => b.SetClass("font-bold w-full"), b.Text(b.Get(serviceData, x => x.ServiceName))),
+                    b.HtmlA(
+                        b =>
+                        {
+                            b.SetClass("flex flex-row justify-end text-gray-100 w-6 h-6 hover:text-white");
+                            b.SetHref(b.Url<Routes.Docs.Service, string>(b.Get(serviceData, x => x.ServiceName)));
+                        },
+                        b.Svg(Icon.Info, "w-full h-full")));
+        }
+
+        public static Var<IVNode> ServicePanel(this LayoutBuilder b, Var<ServicePanelModel> serviceData)
+        {
+            var serviceStatus = b.Get(serviceData, x => x.FullStatus);
+            return b.If(
+                b.Get(serviceStatus, x => !x.Entity.Enabled),
+                b =>
+                {
+                    return b.HtmlDiv(
+                        b =>
+                        {
+                            b.SetClass("flex flex-col rounded-md p-4 shadow-md border border-gray-100 text-gray-100");
+                            b.AddClass("bg-amber-500");
+                        },
+                        b.ServicePanelHeader(serviceData),
+                        b.HtmlSpan(b.Text("Disabled")));
+                },
+                b =>
+                {
+                    return b.If(
+                        b.Get(serviceStatus, x => x.StatusValues.Any(x => x.GeneralStatus == GeneralStatus.NoData)),
+                        b => b.HtmlDiv(
+                            b =>
+                            {
+                                b.SetClass("flex flex-col rounded-md p-4 shadow-md border border-gray-100 text-gray-100");
+                                b.AddClass("bg-red-500");
+                            },
+                            b.ServicePanelHeader(serviceData),
+                            b.HtmlSpan(b.Text("Cannot retrieve data"))),
+                        b =>
+                        {
+                            return b.HtmlDiv(
+                                b =>
+                                {
+                                    b.SetClass("flex flex-col rounded-md p-4 shadow-md border border-gray-100 text-gray-100");
+                                    b.AddClass("bg-red-500");
+                                },
+                                b.ServicePanelHeader(serviceData),
+                                b.HtmlDiv(
+                                    b =>
+                                    {
+                                        b.SetClass("flex flex-col gap-1");
+                                    },
+                                    b.HtmlSpan(
+                                        b.Text(
+                                            b.Concat(
+                                                b.Get(serviceData, x => x.StartedDateIso),
+                                                b.Get(serviceData, x => x.StartedTimeUtc)))),
+                                    b.HtmlSpan(
+                                        b.Text(
+                                            b.Concat(
+                                                b.Get(serviceData, x => x.RamMb),
+                                                b.Const(" MB"))))));
+                        });
+                });
+        }
         public static Var<IVNode> RenderServicePanel(
             this LayoutBuilder b,
             MdsInfrastructure.Deployment deployment,

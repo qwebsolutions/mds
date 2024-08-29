@@ -61,8 +61,8 @@ namespace MdsCommon.Controls
         public static Var<IVNode> InfoPanel(
             this LayoutBuilder b,
             Panel.Style style,
-            string header,
-            string body,
+            Var<string> header,
+            Var<string> body,
             Var<string> infoLink = null)
         {
             string info = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" fill=\"currentColor\">\r\n  <path fill-rule=\"evenodd\" d=\"M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm8.706-1.442c1.146-.573 2.437.463 2.126 1.706l-.709 2.836.042-.02a.75.75 0 01.67 1.34l-.04.022c-1.147.573-2.438-.463-2.127-1.706l.71-2.836-.042.02a.75.75 0 11-.671-1.34l.041-.022zM12 9a.75.75 0 100-1.5.75.75 0 000 1.5z\" clip-rule=\"evenodd\" />\r\n</svg>\r\n";
@@ -92,10 +92,20 @@ namespace MdsCommon.Controls
                                 b.Svg(info, "w-full h-full")));
                     }
                 },
-                b => b.TextSpan(b.Const(body)));
+                b => b.TextSpan(body));
         }
 
-        public static Var<IVNode> PanelsContainer(this LayoutBuilder b, int columns, IEnumerable<Var<IVNode>> panels)
+        public static Var<IVNode> InfoPanel(
+            this LayoutBuilder b,
+            Panel.Style style,
+            string header,
+            string body,
+            Var<string> infoLink = null)
+        {
+            return b.InfoPanel(style, b.Const(header), b.Const(body), infoLink);
+        }
+
+        public static Var<IVNode> PanelsContainer(this LayoutBuilder b, int columns, Var<List<IVNode>> panels)
         {
             // tw import
             // lg:grid-cols-4
@@ -104,7 +114,7 @@ namespace MdsCommon.Controls
                 {
                     b.SetClass($"grid grid-cols-1 lg:grid-cols-{columns} gap-4");
                 },
-                panels.ToArray());
+                panels);
         }
     }
 }

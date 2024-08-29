@@ -108,5 +108,13 @@ namespace MdsCommon
             b.Set(headerProps, x => x.User, user);
             return headerProps;
         }
+
+        public static Var<bool> IsSignedIn(this SyntaxBuilder b, Var<MdsCommon.User> user)
+        {
+            return b.If(
+                b.Not(b.HasObject(user)),
+                b => b.Const(false),
+                b => b.HasValue(b.Get(user, x => x.AuthType)));
+        }
     }
 }

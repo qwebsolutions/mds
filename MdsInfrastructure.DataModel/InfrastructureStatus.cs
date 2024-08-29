@@ -14,9 +14,9 @@ namespace MdsInfrastructure
 
         public MdsCommon.User User { get; set; } = new();
 
-        public string SingleChoiceTest { get; set; } = string.Empty;
-        public List<string> MultiChoiceTest { get; set; } = new();
-        public List<string> InputChoiceTest { get; set; } = new();
+        public List<NodePanelModel> NodePanels { get; set; } = new();
+        public List<ApplicationPanelModel> ApplicationPanels { get; set; } = new();
+        public List<ServicePanelModel> ServicePanels { get; set; } = new();
     }
 
     public class ApplicationStatus
@@ -29,5 +29,41 @@ namespace MdsInfrastructure
     {
         public string NodeName { get; set; } = string.Empty;
         public InfrastructureStatus InfrastructureStatus { get; set; } = new();
+    }
+
+    public class NodePanelModel
+    {
+        public string NodeName { get; set; }
+        public string NodeUiUrl { get; set; }
+        public string NodeStatusCode { get; set; } = "ok";
+        public string AvailableHddGb { get; set; }
+        public string AvailableHddPercent { get; set; }
+        public bool HddWarning { get; set; }
+        public string AvailableRamGb { get; set; }
+        public string AvailableRamPercent { get; set; }
+        public bool RamWarning { get; set; }
+
+        public string ErrorMessage { get; set; }
+    }
+
+    public class ApplicationPanelModel
+    {
+        public string ApplicationName { get; set; }
+        public string StatusCode { get; set; }
+        public string StatusText { get; set; }
+        public int DangerServicesCount { get; set; }
+        public int WarningServicesCount { get; set; }
+    }
+
+    public class ServicePanelModel
+    {
+        public string ServiceName { get; set; }
+        public FullStatus<MdsCommon.ServiceConfigurationSnapshot> FullStatus { get; set; }
+        public string StatusCode { get; set; }
+        public string StatusText { get; set; }
+        public string StartedDateIso { get; set; }
+        public string StartedTimeUtc { get; set; }
+        public string RamMb { get; set; }
+
     }
 }

@@ -50,24 +50,24 @@ namespace MdsInfrastructure.Render
             return b.Layout(
                 b.InfraMenu(nameof(Routes.Status), serverModel.User.IsSignedIn()),
                 b.Render(headerProps),
-                Render(b, serverModel)).As<IVNode>();
+                RenderContent(b, serverModel, clientModel));
         }
 
-        public static Var<IVNode> Render(LayoutBuilder b, MdsInfrastructure.InfrastructureStatus dataModel)
+        public static Var<IVNode> RenderContent(LayoutBuilder b, MdsInfrastructure.InfrastructureStatus serverModel, Var<MdsInfrastructure.InfrastructureStatus> clientModel)
         {
 
-            if (!string.IsNullOrEmpty(dataModel.SchemaValidationMessage))
+            if (!string.IsNullOrEmpty(serverModel.SchemaValidationMessage))
             {
-                return b.StyledDiv("text-red-500", b.Bold(dataModel.SchemaValidationMessage));
+                return b.StyledDiv("text-red-500", b.Bold(serverModel.SchemaValidationMessage));
             }
 
-            if (dataModel.Deployment == null)
+            if (serverModel.Deployment == null)
             {
                 return b.TextSpan("No deployment yet! The infrastructure is not running any service!");
             }
 
-            int totalServices = dataModel.Deployment.GetDeployedServices().Count();
-            int totalNodes = dataModel.Deployment.GetDeployedServices().Select(x => x.NodeName).Distinct().Count();
+            var totalServices = b.Get(b.GetDeployedServices(clientModel), x => x.Count());
+            var totalNodes = b.Get(b.GetDeployedServices(clientModel), x => x.Select(x => x.NodeName).Distinct().Count());
 
             return b.HtmlDiv(
                 b =>
@@ -76,26 +76,18 @@ namespace MdsInfrastructure.Render
                 },
                 b.InfoPanel(
                     Panel.Style.Info,
-                    $"Last deployment: {dataModel.Deployment.ConfigurationName}",
-                    $"{dataModel.Deployment.Timestamp.ItalianFormat()}, total services {totalServices}, total infrastructure nodes {totalNodes}"),
+                    b.Concat(b.Const("Last deployment: "), b.Get(clientModel, x => x.Deployment.ConfigurationName)),
+                    b.Concat(b.ItalianFormat(b.Get(clientModel, x => x.Deployment.Timestamp)), b.Const(" total services "), b.AsString(totalServices), b.Const(" total infrastructure nodes "), b.AsString(totalNodes))),
                 b.PanelsContainer(
                     4,
-                    dataModel.Deployment.GetDeployedServices().Select(x => x.NodeName).Distinct().Select(nodeName =>
-                    {
-                        var node = dataModel.InfrastructureNodes.Single(x => x.NodeName == nodeName);
-                        var nodePanel = b.RenderNodePanel<MdsInfrastructure.InfrastructureStatus, MdsInfrastructure.InfrastructureStatus>(node, dataModel.HealthStatus);
-                        return nodePanel;
-                    })),
+                    b.Map(
+                        b.Get(clientModel, x => x.NodePanels),
+                        (b, panelData) => b.NodePanel(panelData))),
                 b.PanelsContainer(
                     4,
-                    dataModel.Deployment.GetDeployedServices().Select(x => x.ApplicationName).Distinct().Select(applicationName =>
-                    {
-                        return b.RenderApplicationPanel<MdsInfrastructure.InfrastructureStatus, MdsInfrastructure.InfrastructureStatus>(
-                            dataModel.Deployment,
-                            dataModel.HealthStatus,
-                            dataModel.InfrastructureEvents,
-                            applicationName);
-                    })));
+                    b.Map(
+                        b.Get(clientModel, x => x.ApplicationPanels), 
+                        (b, panelData) => b.ApplicationPanel(panelData))));
         }
     }
 }

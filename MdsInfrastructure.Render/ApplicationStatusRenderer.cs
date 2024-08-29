@@ -17,7 +17,10 @@ namespace MdsInfrastructure.Render
             }));
         }
 
-        public static Var<IVNode> OnRender(LayoutBuilder b, MdsInfrastructure.ApplicationStatus serverData, Var<MdsInfrastructure.ApplicationStatus> clientModel)
+        public static Var<IVNode> OnRender(
+            LayoutBuilder b, 
+            MdsInfrastructure.ApplicationStatus serverData, 
+            Var<MdsInfrastructure.ApplicationStatus> clientModel)
         {
             b.AddModuleStylesheet();
 
@@ -27,38 +30,17 @@ namespace MdsInfrastructure.Render
                     b.GetHeaderProps(
                         b.Const("Application status"),
                         b.Const(serverData.ApplicationName),
-                        b.Get(clientModel, x=>x.InfrastructureStatus.User))),
-                Render(
+                        b.Get(clientModel, x => x.InfrastructureStatus.User))),
+                RenderClient(
                     b,
-                    serverData.InfrastructureStatus,
-                    serverData.ApplicationName)).As<IVNode>();
+                    clientModel));
         }
 
 
-        public static Var<IVNode> Render(
+        public static Var<IVNode> RenderClient(
             LayoutBuilder b,
-            MdsInfrastructure.InfrastructureStatus applicationStatusPage,
-            string selectedApplicationName)
+            Var<MdsInfrastructure.ApplicationStatus> clientModel)
         {
-            var selectedApplication = applicationStatusPage.InfrastructureConfiguration.Applications.Single(x => x.Name == selectedApplicationName);
-
-            //var applicationPanel = b.RenderApplicationPanel<MdsInfrastructure.InfrastructureStatus, MdsInfrastructure.InfrastructureStatus>(
-            //    applicationStatusPage.Deployment,
-            //    applicationStatusPage.HealthStatus,
-            //    applicationStatusPage.InfrastructureEvents,
-            //    selectedApplication.Name);
-
-            //var servicesGroup = b.Add(page, b.PanelsContainer(4));
-
-            //foreach (var service in applicationStatusPage.Deployment.GetDeployedServices().Where(x => x.ApplicationName == selectedApplication.Name))
-            //{
-            //    b.Add(servicesGroup, b.RenderServicePanel(
-            //        applicationStatusPage.Deployment,
-            //        applicationStatusPage.HealthStatus,
-            //        service,
-            //        applicationStatusPage.InfrastructureEvents));
-            //}
-
             return b.HtmlDiv(
                 b =>
                 {
@@ -66,15 +48,9 @@ namespace MdsInfrastructure.Render
                 },
                 b.PanelsContainer(
                     4,
-                    applicationStatusPage.Deployment.GetDeployedServices().Where(x => x.ApplicationName == selectedApplication.Name).Select(
-                        service => b.RenderServicePanel(
-                            applicationStatusPage.Deployment,
-                            applicationStatusPage.HealthStatus,
-                            service,
-                            applicationStatusPage.InfrastructureEvents))
-                    ));
-
-
+                    b.Map(
+                        b.Get(clientModel, x => x.InfrastructureStatus.ApplicationPanels),
+                        (b, panel) => b.ApplicationPanel(panel))));
         }
     }
 }
