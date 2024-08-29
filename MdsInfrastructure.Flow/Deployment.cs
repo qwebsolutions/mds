@@ -2,9 +2,7 @@
 using Metapsi;
 using Microsoft.AspNetCore.Http;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MdsInfrastructure.Flow
@@ -27,21 +25,25 @@ namespace MdsInfrastructure.Flow
         {
             public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext, Guid deploymentId)
             {
-                var deployment = await commandContext.Do(
-                    Backend.LoadDeploymentById,
-                    deploymentId);
+                var deploymentReview = await Load(commandContext, deploymentId);
+                deploymentReview.User = httpContext.User();
+                return Page.Result(deploymentReview);
+            }
+
+            public static async Task<DeploymentReview> Load(CommandContext commandContext, Guid deploymentId)
+            {
+                var deployment = await commandContext.Do(Backend.LoadDeploymentById, deploymentId);
 
                 var fromSnapshotIds = deployment.Transitions.Select(x => x.FromServiceConfigurationSnapshotId);
                 var toSnapshotIds = deployment.Transitions.Select(x => x.ToServiceConfigurationSnapshotId);
 
                 var changes = ChangesReport.Get(deployment.Transitions.Select(x => x.FromSnapshot).Where(x => x != null).ToList(), deployment.GetDeployedServices().ToList());
 
-                return Page.Result(new DeploymentReview()
+                return new DeploymentReview()
                 {
                     ChangesReport = changes,
                     Deployment = deployment,
-                    User = httpContext.User()
-                });
+                };
             }
         }
 
