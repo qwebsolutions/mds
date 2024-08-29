@@ -483,7 +483,13 @@ namespace MdsInfrastructure
 
             deploymentEvent.OnMessage<DeploymentEvent.ServiceStarted>(async (cc, message) =>
             {
+                await SignalRHub.HubContext.Clients.All.RaiseEvent(message);
+            });
 
+            deploymentEvent.OnMessage<MachineStatus>(async (cc, message) =>
+            {
+                await cc.Do(Backend.StoreHealthStatus, message);
+                await SignalRHub.HubContext.Clients.All.RaiseEvent(new RefreshModel());
             });
 
             api.MapGroup("deploymentEvent").MapGet("/", () => "WORKS!");

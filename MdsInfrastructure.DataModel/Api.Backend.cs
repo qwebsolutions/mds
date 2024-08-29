@@ -18,7 +18,7 @@ namespace MdsInfrastructure
         }
 
         public static Request<string> ValidateSchema { get; set; } = new(nameof(ValidateSchema));
-        public static Request<InfrastructureStatus> LoadInfraStatus { get; set; } = new(nameof(LoadInfraStatus));
+        public static Request<InfrastructureStatusData> LoadInfraStatus { get; set; } = new(nameof(LoadInfraStatus));
         public static Request<ConfigurationHeadersList> LoadAllConfigurationHeaders { get; set; } = new(nameof(LoadAllConfigurationHeaders));
         public static Request<InfrastructureConfiguration, Guid> LoadConfiguration { get; set; } = new(nameof(LoadConfiguration));
         public static Command<InfrastructureConfiguration> SaveConfiguration { get; set; } = new(nameof(SaveConfiguration));

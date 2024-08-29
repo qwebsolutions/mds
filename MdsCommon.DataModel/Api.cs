@@ -4,6 +4,16 @@ using System.Collections.Generic;
 
 namespace MdsCommon;
 
+public class InfrastructureMessage : IData
+{
+    public object Message { get; set; }
+}
+
+public class RefreshModel
+{
+
+}
+
 public static class DeploymentEvent
 {
     public class Started : IData
@@ -29,6 +39,14 @@ public static class DeploymentEvent
     public class ServiceUninstalled : IData
     {
         public Guid Id { get; set; }
+    }
+
+    public static void NotifyGlobal(this CommandContext commandContext, object message)
+    {
+        commandContext.PostEvent(new InfrastructureMessage()
+        {
+            Message = message
+        });
     }
 }
 

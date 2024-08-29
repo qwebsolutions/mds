@@ -32,7 +32,7 @@ public static class MessagingApi
 
     public static async Task PostMessage<T>(this HttpClient httpClient, string baseUrl, T message)
     {
-        var messageApiPath = baseUrl.TrimEnd('/') + "/" + TypeUrl<T>();
+        var messageApiPath = baseUrl.TrimEnd('/') + "/" + TypeUrl(message.GetType().Name);
         var response = await httpClient.PostAsJsonAsync(messageApiPath, message);
         //response.EnsureSuccessStatusCode();
     }

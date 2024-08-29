@@ -28,8 +28,6 @@ namespace MdsLocal
 
         public static async Task SynchronizeRunningProcesses(CommandContext commandContext, State state, LocalServicesConfigurationDiff configurationDiff, SyncResult syncResult)
         {
-            commandContext.PostEvent(new DeploymentEvent.Started());
-
             Event.ProcessesSynchronized processesSynchronized = new Event.ProcessesSynchronized();
             //syncResult.AddInfo("Reloading local configuration after update ...");
             var localKnownConfiguration = await commandContext.Do(GetLocalKnownConfiguration);
@@ -212,7 +210,6 @@ namespace MdsLocal
             }
 
             commandContext.PostEvent(processesSynchronized);
-            commandContext.PostEvent(new DeploymentEvent.Done());
         }
     }
 }

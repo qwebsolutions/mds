@@ -1,4 +1,5 @@
-﻿using Metapsi;
+﻿using MdsCommon;
+using Metapsi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,8 @@ namespace MdsLocal
 
         public static async Task SynchronizeConfiguration(CommandContext commandContext, State state, string trigger)
         {
+            bool needsDeploy = false;
+
             SyncResult syncResult = new SyncResult()
             {
                 ResultCode = SyncStatusCodes.UpToDate,
@@ -69,6 +72,9 @@ namespace MdsLocal
                 {
                     if (localServicesDiff.HasAnyUpdate())
                     {
+                        needsDeploy = true;
+                        commandContext.NotifyGlobal(new DeploymentEvent.Started());
+
                         foreach (var serviceDiff in localServicesDiff.AddedServices)
                         {
                             syncResult.AddInfo($"New service detected: {serviceDiff.ServiceName}");
@@ -138,6 +144,11 @@ namespace MdsLocal
             finally
             {
                 await commandContext.Do(StoreSyncResult, syncResult);
+                if (needsDeploy)
+                {
+                    await CheckMachineStatus(commandContext, state);
+                    commandContext.NotifyGlobal(new DeploymentEvent.Done());
+                }
             }
         }
 

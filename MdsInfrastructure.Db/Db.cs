@@ -49,7 +49,7 @@ namespace MdsInfrastructure
             return string.Empty;
         }
 
-        public static async Task<InfrastructureStatus> LoadInfrastructureStatus(
+        public static async Task<InfrastructureStatusData> LoadInfrastructureStatus(
             string fullDbPath)
         {
             return await Metapsi.Sqlite.Db.WithRollback(fullDbPath, async c =>
@@ -59,7 +59,7 @@ namespace MdsInfrastructure
                 activeDeployment.ConfigurationHeaderId == Guid.Empty ?
                 new InfrastructureConfiguration() : await c.Transaction.LoadSpecificConfiguration(activeDeployment.ConfigurationHeaderId);
 
-                return new InfrastructureStatus()
+                return new InfrastructureStatusData()
                 {
                     Deployment = activeDeployment,
                     HealthStatus = await c.Transaction.LoadFullInfrastructureHealthStatus(),

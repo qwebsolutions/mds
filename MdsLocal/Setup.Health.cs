@@ -1,4 +1,5 @@
-﻿using Metapsi;
+﻿using MdsCommon;
+using Metapsi;
 
 namespace MdsLocal
 {
@@ -60,9 +61,12 @@ namespace MdsLocal
                                 configuration.HealthStatusOutputChannel,
                                 nameof(MdsCommon.NodeStatus),
                                  Metapsi.Serialize.ToJson(serializable)));
+                        e.Using(healthNotifier, implementationGroup).EnqueueCommand(async (cc, state) =>
+                        {
+                            cc.NotifyGlobal(hs);
+                        });
                     }
                 });
         }
-
     }
 }

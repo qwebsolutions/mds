@@ -1,4 +1,5 @@
 ﻿using MdsCommon;
+using MdsInfrastructure.Routes;
 using Metapsi;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
@@ -6,10 +7,12 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Hosting.Internal;
 using Microsoft.Extensions.Hosting.Systemd;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace MdsInfrastructure.Flow;
@@ -18,9 +21,9 @@ public static class GetModel
 {
     public static async Task<InfrastructureStatus> InfrastructureStatus(CommandContext commandContext, HttpContext httpContext)
     {
-        var statusPage = await Load.Status(commandContext);
-        statusPage.User = httpContext.User();
-        return statusPage;
+        var pageModel = await Status.LoadInfrastructureStatusPageModel(commandContext);
+        pageModel.User = httpContext.User();
+        return pageModel;
     }
 
     public static void RegisterModelApi(this IEndpointRouteBuilder endpointRouteBuilder)
@@ -31,11 +34,46 @@ public static class GetModel
 
 public static partial class Status
 {
+    public static async Task<InfrastructureStatus> LoadInfrastructureStatusPageModel(CommandContext commandContext)
+    {
+        var statusPage = await Load.FullStatusData(commandContext);
+        return new MdsInfrastructure.InfrastructureStatus()
+        {
+            InfrastructureStatusData = statusPage,
+            ApplicationPanels = Load.GetApplicationPanelData(statusPage, statusPage.Deployment.GetDeployedServices().Select(x => x.ApplicationName).Distinct()),
+            NodePanels = Load.GetNodePanelsData(statusPage, statusPage.InfrastructureNodes.Select(x => x.NodeName))
+        };
+    }
+
+    public static async Task<ApplicationStatus> LoadApplicationStatusPageModel(CommandContext commandContext, string applicationName)
+    {
+        var fullStatus = await Load.FullStatusData(commandContext);
+        return new MdsInfrastructure.ApplicationStatus()
+        {
+            InfrastructureStatus = fullStatus,
+            ApplicationName = applicationName,
+            ApplicationPanel = Load.GetApplicationPanelData(fullStatus, applicationName),
+            ServicePanels = Load.GetServicePanelData(fullStatus, fullStatus.Deployment.GetDeployedServices().Where(x => x.ApplicationName == applicationName).Select(x => x.ServiceName))
+        };
+    }
+
+    public static async Task<NodeStatus> LoadNodeStatusPageModel(CommandContext commandContext, string nodeName)
+    {
+        var fullStatus = await Load.FullStatusData(commandContext);
+        return new MdsInfrastructure.NodeStatus()
+        {
+            InfrastructureStatus = fullStatus,
+            NodeName = nodeName,
+            NodePanel = Load.GetNodePanelData(fullStatus, nodeName),
+            ServicePanels = Load.GetServicePanelData(fullStatus, fullStatus.Deployment.GetDeployedServices().Where(x => x.NodeName == nodeName).Select(x => x.ServiceName))
+        };
+    }
+
     public class Infra : Metapsi.Http.Get<Routes.Status.Infra>
     {
         public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext)
         {
-            var statusPage = await Load.Status(commandContext);
+            var statusPage = await LoadInfrastructureStatusPageModel(commandContext);
             statusPage.User = httpContext.User();
             return Page.Result(statusPage);
         }
@@ -45,15 +83,9 @@ public static partial class Status
     {
         public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext, string applicationName)
         {
-            var pageData = await Load.Status(commandContext);
+            var pageData = await LoadApplicationStatusPageModel(commandContext, applicationName);
             pageData.User = httpContext.User();
-            //Guid selectedApplicationId = pageData.InfrastructureConfiguration.Applications.Single(x => x.Name == applicationName).Id;
-
-            return Page.Result<ApplicationStatus>(new ApplicationStatus()
-            {
-                ApplicationName = applicationName,
-                InfrastructureStatus = pageData
-            });
+            return Page.Result(pageData);
         }
     }
 
@@ -61,117 +93,110 @@ public static partial class Status
     {
         public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext, string nodeName)
         {
-            var pageData = await Load.Status(commandContext);
+            var pageData = await LoadNodeStatusPageModel(commandContext, nodeName);
             pageData.User = httpContext.User();
 
-            return Page.Result<NodeStatus>(new NodeStatus()
-            {
-                NodeName = nodeName,
-                InfrastructureStatus = pageData
-            });
+            return Page.Result(pageData);
         }
     }
 }
 
 internal static partial class Load
 {
-    public static async Task<InfrastructureStatus> Status(CommandContext commandContext)
+    public const decimal WarningAvailableHddGb = 1;
+    public const decimal WarningAvailableRamGb = 0.75m;
+    public const int WarningSyncSecondsAgo = 60;
+    public const decimal WarningServiceUsedRamMb = 800;
+
+    public static async Task<InfrastructureStatusData> FullStatusData(CommandContext commandContext)
     {
         string validation = await commandContext.Do(Backend.ValidateSchema);
 
         if (!string.IsNullOrEmpty(validation))
         {
-            return new InfrastructureStatus()
+            return new InfrastructureStatusData()
             {
                 SchemaValidationMessage = validation
             };
         }
 
         var infrastructureStatus = await commandContext.Do(Backend.LoadInfraStatus);
-        infrastructureStatus.NodePanels = GetNodePanelsData(infrastructureStatus);
-        infrastructureStatus.ApplicationPanels = GetApplicationPanelData(infrastructureStatus);
-        infrastructureStatus.ServicePanels = GetServicePanelData(infrastructureStatus);
         return infrastructureStatus;
     }
 
-    private static List<NodePanelModel> GetNodePanelsData(InfrastructureStatus infrastructureStatus)
+    public static NodePanelModel GetNodePanelData(InfrastructureStatusData infrastructureStatus, string nodeName)
+    {
+        var node = infrastructureStatus.InfrastructureNodes.SingleOrDefault(x => x.NodeName == nodeName);
+
+        if (node == null)
+        {
+            return new NodePanelModel()
+            {
+                NodeStatusCode = "error",
+                NodeName = nodeName,
+                ErrorMessage = "Node data not available"
+            };
+        }
+
+        // Should theoretically be only one anyway
+        var nodeStatus = infrastructureStatus.HealthStatus.OrderByDescending(x => x.TimestampUtc).FirstOrDefault();
+        if (nodeStatus == null)
+        {
+            return new NodePanelModel()
+            {
+                NodeStatusCode = "error",
+                NodeName = nodeName,
+                ErrorMessage = "Node data not available"
+            };
+        }
+
+        var nodePanelModel = new NodePanelModel()
+        {
+            NodeName = nodeName,
+            NodeUiUrl = $"http://{node.MachineIp}:{node.UiPort}"
+        };
+
+        decimal availableHddPercent = decimal.Round(decimal.Divide(nodeStatus.HddAvailableMb * 100, nodeStatus.HddTotalMb), 2, MidpointRounding.AwayFromZero);
+
+        nodePanelModel.AvailableHddPercent = availableHddPercent.ToString();
+
+        decimal availableHddGb = decimal.Round(decimal.Divide(nodeStatus.HddAvailableMb, 1024), 2, MidpointRounding.AwayFromZero);
+        nodePanelModel.AvailableHddGb = availableHddGb.ToString();
+
+        if (availableHddGb < WarningAvailableHddGb)
+        {
+            nodePanelModel.HddWarning = true;
+            nodePanelModel.NodeStatusCode = "warning";
+        }
+
+        decimal availableRamPercent = decimal.Round(decimal.Divide(nodeStatus.RamAvailableMb * 100, nodeStatus.RamTotalMb), 2, MidpointRounding.AwayFromZero);
+        nodePanelModel.AvailableRamPercent = availableRamPercent.ToString();
+
+        decimal availableRamGb = decimal.Round(decimal.Divide(nodeStatus.RamAvailableMb, 1024), 2, MidpointRounding.AwayFromZero);
+        nodePanelModel.AvailableRamGb = availableRamGb.ToString();
+
+        if (availableRamGb < WarningAvailableRamGb)
+        {
+            nodePanelModel.RamWarning = true;
+            nodePanelModel.NodeStatusCode = "warning";
+        }
+
+        return nodePanelModel;
+    }
+
+    public static List<NodePanelModel> GetNodePanelsData(InfrastructureStatusData infrastructureStatus, IEnumerable<string> nodeNames)
     {
         List<NodePanelModel> nodePanels = new List<NodePanelModel>();
 
-        foreach (var node in infrastructureStatus.InfrastructureNodes)
+        foreach (var node in nodeNames)
         {
-            var nodeHealthStatus = infrastructureStatus.HealthStatus.SingleOrDefault(x => x.NodeName == node.NodeName);
-            if (nodeHealthStatus == null)
-            {
-                nodePanels.Add(new NodePanelModel()
-                {
-                    NodeName = node.NodeName,
-                    NodeUiUrl = $"http://{node.MachineIp}:{node.UiPort}",
-                    NodeStatusCode = "error",
-                    ErrorMessage = "Could not retrieve status"
-                });
-            }
-            else
-            {
-                var nodePanel = new NodePanelModel()
-                {
-                    NodeName = node.NodeName,
-                    NodeUiUrl = $"http://{node.MachineIp}:{node.UiPort}",
-                };
-
-                nodePanels.Add(nodePanel);
-
-                FullStatus<string> status = StatusExtensions.GetNodeStatus(infrastructureStatus.HealthStatus, node.NodeName);
-
-                var availableHddGb = status.StatusValues.SingleOrDefault(x => x.Name == StatusExtensions.AvailableHddGb);
-                var availableHddPercent = status.StatusValues.SingleOrDefault(x => x.Name == StatusExtensions.AvailableHddPercent);
-                var availableRamGb = status.StatusValues.SingleOrDefault(x => x.Name == StatusExtensions.AvailableRamGb);
-                var availableRamPercent = status.StatusValues.SingleOrDefault(x => x.Name == StatusExtensions.AvailableRamPercent);
-
-
-                if (availableHddGb != null)
-                {
-                    nodePanel.AvailableHddGb = availableHddGb.CurrentValue;
-
-                    if (availableHddGb.GeneralStatus == GeneralStatus.Danger)
-                    {
-                        nodePanel.HddWarning = true;
-                    }
-                }
-
-                if (availableHddPercent != null)
-                {
-                    nodePanel.AvailableHddPercent = availableHddPercent.CurrentValue;
-                    if (availableHddPercent.GeneralStatus == GeneralStatus.Danger)
-                    {
-                        nodePanel.HddWarning = true;
-                    }
-                }
-
-                if (availableRamGb != null)
-                {
-                    nodePanel.AvailableRamGb = availableRamGb.CurrentValue;
-                    if (availableRamGb.GeneralStatus == GeneralStatus.Danger)
-                    {
-                        nodePanel.RamWarning = true;
-                    }
-                }
-
-                if (availableHddPercent != null)
-                {
-                    nodePanel.AvailableRamPercent = availableRamPercent.CurrentValue;
-                    if (availableRamPercent.GeneralStatus == GeneralStatus.Danger)
-                    {
-                        nodePanel.RamWarning = true;
-                    }
-                }
-            }
+            nodePanels.Add(GetNodePanelData(infrastructureStatus, node));
         }
 
         return nodePanels;
     }
 
-    private static ApplicationPanelModel GetApplicationPanelData(InfrastructureStatus status, string applicationName)
+    public static ApplicationPanelModel GetApplicationPanelData(InfrastructureStatusData status, string applicationName)
     {
         ApplicationPanelModel panelModel = new ApplicationPanelModel()
         {
@@ -186,24 +211,17 @@ internal static partial class Load
 
         foreach (var service in appServices)
         {
-            var serviceStatus = StatusExtensions.GetServiceStatus(status.Deployment, status.HealthStatus, service, status.InfrastructureEvents);
-            if (serviceStatus.Entity.Enabled)
+            var servicePanelData = GetServicePanelData(status, service.ServiceName);
+            if (servicePanelData.Enabled)
             {
-                if (serviceStatus.StatusValues.Any(x => x.GeneralStatus == GeneralStatus.Danger || x.GeneralStatus == GeneralStatus.NoData))
+                if (servicePanelData.StatusCode == "error")
                 {
                     dangerServicesCount++;
                 }
-                else
+                else if (servicePanelData.StatusCode == "warning")
                 {
-                    if (serviceStatus.StatusValues.Any(x => x.GeneralStatus == GeneralStatus.Warning))
-                    {
-                        warningServicesCount++;
-                    }
+                    warningServicesCount++;
                 }
-            }
-            else
-            {
-                warningServicesCount++;
             }
         }
 
@@ -223,13 +241,12 @@ internal static partial class Load
         return panelModel;
     }
 
-    private static List<ApplicationPanelModel> GetApplicationPanelData(InfrastructureStatus status)
+    public static List<ApplicationPanelModel> GetApplicationPanelData(InfrastructureStatusData status, IEnumerable<string> applicationNames)
     {
-        var applications = status.Deployment.GetDeployedServices().Select(x => x.ApplicationName).Distinct();
-        return applications.Select(x => GetApplicationPanelData(status, x)).ToList();
+        return applicationNames.Select(x => GetApplicationPanelData(status, x)).ToList();
     }
 
-    private static ServicePanelModel GetServicePanelData(InfrastructureStatus status, string serviceName)
+    public static ServicePanelModel GetServicePanelData(InfrastructureStatusData status, string serviceName)
     {
 
         ServicePanelModel servicePanelData = new ServicePanelModel()
@@ -238,33 +255,66 @@ internal static partial class Load
         };
 
         var serviceSnapshot = status.Deployment.GetDeployedServices().Single(x => x.ServiceName == serviceName);
-
-
-
-        servicePanelData.FullStatus = StatusExtensions.GetServiceStatus(status.Deployment, status.HealthStatus, serviceSnapshot, status.InfrastructureEvents);
-
-        if (servicePanelData.FullStatus.StatusValues.Any(x => x.GeneralStatus == GeneralStatus.NoData))
+        if (!serviceSnapshot.Enabled)
         {
-            servicePanelData.StatusCode = "warning";
-            servicePanelData.StatusText = "Waiting for data";
+            servicePanelData.Enabled = false;
+            servicePanelData.StatusText = "Disabled";
+            return servicePanelData;
         }
-        else if (servicePanelData.FullStatus.StatusValues.Single(x => x.Name == StatusExtensions.ServiceRunningFor).GeneralStatus == GeneralStatus.Danger)
+
+        var serviceStatus = status.HealthStatus.SelectMany(x => x.ServiceStatuses).Where(x => x.ServiceName == serviceName).OrderByDescending(x => x.StatusTimestamp).FirstOrDefault();
+
+        if (serviceStatus == null)
         {
             servicePanelData.StatusCode = "error";
-            servicePanelData.StatusText = "Service not running!";
+            servicePanelData.StatusText = "Service data not available";
+            return servicePanelData;
         }
-        else
+
+        var chronologicalEvents = status.InfrastructureEvents.Where(x => x.Source == serviceName).OrderBy(x => x.Timestamp);
+        var lastConfigurationChange = status.Deployment.LastConfigurationChanges.Single(x => x.ServiceName == serviceName);
+        // Kinda flimsy based on timestamp, ain't it?
+        var eventsSinceLastReconfigured = chronologicalEvents.Where(x => x.Timestamp > lastConfigurationChange.LastConfigurationChangeTimestamp);
+
+        // If started multiple times since last deployment, could be a problem
+        var exitEvents = eventsSinceLastReconfigured.Where(x => x.Type == MdsCommon.InfrastructureEventType.ProcessExit);
+
+        if (exitEvents.Count() > 30)
         {
-            var runningSince = servicePanelData.FullStatus.StatusValues.SingleOrDefault(x => x.Name == StatusExtensions.ServiceRunningSince);
-            servicePanelData.StartedDateIso = runningSince.CurrentValue;
+            servicePanelData.StatusCode = "warning";
+            servicePanelData.StatusText = $"Crashed {exitEvents.Count()} times since deployed";
+        }
+
+        servicePanelData.StartedTimeUtc = serviceStatus.StartTimeUtc.Roundtrip();
+
+        TimeSpan syncAgo = TimeSpan.FromSeconds((int)(DateTime.UtcNow - serviceStatus.StatusTimestamp.ToUniversalTime()).TotalSeconds);
+
+        if (syncAgo.TotalSeconds > WarningSyncSecondsAgo)
+        {
+            servicePanelData.StatusCode = "warning";
+            servicePanelData.StatusText = "Waiting for status update...";
+        }
+        servicePanelData.RamMb = serviceStatus.UsedRamMb.ToString();
+
+        if (serviceStatus.UsedRamMb > WarningServiceUsedRamMb)
+        {
+            servicePanelData.StatusCode = "warning";
+            servicePanelData.RamWarning = true;
         }
 
         return servicePanelData;
     }
 
-    private static List<ServicePanelModel> GetServicePanelData(InfrastructureStatus status)
+    public static List<ServicePanelModel> GetServicePanelData(InfrastructureStatusData status, IEnumerable<string> serviceNames)
     {
-        var deployedServiceNames = status.Deployment.GetDeployedServices().Select(x => x.ServiceName);
-        return deployedServiceNames.Select(x => GetServicePanelData(status, x)).ToList();
+        List<ServicePanelModel> servicePanels = new List<ServicePanelModel>();
+        foreach (var serviceName in serviceNames)
+        {
+            servicePanels.Add(GetServicePanelData(status, serviceName));
+        }
+
+        return servicePanels;
+        //var deployedServiceNames = status.Deployment.GetDeployedServices().Select(x => x.ServiceName);
+        //return deployedServiceNames.Select(x => GetServicePanelData(status, x)).ToList();
     }
 }

@@ -296,21 +296,30 @@ namespace MdsLocal
             var httpEventPoster = setup.AddBusinessState(new HttpClient());
             var deploymentEventsUrl = inputArguments.InfrastructureApiUrl.Trim('/') + "/deploymentEvent";
 
-            setup.MapEvent<DeploymentEvent.Started>(e =>
+            //setup.MapEvent<DeploymentEvent.Started>(e =>
+            //{
+            //    e.Using(httpEventPoster, ig).EnqueueCommand(async (cc, state) =>
+            //    {
+            //        await state.PostMessage(deploymentEventsUrl, e.EventData);
+            //    });
+            //});
+
+            //setup.MapEvent<DeploymentEvent.Done>(e =>
+            //{
+            //    e.Using(httpEventPoster, ig).EnqueueCommand(async (cc, state) =>
+            //    {
+            //        await state.PostMessage(deploymentEventsUrl, e.EventData);
+            //    });
+            //});
+
+            setup.MapEvent<InfrastructureMessage>(e =>
             {
                 e.Using(httpEventPoster, ig).EnqueueCommand(async (cc, state) =>
                 {
-                    await state.PostMessage(deploymentEventsUrl, e.EventData);
+                    await state.PostMessage(deploymentEventsUrl, e.EventData.Message);
                 });
             });
 
-            setup.MapEvent<DeploymentEvent.Done>(e =>
-            {
-                e.Using(httpEventPoster, ig).EnqueueCommand(async (cc, state) =>
-                {
-                    await state.PostMessage(deploymentEventsUrl, e.EventData);
-                });
-            });
         }
     }
 }

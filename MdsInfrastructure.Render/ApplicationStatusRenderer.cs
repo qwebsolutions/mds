@@ -25,12 +25,12 @@ namespace MdsInfrastructure.Render
             b.AddModuleStylesheet();
 
             return b.Layout(
-                b.InfraMenu(nameof(Routes.Status), serverData.InfrastructureStatus.User.IsSignedIn()),
+                b.InfraMenu(nameof(Routes.Status), serverData.User.IsSignedIn()),
                 b.Render(
                     b.GetHeaderProps(
                         b.Const("Application status"),
                         b.Const(serverData.ApplicationName),
-                        b.Get(clientModel, x => x.InfrastructureStatus.User))),
+                        b.Get(clientModel, x => x.User))),
                 RenderClient(
                     b,
                     clientModel));
@@ -46,11 +46,12 @@ namespace MdsInfrastructure.Render
                 {
                     b.AddClass("flex flex-col space-y-4");
                 },
+                b.ApplicationPanel(b.Get(clientModel, x=>x.ApplicationPanel)),
                 b.PanelsContainer(
                     4,
                     b.Map(
-                        b.Get(clientModel, x => x.InfrastructureStatus.ApplicationPanels),
-                        (b, panel) => b.ApplicationPanel(panel))));
+                        b.Get(clientModel, x => x.ServicePanels),
+                        (b, panel) => b.ServicePanel(panel))));
         }
     }
 }
