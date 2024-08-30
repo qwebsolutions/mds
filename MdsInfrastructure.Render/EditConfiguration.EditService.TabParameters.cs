@@ -182,7 +182,7 @@ namespace MdsInfrastructure.Render
             b.Set(parameter, x => x.InfrastructureServiceParameterBindings, bindingRemoved);
             var valueRemoved = b.Get(parameter, paramId, (x, paramId) => x.InfrastructureServiceParameterValues.Where(x => x.InfrastructureServiceParameterDeclarationId != paramId).ToList());
             b.Set(parameter, x => x.InfrastructureServiceParameterValues, valueRemoved);
-            var notesRemoved = b.Get(service, x => x.InfrastructureServiceNotes.Where(x => x.Reference != paramId.ToString()).ToList());
+            var notesRemoved = b.Get(service, paramId, (x, paramId) => x.InfrastructureServiceNotes.Where(x => x.Reference != paramId.ToString()).ToList());
             b.Set(service, x => x.InfrastructureServiceNotes, notesRemoved);
             return b.Clone(clientModel);
         }

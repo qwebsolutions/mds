@@ -80,7 +80,7 @@ namespace MdsInfrastructure.Render
                         nameof(Routes.Deployment),
                         serverModel.User.IsSignedIn()),
                 b.Render(headerProps),
-                b.ReviewDeployment(b.Get(clientModel, x => x.ChangesReport)));
+                b.ReviewDeployment(clientModel));
             }
         }
 
@@ -192,12 +192,13 @@ namespace MdsInfrastructure.Render
                                     b.Set(x => x.SvgIcon, swapIcon);
                                 }),
                             b.DeployNowButton<DeploymentPreview>(b.Get(infrastructureConfiguration, x => x.Id))),
-                        b.ChangesReport(b.Get(changesReport, x => x.ServiceChanges)));
+                        b.ChangesReport(
+                            b.Get(changesReport, x => x.ServiceChanges),
+                            b.NewCollection<DeploymentServiceStatus>()));
                 });
         }
 
-
-        public static Var<IVNode> ReviewDeployment(this LayoutBuilder b, Var<ChangesReport> model)
+        public static Var<IVNode> ReviewDeployment(this LayoutBuilder b, Var<DeploymentReview> model)
         {
             var view = b.HtmlDiv(
                 b =>
@@ -214,7 +215,9 @@ namespace MdsInfrastructure.Render
                     {
                         b.SetClass("py-4");
                     },
-                    b.ChangesReport(b.Get(model, x => x.ServiceChanges))));
+                    b.ChangesReport(
+                        b.Get(model, x => x.ChangesReport.ServiceChanges),
+                        b.Get(model, x=>x.DeploymentServiceStatuses))));
 
             return view;
         }
@@ -234,7 +237,7 @@ namespace MdsInfrastructure.Render
         const string Stop = "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" class=\"w-6 h-6\">\r\n  <path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M5.25 7.5A2.25 2.25 0 0 1 7.5 5.25h9a2.25 2.25 0 0 1 2.25 2.25v9a2.25 2.25 0 0 1-2.25 2.25h-9a2.25 2.25 0 0 1-2.25-2.25v-9Z\" />\r\n</svg>\r\n";
         const string StopCircle = "<svg xmlns=\"http://www.w3.org/2000/svg\" fill=\"none\" viewBox=\"0 0 24 24\" stroke-width=\"1.5\" stroke=\"currentColor\" class=\"w-6 h-6\">\r\n  <path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z\" />\r\n  <path stroke-linecap=\"round\" stroke-linejoin=\"round\" d=\"M9 9.563C9 9.252 9.252 9 9.563 9h4.874c.311 0 .563.252.563.563v4.874c0 .311-.252.563-.563.563H9.564A.562.562 0 0 1 9 14.437V9.564Z\" />\r\n</svg>\r\n";
 
-        public static Var<IVNode> ChangesReport(this LayoutBuilder b, Var<List<ServiceChange>> serviceChanges)
+        public static Var<IVNode> ChangesReport(this LayoutBuilder b, Var<List<ServiceChange>> serviceChanges, Var<List<DeploymentServiceStatus>> servicesState)
         {
             return b.HtmlDiv(
                 b =>
@@ -245,18 +248,20 @@ namespace MdsInfrastructure.Render
                     serviceChanges,
                     (b, change) =>
                     {
+                        var serviceStatus = b.Get(servicesState, change, (servicesState, change) => servicesState.SingleOrDefault(x => x.ServiceName == change.ServiceName));
                         return b.Switch(
                             b.Get(change, x => x.ServiceChangeType),
-                            b => b.NewService(change),
-                            (ChangeType.Added, b => b.NewService(change)),
+                            b => b.NewService(change, serviceStatus),
+                            (ChangeType.Added, b => b.NewService(change, serviceStatus)),
                             (ChangeType.Changed, b => b.ChangedService(change)),
                             (ChangeType.Removed, b => b.RemovedService(change)));
                     }));
         }
 
-        public static Var<IVNode> NewService(this LayoutBuilder b, Var<ServiceChange> serviceChange)
+        public static Var<IVNode> DefaultNewServiceStatus(this LayoutBuilder b, Var<ServiceChange> serviceChange)
         {
-            var processStatus = b.If(
+            b.Log("serviceChange", serviceChange);
+            return b.If(
                 b.Get(serviceChange, x => x.Enabled.NewValue == "False"),
                 b => b.HtmlDiv(
                     b =>
@@ -272,7 +277,40 @@ namespace MdsInfrastructure.Render
                     },
                     b.Svg(Play, "w-6 h-6"),
                     b.Text($"Service will be started")));
+        }
 
+        public static Var<IVNode> LiveServiceStatus(this LayoutBuilder b, Var<DeploymentServiceStatus> serviceStatus)
+        {
+            return b.If(
+                b.Get(serviceStatus, x => !x.IsRunning),
+                b =>
+                {
+                    return b.HtmlDiv(
+                        b =>
+                        {
+                            b.SetClass("flex flex-row gap-2 text-gray-800");
+                        },
+                        b.Svg(StopCircle, "w-6 h-6"),
+                        b.Text($"Service stopped"));
+                },
+                b =>
+                {
+                    return b.HtmlDiv(
+                        b =>
+                        {
+                            b.SetClass("flex flex-row gap-2 text-green-800");
+                        },
+                        b.Svg(PlayCircle, "w-6 h-6"),
+                        b.Text($"Service started"));
+                });
+        }
+
+        public static Var<IVNode> NewService(this LayoutBuilder b, Var<ServiceChange> serviceChange, Var<DeploymentServiceStatus> serviceStatus)
+        {
+            var processStatus = b.If(
+                b.HasObject(serviceStatus),
+                b => b.LiveServiceStatus(serviceStatus),
+                b => b.DefaultNewServiceStatus(serviceChange));
 
             return b.ServiceChangeCard(
                 b.Get(serviceChange, x => x.ServiceName),
@@ -351,6 +389,7 @@ namespace MdsInfrastructure.Render
 
         public static Var<IVNode> ChangedService(this LayoutBuilder b, Var<ServiceChange> serviceChange)
         {
+            b.Log("serviceChange", serviceChange);
             var shouldEnable = b.Get(serviceChange, serviceChange => serviceChange.Enabled.NewValue == "True" && serviceChange.Enabled.OldValue == "False");
             var shouldDisable = b.Get(serviceChange, serviceChange => serviceChange.Enabled.NewValue == "False" && serviceChange.Enabled.OldValue == "True");
             var isDisabled = b.Get(serviceChange, serviceChange => serviceChange.Enabled.NewValue == "False" && serviceChange.Enabled.OldValue == "False");

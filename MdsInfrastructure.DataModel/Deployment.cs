@@ -64,6 +64,17 @@ namespace MdsInfrastructure
         public Deployment Deployment { get; set; }
         public ChangesReport ChangesReport { get; set; }
         public MdsCommon.User User { get; set; }
+
+        public List<DeploymentServiceStatus> DeploymentServiceStatuses { get; set; } = new();
+    }
+
+    public class DeploymentServiceStatus
+    {
+        public string ServiceName { get; set; }
+        public DateTime StartTime { get; set; }
+        public bool IsRunning { get; set; }
+        public int RestartCount { get; set; }
+        public string ErrorMessage { get; set; }
     }
 
     public class DeploymentPreview
