@@ -18,7 +18,7 @@ namespace MdsInfrastructure
         }
 
         public static Request<string> ValidateSchema { get; set; } = new(nameof(ValidateSchema));
-        public static Request<InfrastructureStatus> LoadInfraStatus { get; set; } = new(nameof(LoadInfraStatus));
+        public static Request<InfrastructureStatusData> LoadInfraStatus { get; set; } = new(nameof(LoadInfraStatus));
         public static Request<ConfigurationHeadersList> LoadAllConfigurationHeaders { get; set; } = new(nameof(LoadAllConfigurationHeaders));
         public static Request<InfrastructureConfiguration, Guid> LoadConfiguration { get; set; } = new(nameof(LoadConfiguration));
         public static Command<InfrastructureConfiguration> SaveConfiguration { get; set; } = new(nameof(SaveConfiguration));
@@ -31,7 +31,7 @@ namespace MdsInfrastructure
         public static Request<List<MdsCommon.Project>> LoadAllProjects { get; set; } = new(nameof(LoadAllProjects));
         public static Request<List<InfrastructureNode>> LoadAllNodes { get; set; } = new(nameof(LoadAllNodes));
         public static Request<List<InfrastructureService>> LoadAllServices { get; set; } = new(nameof(LoadAllServices));
-        public static Command<ConfirmDeploymentInput> ConfirmDeployment { get; set; } = new(nameof(ConfirmDeployment));
+        public static Request<Guid, ConfirmDeploymentInput> ConfirmDeployment { get; set; } = new(nameof(ConfirmDeployment));
         public static Request<List<ParameterType>> GetAllParameterTypes { get; set; } = new Request<List<ParameterType>>(nameof(GetAllParameterTypes));
         public static Request<List<EnvironmentType>> LoadEnvironmentTypes { get; set; } = new(nameof(LoadEnvironmentTypes));
         public static Request<List<MdsCommon.MachineStatus>> LoadHealthStatus { get; set; } = new(nameof(LoadHealthStatus));
@@ -43,7 +43,8 @@ namespace MdsInfrastructure
         public static Request<string> GetInfrastructureName { get; set; } = new(nameof(GetInfrastructureName));
         public static Request<List<NoteType>> GetAllNoteTypes { get; set; } = new(nameof(GetAllNoteTypes));
         public static Command<MachineStatus> StoreHealthStatus { get; set; } = new(nameof(StoreHealthStatus));
-
+        public static Command<DbDeploymentEvent> SaveDeploymentEvent { get; set; } = new(nameof(SaveDeploymentEvent));
+        public static Request<List<DbDeploymentEvent>, Guid> LoadDeploymentEvents { get; set; } = new(nameof(LoadDeploymentEvents));
         public static Request<MdsCommon.ServiceConfigurationSnapshot, MdsCommon.ServiceConfigurationSnapshot> LoadIdenticalSnapshot { get; set; } = new(nameof(LoadIdenticalSnapshot));
     }
 

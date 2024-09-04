@@ -7,12 +7,12 @@
 	<ItemGroup>
 		<PackageReference Include="Metapsi.Runtime" Version="$(MetapsiVersion)" />
 		<PackageReference Include="Metapsi.Web" Version="$(MetapsiVersion)" />
-		<PackageReference Include="Metapsi.Web.Contracts" Version="$(MetapsiVersion)" />
 		<PackageReference Include="Metapsi.Mds" Version="$(MetapsiVersion)" />
 		<PackageReference Include="Metapsi.Sqlite" Version="$(MetapsiVersion)" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\MdsCommon\MdsCommon.csproj" />
 		<ProjectReference Include="..\MdsInfrastructure.DataModel\MdsInfrastructure.DataModel.csproj" />
 	</ItemGroup>
 

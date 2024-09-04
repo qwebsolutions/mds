@@ -7,6 +7,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<EmbeddedResource Include="embedded\dateFns.js" LogicalName="dateFns.js" />
 		<EmbeddedResource Include="embedded\connect.js" LogicalName="connect.js" />
 		<EmbeddedResource Include="embedded\cy.js" LogicalName="cy.js" />
 		<EmbeddedResource Include="embedded\cytoscape.min.js" LogicalName="cytoscape.min.js"/>

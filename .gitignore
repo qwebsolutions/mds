@@ -14,3 +14,9 @@ infraargs.json
 localargs.json
 dev_kratos
 publish.metapsi.dev.sh
+/dev/nugets/*
+/PublishScripts/publish/
+/PublishScripts/*.bat
+/*.txt
+MdsTests/
+MdsInfrastructure/*.json

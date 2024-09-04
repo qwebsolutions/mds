@@ -1,15 +1,13 @@
 ﻿using Metapsi.Syntax;
 using Metapsi.Hyperapp;
 using MdsCommon.Controls;
-using Metapsi.Dom;
 using Metapsi.Html;
-using System.ComponentModel;
 using Metapsi.Shoelace;
-using Metapsi;
 using System;
 
 namespace MdsCommon
 {
+
     public static class SignIn
     {
         public static Var<IVNode> Render(
@@ -114,6 +112,16 @@ namespace MdsCommon
             Var<IVNode> header,
             Var<IVNode> page)
         {
+            return b.LayoutWithProgressBar(menu, header, b.VoidNode(), page);
+        }
+
+        public static Var<IVNode> LayoutWithProgressBar(
+            this LayoutBuilder b,
+            Var<IVNode> menu,
+            Var<IVNode> header,
+            Var<IVNode> progressBar,
+            Var<IVNode> page)
+        {
             b.AddModuleStylesheet();
 
             var rightArea = b.HtmlDiv(
@@ -124,8 +132,14 @@ namespace MdsCommon
                 b.HtmlDiv(
                     b =>
                     {
-                        b.SetClass("w-full bg-white drop-shadow px-8 py-4 z-40");
-                    }, header),
+                        b.SetClass("flex flex-col");
+                    },
+                    b.HtmlDiv(
+                        b =>
+                        {
+                            b.SetClass("w-full bg-white drop-shadow px-8 py-4 z-40");
+                        }, header),
+                    progressBar),
                 b.HtmlDiv(
                     b =>
                     {

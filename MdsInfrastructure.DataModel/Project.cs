@@ -1,11 +1,9 @@
 ﻿using MdsCommon;
-using Metapsi.Hyperapp;
-using Metapsi.Ui;
 using System.Collections.Generic;
 
 namespace MdsInfrastructure
 {
-    public class ListProjectsPage : IHasLoadingPanel, IHasValidationPanel, IApiSupportState
+    public class ListProjectsPage : IHasLoadingPanel, IHasValidationPanel
     {
         public List<Project> ProjectsList { get; set; }
         public List<InfrastructureConfiguration> AllConfigurationHeaders { get; set; }
@@ -20,11 +18,9 @@ namespace MdsInfrastructure
         public bool IsLoading { get; set; }
         public string ValidationMessage { get; set; }
 
-        public Metapsi.Ui.User User { get; set; }
+        public User User { get; set; }
 
         public string SearchKeyword { get; set; }
-
-        public ApiSupport ApiSupport { get; set; } = new ApiSupport();
 
         public string DeleteError { get; set; } = string.Empty;
     }

@@ -39,14 +39,14 @@ namespace MdsCommon.Controls
         public static Var<IVNode> TextArea(
             this LayoutBuilder b, 
             Var<string> text,
-            System.Action<Modifier<TextArea.Props>> optional = null)
+            System.Action<PropsBuilder<TextArea.Props>> optional = null)
         {
             var props = b.NewObj<TextArea.Props>(
                 b =>
                 {
                     b.Set(x => x.Text, text);
                 });
-            b.Modify(props, optional);
+            b.SetProps(props, optional);
 
             return b.TextArea(props);
         }

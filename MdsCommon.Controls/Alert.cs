@@ -2,6 +2,7 @@
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using System.Linq;
+using MdsCommon;
 
 namespace MdsCommon.Controls
 {
@@ -55,7 +56,7 @@ namespace MdsCommon.Controls
         }
 
         public static Var<IVNode> ValidationPanel<TPage>(this LayoutBuilder b, Var<TPage> page)
-            where TPage : Metapsi.Ui.IHasValidationPanel
+            where TPage : IHasValidationPanel
         {
             Var<string> validationMessage = b.Get(page, x => x.ValidationMessage);
             return b.If(

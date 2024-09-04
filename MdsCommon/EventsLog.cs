@@ -18,5 +18,23 @@ namespace MdsCommon
             return Page.Result(allEvents);
         }
     }
+
+    public static class UserExtensions
+    {
+        public static MdsCommon.User User(this HttpContext httpContext)
+        {
+            var userIdClaim = httpContext.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+            if (userIdClaim == null)
+            {
+                return new User();
+            }
+
+            return new MdsCommon.User
+            {
+                AuthType = "OIDC",
+                Name = userIdClaim.Value
+            };
+        }
+    }
 }
 

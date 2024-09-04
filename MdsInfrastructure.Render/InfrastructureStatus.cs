@@ -1,23 +1,48 @@
 ﻿using Metapsi;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
-using Metapsi.Ui;
 using MdsCommon;
 using System.Linq;
 using MdsCommon.Controls;
-using System.Collections.Generic;
 using Metapsi.Html;
+using Metapsi.SignalR;
 
 namespace MdsInfrastructure.Render
 {
-    public class InfrastructureStatus: MixedHyperPage<MdsInfrastructure.InfrastructureStatus, MdsInfrastructure.InfrastructureStatus>
+    public static class InfrastructureStatus
     {
-        public override MdsInfrastructure.InfrastructureStatus ExtractClientModel(MdsInfrastructure.InfrastructureStatus serverData)
+        public static void Render(this HtmlBuilder b, MdsInfrastructure.InfrastructureStatus serverModel)
         {
-            return serverData;
+            b.BodyAppend(b.DeploymentToasts());
+            b.BodyAppend(
+                b.Hyperapp(
+                    (SyntaxBuilder b) => b.MakeInit(
+                        b.MakeStateWithEffects(
+                            b.Const(serverModel),
+                            b.SignalRConnect())),
+                    (LayoutBuilder b, Var<MdsInfrastructure.InfrastructureStatus> model) =>
+                    {
+                        return OnRender(b, serverModel, model);
+                    },
+                    (b, model) => b.Listen(b.MakeAction((SyntaxBuilder b, Var<MdsInfrastructure.InfrastructureStatus> model, Var<DeploymentEvent.Started> e) =>
+                    {
+                        b.ShowDeploymentToast(MdsCommon.Controls.Controls.IdDeploymentStartedToast);
+                        return model;
+                    })),
+                    (b, model) => b.Listen(b.MakeAction((SyntaxBuilder b, Var<MdsInfrastructure.InfrastructureStatus> model, Var<DeploymentEvent.Done> e) =>
+                    {
+                        b.ShowDeploymentToast(MdsCommon.Controls.Controls.IdDeploymentSuccessToast);
+                        return b.MakeStateWithEffects(
+                            model,
+                            b.RefreshModelEffect<MdsInfrastructure.InfrastructureStatus>());
+                    })),
+                    (b, model) => b.Listen(b.MakeAction((SyntaxBuilder b, Var<MdsInfrastructure.InfrastructureStatus> model, Var<RefreshInfrastructureStatusModel> e) =>
+                    {
+                        return b.MakeStateWithEffects(model, b.RefreshModelEffect<MdsInfrastructure.InfrastructureStatus>());
+                    }))));
         }
 
-        public override Var<IVNode> OnRender(LayoutBuilder b, MdsInfrastructure.InfrastructureStatus serverModel, Var<MdsInfrastructure.InfrastructureStatus> clientModel)
+        public static Var<IVNode> OnRender(LayoutBuilder b, MdsInfrastructure.InfrastructureStatus serverModel, Var<MdsInfrastructure.InfrastructureStatus> clientModel)
         {
             b.AddModuleStylesheet();
 
@@ -26,24 +51,32 @@ namespace MdsInfrastructure.Render
             return b.Layout(
                 b.InfraMenu(nameof(Routes.Status), serverModel.User.IsSignedIn()),
                 b.Render(headerProps),
-                Render(b, serverModel)).As<IVNode>();
+                RenderContent(b, serverModel, clientModel));
         }
 
-        public static Var<IVNode> Render(LayoutBuilder b, MdsInfrastructure.InfrastructureStatus dataModel)
+        public static Var<string> FormatDistanceAgo(this SyntaxBuilder b, Var<string> date, Var<string> language)
+        {
+            StaticFiles.Add(typeof(MdsInfrastructure.Render.InfrastructureStatus).Assembly, "dateFns.js");
+            var parsedDate = b.ParseDate(date);
+            b.Log("FormatDistanceAgo language", language);
+            return b.Concat(b.CallExternal<string>("dateFns", "formatDistanceToNow", parsedDate), b.Const(" ago"));
+        }
+
+        public static Var<IVNode> RenderContent(LayoutBuilder b, MdsInfrastructure.InfrastructureStatus serverModel, Var<MdsInfrastructure.InfrastructureStatus> clientModel)
         {
 
-            if (!string.IsNullOrEmpty(dataModel.SchemaValidationMessage))
+            if (!string.IsNullOrEmpty(serverModel.InfrastructureStatusData.SchemaValidationMessage))
             {
-                return b.StyledDiv("text-red-500", b.Bold(dataModel.SchemaValidationMessage));
+                return b.StyledDiv("text-red-500", b.Bold(serverModel.InfrastructureStatusData.SchemaValidationMessage));
             }
 
-            if (dataModel.Deployment == null)
+            if (serverModel.InfrastructureStatusData.Deployment == null)
             {
                 return b.TextSpan("No deployment yet! The infrastructure is not running any service!");
             }
 
-            int totalServices = dataModel.Deployment.GetDeployedServices().Count();
-            int totalNodes = dataModel.Deployment.GetDeployedServices().Select(x => x.NodeName).Distinct().Count();
+            var totalServices = b.Get(b.GetDeployedServices(clientModel), x => x.Count());
+            var totalNodes = b.Get(b.GetDeployedServices(clientModel), x => x.Select(x => x.NodeName).Distinct().Count());
 
             return b.HtmlDiv(
                 b =>
@@ -52,26 +85,30 @@ namespace MdsInfrastructure.Render
                 },
                 b.InfoPanel(
                     Panel.Style.Info,
-                    $"Last deployment: {dataModel.Deployment.ConfigurationName}",
-                    $"{dataModel.Deployment.Timestamp.ItalianFormat()}, total services {totalServices}, total infrastructure nodes {totalNodes}"),
+                    b.Concat(b.Const("Last deployment: "), b.Get(clientModel, x => x.InfrastructureStatusData.Deployment.ConfigurationName)),
+                    b.Concat(b.ItalianFormat(b.Get(clientModel, x => x.InfrastructureStatusData.Deployment.Timestamp)), b.Const(" total services "), b.AsString(totalServices), b.Const(" total infrastructure nodes "), b.AsString(totalNodes))),
                 b.PanelsContainer(
                     4,
-                    dataModel.Deployment.GetDeployedServices().Select(x => x.NodeName).Distinct().Select(nodeName =>
-                    {
-                        var node = dataModel.InfrastructureNodes.Single(x => x.NodeName == nodeName);
-                        var nodePanel = b.RenderNodePanel<MdsInfrastructure.InfrastructureStatus, MdsInfrastructure.InfrastructureStatus>(node, dataModel.HealthStatus);
-                        return nodePanel;
-                    })),
+                    b.Map(
+                        b.Get(clientModel, x => x.NodePanels),
+                        (b, panelData) =>
+                        b.HtmlA(
+                            b =>
+                            {
+                                b.SetHref(b.Url<Routes.Status.Node, string>(b.Get(panelData, x => x.NodeName)));
+                            },
+                            b.NodePanel(panelData)))),
                 b.PanelsContainer(
                     4,
-                    dataModel.Deployment.GetDeployedServices().Select(x => x.ApplicationName).Distinct().Select(applicationName =>
-                    {
-                        return b.RenderApplicationPanel<MdsInfrastructure.InfrastructureStatus, MdsInfrastructure.InfrastructureStatus>(
-                            dataModel.Deployment,
-                            dataModel.HealthStatus,
-                            dataModel.InfrastructureEvents,
-                            applicationName);
-                    })));
+                    b.Map(
+                        b.Get(clientModel, x => x.ApplicationPanels),
+                        (b, panelData) =>
+                        b.HtmlA(
+                            b =>
+                            {
+                                b.SetHref(b.Url<Routes.Status.Application, string>(b.Get(panelData, x => x.ApplicationName)));
+                            },
+                            b.ApplicationPanel(panelData)))));
         }
     }
 }

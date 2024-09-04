@@ -1,64 +1,62 @@
 ﻿using Metapsi.Hyperapp;
 using Metapsi.Syntax;
-using Metapsi.Ui;
 using MdsCommon;
 using System.Linq;
 using MdsCommon.Controls;
+using Metapsi.Html;
 
 namespace MdsInfrastructure.Render
 {
-    public class NodeStatus : MixedHyperPage<MdsInfrastructure.NodeStatus, MdsInfrastructure.NodeStatus>
+    public static class NodeStatus
     {
-        public override MdsInfrastructure.NodeStatus ExtractClientModel(MdsInfrastructure.NodeStatus serverData)
+        public static void Render(this HtmlBuilder b, MdsInfrastructure.NodeStatus serverModel)
         {
-            return serverData;
+            b.BodyAppend(b.Hyperapp(serverModel, (b, model) =>
+            {
+                return OnRender(b, serverModel, model);
+            }));
         }
-
-        public override Var<IVNode> OnRender(LayoutBuilder b, MdsInfrastructure.NodeStatus serverData, Var<MdsInfrastructure.NodeStatus> clientModel)
+        public static Var<IVNode> OnRender(LayoutBuilder b, MdsInfrastructure.NodeStatus serverData, Var<MdsInfrastructure.NodeStatus> clientModel)
         {
             b.AddModuleStylesheet();
 
             var headerProps = b.GetHeaderProps(
                 b.Const("Node status"),
                 b.Get(clientModel, x => x.NodeName),
-                b.Get(clientModel, x => x.InfrastructureStatus.User));
+                b.Get(clientModel, x => x.User));
 
             return b.Layout(
                 b.InfraMenu(
                     nameof(Routes.Status),
-                    serverData.InfrastructureStatus.User.IsSignedIn()),
+                    serverData.User.IsSignedIn()),
                 b.Render(headerProps),
-                RenderNodeStatus(b, serverData.InfrastructureStatus, serverData.NodeName)).As<IVNode>();
+                RenderNodeStatus(b, clientModel));
         }
 
         public static Var<IVNode> RenderNodeStatus(
             LayoutBuilder b,
-            MdsInfrastructure.InfrastructureStatus nodesStatusPage,
-            string selectedNodeName)
+            Var<MdsInfrastructure.NodeStatus> clientModel)
         {
-            var selectedNode = nodesStatusPage.InfrastructureNodes.SingleOrDefault(x => x.NodeName == selectedNodeName);
-
-            if (selectedNode == null)
-            {
-                return b.TextSpan("Node not found");
-            }
-
-            var nodeServices = nodesStatusPage.Deployment.GetDeployedServices().Where(x => x.NodeName == selectedNode.NodeName);
-
-            var servicesGroup = b.PanelsContainer(4,
-                nodeServices.Select(service =>
+            return b.If(
+                b.Get(clientModel, clientModel => !clientModel.InfrastructureStatus.InfrastructureNodes.Any(x => x.NodeName == clientModel.NodeName)),
+                b =>
                 {
-                    return b.RenderServicePanel(
-                        nodesStatusPage.Deployment,
-                        nodesStatusPage.HealthStatus,
-                        service,
-                        nodesStatusPage.InfrastructureEvents);
-                }));
-
-            return b.StyledDiv(
-                "flex flex-col space-y-4",
-                b.RenderNodePanel<InfrastructureStatus, InfrastructureStatus>(selectedNode, nodesStatusPage.HealthStatus),
-                servicesGroup);
+                    return b.Text("Node not found!");
+                },
+                b =>
+                {
+                    return b.HtmlDiv(
+                        b =>
+                        {
+                            b.SetClass("flex flex-col gap-4");
+                        },
+                        b.NodePanel(b.Get(clientModel, x => x.NodePanel)),
+                        b.PanelsContainer(
+                            4,
+                            b.Map(
+                                b.Get(clientModel, x => x.ServicePanels),
+                                (b, service) => b.ServicePanel(service))));
+                });
         }
     }
 }

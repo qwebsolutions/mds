@@ -46,10 +46,11 @@ namespace MdsInfrastructure
             {
                 return $"Db schema mismatch: extra fields {Metapsi.Serialize.ToJson(fieldsDiff.ExtraFields)}, missing fields {Metapsi.Serialize.ToJson(fieldsDiff.MissingFields)}, db path {fullDbPath}";
             }
+
             return string.Empty;
         }
 
-        public static async Task<InfrastructureStatus> LoadInfrastructureStatus(
+        public static async Task<InfrastructureStatusData> LoadInfrastructureStatus(
             string fullDbPath)
         {
             return await Metapsi.Sqlite.Db.WithRollback(fullDbPath, async c =>
@@ -59,7 +60,7 @@ namespace MdsInfrastructure
                 activeDeployment.ConfigurationHeaderId == Guid.Empty ?
                 new InfrastructureConfiguration() : await c.Transaction.LoadSpecificConfiguration(activeDeployment.ConfigurationHeaderId);
 
-                return new InfrastructureStatus()
+                return new InfrastructureStatusData()
                 {
                     Deployment = activeDeployment,
                     HealthStatus = await c.Transaction.LoadFullInfrastructureHealthStatus(),
@@ -264,7 +265,7 @@ namespace MdsInfrastructure
             //return true;
         }
 
-        public static async Task ConfirmDeployment(
+        public static async Task<Guid> ConfirmDeployment(
             string fullDbPath,
             List<ServiceConfigurationSnapshot> infraSnapshot,
             InfrastructureConfiguration infrastructureConfiguration)
@@ -272,10 +273,13 @@ namespace MdsInfrastructure
             var previousDeployment = await LoadActiveDeployment(fullDbPath);
             var previousServiceConfigurations = previousDeployment.GetDeployedServices();
 
+            Guid deploymentGuid = Guid.NewGuid();
+
             await Metapsi.Sqlite.Db.WithCommit(fullDbPath, async c =>
             {
                 Deployment deployment = new Deployment()
                 {
+                    Id = deploymentGuid,
                     ConfigurationHeaderId = infrastructureConfiguration.Id,
                     ConfigurationName = infrastructureConfiguration.Name,
 
@@ -344,6 +348,8 @@ namespace MdsInfrastructure
                     }
                 }
             });
+
+            return deploymentGuid;
         }
 
         public static async Task<List<NoteType>> LoadAllNoteTypes(
@@ -383,6 +389,24 @@ namespace MdsInfrastructure
                 return await c.Transaction.LoadActiveDeployment();
             });
         }
+
+        public static async Task SaveDeploymentEvent(string fullDbPath, DbDeploymentEvent dbDeploymentEvent)
+        {
+            await Metapsi.Sqlite.Db.WithCommit(fullDbPath, async c =>
+            {
+                await c.Transaction.SaveRecord(dbDeploymentEvent);
+            });
+        }
+
+        public static async Task<List<DbDeploymentEvent>> GetDeploymentEvents(string fullDbPath, Guid deploymentId)
+        {
+            return await Metapsi.Sqlite.Db.WithRollback(fullDbPath, async c =>
+            {
+                var deploymentEvents = await c.Transaction.LoadRecords<DbDeploymentEvent, Guid>(x => x.DeploymentId, deploymentId);
+                return deploymentEvents.ToList();
+            });
+        }
+
         public static async Task<MdsCommon.ServiceConfigurationSnapshot> LoadIdenticalSnapshot(string fullDbPath, MdsCommon.ServiceConfigurationSnapshot expectedSnapshot)
         {
             return await Metapsi.Sqlite.Db.WithRollback(fullDbPath,

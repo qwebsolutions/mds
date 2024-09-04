@@ -1,9 +1,6 @@
 ﻿using Metapsi.Syntax;
 using Metapsi.Hyperapp;
-using Metapsi.JavaScript;
-using Metapsi.Ui;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace MdsInfrastructure

@@ -4,6 +4,7 @@ using System.Linq;
 
 namespace MdsCommon
 {
+
     //public partial class InfrastructureEvent : MetapsiRuntime.IData
     //{
     //    //public string NodeName { get; set; }

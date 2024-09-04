@@ -1,46 +1,14 @@
 ﻿using Metapsi;
-using Metapsi.Dom;
 using Metapsi.Html;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
-using Metapsi.Ui;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.Razor.TagHelpers;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
-
 
 
 namespace MdsCommon.Controls
 {
-
-    //public interface IHasStringValue
-    //{
-    //    string Value { get; set; }
-    //}
-
-    //public interface IHasOnInputEvent { }
-    //public interface IHasClearEvent { }
-
-    //public class Filter
-    //{
-    //    public string Value { get; set; } = string.Empty;
-    //}
-
-    //public class FilterDefinition : IControlDefinition<Filter>
-    //{
-    //    public ControlDefinition<Filter> Container { get; set; }
-    //    public ControlDefinition<Filter> Input { get; set; }
-    //    public ControlDefinition<Filter> ClearButton { get; set; }
-    //    public ControlDefinition<Filter> ClearIcon { get; set; }
-
-    //    public Func<LayoutBuilder, Var<Filter>, Var<IVNode>> GetRenderer() => Container.GetRenderer();
-    //}
-
     public static partial class Control
     {
         public static Var<IVNode> Filter<TModel>(this LayoutBuilder b,

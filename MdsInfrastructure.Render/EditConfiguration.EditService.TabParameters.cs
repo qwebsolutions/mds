@@ -182,7 +182,7 @@ namespace MdsInfrastructure.Render
             b.Set(parameter, x => x.InfrastructureServiceParameterBindings, bindingRemoved);
             var valueRemoved = b.Get(parameter, paramId, (x, paramId) => x.InfrastructureServiceParameterValues.Where(x => x.InfrastructureServiceParameterDeclarationId != paramId).ToList());
             b.Set(parameter, x => x.InfrastructureServiceParameterValues, valueRemoved);
-            var notesRemoved = b.Get(service, x => x.InfrastructureServiceNotes.Where(x => x.Reference != paramId.ToString()).ToList());
+            var notesRemoved = b.Get(service, paramId, (x, paramId) => x.InfrastructureServiceNotes.Where(x => x.Reference != paramId.ToString()).ToList());
             b.Set(service, x => x.InfrastructureServiceNotes, notesRemoved);
             return b.Clone(clientModel);
         }
@@ -200,15 +200,17 @@ namespace MdsInfrastructure.Render
                 b.Set(x => x.Id, newParameterId);
                 b.Set(x => x.ParameterName, b.Const(""));
                 b.Set(x => x.InfrastructureServiceId, selectedServiceId);
-                b.Update(x => x.InfrastructureServiceParameterValues, b =>
-                {
-                    b.Add(b =>
+            });
+
+            b.Push(
+                b.Get(newParam, x => x.InfrastructureServiceParameterValues),
+                b.NewObj<InfrastructureServiceParameterValue>(
+                    b =>
                     {
                         b.Set(x => x.Id, newValueId);
                         b.Set(x => x.InfrastructureServiceParameterDeclarationId, newParameterId);
-                    });
-                });
-            });
+                    }));
+
             b.Push(parameters, newParam);
             b.Set(clientModel, x => x.EditParameterId, newParameterId);
             return b.EditView<EditConfigurationPage>(clientModel, EditParameter);

@@ -58,7 +58,7 @@ namespace MdsCommon
                                 },
                                 b.TextSpan(userName)),
                             b.Optional(
-                                b.Get(props, x => x.User.AuthType == Metapsi.Ui.AuthType.Oidc),
+                                b.HasValue(b.Get(props, x => x.User.AuthType)),
                                 b =>
                                 {
                                     return b.HtmlA(
@@ -97,7 +97,7 @@ namespace MdsCommon
             this LayoutBuilder b,
             Var<string> operation,
             Var<string> entity,
-            Var<Metapsi.Ui.User> user)
+            Var<User> user)
         {
             var headerTitle = b.NewObj<Header.Title>();
             b.Set(headerTitle, x => x.Operation, operation);
@@ -107,6 +107,14 @@ namespace MdsCommon
             b.Set(headerProps, x => x.Main, headerTitle);
             b.Set(headerProps, x => x.User, user);
             return headerProps;
+        }
+
+        public static Var<bool> IsSignedIn(this SyntaxBuilder b, Var<MdsCommon.User> user)
+        {
+            return b.If(
+                b.Not(b.HasObject(user)),
+                b => b.Const(false),
+                b => b.HasValue(b.Get(user, x => x.AuthType)));
         }
     }
 }

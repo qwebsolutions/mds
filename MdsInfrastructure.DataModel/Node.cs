@@ -1,5 +1,5 @@
-﻿using Metapsi.Ui;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using MdsCommon;
 
 namespace MdsInfrastructure
 {
@@ -7,7 +7,7 @@ namespace MdsInfrastructure
     {
         public class List
         {
-            public Metapsi.Ui.User User { get; set; }
+            public User User { get; set; }
 
             public List<EnvironmentType> EnvironmentTypes { get; set; } = new List<EnvironmentType>();
             public List<InfrastructureNode> InfrastructureNodes { get; set; } = new List<InfrastructureNode>();
@@ -16,7 +16,7 @@ namespace MdsInfrastructure
 
         public class EditPage : IHasValidationPanel
         {
-            public Metapsi.Ui.User User { get; set; }
+            public User User { get; set; }
 
             public InfrastructureNode InfrastructureNode { get; set; } = new InfrastructureNode();
             public List<EnvironmentType> EnvironmentTypes { get; set; } = new List<EnvironmentType>();

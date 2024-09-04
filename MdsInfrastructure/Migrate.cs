@@ -23,6 +23,11 @@ namespace MdsInfrastructure
                     await MdsCommon.Db.AddSnapshotEnabledField(t);
                     await MdsCommon.Db.DropSnapshotHashField(t);
                 });
+
+            await Metapsi.Sqlite.Db.WithCommit(fullDbPath, async c =>
+            {
+                await c.Transaction.CreateTableIfNotExists<DbDeploymentEvent>();
+            });
         }
     }
 }

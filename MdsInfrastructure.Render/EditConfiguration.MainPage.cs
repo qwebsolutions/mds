@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using Metapsi.Shoelace;
 using MdsCommon;
 using Microsoft.Extensions.Options;
-using Metapsi.Dom;
 using Metapsi.Html;
 
 namespace MdsInfrastructure.Render
@@ -45,43 +44,84 @@ namespace MdsInfrastructure.Render
                     {
                         b.OnSlSelect(b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<SlSelectEventArgs> args) =>
                         {
-                            var selectedValue = b.Get(args, x => x.item.value);
+                            var selectedValue = b.GetProperty<string>(b.Get(args, x => x.item), "value");
 
-                            var showCurrentJson = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
-                            {
-                                return b.MakeStateWithEffects(
-                                    b.ShowPanel(clientModel),
-                                    b.MakeEffect(
-                                        b.Def(
-                                            b.Request(
-                                                Frontend.GetConfigurationJson,
-                                                b.Get(clientModel, x => x.Configuration),
-                                                b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<GetConfigurationJsonResponse> response) =>
-                                                {
-                                                    b.Set(page, x => x.CurrentConfigurationSimplifiedJson, b.Get(response, x => x.Json));
-                                                    b.ShowDialog(b.Const(IdCurrentJsonPopup));
-                                                    return b.Clone(page);
-                                                })))));
+                        var showCurrentJson = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
+                        {
+                        return b.MakeStateWithEffects(
+                                clientModel,
+                                b.PostJson(
+                                    b.GetApiUrl(Frontend.GetConfigurationJson),
+                                    b.Get(clientModel, x => x.Configuration),
+                                    b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<GetConfigurationJsonResponse> response) =>
+                                            {
+                                                b.Set(page, x => x.CurrentConfigurationSimplifiedJson, b.Get(response, x => x.Json));
+                                                b.ShowDialog(b.Const(IdCurrentJsonPopup));
+                                                return b.Clone(page);
+                                            }),
+                                    b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<ClientSideException> ex) =>
+                                    {
+                                        b.Alert(ex);
+                                        return page;
+                                    })));
                             });
 
                             var downloadWindowsScripts = b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> clientModel) =>
                             {
-                                var fetchOptions = b.NewObj<FetchOptions>();
-                                b.Set(fetchOptions, x => x.method, b.Const("POST"));
-                                b.Set(fetchOptions, x => x.body, b.Serialize(b.Get(clientModel, x => x.Configuration)));
-                                b.SetDynamic(b.Get(fetchOptions, x => x.headers), DynamicProperty.String("Content-Type"), b.Const("application/json"));
+                                var fetchOptions = b.SetProps<FetchOptions>(
+                                    b.NewObj<DynamicObject>(),
+                                    b =>
+                                    {
+                                        b.Set(x => x.method, b.Const("POST"));
+                                        b.Set(x => x.body, b.Serialize(b.Get(clientModel, x => x.Configuration)));
+                                        b.SetJsonContentTypeHeaders();
+                                    });
+
                                 return b.MakeStateWithEffects(
-                                    b.ShowPanel(clientModel),
-                                    b.MakeEffect(
-                                        b.Def((SyntaxBuilder b, Var<HyperType.Dispatcher<EditConfigurationPage>> dispatcher) =>
-                                            b.CallExternal("fetch", "DownloadFile",
-                                                b.Const("/api/windows-scripts"),
-                                                fetchOptions,
-                                                b.Def((SyntaxBuilder b, Var<object> file) =>
-                                                {
-                                                    b.CallExternal("fetch", "DownloadBlob", file, b.Concat(b.Get(clientModel, x => x.Configuration.Name), b.Const(".zip")));
-                                                }),
-                                                b.Def((SyntaxBuilder b, Var<ApiError> not_used) => { b.Log("Error"); b.Log(not_used); })))));
+                                    clientModel,
+                                    b.MakeEffect((SyntaxBuilder b, Var<HyperType.Dispatcher> dispatch) =>
+                                    {
+                                        var fetch = b.Fetch(
+                                            b.Const("/api/windows-scripts"),
+                                            b =>
+                                            {
+                                                b.SetMethodPost();
+                                                b.SetJsonBody(b.Get(clientModel, x => x.Configuration));
+                                                b.SetJsonContentTypeHeaders();
+                                            });
+
+                                        var then1 = b.Then(fetch, b.Def((SyntaxBuilder b, Var<object> r) =>
+                                        {
+                                            return b.If(
+                                                    b.GetProperty<bool>(r, "ok"),
+                                                    b =>
+                                                    {
+                                                        return r.As<Promise>();
+                                                    },
+                                                    b =>
+                                                    {
+                                                        return b.CallOnObject<Promise>(b.Promise(), "reject", r);
+                                                    });
+                                        }));
+
+                                        var then2 = b.Then(
+                                            then1,
+                                            b.Def((SyntaxBuilder b, Var<object> r) =>
+                                            {
+                                                return b.CallOnObject<Promise>(r, "blob");
+                                            }));
+
+                                        var onOk = b.Then(then2, b.Def((SyntaxBuilder b, Var<object> file) =>
+                                        {
+                                            b.CallExternal("fetch", "DownloadBlob", file, b.Concat(b.Get(clientModel, x => x.Configuration.Name), b.Const(".zip")));
+                                            return b.Const(true).As<Promise>();
+                                        }));
+                                        b.Catch(onOk, b.Def((SyntaxBuilder b, Var<ClientSideException> err) =>
+                                        {
+                                            b.Log(err);
+                                        }));
+
+                                    }));
                             });
 
                             return b.Switch(selectedValue,
@@ -138,13 +178,11 @@ namespace MdsInfrastructure.Render
                         b.Set(saveInput, x => x.OriginalJson, b.Get(model, x => x.InitialConfiguration));
 
                         return b.MakeStateWithEffects(
-                            b.ShowPanel(model),
-                            b.MakeEffect(
-                                b.Def(
-                                    b.Request(
-                                        Frontend.SaveConfiguration,
-                                        saveInput,
-                                        b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<SaveConfigurationResponse> response) =>
+                            model,
+                            b.PostJson(
+                                b.GetApiUrl(Frontend.SaveConfiguration),
+                                saveInput,
+                                b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<SaveConfigurationResponse> response) =>
                                         {
                                             b.Set(page, x => x.SaveConfigurationResponse, response);
 
@@ -167,7 +205,12 @@ namespace MdsInfrastructure.Render
                                                         b.HideDialog(b.Const(IdSaveConflictPopup));
                                                         return b.Clone(page);
                                                     }));
-                                        })))));
+                                        }),
+                                b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<ClientSideException> ex) =>
+                                {
+                                    b.Alert(ex);
+                                    return page;
+                                })));
                     }));
                 },
                 b.TextSpan("Save"));
@@ -340,12 +383,10 @@ namespace MdsInfrastructure.Render
                         b.Set(mergeConfigurationInput, x => x.EditedConfiguration, b.Get(model, x => x.Configuration));
 
                         return b.MakeStateWithEffects(
-                            b.ShowPanel(model),
-                            b.MakeEffect(
-                                b.Def(
-                                    b.Request(
-                                        Frontend.MergeConfiguration,
-                                        mergeConfigurationInput,
+                            model,
+                            b.PostJson(
+                                b.GetApiUrl(Frontend.MergeConfiguration),
+                                mergeConfigurationInput,
                                         b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<MergeConfigurationResponse> response) =>
                                         {
                                             b.Set(page, x => x.MergeConfigurationResponse, response);
@@ -363,7 +404,12 @@ namespace MdsInfrastructure.Render
                                                     b.ShowDialog(b.Const(IdMergeSuccessPopup));
                                                     return b.Clone(page);
                                                 });
-                                        })))));
+                                        }),
+                                        b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> page, Var<ClientSideException> ex) =>
+                                        {
+                                            b.Alert(ex);
+                                            return page;
+                                        })));
                     }));
                 },
                 b.TextSpan("Merge"));

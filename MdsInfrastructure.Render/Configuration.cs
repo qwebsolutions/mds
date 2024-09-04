@@ -1,9 +1,7 @@
 ﻿using MdsCommon;
 using Metapsi;
-using Metapsi.Dom;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
-using Metapsi.Ui;
 using System;
 using System.Linq;
 using MdsCommon.Controls;
@@ -13,14 +11,9 @@ namespace MdsInfrastructure.Render
 {
     public static class Configuration
     {
-        public class List : MixedHyperPage<ListConfigurationsPage, ListConfigurationsPage>
+        public class List 
         {
-            public override ListConfigurationsPage ExtractClientModel(ListConfigurationsPage serverData)
-            {
-                return serverData;
-            }
-
-            public override Var<IVNode> OnRender(LayoutBuilder b, ListConfigurationsPage serverModel, Var<ListConfigurationsPage> clientModel)
+            public static Var<IVNode> Render(LayoutBuilder b, ListConfigurationsPage serverModel, Var<ListConfigurationsPage> clientModel)
             {
                 b.AddModuleStylesheet();
 
@@ -103,14 +96,29 @@ namespace MdsInfrastructure.Render
             return dataGrid;
         }
 
-        public class Edit : MixedHyperPage<EditConfigurationPage, EditConfigurationPage>
+        public class Edit
         {
-            public override EditConfigurationPage ExtractClientModel(EditConfigurationPage serverModel)
+            public static void Render(HtmlBuilder b, EditConfigurationPage serverModel)
             {
-                return serverModel;
+                b.BodyAppend(
+                    b.Hyperapp(
+                        (SyntaxBuilder b) => b.MakeInit(
+                            b.MakeStateWithEffects(
+                                b.Const(serverModel),
+                                b.MakeEffect(
+                                    (SyntaxBuilder b, Var<HyperType.Dispatcher> dispatch) =>
+                                    {
+                                        b.Dispatch(dispatch, b.MakeAction((SyntaxBuilder b, Var<EditConfigurationPage> model) =>
+                                        {
+                                            var serializedConfiguration = b.Serialize(b.Get(model, x => x.Configuration));
+                                            b.Set(model, x => x.InitialConfiguration, serializedConfiguration);
+                                            return b.Clone(model);
+                                        }));
+                                    }))),
+                        (LayoutBuilder b, Var<EditConfigurationPage> model) => RenderClient(b, serverModel, model)));
             }
 
-            public override Var<IVNode> OnRender(LayoutBuilder b, EditConfigurationPage serverModel, Var<EditConfigurationPage> clientModel)
+            public static Var<IVNode> RenderClient(LayoutBuilder b, EditConfigurationPage serverModel, Var<EditConfigurationPage> clientModel)
             {
                 b.AddModuleStylesheet();
 
@@ -127,14 +135,14 @@ namespace MdsInfrastructure.Render
                         Render(b, clientModel)).As<IVNode>();
             }
 
-            public override Var<HyperType.StateWithEffects> OnInit(SyntaxBuilder b, Var<EditConfigurationPage> model)
-            {
-                var serializedConfiguration = b.Serialize(b.Get(model, x => x.Configuration));
-                b.Set(model, x => x.InitialConfiguration, serializedConfiguration);
-                return b.MakeStateWithEffects(model);
-            }
+            //public static Var<HyperType.StateWithEffects> OnInit(SyntaxBuilder b, Var<EditConfigurationPage> model)
+            //{
+            //    var serializedConfiguration = b.Serialize(b.Get(model, x => x.Configuration));
+            //    b.Set(model, x => x.InitialConfiguration, serializedConfiguration);
+            //    return b.MakeStateWithEffects(model);
+            //}
 
-            private Var<IVNode> Render(LayoutBuilder b, Var<EditConfigurationPage> clientModel)
+            private static Var<IVNode> Render(LayoutBuilder b, Var<EditConfigurationPage> clientModel)
             {
                 return b.View(
                     clientModel,
@@ -147,14 +155,9 @@ namespace MdsInfrastructure.Render
             }
         }
 
-        public class Review : MixedHyperPage<ReviewConfigurationPage, ReviewConfigurationPage>
+        public class Review
         {
-            public override ReviewConfigurationPage ExtractClientModel(ReviewConfigurationPage serverModel)
-            {
-                return serverModel;
-            }
-
-            public override Var<IVNode> OnRender(LayoutBuilder b, ReviewConfigurationPage serverModel, Var<ReviewConfigurationPage> clientModel)
+            public static Var<IVNode> Render(LayoutBuilder b, ReviewConfigurationPage serverModel, Var<ReviewConfigurationPage> clientModel)
             {
                 b.AddModuleStylesheet();
 
@@ -177,7 +180,7 @@ namespace MdsInfrastructure.Render
                 public string Value { get; set; }
             }
 
-            public Var<IVNode> RenderDeploymentConfiguration(
+            public static Var<IVNode> RenderDeploymentConfiguration(
                 LayoutBuilder b,
                 Var<ReviewConfigurationPage> clientModel,
                 System.Collections.Generic.List<MdsCommon.ServiceConfigurationSnapshot> infrastructureSnapshot,

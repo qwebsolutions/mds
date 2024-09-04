@@ -2,19 +2,12 @@
 using MdsCommon;
 using Metapsi.Hyperapp;
 using Metapsi;
-using MdsInfrastructure;
-using Metapsi.Ui;
 
 namespace MdsInfrastructure
 {
-    public class RenderInfrastructureEventsList : MixedHyperPage<ListInfrastructureEventsPage, ListInfrastructureEventsPage>
+    public class RenderInfrastructureEventsList
     {
-        public override ListInfrastructureEventsPage ExtractClientModel(ListInfrastructureEventsPage serverModel)
-        {
-            return serverModel;
-        }
-
-        public override Var<IVNode> OnRender(LayoutBuilder b, ListInfrastructureEventsPage serverModel, Var<ListInfrastructureEventsPage> clientModel)
+        public static Var<IVNode> Render(LayoutBuilder b, ListInfrastructureEventsPage serverModel, Var<ListInfrastructureEventsPage> clientModel)
         {
             b.AddModuleStylesheet();
 

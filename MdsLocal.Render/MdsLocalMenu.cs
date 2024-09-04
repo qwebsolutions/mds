@@ -14,7 +14,7 @@ namespace MdsLocal
             this LayoutBuilder b,
             string selectedCode)
         {
-            var menuEntries = new List<Metapsi.Ui.Menu.Entry>() {
+            var menuEntries = new List<MdsCommon.Menu.Entry>() {
                 new ()
                 {
                     Code = nameof(Overview),

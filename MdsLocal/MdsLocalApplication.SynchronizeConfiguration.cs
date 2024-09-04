@@ -1,4 +1,5 @@
-﻿using Metapsi;
+﻿using MdsCommon;
+using Metapsi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,12 +13,16 @@ namespace MdsLocal
 
         public static async Task SynchronizeConfiguration(CommandContext commandContext, State state, string trigger)
         {
+            bool needsDeploy = false;
+
             SyncResult syncResult = new SyncResult()
             {
                 ResultCode = SyncStatusCodes.UpToDate,
                 Timestamp = DateTime.UtcNow,
                 Trigger = trigger
             };
+
+            GetUpToDateConfigurationResponse upToDateConfigurationResult = null;
 
             try
             {
@@ -28,7 +33,8 @@ namespace MdsLocal
                 var nodeConfiguration = await commandContext.Do(GetLocalKnownConfiguration);
                 syncResult.AddInfo("Local configuration loaded");
                 syncResult.AddInfo("Retrieving updated configuration ...");
-                var upToDateConfiguration = await commandContext.Do(Api.GetUpToDateConfiguration);
+                upToDateConfigurationResult = await commandContext.Do(Api.GetUpToDateConfiguration);
+                var upToDateConfiguration = upToDateConfigurationResult.ServiceSnapshots;
                 syncResult.AddInfo("Updated configuration retrieved");
                 LocalServicesConfigurationDiff localServicesDiff = null;
 
@@ -69,6 +75,12 @@ namespace MdsLocal
                 {
                     if (localServicesDiff.HasAnyUpdate())
                     {
+                        needsDeploy = true;
+                        commandContext.NotifyGlobal(new DeploymentEvent.Started()
+                        {
+                            DeploymentId = upToDateConfigurationResult.CurrentDeploymentId
+                        });
+
                         foreach (var serviceDiff in localServicesDiff.AddedServices)
                         {
                             syncResult.AddInfo($"New service detected: {serviceDiff.ServiceName}");
@@ -127,7 +139,7 @@ namespace MdsLocal
                         ResultCode = syncResult.ResultCode
                     });
 
-                    await SynchronizeRunningProcesses(commandContext, state, localServicesDiff, syncResult);
+                    await SynchronizeRunningProcesses(commandContext, state, localServicesDiff, syncResult, upToDateConfigurationResult != null ? upToDateConfigurationResult.CurrentDeploymentId : Guid.Empty);
                 }
             }
             catch (Exception ex)
@@ -138,6 +150,19 @@ namespace MdsLocal
             finally
             {
                 await commandContext.Do(StoreSyncResult, syncResult);
+                if (needsDeploy)
+                {
+                    await CheckMachineStatus(commandContext, state);
+                    if (upToDateConfigurationResult != null)
+                    {
+                        {
+                            commandContext.NotifyGlobal(new DeploymentEvent.Done()
+                            {
+                                DeploymentId = upToDateConfigurationResult.CurrentDeploymentId
+                            });
+                        }
+                    }
+                }
             }
         }
 

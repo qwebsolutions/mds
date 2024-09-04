@@ -1,6 +1,5 @@
 ﻿using Metapsi.Syntax;
 using MdsCommon;
-using Metapsi.Ui;
 using Metapsi.Hyperapp;
 using System.Linq;
 using Metapsi;
@@ -11,11 +10,11 @@ using System.Collections.Generic;
 
 namespace MdsLocal
 {
-    public class RenderOverviewListProcesses : Metapsi.Hyperapp.HyperPage<OverviewPage>
+    public static class RenderOverviewListProcesses
     {
         public const string IdKillProcessPopup = "id-kill-process-popup";
 
-        public override Var<IVNode> OnRender(LayoutBuilder b, Var<OverviewPage> model)
+        public static Var<IVNode> Render(LayoutBuilder b, Var<OverviewPage> model)
         {
             var headerProps = b.NewObj<Header.Props>();
             b.Set(headerProps, x => x.Main, b.Const(new Header.Title() { Operation = "Overview" }));
@@ -70,7 +69,7 @@ namespace MdsLocal
                 view);
         }
 
-        private Var<IVNode> ProcessesGrid(LayoutBuilder b, Var<OverviewPage> model)
+        private static Var<IVNode> ProcessesGrid(LayoutBuilder b, Var<OverviewPage> model)
         {
             var processes = b.Get(model, x => x.Processes);
 
@@ -132,7 +131,7 @@ namespace MdsLocal
             return b.DataGrid(processesGridBuilder, processes, columns.ToArray());
         }
 
-        private Var<OverviewPage> KillProcessAction(SyntaxBuilder b, Var<OverviewPage> model, Var<ProcessRow> processData)
+        private static Var<OverviewPage> KillProcessAction(SyntaxBuilder b, Var<OverviewPage> model, Var<ProcessRow> processData)
         {
             b.Set(model, x => x.RestartProcess, processData);
             b.ShowDialog(b.Const(IdKillProcessPopup));
@@ -151,7 +150,7 @@ namespace MdsLocal
                         b.SetId(IdKillProcessPopup);
                     },
                     b.DialogHeader("Restart process?"),
-                    b.Text(b.Concat(b.Const("Are you sure you want to restart "), b.Get(model, x=>x.RestartProcess.ServiceName), b.Const("?"))),
+                    b.Text(b.Concat(b.Const("Are you sure you want to restart "), b.Get(model, x => x.RestartProcess.ServiceName), b.Const("?"))),
                     b.DialogFooter(
                         "",
                         b.HtmlButton(
@@ -173,23 +172,30 @@ namespace MdsLocal
 
                                     return b.MakeStateWithEffects(
                                         b.Clone(model),
-                                        b.MakeEffect(
-                                            b.Def(
-                                                b.Request(
-                                                    Frontend.KillProcessByPid,
-                                                    pid,
-                                                    b.MakeAction((SyntaxBuilder b, Var<OverviewPage> page, Var<ApiResponse> response) =>
-                                                    {
-                                                        return b.MakeStateWithEffects(
-                                                            b.Clone(model),
-                                                            b.MakeEffect(
-                                                                b.Def(
-                                                                    b.Request(Frontend.ReloadProcesses,
-                                                                    b.MakeAction((SyntaxBuilder b, Var<OverviewPage> page, Var<ReloadedOverviewModel> response) =>
-                                                                    {
-                                                                        return b.Get(response, x => x.Model);
-                                                                    })))));
-                                                    })))));
+                                        b.Fetch(
+                                            b.GetApiUrl(Frontend.KillProcessByPid, pid),
+                                            b => { },
+                                            b.MakeAction((SyntaxBuilder b, Var<OverviewPage> page) =>
+                                            {
+                                                return b.MakeStateWithEffects(
+                                                    b.Clone(model),
+                                                    b.GetJson(
+                                                        b.GetApiUrl(Frontend.ReloadProcesses),
+                                                        b.MakeAction((SyntaxBuilder b, Var<OverviewPage> page, Var<ReloadedOverviewModel> response) =>
+                                                            {
+                                                                return b.Get(response, x => x.Model);
+                                                            }),
+                                                        b.MakeAction((SyntaxBuilder b, Var<OverviewPage> page, Var<ClientSideException> ex) =>
+                                                        {
+                                                            b.Alert(ex);
+                                                            return b.Clone(page);
+                                                        })));
+                                            }),
+                                            b.MakeAction((SyntaxBuilder b, Var<OverviewPage> page, Var<ClientSideException> ex) =>
+                                            {
+                                                b.Alert(ex);
+                                                return b.Clone(page);
+                                            })));
                                 }));
                             },
                             b.Text("Restart"))));

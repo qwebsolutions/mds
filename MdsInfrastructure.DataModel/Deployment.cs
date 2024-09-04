@@ -1,4 +1,5 @@
-﻿using Metapsi;
+﻿using MdsCommon;
+using Metapsi;
 using Metapsi.Hyperapp;
 using System;
 using System.Collections.Generic;
@@ -56,22 +57,34 @@ namespace MdsInfrastructure
     public class DeploymentHistory
     {
         public System.Collections.Generic.List<Deployment> Deployments { get; set; } = new System.Collections.Generic.List<Deployment>();
-        public Metapsi.Ui.User User { get; set; }
+        public MdsCommon.User User { get; set; }
     }
 
     public class DeploymentReview
     {
         public Deployment Deployment { get; set; }
         public ChangesReport ChangesReport { get; set; }
-        public Metapsi.Ui.User User { get; set; }
+        public MdsCommon.User User { get; set; }
+
+        //public List<DeploymentServiceStatus> DeploymentServiceStatuses { get; set; } = new();
+
+        public List<DbDeploymentEvent> DeploymentEvents { get; set; } = new();
     }
 
-    public class DeploymentPreview : IApiSupportState
+    //public class DeploymentServiceStatus
+    //{
+    //    public string ServiceName { get; set; }
+    //    public DateTime StartTime { get; set; }
+    //    public bool IsRunning { get; set; }
+    //    public int RestartCount { get; set; }
+    //    public string ErrorMessage { get; set; }
+    //}
+
+    public class DeploymentPreview
     {
         public Deployment Deployment { get; set; }
         public ChangesReport ChangesReport { get; set; }
         public InfrastructureConfiguration SavedConfiguration { get; set; }
-        public Metapsi.Ui.User User { get; set; }
-        public ApiSupport ApiSupport { get; set; } = new();
+        public MdsCommon.User User { get; set; }
     }
 }

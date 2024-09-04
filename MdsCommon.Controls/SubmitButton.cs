@@ -139,7 +139,7 @@ namespace MdsCommon.Controls
             return b.Call(MdsCommon.Controls.NavigateButton.Render, props);
         }
 
-        public static Var<IVNode> NavigateButton(this LayoutBuilder b, Action<Modifier<NavigateButton.Props>> updateDefaults)
+        public static Var<IVNode> NavigateButton(this LayoutBuilder b, Action<PropsBuilder<NavigateButton.Props>> updateDefaults)
         {
             return b.FromDefault(MdsCommon.Controls.NavigateButton.Render, updateDefaults);
         }
@@ -149,12 +149,12 @@ namespace MdsCommon.Controls
             return b.Call(MdsCommon.Controls.SubmitButton.Render, props);
         }
 
-        public static Var<IVNode> SubmitButton<TPayload>(this LayoutBuilder b, Action<Modifier<SubmitButton.Props<TPayload>>> updateDefaults)
+        public static Var<IVNode> SubmitButton<TPayload>(this LayoutBuilder b, Action<PropsBuilder<SubmitButton.Props<TPayload>>> updateDefaults)
         {
             return b.SubmitButton(b.NewObj(updateDefaults));
         }
 
-        public static Var<IVNode> FromDefault<TProps>(this LayoutBuilder b, Func<LayoutBuilder, Var<TProps>, Var<IVNode>> control, Action<Modifier<TProps>> updateDefaults)
+        public static Var<IVNode> FromDefault<TProps>(this LayoutBuilder b, Func<LayoutBuilder, Var<TProps>, Var<IVNode>> control, Action<PropsBuilder<TProps>> updateDefaults)
             where TProps : new()
         {
             var modifiedProps = b.NewObj<TProps>(updateDefaults);
@@ -164,7 +164,7 @@ namespace MdsCommon.Controls
         public static Var<IVNode> FromProps<TProps>(this LayoutBuilder b, Func<LayoutBuilder, Var<TProps>, Var<IVNode>> control, TProps props)
             where TProps : new()
         {
-            return b.Call(control, b.NewObj(props));
+            return b.Call(control, b.Const(props));
         }
     }
 }

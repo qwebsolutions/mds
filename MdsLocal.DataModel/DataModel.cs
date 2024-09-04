@@ -1,7 +1,5 @@
-﻿using Metapsi;
-using Metapsi.Hyperapp;
-using Metapsi.Ui;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using MdsCommon;
 
 namespace MdsLocal
 {
@@ -14,12 +12,11 @@ namespace MdsLocal
     {
         public class List : Metapsi.Route.IGet { }
         
-        public class DataModel : IHasUser, IApiSupportState, IHasLoadingPanel
+        public class DataModel : IHasUser, IHasLoadingPanel
         {
             public List<SyncResult> SyncHistory { get; set; } = new List<SyncResult>();
             public SyncResult SelectedResult { get; set; }
             public User User { get; set; } = new();
-            public ApiSupport ApiSupport { get; set; } = new ApiSupport();
             public bool IsLoading { get; set; }
         }
     }
@@ -36,7 +33,7 @@ namespace MdsLocal
         public bool Running { get; set; } = true;
     }
 
-    public partial class OverviewPage : Metapsi.Hyperapp.ApiSupportModel
+    public partial class OverviewPage
     {
         public LocalSettings LocalSettings { get; set; } = new();
         public FullLocalStatus FullLocalStatus { get; set; } = new();

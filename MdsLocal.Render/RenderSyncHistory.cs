@@ -1,24 +1,17 @@
 ﻿using Metapsi.Syntax;
 using MdsCommon;
-using Metapsi.Ui;
 using Metapsi.Hyperapp;
-using System.Text;
-using System;
 using Metapsi;
 using MdsCommon.Controls;
 using static MdsLocal.SyncHistory;
 using Metapsi.Html;
-using System.Collections.Specialized;
-using System.Security.Cryptography;
-using Metapsi.Log;
-using Metapsi.Shoelace;
 using System.Linq;
 
 namespace MdsLocal
 {
-    public class RenderSyncHistory : HyperPage<SyncHistory.DataModel>
+    public static class RenderSyncHistory
     {
-        public override Var<IVNode> OnRender(LayoutBuilder b, Var<SyncHistory.DataModel> dataModel)
+        public static Var<IVNode> Render(LayoutBuilder b, Var<SyncHistory.DataModel> dataModel)
         {
             b.AddModuleStylesheet();
             var headerProps = b.NewObj<Header.Props>();
@@ -28,10 +21,10 @@ namespace MdsLocal
 
             return b.Layout(
                 b.LocalMenu(nameof(SyncHistory)),
-                b.Render(headerProps), Render(b, dataModel));
+                b.Render(headerProps), RenderContent(b, dataModel));
         }
 
-        private static Var<IVNode> Render(LayoutBuilder b, Var<SyncHistory.DataModel> dataModel)
+        private static Var<IVNode> RenderContent(LayoutBuilder b, Var<SyncHistory.DataModel> dataModel)
         {
             return b.HtmlDiv(
                 b =>
@@ -108,19 +101,22 @@ namespace MdsLocal
                         {
                             return b.MakeStateWithEffects(
                                 b.ShowLoading(model),
-                                b.MakeEffect(
-                                    b.Def(
-                                        b.Request(
-                                            Frontend.LoadFullSyncResult,
-                                            b.Get(syncResult, x => x.Id),
-                                            b.MakeAction((SyntaxBuilder b, Var<DataModel> page, Var<FullSyncResultResponse> response) =>
-                                            {
-                                                b.Set(page, x => x.SelectedResult, b.Get(response, x => x.SyncResult));
-                                                b.Log(page);
-                                                b.HideLoading(page);
-                                                b.ShowSidePanel();
-                                                return b.Clone(page);
-                                            })))));
+                                b.GetJson(
+                                    b.GetApiUrl(Frontend.LoadFullSyncResult, b.Get(syncResult, x => x.Id).As<string>()),
+                                    b.MakeAction((SyntaxBuilder b, Var<DataModel> page, Var<FullSyncResultResponse> response) =>
+                                    {
+                                        b.Set(page, x => x.SelectedResult, b.Get(response, x => x.SyncResult));
+                                        b.Log(page);
+                                        b.HideLoading(page);
+                                        b.ShowSidePanel();
+                                        return b.Clone(page);
+                                    }),
+                                    b.MakeAction((SyntaxBuilder b, Var<DataModel> page, Var<ClientSideException> ex) =>
+                                    {
+                                        b.HideLoading(page);
+                                        b.Alert(ex);
+                                        return b.Clone(page);
+                                    })));
                         });
                     },
                     b.Text(b.ItalianFormat(b.Get(syncResult, x => x.Timestamp))));

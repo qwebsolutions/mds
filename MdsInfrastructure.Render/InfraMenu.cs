@@ -16,7 +16,7 @@ namespace MdsInfrastructure
             bool isSignedIn
             )
         {
-            var menuEntries = new List<Metapsi.Ui.Menu.Entry>();
+            var menuEntries = new List<MdsCommon.Menu.Entry>();
 
             menuEntries.Add(new()
             {
@@ -75,7 +75,7 @@ namespace MdsInfrastructure
                 SvgIcon = MdsCommon.Icon.History
             });
 
-            return b.Menu(b.Const(new Menu.Props()
+            return b.Menu(b.Const(new MdsCommon.Controls.Menu.Props()
             {
                 ActiveCode = selectedCode,
                 //ActiveCode = nameof(Routes.Status),

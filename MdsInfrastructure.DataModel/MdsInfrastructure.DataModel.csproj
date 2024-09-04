@@ -7,7 +7,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Metapsi.Hyperapp" Version="$(MetapsiVersion)" />
+	  <PackageReference Include="Metapsi.Html" Version="$(MetapsiVersion)" />
 	  <PackageReference Include="Metapsi.Runtime" Version="$(MetapsiVersion)" />
 	</ItemGroup>
 

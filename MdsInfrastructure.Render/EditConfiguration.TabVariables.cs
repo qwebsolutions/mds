@@ -4,8 +4,6 @@ using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using System.Linq;
 using MdsCommon.Controls;
-using static MdsCommon.Controls.DataTable;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 using Metapsi.Html;
 
 namespace MdsInfrastructure.Render

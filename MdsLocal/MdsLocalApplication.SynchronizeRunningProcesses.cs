@@ -23,10 +23,12 @@ namespace MdsLocal
             var localKnownConfiguration = await commandContext.Do(GetLocalKnownConfiguration);
             var fakeDiff = DiffServices(localKnownConfiguration, localKnownConfiguration);
 
-            await SynchronizeRunningProcesses(commandContext, state, fakeDiff, new SyncResult());
+            var upToDateConfigurationResult = await commandContext.Do(Api.GetUpToDateConfiguration);
+
+            await SynchronizeRunningProcesses(commandContext, state, fakeDiff, new SyncResult(), upToDateConfigurationResult != null ? upToDateConfigurationResult.CurrentDeploymentId : Guid.Empty);
         }
 
-        public static async Task SynchronizeRunningProcesses(CommandContext commandContext, State state, LocalServicesConfigurationDiff configurationDiff, SyncResult syncResult)
+        public static async Task SynchronizeRunningProcesses(CommandContext commandContext, State state, LocalServicesConfigurationDiff configurationDiff, SyncResult syncResult, Guid currentDeploymentId)
         {
             Event.ProcessesSynchronized processesSynchronized = new Event.ProcessesSynchronized();
             //syncResult.AddInfo("Reloading local configuration after update ...");
@@ -51,6 +53,11 @@ namespace MdsLocal
                     processesSynchronized.Stopped.Add(serviceProcess.ServiceName);
                     await commandContext.Do(StopProcess, serviceProcess);
                     syncResult.AddInfo($"Service {serviceProcess.FullExePath} (PID {serviceProcess.Pid}) stopped");
+                    commandContext.NotifyGlobal(new DeploymentEvent.ServiceStopped()
+                    {
+                        DeploymentId = currentDeploymentId,
+                        ServiceName = serviceProcess.ServiceName
+                    });
                     commandContext.Logger.LogDebug($"SynchronizeRunningProcesses: {serviceProcess.ServiceName} stopped");
                 }
                 else
@@ -71,20 +78,13 @@ namespace MdsLocal
                         processesSynchronized.Stopped.Add(serviceProcess.ServiceName);
                         await commandContext.Do(StopProcess, serviceProcess);
                         syncResult.AddInfo($"Service {serviceProcess.ServiceName} stopped");
+                        commandContext.NotifyGlobal(new DeploymentEvent.ServiceStopped()
+                        {
+                            DeploymentId = currentDeploymentId,
+                            ServiceName = serviceProcess.ServiceName
+                        });
                         commandContext.Logger.LogDebug($"SynchronizeRunningProcesses: {serviceProcess.ServiceName} stopped");
                     }
-
-                    /*
-                    var serviceVersion = GetServiceVersionData(state.ServicesBasePath, serviceConfiguration.ServiceName);
-                    if (serviceVersion.ConfigurationId != serviceConfiguration.Id.ToString())
-                    {
-                        if(configurationDiff.ChangedServices.Contains())
-
-                        // Configuration changed, should be reinstalled
-                        processesSynchronized.Stopped.Add(serviceProcess.ServiceName);
-                        await commandContext.Do(StopProcess, serviceProcess);
-                        commandContext.Logger.LogDebug($"SynchronizeRunningProcesses: {serviceProcess.ServiceName} stopped");
-                    }*/
                 }
             }
 
@@ -209,6 +209,11 @@ namespace MdsLocal
                         syncResult.AddInfo($"Starting service {serviceConfiguration.ServiceName} ...");
                         await StartService(commandContext, state, serviceConfiguration.ServiceName);
                         syncResult.AddInfo($"Service {serviceConfiguration.ServiceName} started");
+                        commandContext.NotifyGlobal(new DeploymentEvent.ServiceStarted()
+                        {
+                            ServiceName = serviceConfiguration.ServiceName,
+                            DeploymentId = currentDeploymentId,
+                        });
                     }
                 }
             }

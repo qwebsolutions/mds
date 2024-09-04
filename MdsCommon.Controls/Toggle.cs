@@ -1,5 +1,4 @@
 ﻿using Metapsi;
-using Metapsi.Dom;
 using Metapsi.Html;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
@@ -94,27 +93,27 @@ namespace MdsCommon.Controls
 
     public static partial class Controls
     {
-        public static void Modify<T>(this SyntaxBuilder b, Var<T> obj, System.Action<Modifier<T>> update)
-        {
-            if (update != null)
-            {
-                update(new Modifier<T>(b, obj));
-            }
-        }
+        //public static void Modify<T>(this SyntaxBuilder b, Var<T> obj, System.Action<PropsBuilder<T>> update)
+        //{
+        //    if (update != null)
+        //    {
+        //        update(new PropsBuilder<T>(b, obj));
+        //    }
+        //}
 
-        public static void Modify<T, TProp>(
-            this SyntaxBuilder b,
-            Var<T> obj,
-            System.Linq.Expressions.Expression<System.Func<T, TProp>> by,
-            System.Action<Modifier<TProp>> update)
-        {
-            var prop = b.Get(obj, by);
+        //public static void Modify<T, TProp>(
+        //    this SyntaxBuilder b,
+        //    Var<T> obj,
+        //    System.Linq.Expressions.Expression<System.Func<T, TProp>> by,
+        //    System.Action<PropsBuilder<TProp>> update)
+        //{
+        //    var prop = b.Get(obj, by);
 
-            if (update != null)
-            {
-                update(new Modifier<TProp>(b, prop));
-            }
-        }
+        //    if (update != null)
+        //    {
+        //        update(new PropsBuilder<TProp>(b, prop));
+        //    }
+        //}
 
         public static Var<IVNode> Toggle<TState>(
             this LayoutBuilder b,
@@ -122,7 +121,7 @@ namespace MdsCommon.Controls
             Var<HyperType.Action<TState, bool>> onToggle,
             Var<string> onLabel,
             Var<string> offLabel,
-            System.Action<Modifier<Toggle.Props>> optional = null)
+            System.Action<PropsBuilder<Toggle.Props>> optional = null)
         {
             var props = b.NewObj<Toggle.Props>(b =>
             {
@@ -131,7 +130,7 @@ namespace MdsCommon.Controls
                 b.Set(x => x.OffLabel, offLabel);
             });
             
-            b.Modify(props, optional);
+            b.SetProps(props, optional);
             return b.Call(MdsCommon.Controls.Toggle.Render, props, onToggle);
         }
 
@@ -141,7 +140,7 @@ namespace MdsCommon.Controls
             System.Linq.Expressions.Expression<System.Func<TEntity, bool>> onProperty,
             Var<string> onLabel,
             Var<string> offLabel,
-            System.Action<Modifier<Toggle.Props>> optional = null)
+            System.Action<PropsBuilder<Toggle.Props>> optional = null)
         {
             var isOn = b.Get(entity, onProperty);
 

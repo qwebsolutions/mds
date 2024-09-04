@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using MdsCommon;
 using Metapsi;
 using StackExchange.Redis;
 using System;
@@ -6,6 +7,7 @@ using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
 
 namespace MdsLocal
@@ -129,6 +131,8 @@ namespace MdsLocal
 
             SetupHealth(applicationSetup, implementationGroup, infrastructureConfiguration, mdsLocalApplication, arguments.NodeName);
 
+            SetupPostEvents(applicationSetup, implementationGroup, arguments);
+
             List<string> warnings = new List<string>();
 
 
@@ -139,12 +143,22 @@ namespace MdsLocal
 
             implementationGroup.MapRequest(Api.GetInfrastructureNodeSettings, async (rc) =>
             {
-                return await apiClient.Request(MdsCommon.Api.GetInfrastructureNodeSettings, arguments.NodeName);
+                return await apiClient.GetFromJsonAsync<MdsCommon.InfrastructureNodeSettings>(
+                    $"{MdsCommon.Api.GetInfrastructureNodeSettings.Name}/{arguments.NodeName}");
             });
 
             implementationGroup.MapRequest(Api.GetUpToDateConfiguration, async (rc) =>
             {
-                return await apiClient.Request(MdsCommon.Api.GetCurrentNodeSnapshot, arguments.NodeName);
+                var serviceSnapshots = await apiClient.GetFromJsonAsync<List<MdsCommon.ServiceConfigurationSnapshot>>(
+                    $"{MdsCommon.Api.GetCurrentNodeSnapshot.Name}/{arguments.NodeName}");
+
+                var deploymentId = await apiClient.GetFromJsonAsync<Guid>("GetCurrentDeploymentId");
+
+                return new GetUpToDateConfigurationResponse()
+                {
+                    ServiceSnapshots = serviceSnapshots,
+                    CurrentDeploymentId = deploymentId
+                };
             });
 
             implementationGroup.MapRequest(MdsLocalApplication.GetLocalKnownConfiguration, async (rc) =>
@@ -283,6 +297,20 @@ namespace MdsLocal
             }
 
             return warnings;
+        }
+
+        private static void SetupPostEvents(this ApplicationSetup setup, ImplementationGroup ig, InputArguments inputArguments)
+        {
+            var httpEventPoster = setup.AddBusinessState(new HttpClient());
+            var deploymentEventsUrl = inputArguments.InfrastructureApiUrl.Trim('/') + "/event";
+
+            setup.MapEvent<InfrastructureMessage>(e =>
+            {
+                e.Using(httpEventPoster, ig).EnqueueCommand(async (cc, state) =>
+                {
+                    await state.PostMessage(deploymentEventsUrl, e.EventData.Message);
+                });
+            });
         }
     }
 }

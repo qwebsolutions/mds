@@ -1,12 +1,10 @@
 ﻿using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using MdsCommon;
-using Metapsi.Ui;
 using System.Linq;
 using MdsCommon.Controls;
 using Metapsi.Html;
 using Metapsi.Shoelace;
-using Metapsi.Dom;
 using System.Collections.Generic;
 
 namespace MdsInfrastructure.Render
@@ -15,14 +13,9 @@ namespace MdsInfrastructure.Render
     {
         const string DeleteSelectedDialogId = "id-delete-selected-dialog";
 
-        public class List : MixedHyperPage<MdsInfrastructure.ListProjectsPage, MdsInfrastructure.ListProjectsPage>
+        public class List
         {
-            public override ListProjectsPage ExtractClientModel(ListProjectsPage serverModel)
-            {
-                return serverModel;
-            }
-
-            public override Var<IVNode> OnRender(LayoutBuilder b, ListProjectsPage serverModel, Var<ListProjectsPage> clientModel)
+            public static Var<IVNode> Render(LayoutBuilder b, ListProjectsPage serverModel, Var<ListProjectsPage> clientModel)
             {
                 b.AddModuleStylesheet();
                 b.AddScript(typeof(Project).Assembly, "MdsInfrastructure.Render.js", "module");
@@ -95,28 +88,32 @@ namespace MdsInfrastructure.Render
                                             b.Set(version, x => x.Enabled, isChecked);
                                             return b.MakeStateWithEffects(
                                                 b.Clone(state),
-                                                b.MakeEffect(
-                                                    b.Def(
-                                                        b.CallApi<ListProjectsPage, ProjectVersion>(
-                                                            Backend.SaveVersionEnabled,
-                                                            version,
-                                                            (SyntaxBuilder b, Var<ListProjectsPage> state) => b.HideLoading(state),
-                                                            (SyntaxBuilder b, Var<ListProjectsPage> state, Var<ApiError> error) =>
-                                                            {
-                                                                var allVersions = b.Get(clientModel, projectId, (x, projectId) => x.ProjectsList.SelectMany(x => x.Versions).Where(x => x.ProjectId == projectId).ToList());
-                                                                var versionReference = b.Get(allVersions, b.Get(initialVersion, x => x.Id), (allVersions, versionid) => allVersions.Single(x => x.Id == versionid));
-                                                                b.Set(versionReference, x => x.Enabled, b.Get(initialVersion, x => x.Enabled));
-                                                                b.HideLoading(state);
-                                                                return b.Clone(state);
-                                                            }))));
+                                                b.PostJson(
+                                                    b.GetApiUrl(Frontend.ToggleVersionEnabled),
+                                                    b.NewObj<ToggleVersionEnabledInput>(
+                                                        b =>
+                                                        {
+                                                            b.Set(x => x.VersionId, b.Get(version, x => x.Id));
+                                                            b.Set(x => x.IsEnabled, isChecked);
+                                                        }),
+                                                    b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> state) => b.HideLoading(state)),
+                                                    b.MakeAction(
+                                                        (SyntaxBuilder b, Var<ListProjectsPage> state, Var<ClientSideException> error) =>
+                                                        {
+                                                            var allVersions = b.Get(clientModel, projectId, (x, projectId) => x.ProjectsList.SelectMany(x => x.Versions).Where(x => x.ProjectId == projectId).ToList());
+                                                            var versionReference = b.Get(allVersions, b.Get(initialVersion, x => x.Id), (allVersions, versionid) => allVersions.Single(x => x.Id == versionid));
+                                                            b.Set(versionReference, x => x.Enabled, b.Get(initialVersion, x => x.Enabled));
+                                                            b.HideLoading(state);
+                                                            return b.Clone(state);
+                                                        })));
 
                                         }),
-                                            checkboxText,
-                                            checkboxText,
-                                            b =>
-                                            {
-                                                b.Set(x => x.Enabled, b.Not(isInUse));
-                                            }),
+                                        checkboxText,
+                                        checkboxText,
+                                        b =>
+                                        {
+                                            b.Set(x => x.Enabled, b.Not(isInUse));
+                                        }),
                                     b.Optional(
                                         isInUse,
                                         b =>
@@ -314,7 +311,7 @@ namespace MdsInfrastructure.Render
             return b.MakeStateWithEffects(
                 b.ShowLoading(b.Clone(model)),
                 b.MakeEffect(
-                    (SyntaxBuilder b, Var<HyperType.Dispatcher<ListProjectsPage>> dispatch) =>
+                    (SyntaxBuilder b, Var<HyperType.Dispatcher> dispatch) =>
                     {
                         b.AsyncForeach(
                             b.Get(model, x=>x.ToDeleteBinaries),
@@ -349,19 +346,18 @@ namespace MdsInfrastructure.Render
                     }));
         }
 
-        public static void CallDelete(this SyntaxBuilder b, Var<BinariesRepositoryEntry> item, Var<HyperType.Dispatcher<ListProjectsPage>> dispatch, Var<System.Action> moveNext)
+        public static void CallDelete(this SyntaxBuilder b, Var<BinariesRepositoryEntry> item, Var<HyperType.Dispatcher> dispatch, Var<System.Action> moveNext)
         {
             var removeRequest = b.NewObj<RemoveBuildsRequest>();
             b.Push(b.Get(removeRequest, x => x.ToRemove), item);
-
-            b.FetchRequest(
-                Frontend.RemoveBuilds,
+            b.PostJson(
+                b.GetApiUrl(Frontend.RemoveBuilds),
                 removeRequest,
                 b.Def((SyntaxBuilder b, Var<RemoveBuildsResponse> response) =>
                 {
                     b.Dispatch(dispatch, b.MakeRemoveSuccessAction(response, moveNext));
                 }),
-                b.Def((SyntaxBuilder b, Var<ApiError> error) =>
+                b.Def((SyntaxBuilder b, Var<ClientSideException> error) =>
                 {
                     b.Dispatch(dispatch, b.MakeAction((SyntaxBuilder b, Var<ListProjectsPage> model) =>
                     {
@@ -409,10 +405,10 @@ namespace MdsInfrastructure.Render
 
         public static Var<HyperType.Effect> RefreshModelOnEnd(this SyntaxBuilder b)
         {
-            return b.MakeEffect((SyntaxBuilder b, Var<HyperType.Dispatcher<ListProjectsPage>> dispatch) =>
+            return b.MakeEffect((SyntaxBuilder b, Var<HyperType.Dispatcher> dispatch) =>
             {
-                b.FetchRequest(
-                    Frontend.ReloadListProjectsPageModel,
+                b.GetJson(
+                    b.GetApiUrl(Frontend.ReloadListProjectsPageModel),
                      b.Def((SyntaxBuilder b, Var<ReloadListProjectsPageModel> response) =>
                      {
                          b.If(
@@ -464,7 +460,7 @@ namespace MdsInfrastructure.Render
                                  }));
                              });
                      }),
-                     b.Def((SyntaxBuilder b, Var<ApiError> error) =>
+                     b.Def((SyntaxBuilder b, Var<ClientSideException> error) =>
                      {
                          // Actual error, network or something
 
@@ -522,8 +518,9 @@ namespace MdsInfrastructure.Render
                            {
                                b.OnSlSelect((SyntaxBuilder b, Var<ListProjectsPage> model, Var<SlSelectEventArgs> args) =>
                                {
+                                   var value = b.GetProperty<string>(b.Get(args, x => x.item), "value");
                                    return b.Switch(
-                                       b.Get(args, x => x.item.value),
+                                       value,
                                        b => model,
                                        ("select-filtered", b =>
                                        {

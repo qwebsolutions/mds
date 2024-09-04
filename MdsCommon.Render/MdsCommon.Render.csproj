@@ -5,14 +5,16 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Metapsi.Hyperapp" Version="$(MetapsiVersion)" />
+		<PackageReference Include="Metapsi.Html" Version="$(MetapsiVersion)" />
+		<PackageReference Include="Metapsi.Web" Version="$(MetapsiVersion)" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\MdsCommon.Controls\MdsCommon.Controls.csproj" />
 		<ProjectReference Include="..\MdsCommon.DataModel\MdsCommon.DataModel.csproj" />
+		<ProjectReference Include="..\MdsCommon\MdsCommon.csproj" />
 	</ItemGroup>
 
-	<Import Project="embedded/Embedded.target"/>
+	<Import Project="embedded/Embedded.target" />
 
 </Project>

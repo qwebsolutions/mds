@@ -130,7 +130,7 @@ namespace MdsCommon.Controls
             return b.Call(MdsCommon.Controls.CommandButton.Render, props);
         }
 
-        public static Var<IVNode> CommandButton<TState>(this LayoutBuilder b, Action<Modifier<CommandButton.Props<TState>>> updateDefaults)
+        public static Var<IVNode> CommandButton<TState>(this LayoutBuilder b, Action<PropsBuilder<CommandButton.Props<TState>>> updateDefaults)
         {
             return b.CommandButton(b.NewObj(updateDefaults));
         }
@@ -140,7 +140,7 @@ namespace MdsCommon.Controls
             return b.Call(MdsCommon.Controls.CommandButton.Render, props);
         }
 
-        public static Var<IVNode> CommandButton<TState, TPayload>(this LayoutBuilder b, Action<Modifier<CommandButton.Props<TState, TPayload>>> updateDefaults)
+        public static Var<IVNode> CommandButton<TState, TPayload>(this LayoutBuilder b, Action<PropsBuilder<CommandButton.Props<TState, TPayload>>> updateDefaults)
         {
             return b.CommandButton(b.NewObj(updateDefaults));
         }

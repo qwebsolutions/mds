@@ -1,17 +1,10 @@
 ﻿using Metapsi;
-using Metapsi.Hyperapp;
 using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
-using System.Text;
-using Metapsi.Syntax;
 using MdsCommon;
-using static Metapsi.Hyperapp.HyperType;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Metapsi.Ui;
-using Dapper;
-using Metapsi.Sqlite;
 
 namespace MdsLocal
 {
@@ -112,45 +105,32 @@ namespace MdsLocal
             webServer.WebApplication.RegisterGetHandler<ListProcessesHandler, Overview.ListProcesses>();
             webServer.WebApplication.RegisterGetHandler<SyncHistoryHandler, SyncHistory.List>();
             webServer.WebApplication.RegisterGetHandler<MdsCommon.EventsLogHandler, MdsCommon.Routes.EventsLog.List>();
-            webServer.RegisterPageBuilder<OverviewPage>(new RenderOverviewListProcesses().Render);
-            webServer.RegisterPageBuilder<ListInfrastructureEventsPage>(new RenderInfrastructureEventsList().Render);
-            webServer.RegisterPageBuilder<SyncHistory.DataModel>(new RenderSyncHistory().Render);
+            webServer.WebApplication.UseRenderer<OverviewPage>(RenderOverviewListProcesses.Render);
+            webServer.WebApplication.UseRenderer<ListInfrastructureEventsPage>(RenderInfrastructureEventsList.Render);
+            webServer.WebApplication.UseRenderer<SyncHistory.DataModel>(RenderSyncHistory.Render);
 
             webServer.WebApplication.MapGet("/", () => Results.Redirect(WebServer.Url<Overview.ListProcesses>())).AllowAnonymous().ExcludeFromDescription();
 
             var api = webServer.WebApplication.MapGroup("api");
-            api.MapRequest(Frontend.KillProcessByPid, async (CommandContext commandContext, HttpContext httpContext, string pid) =>
+            api.MapGetCommand(Frontend.KillProcessByPid, async (CommandContext commandContext, HttpContext httpContext, string pid) =>
             {
-                try
-                {
-                    var intPid = Convert.ToInt32(pid);
-                    var process = System.Diagnostics.Process.GetProcessById(intPid);
-                    process.Kill();
-                    process.WaitForExit(5000);
-                    await Task.Delay(5000);
+                var intPid = Convert.ToInt32(pid);
+                var process = System.Diagnostics.Process.GetProcessById(intPid);
+                process.Kill();
+                process.WaitForExit(5000);
+                await Task.Delay(5000);
+            });
 
-                    return new ApiResponse();
-                }
-                catch (Exception ex)
-                {
-                    return new ApiResponse()
-                    {
-                        ErrorMessage = ex.Message,
-                        ResultCode = ApiResultCode.Error
-                    };
-                }
-            }, WebServer.Authorization.Public);
-
-            api.MapRequest(Frontend.ReloadProcesses, async (CommandContext commandContext, HttpContext httpContext) =>
+            api.MapGetRequest(Frontend.ReloadProcesses, async (CommandContext commandContext, HttpContext httpContext) =>
             {
                 var reloadedModel = await ListProcessesHandler.Load(commandContext, httpContext);
                 return new ReloadedOverviewModel()
                 {
                     Model = reloadedModel,
                 };
-            }, WebServer.Authorization.Public);
+            });
 
-            api.MapRequest(Frontend.LoadFullSyncResult, async (CommandContext commandContext, HttpContext httpContext, Guid syncResultId) =>
+            api.MapGetRequest(Frontend.LoadFullSyncResult, async (CommandContext commandContext, HttpContext httpContext, Guid syncResultId) =>
             {
 
                 var fullSyncResult = await LocalDb.LoadFullSyncResult(arguments.DbPath, syncResultId);
@@ -160,7 +140,7 @@ namespace MdsLocal
                     SyncResult = fullSyncResult
                 };
 
-            }, WebServer.Authorization.Public);
+            });
 
             return webServer;
         }

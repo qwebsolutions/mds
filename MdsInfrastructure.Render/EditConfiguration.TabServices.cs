@@ -4,21 +4,11 @@ using Metapsi.Syntax;
 using System.Linq;
 using System;
 using System.Collections.Generic;
-using MdsCommon;
 using MdsCommon.Controls;
-using System.Xml.Serialization;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Metapsi.Dom;
-using System.ComponentModel.DataAnnotations.Schema;
 using Metapsi.Html;
 
 namespace MdsInfrastructure.Render
 {
-    //public class Filter
-    //{
-    //    public string Value { get; set; }
-    //}
-
     public class InfrastructureServiceRow
     {
         public Guid Id { get; set; }
