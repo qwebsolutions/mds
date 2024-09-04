@@ -60,6 +60,7 @@ namespace MdsInfrastructure
             MapRequest1(Backend.LoadIdenticalSnapshot, Db.LoadIdenticalSnapshot);
             MapCommand(Backend.SaveDeploymentEvent, Db.SaveDeploymentEvent);
             MapRequest1(Backend.LoadDeploymentEvents, Db.GetDeploymentEvents);
+            MapCommand(MdsCommon.Api.SaveInfrastructureEvent, MdsCommon.Db.SaveInfrastructureEvent);
         }
     }
 }

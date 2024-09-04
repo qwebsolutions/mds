@@ -45,6 +45,8 @@ namespace MdsLocal
             public List<string> StartupWarnings = new List<string>();
             public List<ServiceCrashEvent> ServiceCrashEvents = new List<ServiceCrashEvent>();
             public HashSet<string> DroppedServices { get; set; } = new HashSet<string>();
+
+            public HashSet<int> PendingStopPids { get; set; } = new();
         }
 
         public class LogEntry
@@ -75,7 +77,6 @@ namespace MdsLocal
                         commandContext.Logger.LogError($"Cannot restart! Service {serviceName} is not running!");
                         return;
                     }
-
                     await commandContext.Do(StopProcess, runningService);
                     break;
             }

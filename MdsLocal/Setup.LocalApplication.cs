@@ -151,7 +151,7 @@ namespace MdsLocal
                     e.Using(eventBroadcaster, implementationGroup).EnqueueCommand(EventBroadcaster.Broadcast, infraEvent);
 
                     // And start all processes that should be running
-                    e.Using(mdsLocalApplication, implementationGroup).EnqueueCommand(MdsLocalApplication.SynchronizeRunningProcesses);
+                    e.Using(mdsLocalApplication, implementationGroup).EnqueueCommand(MdsLocalApplication.SynchronizeOnCrash);
                 });
 
             applicationSetup.MapEvent<Event.ProcessStarted>(
@@ -168,6 +168,15 @@ namespace MdsLocal
                     };
 
                     e.Using(eventBroadcaster, implementationGroup).EnqueueCommand(EventBroadcaster.Broadcast, infraEvent);
+                });
+
+            applicationSetup.MapEvent<MdsLocalApplication.Event.ProcessesSynchronized>(
+                e =>
+                {
+                    e.Using(mdsLocalApplication, implementationGroup).EnqueueCommand(async (cc, state) =>
+                    {
+                        state.PendingStopPids.Clear();
+                    });
                 });
 
             applicationSetup.MapEvent<MdsLocalApplication.Event.Error>(

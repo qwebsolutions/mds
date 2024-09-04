@@ -488,6 +488,7 @@ namespace MdsInfrastructure
                     EventType = nameof(DeploymentEvent.Started)
                 });
                 await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(message);
+                await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(new RefreshDeploymentReviewModel());
             });
 
             deploymentEvent.OnMessage<DeploymentEvent.Done>(async (cc, message) =>
@@ -502,31 +503,44 @@ namespace MdsInfrastructure
 
             deploymentEvent.OnMessage<DeploymentEvent.ServiceStopped>(async (cc, message) =>
             {
-                await cc.Do(Backend.SaveDeploymentEvent, new DbDeploymentEvent()
+                // Guid.Empty = Process just crashed, it is not related to the deployment
+                if (message.DeploymentId != Guid.Empty)
                 {
-                    DeploymentId = message.DeploymentId,
-                    EventType = nameof(DeploymentEvent.ServiceStopped),
-                    ServiceName = message.ServiceName
-                });
-                await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(new RefreshDeploymentReviewModel());
+                    await cc.Do(Backend.SaveDeploymentEvent, new DbDeploymentEvent()
+                    {
+                        DeploymentId = message.DeploymentId,
+                        EventType = nameof(DeploymentEvent.ServiceStopped),
+                        ServiceName = message.ServiceName
+                    });
+                    await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(new RefreshDeploymentReviewModel());
+                }
             });
 
             deploymentEvent.OnMessage<DeploymentEvent.ServiceStarted>(async (cc, message) =>
             {
-                await cc.Do(Backend.SaveDeploymentEvent, new DbDeploymentEvent()
+                // Guid.Empty = Some process just recovered after a crash, unrelated to a deployment
+                if (message.DeploymentId != Guid.Empty)
                 {
-                    DeploymentId = message.DeploymentId,
-                    EventType = nameof(DeploymentEvent.ServiceStarted),
-                    ServiceName = message.ServiceName
-                });
+                    await cc.Do(Backend.SaveDeploymentEvent, new DbDeploymentEvent()
+                    {
+                        DeploymentId = message.DeploymentId,
+                        EventType = nameof(DeploymentEvent.ServiceStarted),
+                        ServiceName = message.ServiceName
+                    });
 
-                await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(new RefreshDeploymentReviewModel());
+                    await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(new RefreshDeploymentReviewModel());
+                }
             });
 
             deploymentEvent.OnMessage<MachineStatus>(async (cc, message) =>
             {
                 await cc.Do(Backend.StoreHealthStatus, message);
                 await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(new RefreshInfrastructureStatusModel());
+            });
+
+            deploymentEvent.OnMessage<InfrastructureEvent>(async (cc, message) =>
+            {
+                await cc.Do(MdsCommon.Api.SaveInfrastructureEvent, message);
             });
 
             api.MapGroup("event").MapGet("/", () => "WORKS!");

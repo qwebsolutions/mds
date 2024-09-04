@@ -73,12 +73,15 @@ namespace MdsLocal
                 commandContext.Logger.LogDebug($"Exit process name: {fullExePath}");
                 commandContext.Logger.LogDebug($"Exit process module: {mainModulePath}");
 
-                commandContext.PostEvent(new Event.ProcessExited()
+                if (!state.PendingStopPids.Contains(process.Id))
                 {
-                    ExitCode = process.ExitCode,
-                    Pid = processId,
-                    FullExePath = fullExePath
-                });
+                    commandContext.PostEvent(new Event.ProcessExited()
+                    {
+                        ExitCode = process.ExitCode,
+                        Pid = processId,
+                        FullExePath = fullExePath
+                    });
+                }
             };
         }
 

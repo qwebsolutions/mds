@@ -18,14 +18,12 @@ namespace MdsLocal
             }
         }
 
-        public static async Task SynchronizeRunningProcesses(CommandContext commandContext, State state)
+        public static async Task SynchronizeOnCrash(CommandContext commandContext, State state)
         {
             var localKnownConfiguration = await commandContext.Do(GetLocalKnownConfiguration);
             var fakeDiff = DiffServices(localKnownConfiguration, localKnownConfiguration);
 
-            var upToDateConfigurationResult = await commandContext.Do(Api.GetUpToDateConfiguration);
-
-            await SynchronizeRunningProcesses(commandContext, state, fakeDiff, new SyncResult(), upToDateConfigurationResult != null ? upToDateConfigurationResult.CurrentDeploymentId : Guid.Empty);
+            await SynchronizeRunningProcesses(commandContext, state, fakeDiff, new SyncResult(), Guid.Empty);
         }
 
         public static async Task SynchronizeRunningProcesses(CommandContext commandContext, State state, LocalServicesConfigurationDiff configurationDiff, SyncResult syncResult, Guid currentDeploymentId)
@@ -51,7 +49,17 @@ namespace MdsLocal
                 {
                     syncResult.AddInfo($"{serviceProcess.ServiceName} not included in the new configuration. Attempting stop ...");
                     processesSynchronized.Stopped.Add(serviceProcess.ServiceName);
+                    state.PendingStopPids.Add(serviceProcess.Pid);
                     await commandContext.Do(StopProcess, serviceProcess);
+                    commandContext.NotifyGlobal(new MdsCommon.InfrastructureEvent()
+                    {
+                        Timestamp = System.DateTime.UtcNow,
+                        Type = MdsCommon.InfrastructureEventType.ProcessExit,
+                        Source = serviceProcess.ServiceName,
+                        Criticality = "Info",
+                        ShortDescription = "Process stopped",
+                        FullDescription = $"Process pid = {serviceProcess.Pid}, node = {state.NodeName}"
+                    });
                     syncResult.AddInfo($"Service {serviceProcess.FullExePath} (PID {serviceProcess.Pid}) stopped");
                     commandContext.NotifyGlobal(new DeploymentEvent.ServiceStopped()
                     {
@@ -76,7 +84,17 @@ namespace MdsLocal
                         }
                         // Configuration changed, should be reinstalled
                         processesSynchronized.Stopped.Add(serviceProcess.ServiceName);
+                        state.PendingStopPids.Add(serviceProcess.Pid);
                         await commandContext.Do(StopProcess, serviceProcess);
+                        commandContext.NotifyGlobal(new MdsCommon.InfrastructureEvent()
+                        {
+                            Timestamp = System.DateTime.UtcNow,
+                            Type = MdsCommon.InfrastructureEventType.ProcessExit,
+                            Source = serviceProcess.ServiceName,
+                            Criticality = "Info",
+                            ShortDescription = "Process stopped",
+                            FullDescription = $"Process pid = {serviceProcess.Pid}, node = {state.NodeName}"
+                        });
                         syncResult.AddInfo($"Service {serviceProcess.ServiceName} stopped");
                         commandContext.NotifyGlobal(new DeploymentEvent.ServiceStopped()
                         {

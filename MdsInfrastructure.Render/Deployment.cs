@@ -64,7 +64,13 @@ namespace MdsInfrastructure.Render
                         b => b.MakeInit(
                             b.MakeStateWithEffects(
                                 b.Const(serverModel),
-                                b.SignalRConnect())),
+                                b.SignalRConnect(
+                                    DefaultMetapsiSignalRHub.Path, 
+                                    null, 
+                                    (b, dispatch) =>
+                                    {
+                                        b.DispatchCustomEvent(b.NewObj<RefreshDeploymentReviewModel>());
+                                    }))),
                         (LayoutBuilder b, Var<DeploymentReview> model) => RenderClient(b, serverModel, model),
                         (b, model) => b.Listen(b.MakeAction((SyntaxBuilder b, Var<MdsInfrastructure.DeploymentReview> model, Var<RefreshDeploymentReviewModel> e) =>
                         {
@@ -538,6 +544,7 @@ namespace MdsInfrastructure.Render
 
         public static Var<IVNode> ListBinariesChanges(this LayoutBuilder b, Var<ServiceChange> serviceChange)
         {
+            b.Log("ListBinariesChanges", serviceChange);
             return b.Optional(
                 b.Get(serviceChange, serviceChange => !(serviceChange.ProjectName.OldValue == serviceChange.ProjectName.NewValue && serviceChange.ProjectVersionTag.OldValue == serviceChange.ProjectVersionTag.NewValue)),
                 b =>
