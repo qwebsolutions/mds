@@ -91,7 +91,7 @@ namespace MdsInfrastructure.Render
                         serverModel.User.IsSignedIn()),
                     b.Render(headerProps),
                     b.Optional(
-                        b.Get(clientModel, x => !x.DeploymentEvents.Any(x => x.EventType == nameof(DeploymentEvent.Done))),
+                        b.Get(clientModel, x => x.DeploymentEvents.Any() && (!x.DeploymentEvents.Any(x => x.EventType == nameof(DeploymentEvent.Done)))),
                         b =>
                         {
                             return b.SlProgressBar(b =>
@@ -214,7 +214,7 @@ namespace MdsInfrastructure.Render
                                 }),
                             b.DeployNowButton<DeploymentPreview>(b.Get(infrastructureConfiguration, x => x.Id))),
                         b.ChangesReport(
-                            b.Get(changesReport, x => x.ServiceChanges),
+                            b.Get(changesReport, x => x.ServiceChanges.Where(x=>x.ServiceChangeType != ChangeType.None).ToList()),
                             b.NewCollection<DbDeploymentEvent>()));
                 });
         }
@@ -274,6 +274,7 @@ namespace MdsInfrastructure.Render
                         return b.Switch(
                             b.Get(change, x => x.ServiceChangeType),
                             b => b.NewService(change, serviceEvents),
+                            (ChangeType.None, b => b.VoidNode()),
                             (ChangeType.Added, b => b.NewService(change, serviceEvents)),
                             (ChangeType.Changed, b => b.ChangedService(change, serviceEvents)),
                             (ChangeType.Removed, b => b.RemovedService(change)));
