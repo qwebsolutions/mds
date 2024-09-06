@@ -115,6 +115,8 @@ namespace MdsLocal
                 });
             });
 
+            applicationSetup.PoolHealthStatus(implementationGroup, nodeName);
+
             applicationSetup.MapInternalEvents(
                 implementationGroup,
                 localAppState,
@@ -217,51 +219,51 @@ namespace MdsLocal
             //        return await LocalDb.LoadSyncHistory(fullDbPath);
             //    });
 
-            //    implementationGroup.MapRequest(MdsLocalApplication.GetRunningProcesses, async (rc) =>
-            //    {
-            //        List<RunningServiceProcess> processes = new();
+            implementationGroup.MapRequest(MdsLocalApplication.GetRunningProcesses, async (rc) =>
+            {
+                List<RunningServiceProcess> processes = new();
 
-            //        foreach (var osProcess in System.Diagnostics.Process.GetProcesses())
-            //        {
-            //            if (osProcess.ProcessName.StartsWith(MdsLocalApplication.ExePrefix(nodeName)))
-            //            {
-            //                var maxRetries = 5;
-            //                int retryCount = 0;
-            //                while (true)
-            //                {
-            //                    try
-            //                    {
-            //                        string exePath = osProcess.MainModule.FileName;
+                foreach (var osProcess in System.Diagnostics.Process.GetProcesses())
+                {
+                    if (osProcess.ProcessName.StartsWith(ServiceProcessExtensions.ExePrefix(nodeName)))
+                    {
+                        var maxRetries = 5;
+                        int retryCount = 0;
+                        while (true)
+                        {
+                            try
+                            {
+                                string exePath = osProcess.MainModule.FileName;
 
-            //                        processes.Add(new RunningServiceProcess()
-            //                        {
-            //                            FullExePath = exePath,
-            //                            ServiceName = MdsLocalApplication.GuessServiceName(nodeName, exePath),
-            //                            Pid = osProcess.Id,
-            //                            StartTimestampUtc = osProcess.StartTime.ToUniversalTime(),
-            //                            UsedRamMB = (int)(osProcess.WorkingSet64 / (1024 * 1024))
-            //                        });
-            //                        break;
-            //                    }
-            //                    catch (Exception ex)
-            //                    {
-            //                        retryCount++;
-            //                        if (retryCount >= maxRetries)
-            //                        {
-            //                            rc.Logger.LogException(ex);
-            //                            break;
-            //                        }
-            //                        else
-            //                        {
-            //                            await Task.Delay(1000);
-            //                        }
-            //                    }
-            //                }
-            //            }
-            //        }
+                                processes.Add(new RunningServiceProcess()
+                                {
+                                    FullExePath = exePath,
+                                    ServiceName = ServiceProcessExtensions.GuessServiceName(nodeName, exePath),
+                                    Pid = osProcess.Id,
+                                    StartTimestampUtc = osProcess.StartTime.ToUniversalTime(),
+                                    UsedRamMB = (int)(osProcess.WorkingSet64 / (1024 * 1024))
+                                });
+                                break;
+                            }
+                            catch (Exception ex)
+                            {
+                                retryCount++;
+                                if (retryCount >= maxRetries)
+                                {
+                                    rc.Logger.LogException(ex);
+                                    break;
+                                }
+                                else
+                                {
+                                    await Task.Delay(1000);
+                                }
+                            }
+                        }
+                    }
+                }
 
-            //        return processes;
-            //    });
+                return processes;
+            });
 
             //    implementationGroup.MapRequest(MdsCommon.Api.GetAllInfrastructureEvents, async (rc) =>
             //    {

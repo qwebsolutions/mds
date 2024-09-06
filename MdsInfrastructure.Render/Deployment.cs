@@ -304,7 +304,7 @@ namespace MdsInfrastructure.Render
                             (ChangeType.None, b => b.VoidNode()),
                             (ChangeType.Added, b => b.NewService(change, serviceEvents)),
                             (ChangeType.Changed, b => b.ChangedService(change, serviceEvents)),
-                            (ChangeType.Removed, b => b.RemovedService(change)));
+                            (ChangeType.Removed, b => b.RemovedService(change, serviceEvents)));
                     }));
         }
 
@@ -331,7 +331,59 @@ namespace MdsInfrastructure.Render
 
         public static Var<IVNode> LiveServiceStatus(this LayoutBuilder b, Var<List<DbDeploymentEvent>> deploymentEvents)
         {
-            var lastEvent = b.Get(deploymentEvents, x => x.Where(x => x.EventType == nameof(DeploymentEvent.ServiceStart) || x.EventType == nameof(DeploymentEvent.ServiceStop)).OrderByDescending(x => x.TimestampIso).FirstOrDefault());
+            var lastEvent = b.Get(
+                deploymentEvents,
+                x => x.Where(
+                    x => x.EventType == nameof(DeploymentEvent.ServiceStart) ||
+                    x.EventType == nameof(DeploymentEvent.ServiceStop) ||
+                    x.EventType == nameof(DeploymentEvent.ServiceUninstall) ||
+                    x.EventType == nameof(DeploymentEvent.ServiceInstall)).OrderByDescending(x => x.TimestampIso).FirstOrDefault());
+
+
+            var serviceStoppedStatus = (LayoutBuilder b) =>
+            {
+                return b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("flex flex-row gap-2 text-gray-800");
+                    },
+                    b.Svg(StopCircle, "w-6 h-6"),
+                    b.Text($"Service stopped"));
+            };
+
+            var serviceStartedStatus = (LayoutBuilder b) =>
+            {
+                return b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("flex flex-row gap-2 text-green-800");
+                    },
+                    b.Svg(PlayCircle, "w-6 h-6"),
+                    b.Text($"Service started"));
+            };
+
+            var serviceUninstalledStatus = (LayoutBuilder b) =>
+            {
+                return b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("flex flex-row gap-2 text-gray-800");
+                    },
+                    b.Svg(StopCircle, "w-6 h-6"),
+                    b.Text($"Service uninstalled"));
+            };
+
+            var serviceInstalledStatus = (LayoutBuilder b) =>
+            {
+                return b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("flex flex-row gap-2 text-green-800");
+                    },
+                    b.Svg(PlayCircle, "w-6 h-6"),
+                    b.Text($"Service installed"));
+            };
+
             return b.If(
                 b.Not(b.HasObject(lastEvent)),
                 b =>
@@ -340,31 +392,18 @@ namespace MdsInfrastructure.Render
                 },
                 b => b.If(
                     b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceStop)),
-                    b =>
-                    {
-                        return b.HtmlDiv(
-                            b =>
-                            {
-                                b.SetClass("flex flex-row gap-2 text-gray-800");
-                            },
-                            b.Svg(StopCircle, "w-6 h-6"),
-                            b.Text($"Service stopped"));
-                    },
+                    serviceStoppedStatus,
                     b =>
                     {
                         return b.If(
                             b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceStart)),
-                            b =>
-                            {
-                                return b.HtmlDiv(
-                                    b =>
-                                    {
-                                        b.SetClass("flex flex-row gap-2 text-green-800");
-                                    },
-                                    b.Svg(PlayCircle, "w-6 h-6"),
-                                    b.Text($"Service started"));
-                            },
-                            b => b.HtmlDiv(b.Text("Waiting for status...")));
+                            serviceStartedStatus,
+                            b => b.If(
+                                b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceInstall)),
+                                serviceInstalledStatus,
+                                b => b.If(b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceUninstall)),
+                                    serviceUninstalledStatus,
+                                    b => b.VoidNode())));
                     }));
         }
 
@@ -385,20 +424,28 @@ namespace MdsInfrastructure.Render
                 processStatus);
         }
 
-        public static Var<IVNode> RemovedService(this LayoutBuilder b, Var<ServiceChange> serviceChange)
+        public static Var<IVNode> RemovedService(this LayoutBuilder b, Var<ServiceChange> serviceChange, Var<List<DbDeploymentEvent>> serviceDeploymentEvents)
         {
+            var processStatus = b.If(
+                b.Get(serviceDeploymentEvents, x => x.Any()),
+                b => b.LiveServiceStatus(serviceDeploymentEvents),
+                b =>
+                {
+                    return b.HtmlDiv(
+                        b =>
+                        {
+                            b.SetClass("flex flex-row gap-2 text-red-800");
+                        },
+                        b.Svg(XMark),
+                        b.Text($"Service deleted, will be stopped and uninstalled"));
+                });
+
             return b.ServiceChangeCard(
                 b.Get(serviceChange, x => x.ServiceName),
                 b.Get(serviceChange, x => x.NodeName.OldValue),
                 b.Const("bg-red-100"),
                 b.Const("bg-red-200"),
-                b.HtmlDiv(
-                    b =>
-                    {
-                        b.SetClass("flex flex-row gap-2 text-red-800");
-                    },
-                    b.Svg(XMark),
-                    b.Text($"Service deleted, will be stopped and uninstalled")));
+                processStatus);
         }
 
         public static Var<IVNode> ServiceChangeCard(

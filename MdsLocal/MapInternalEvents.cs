@@ -3,6 +3,7 @@ using Metapsi;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MdsLocal;
 
@@ -60,6 +61,9 @@ public static partial class MdsLocalApplication
                     e.EventData.InfrastructureName,
                     pendingStopTracker,
                     e.EventData.DeploymentId);
+
+                var healthStatus = await GetNodeStatus(commandContext, state.NodeName);
+                commandContext.NotifyGlobal(healthStatus);
             });
         });
 
@@ -81,6 +85,10 @@ public static partial class MdsLocalApplication
                             ServiceName = e.EventData.ServiceName,
                             ServicePath = e.EventData.FullExePath
                         });
+
+                        await Task.Delay(10000);
+
+                        await ServiceProcessExtensions.StartServiceProcess(cc, e.EventData.ServiceName, appState.NodeName, appState.ServicesBasePath, Guid.Empty);
                     });
                 }
                 else

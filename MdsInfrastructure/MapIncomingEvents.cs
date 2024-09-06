@@ -11,17 +11,6 @@ namespace MdsInfrastructure
     {
         public static void MapIncomingEvents(this IEndpointRouteBuilder endpoint)
         {
-            //endpoint.OnMessage<DeploymentEvent.Started>(async (cc, message) =>
-            //{
-            //    await cc.Do(Backend.SaveDeploymentEvent, new DbDeploymentEvent()
-            //    {
-            //        DeploymentId = message.DeploymentId,
-            //        EventType = nameof(DeploymentEvent.Started)
-            //    });
-            //    await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(message);
-            //    await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(new RefreshDeploymentReviewModel());
-            //});
-
             endpoint.OnMessage<DeploymentEvent.DeploymentComplete>(async (cc, message) =>
             {
                 await cc.Do(Backend.SaveDeploymentEvent, new DbDeploymentEvent()
@@ -49,6 +38,30 @@ namespace MdsInfrastructure
                 {
                     DeploymentId = message.DeploymentId,
                     EventType = nameof(DeploymentEvent.ServiceStart),
+                    ServiceName = message.ServiceName
+                });
+
+                await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(new RefreshDeploymentReviewModel());
+            });
+
+            endpoint.OnMessage<DeploymentEvent.ServiceInstall>(async (cc, message) =>
+            {
+                await cc.Do(Backend.SaveDeploymentEvent, new DbDeploymentEvent()
+                {
+                    DeploymentId = message.DeploymentId,
+                    EventType = nameof(DeploymentEvent.ServiceInstall),
+                    ServiceName = message.ServiceName
+                });
+
+                await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(new RefreshDeploymentReviewModel());
+            });
+
+            endpoint.OnMessage<DeploymentEvent.ServiceUninstall>(async (cc, message) =>
+            {
+                await cc.Do(Backend.SaveDeploymentEvent, new DbDeploymentEvent()
+                {
+                    DeploymentId = message.DeploymentId,
+                    EventType = nameof(DeploymentEvent.ServiceUninstall),
                     ServiceName = message.ServiceName
                 });
 

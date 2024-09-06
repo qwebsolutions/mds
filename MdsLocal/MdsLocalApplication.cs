@@ -42,8 +42,6 @@ namespace MdsLocal
             public List<string> StartupWarnings = new List<string>();
             public List<ServiceCrashEvent> ServiceCrashEvents = new List<ServiceCrashEvent>();
             public HashSet<string> DroppedServices { get; set; } = new HashSet<string>();
-
-            public HashSet<int> PendingStopPids { get; set; } = new();
         }
 
         public class LogEntry
@@ -60,23 +58,23 @@ namespace MdsLocal
 
         
 
-        public static async Task SendCommand(CommandContext commandContext, State state, string serviceName, string command)
-        {
-            switch (command)
-            {
-                case MdsCommon.NodeCommand.StopService:
-                    commandContext.Logger.LogInfo($"Attempting to restart service {serviceName}");
-                    var serviceProcesses = await commandContext.Do(GetRunningProcesses);
-                    var runningService = serviceProcesses.SingleOrDefault(x => x.ServiceName == serviceName);
+        //public static async Task SendCommand(CommandContext commandContext, State state, string serviceName, string command)
+        //{
+        //    switch (command)
+        //    {
+        //        case MdsCommon.NodeCommand.StopService:
+        //            commandContext.Logger.LogInfo($"Attempting to restart service {serviceName}");
+        //            var serviceProcesses = await commandContext.Do(GetRunningProcesses);
+        //            var runningService = serviceProcesses.SingleOrDefault(x => x.ServiceName == serviceName);
 
-                    if (runningService == null)
-                    {
-                        commandContext.Logger.LogError($"Cannot restart! Service {serviceName} is not running!");
-                        return;
-                    }
-                    await commandContext.Do(StopProcess, runningService);
-                    break;
-            }
-        }
+        //            if (runningService == null)
+        //            {
+        //                commandContext.Logger.LogError($"Cannot restart! Service {serviceName} is not running!");
+        //                return;
+        //            }
+        //            await commandContext.Do(StopProcess, runningService);
+        //            break;
+        //    }
+        //}
     }
 }

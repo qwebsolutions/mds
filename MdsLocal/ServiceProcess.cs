@@ -71,10 +71,10 @@ public static class ServiceProcessExtensions
         MdsLocalApplication.PendingStopTracker pendingStopTracker,
         Guid deploymentId)
     {
-        var currentlyRunning = await GetNodeServiceProcesses(nodeName);
+        var installedServices = await GetInstalledServices(servicesBasePath);
         var currentConfiguration = await dbQueue.Enqueue(async () => await MdsLocal.LocalDb.LoadKnownConfiguration(fullDbPath));
 
-        var union = currentlyRunning.Select(x => x.ServiceName).Union(currentConfiguration.Select(x => x.ServiceName)).Distinct().ToList();
+        var union = installedServices.Union(currentConfiguration.Select(x => x.ServiceName)).Distinct().ToList();
 
         HashSet<ProjectVersion> neededVersions = new HashSet<ProjectVersion>();
 
@@ -114,14 +114,6 @@ public static class ServiceProcessExtensions
                 ProjectVersion = neededBinaries.versionName,
                 TemporaryZipPath = tempFile
             });
-        }
-
-        // Fill temporary binaries from somewhere
-
-        foreach (var runningProcess in currentlyRunning)
-        {
-            var installData = GetServiceInstallData(servicesBasePath, runningProcess.ServiceName);
-            neededVersions.Remove(new ProjectVersion(installData.ProjectName, installData.Version));
         }
 
         List<Task> serviceProcessSyncTasks = new List<Task>();
@@ -170,7 +162,7 @@ public static class ServiceProcessExtensions
             {
                 // Service is not valid anymore, it needs to be uninstalled
                 await StopServiceProcess(commandContext, nodeName, serviceName, servicesBaseDataPath, pendingStopTracker, deploymentId);
-                await UninstallService(servicesBasePath, serviceName);
+                await UninstallService(commandContext, servicesBasePath, serviceName, nodeName, deploymentId);
             }
             else
             {
@@ -182,7 +174,7 @@ public static class ServiceProcessExtensions
                 if (!serviceInstalled)
                 {
                     // Service was not previously installed, install now
-                    await InstallServiceBinaries(commandContext, serviceName, snapshot.ProjectName, snapshot.ProjectVersionTag, nodeName, servicesBasePath, temporaryBinaries);
+                    await InstallServiceBinaries(commandContext, serviceName, snapshot.ProjectName, snapshot.ProjectVersionTag, nodeName, servicesBasePath, temporaryBinaries, deploymentId);
                     await CreateServiceParametersFile(snapshot, servicesBasePath);
                     await CreateServiceInstallFile(snapshot, infrastructureName, servicesBaseDataPath, servicesBasePath);
 
@@ -198,8 +190,8 @@ public static class ServiceProcessExtensions
                     {
                         // Project or version is different, update
                         await StopServiceProcess(commandContext, nodeName, serviceName, servicesBasePath, pendingStopTracker, deploymentId);
-                        await UninstallService(servicesBasePath, serviceName);
-                        await InstallServiceBinaries(commandContext, serviceName, snapshot.ProjectName, snapshot.ProjectVersionTag, nodeName, servicesBasePath, temporaryBinaries);
+                        await UninstallService(commandContext, servicesBasePath, serviceName, nodeName, deploymentId);
+                        await InstallServiceBinaries(commandContext, serviceName, snapshot.ProjectName, snapshot.ProjectVersionTag, nodeName, servicesBasePath, temporaryBinaries, deploymentId);
                         await CreateServiceInstallFile(snapshot, infrastructureName, servicesBaseDataPath, servicesBasePath);
                         await CreateServiceParametersFile(snapshot, servicesBasePath);
                     }
@@ -260,7 +252,8 @@ public static class ServiceProcessExtensions
         string versionTag,
         string nodeName,
         string servicesBasePath,
-        List<TemporaryBinaries> temporaryZipBinaries)
+        List<TemporaryBinaries> temporaryZipBinaries,
+        Guid deploymentId)
     {
         string serviceFolderPath = System.IO.Path.Combine(servicesBasePath, serviceName);
         System.IO.Directory.CreateDirectory(serviceFolderPath); // Works even it it already exists
@@ -292,6 +285,13 @@ public static class ServiceProcessExtensions
             int executePermission = S_IRUSR | S_IXUSR | S_IWUSR;
             int result = chmod(serviceExePath, executePermission);
         }
+
+        commandContext.NotifyGlobal(new DeploymentEvent.ServiceInstall()
+        {
+            DeploymentId = deploymentId,
+            NodeName = nodeName,
+            ServiceName = serviceName,
+        });
     }
 
     public static async Task StopServiceProcess(
@@ -330,7 +330,7 @@ public static class ServiceProcessExtensions
         }
     }
 
-    private static async Task StartServiceProcess(
+    public static async Task StartServiceProcess(
         CommandContext commandContext,
         string serviceName,
         string nodeName,
@@ -440,7 +440,7 @@ public static class ServiceProcessExtensions
     }
 
     // Service must be stopped beforehand
-    public static async Task UninstallService(string servicesBasePath, string serviceName)
+    public static async Task UninstallService(CommandContext commandContext, string servicesBasePath, string serviceName, string nodeName, Guid deploymentId)
     {
         // On first installation directory is not even created
         if (System.IO.Directory.Exists(servicesBasePath))
@@ -452,6 +452,13 @@ public static class ServiceProcessExtensions
                 System.IO.Directory.Delete(serviceFullPath, true);
             }
         }
+
+        commandContext.NotifyGlobal(new DeploymentEvent.ServiceUninstall()
+        {
+            DeploymentId = deploymentId,
+            ServiceName = serviceName,
+            NodeName = nodeName
+        });
     }
 
     private static void DeleteServiceFolder(CommandContext commandContext, string servicesBasePath, string serviceName)
@@ -483,6 +490,18 @@ public static class ServiceProcessExtensions
         }
 
         return processes;
+    }
+
+    public static async Task<List<string>> GetInstalledServices(string basePath)
+    {
+        if (!System.IO.Directory.Exists(basePath))
+        {
+            return new List<string>();
+        }
+
+        var enumerated = System.IO.Directory.EnumerateDirectories(basePath);
+
+        return enumerated.Select(x => System.IO.Path.GetFileName(x)).ToList();
     }
 
     public static List<System.Diagnostics.Process> IdentifyOwnedProcesses(string nodeName)
