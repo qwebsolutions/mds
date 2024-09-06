@@ -41,85 +41,58 @@ namespace MdsLocal
             state.StartupWarnings = await commandContext.Do(PerformStartupValidations);
         }
 
-        public static async Task GetStartupInfrastructureConfiguration(CommandContext commandContext, State state)
-        {
+        //public static async Task GetStartupInfrastructureConfiguration(CommandContext commandContext, State state)
+        //{
 
-            var infraConfig = await commandContext.Do(Api.GetInfrastructureNodeSettings);
+        //    var infraConfig = await commandContext.Do(Api.GetInfrastructureNodeSettings);
 
-            commandContext.Logger.LogDebug($"infra config: {Metapsi.Serialize.ToJson(infraConfig)}");
+        //    commandContext.Logger.LogDebug($"infra config: {Metapsi.Serialize.ToJson(infraConfig)}");
 
-            // Initial reference must be kept, it is shared! This moves data from response to shared InfrastructureConfiguration
-            state.InfrastructureConfiguration.BinariesApiUrl = infraConfig.BinariesApiUrl;
-            state.InfrastructureConfiguration.BroadcastDeploymentInputChannel = infraConfig.BroadcastDeploymentInputChannel;
-            state.InfrastructureConfiguration.HealthStatusOutputChannel = infraConfig.HealthStatusOutputChannel;
-            state.InfrastructureConfiguration.InfrastructureEventsOutputChannel = infraConfig.InfrastructureEventsOutputChannel;
-            state.InfrastructureConfiguration.InfrastructureName = infraConfig.InfrastructureName;
-            state.InfrastructureConfiguration.NodeCommandInputChannel = infraConfig.NodeCommandInputChannel;
-            state.InfrastructureConfiguration.NodeUiPort = infraConfig.NodeUiPort;
+        //    // Initial reference must be kept, it is shared! This moves data from response to shared InfrastructureConfiguration
+        //    state.InfrastructureConfiguration.BinariesApiUrl = infraConfig.BinariesApiUrl;
+        //    state.InfrastructureConfiguration.BroadcastDeploymentInputChannel = infraConfig.BroadcastDeploymentInputChannel;
+        //    state.InfrastructureConfiguration.HealthStatusOutputChannel = infraConfig.HealthStatusOutputChannel;
+        //    state.InfrastructureConfiguration.InfrastructureEventsOutputChannel = infraConfig.InfrastructureEventsOutputChannel;
+        //    state.InfrastructureConfiguration.InfrastructureName = infraConfig.InfrastructureName;
+        //    state.InfrastructureConfiguration.NodeCommandInputChannel = infraConfig.NodeCommandInputChannel;
+        //    state.InfrastructureConfiguration.NodeUiPort = infraConfig.NodeUiPort;
 
-            commandContext.PostEvent(new Event.GlobalControllerReached()
-            {
-                InfrastructureConfiguration = infraConfig
-            });
-        }
+        //    commandContext.PostEvent(new Event.GlobalControllerReached()
+        //    {
+        //        InfrastructureConfiguration = infraConfig
+        //    });
+        //}
 
         //public static async Task SaveLocalEvent(CommandContext commandContext, State state, MdsCommon.InfrastructureEvent localEvent)
         //{
         //    await commandContext.Do(MdsCommon.MdsCommonFunctions.SaveInfrastructureEvent, localEvent);
         //}
 
-        public static string GuessServiceName(string nodeName, string fullExePath)
-        {
-            string processName = System.IO.Path.GetFileName(fullExePath);
-            string serviceName = processName.Replace(ExePrefix(nodeName), string.Empty).Replace(".exe", string.Empty);
-            return serviceName;
-        }
 
-        public static string ExePrefix(string nodeName)
-        {
-            return $"_{nodeName}.";
-        }
 
-        public static List<System.Diagnostics.Process> IdentifyOwnedProcesses(string nodeName)
-        {
-            List<System.Diagnostics.Process> ownedProcesses = new List<System.Diagnostics.Process>();
-            System.Diagnostics.Process[] allProcesses = System.Diagnostics.Process.GetProcesses();
-            foreach (var process in allProcesses)
-            {
-                if (process.ProcessName.StartsWith(ExePrefix(nodeName)))
-                    ownedProcesses.Add(process);
-            }
+        //public static System.Diagnostics.Process GetRunningProcessForService(string nodeName, MdsCommon.ServiceConfigurationSnapshot localService)
+        //{
+        //    string processName = GetProcessName(GetServiceExeName(nodeName, localService.ServiceName));
+        //    //MdsCommon.Debug.Log("SEARCHINGPROCESSNAME", processName);
+        //    System.Diagnostics.Process[] matchingProcesses = System.Diagnostics.Process.GetProcessesByName(processName);
+        //    //var allProcesses = System.Diagnostics.Process.GetProcesses();
+        //    //foreach (var process in allProcesses)
+        //    //{
+        //    //    MdsCommon.Debug.Log($"PROCESSNAME: {process.ProcessName}");
+        //    //}
+        //    //MdsCommon.Debug.Log("MATCHEDPROCESSES", matchingProcesses.Length);
+        //    if (matchingProcesses.Count() > 1)
+        //    {
+        //        throw new Exception("Multiple running services!");
+        //    }
 
-            return ownedProcesses;
-        }
+        //    if (matchingProcesses.Count() == 1)
+        //    {
+        //        return matchingProcesses.First();
+        //    }
+        //    return null;
+        //}
 
-        public static System.Diagnostics.Process GetRunningProcessForService(string nodeName, MdsCommon.ServiceConfigurationSnapshot localService)
-        {
-            string processName = GetProcessName(GetServiceExeName(nodeName, localService.ServiceName));
-            //MdsCommon.Debug.Log("SEARCHINGPROCESSNAME", processName);
-            System.Diagnostics.Process[] matchingProcesses = System.Diagnostics.Process.GetProcessesByName(processName);
-            //var allProcesses = System.Diagnostics.Process.GetProcesses();
-            //foreach (var process in allProcesses)
-            //{
-            //    MdsCommon.Debug.Log($"PROCESSNAME: {process.ProcessName}");
-            //}
-            //MdsCommon.Debug.Log("MATCHEDPROCESSES", matchingProcesses.Length);
-            if (matchingProcesses.Count() > 1)
-            {
-                throw new Exception("Multiple running services!");
-            }
-
-            if (matchingProcesses.Count() == 1)
-            {
-                return matchingProcesses.First();
-            }
-            return null;
-        }
-
-        public static string GetProcessName(string serviceExeName)
-        {
-            return serviceExeName.Replace(".exe", string.Empty);
-        }
 
         public static string ServiceName(string processPath)
         {

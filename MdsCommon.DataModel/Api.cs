@@ -3,10 +3,7 @@ using System.Collections.Generic;
 
 namespace MdsCommon;
 
-public class InfrastructureMessage : IData
-{
-    public object Message { get; set; }
-}
+
 
 public class RefreshInfrastructureStatusModel
 {

@@ -4,13 +4,14 @@ using Metapsi.Html;
 using Metapsi.Hyperapp;
 using Metapsi.Syntax;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using System;
 
 namespace MdsInfrastructure
 {
     public static class Register
     {
-        public static void Everything(WebServer.References refs)
+        public static void Everything(WebServer.References refs, TaskQueue dbQueue, string fullDbPath)
         {
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Status.Infra, Routes.Status.Infra>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Status.Application, Routes.Status.Application, string>();
@@ -24,7 +25,11 @@ namespace MdsInfrastructure
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Node.List, Routes.Node.List>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Node.Edit, Routes.Node.Edit, Guid>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Node.Add, Routes.Node.Add>();
-            refs.WebApplication.RegisterPostHandler<MdsInfrastructure.Flow.Node.Save, Routes.Node.Save, MdsInfrastructure.InfrastructureNode>();
+            refs.WebApplication.MapPost("/node/save", async (CommandContext commandContext, HttpContext httpContext, MdsInfrastructure.InfrastructureNode node) =>
+            {
+                await commandContext.Do(Backend.SaveNode, node);
+                await commandContext.RegisterNodesMessaging(dbQueue, fullDbPath);
+            });
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Project.List, Routes.Project.List>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Deployment.List, Routes.Deployment.List>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Deployment.Review, Routes.Deployment.Review, Guid>();

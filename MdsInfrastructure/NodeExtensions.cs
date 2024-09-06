@@ -1,13 +1,16 @@
-﻿using System;
+﻿using MdsCommon;
+using Metapsi;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MdsInfrastructure
 {
     public static class NodeExtensions
     {
         public static bool IsNodeInUse(
-            this InfrastructureConfiguration infrastructureConfiguration, 
+            this InfrastructureConfiguration infrastructureConfiguration,
             InfrastructureNode infrastructureNode)
         {
             if (infrastructureConfiguration.InfrastructureServices.Any(x => x.InfrastructureNodeId == infrastructureNode.Id))
@@ -25,23 +28,16 @@ namespace MdsInfrastructure
             return target;
         }
 
-        //public static IEnumerable<InfrastructureNode> GetSupportedNodesForProjectVersion(
-        //    InfrastructureConfiguration infrastructureConfiguration,
-        //    List<MdsCommon.Project> allProjects,
-        //    Metapsi.RecordCollection<EnvironmentType> environmentTypes,
-        //    Guid selectedConfigurationId,
-        //    Guid projectVersionId)
-        //{
-        //    var versionBinaries = allProjects.SelectMany(x=>x.Versions). .SelectMany(x => x.Binaries).Where(x => x.ProjectVersionId == projectVersionId);
-        //    List<string> buildOses = versionBinaries.Select(x => NodeExtensions.TargetToEnvironment(x.Target)).ToList();
-        //    var compatibleNodes = infrastructureConfiguration.InfrastructureNodes.Where(x => x.ConfigurationHeaderId == selectedConfigurationId).Where(x =>
-        //    {
-        //        var envType = environmentTypes.ById(x.EnvironmentTypeId);
-        //        return buildOses.Contains(envType.OsType);
-        //    });
-
-        //    return compatibleNodes;
-        //}
-
+        public static async Task RegisterNodesMessaging(
+            this CommandContext commandContext,
+            TaskQueue dbQueue,
+            string fullDbPath)
+        {
+            var allNodes = await dbQueue.Enqueue(async () => await Db.LoadAllNodes(fullDbPath));
+            foreach (var node in allNodes)
+            {
+                commandContext.MapMessaging(node.NodeName, $"http://{node.MachineIp}:{node.UiPort}/event");
+            }
+        }
     }
 }

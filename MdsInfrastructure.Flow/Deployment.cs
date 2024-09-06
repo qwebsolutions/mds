@@ -45,7 +45,8 @@ namespace MdsInfrastructure.Flow
                 {
                     ChangesReport = changes,
                     Deployment = deployment,
-                    DeploymentEvents = deploymentEvents
+                    DeploymentEvents = deploymentEvents,
+                    DeploymentInProgress = deploymentEvents.Any() && (!deploymentEvents.Any(x => x.EventType == nameof(DeploymentEvent.DeploymentComplete)))
                 };
             }
         }

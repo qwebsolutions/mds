@@ -13,7 +13,7 @@ namespace MdsLocal
 
             string entryLocation = System.Reflection.Assembly.GetEntryAssembly().Location;
 
-            switch (GetOs())
+            switch (ServiceProcessExtensions.GetOs())
             {
                 case Os.Windows:
                     {

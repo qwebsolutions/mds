@@ -10,7 +10,7 @@ namespace MdsLocal
 {
     public static partial class ApiBinariesRetriever
     {
-        private static TimeSpan KeepInMemory = TimeSpan.FromMinutes(5);
+        private static TimeSpan KeepInMemory = TimeSpan.FromMinutes(15);
 
         private static HttpClient httpClient = new System.Net.Http.HttpClient();
 

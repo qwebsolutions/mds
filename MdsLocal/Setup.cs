@@ -1,10 +1,7 @@
-﻿using Dapper;
-using MdsCommon;
+﻿using MdsCommon;
 using Metapsi;
-using StackExchange.Redis;
 using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
@@ -42,233 +39,255 @@ namespace MdsLocal
 
             ApplicationSetup applicationSetup = ApplicationSetup.New();
 
-            var infraEventNotifier = applicationSetup.AddBusinessState(new RedisNotifier.State());
+            //var infraEventNotifier = applicationSetup.AddBusinessState(new RedisNotifier.State());
 
-            applicationSetup.OnLogMessage = async (logMessage) =>
-            {
-                System.Console.Error.Write(logMessage);
+            //applicationSetup.OnLogMessage = async (logMessage) =>
+            //{
+            //    System.Console.Error.Write(logMessage);
 
-                await Mds.LogToServiceText(arguments.LogFilePath, start, logMessage);
+            //    await Mds.LogToServiceText(arguments.LogFilePath, start, logMessage);
 
-                MdsCommon.InfrastructureEvent infrastructureEvent = null;
+            //    MdsCommon.InfrastructureEvent infrastructureEvent = null;
 
-                switch (logMessage.Message)
-                {
-                    case Metapsi.Log.Exception ex:
-                        {
-                            infrastructureEvent = new MdsCommon.InfrastructureEvent()
-                            {
-                                Type = "Error",
-                                Criticality = "Error",
-                                Source = arguments.NodeName,
-                                FullDescription = logMessage.ToString(),
-                                ShortDescription = "Internal error",
-                                Timestamp = System.DateTime.UtcNow
-                            };
-                        }
-                        break;
-                    case Metapsi.Log.Error error:
-                        {
-                            infrastructureEvent = new MdsCommon.InfrastructureEvent()
-                            {
-                                Type = "Error",
-                                Criticality = "Error",
-                                Source = arguments.NodeName,
-                                FullDescription = logMessage.ToString(),
-                                ShortDescription = "Internal error",
-                                Timestamp = System.DateTime.UtcNow
-                            };
-                        }
-                        break;
-                }
+            //    switch (logMessage.Message)
+            //    {
+            //        case Metapsi.Log.Exception ex:
+            //            {
+            //                infrastructureEvent = new MdsCommon.InfrastructureEvent()
+            //                {
+            //                    Type = "Error",
+            //                    Criticality = "Error",
+            //                    Source = arguments.NodeName,
+            //                    FullDescription = logMessage.ToString(),
+            //                    ShortDescription = "Internal error",
+            //                    Timestamp = System.DateTime.UtcNow
+            //                };
+            //            }
+            //            break;
+            //        case Metapsi.Log.Error error:
+            //            {
+            //                infrastructureEvent = new MdsCommon.InfrastructureEvent()
+            //                {
+            //                    Type = "Error",
+            //                    Criticality = "Error",
+            //                    Source = arguments.NodeName,
+            //                    FullDescription = logMessage.ToString(),
+            //                    ShortDescription = "Internal error",
+            //                    Timestamp = System.DateTime.UtcNow
+            //                };
+            //            }
+            //            break;
+            //    }
 
-                if (infrastructureEvent != null)
-                {
-                    await MdsCommon.Db.SaveInfrastructureEvent(fullDbPath, infrastructureEvent);
+            //    if (infrastructureEvent != null)
+            //    {
+            //        await MdsCommon.Db.SaveInfrastructureEvent(fullDbPath, infrastructureEvent);
 
-                    if (!string.IsNullOrEmpty(infrastructureConfiguration.InfrastructureEventsOutputChannel))
-                    {
-                        await RedisNotifier.RaiseNotification(
-                            infraEventNotifier,
-                            new RedisChannelMessage(
-                                infrastructureConfiguration.InfrastructureEventsOutputChannel,
-                                infrastructureEvent.GetType().Name,
-                                Serialize.ToJson(infrastructureEvent)));
-                    }
-                }
-            };
+            //        if (!string.IsNullOrEmpty(infrastructureConfiguration.InfrastructureEventsOutputChannel))
+            //        {
+            //            await RedisNotifier.RaiseNotification(
+            //                infraEventNotifier,
+            //                new RedisChannelMessage(
+            //                    infrastructureConfiguration.InfrastructureEventsOutputChannel,
+            //                    infrastructureEvent.GetType().Name,
+            //                    Serialize.ToJson(infrastructureEvent)));
+            //        }
+            //    }
+            //};
 
             ImplementationGroup implementationGroup = applicationSetup.AddImplementationGroup();
             var implementations = implementationGroup;
 
-            #endregion Application setup
+            var localAppState = applicationSetup.AddBusinessState(new MdsLocalApplication.State()
+            {
+                BaseDataFolder = arguments.ServicesDataPath,
+                NodeName= arguments.NodeName,
+                ServicesBasePath = arguments.ServicesBasePath,
+            });
 
-            var eventBroadcaster = SetupEventBroadcaster(
-                applicationSetup, 
-                implementationGroup, 
-                fullDbPath, 
-                infraEventNotifier,
-                infrastructureConfiguration);
+            var messagingHandler = applicationSetup.SetupMessagingApi(implementationGroup);
+            applicationSetup.MapEvent<ApplicationRevived>(e =>
+            {
+                e.Using(messagingHandler, implementationGroup).EnqueueCommand(async (cc, state) =>
+                {
+                    var deploymentEventsUrl = arguments.InfrastructureApiUrl.Trim('/') + "/event";
+                    cc.MapMessaging("global", deploymentEventsUrl);
+                });
+            });
 
-            var mdsLocalApplication = SetupLocalApp(
-                applicationSetup, 
-                implementationGroup, 
-                infrastructureConfiguration, 
-                eventBroadcaster, 
-                arguments.ServicesBasePath, 
-                arguments.NodeName,
-                arguments.ServicesDataPath,
-                start);
-
-            SetupDeployment(
-                applicationSetup,
+            applicationSetup.MapInternalEvents(
                 implementationGroup,
-                infrastructureConfiguration,
-                mdsLocalApplication,
-                eventBroadcaster,
-                arguments.BinariesRepositoryFolder,
+                localAppState,
+                fullDbPath,
                 arguments.BuildTarget);
 
-            SetupHealth(applicationSetup, implementationGroup, infrastructureConfiguration, mdsLocalApplication, arguments.NodeName);
+            #endregion Application setup
 
-            SetupPostEvents(applicationSetup, implementationGroup, arguments);
+            //var eventBroadcaster = SetupEventBroadcaster(
+            //    applicationSetup, 
+            //    implementationGroup, 
+            //    fullDbPath, 
+            //    infraEventNotifier,
+            //    infrastructureConfiguration);
 
-            List<string> warnings = new List<string>();
+            //var mdsLocalApplication = SetupLocalApp(
+            //    applicationSetup, 
+            //    implementationGroup, 
+            //    infrastructureConfiguration, 
+            //    eventBroadcaster, 
+            //    arguments.ServicesBasePath, 
+            //    arguments.NodeName,
+            //    arguments.ServicesDataPath,
+            //    start);
+
+            //SetupDeployment(
+            //    applicationSetup,
+            //    implementationGroup,
+            //    infrastructureConfiguration,
+            //    mdsLocalApplication,
+            //    eventBroadcaster,
+            //    arguments.BinariesRepositoryFolder,
+            //    arguments.BuildTarget);
+
+            //SetupHealth(applicationSetup, implementationGroup, infrastructureConfiguration, mdsLocalApplication, arguments.NodeName);
 
 
-            #region Implementation mappings
+            //    List<string> warnings = new List<string>();
 
-            System.Net.Http.HttpClient apiClient = new System.Net.Http.HttpClient();
-            apiClient.BaseAddress = new Uri(infrastructureUrl);
 
-            implementationGroup.MapRequest(Api.GetInfrastructureNodeSettings, async (rc) =>
-            {
-                return await apiClient.GetFromJsonAsync<MdsCommon.InfrastructureNodeSettings>(
-                    $"{MdsCommon.Api.GetInfrastructureNodeSettings.Name}/{arguments.NodeName}");
-            });
+            //    #region Implementation mappings
 
-            implementationGroup.MapRequest(Api.GetUpToDateConfiguration, async (rc) =>
-            {
-                var serviceSnapshots = await apiClient.GetFromJsonAsync<List<MdsCommon.ServiceConfigurationSnapshot>>(
-                    $"{MdsCommon.Api.GetCurrentNodeSnapshot.Name}/{arguments.NodeName}");
+            //    System.Net.Http.HttpClient apiClient = new System.Net.Http.HttpClient();
+            //    apiClient.BaseAddress = new Uri(infrastructureUrl);
 
-                var deploymentId = await apiClient.GetFromJsonAsync<Guid>("GetCurrentDeploymentId");
+            //    implementationGroup.MapRequest(Api.GetInfrastructureNodeSettings, async (rc) =>
+            //    {
+            //        return await apiClient.GetFromJsonAsync<MdsCommon.InfrastructureNodeSettings>(
+            //            $"{MdsCommon.Api.GetInfrastructureNodeSettings.Name}/{arguments.NodeName}");
+            //    });
 
-                return new GetUpToDateConfigurationResponse()
-                {
-                    ServiceSnapshots = serviceSnapshots,
-                    CurrentDeploymentId = deploymentId
-                };
-            });
+            //    implementationGroup.MapRequest(Api.GetUpToDateConfiguration, async (rc) =>
+            //    {
+            //        var serviceSnapshots = await apiClient.GetFromJsonAsync<List<MdsCommon.ServiceConfigurationSnapshot>>(
+            //            $"{MdsCommon.Api.GetCurrentNodeSnapshot.Name}/{arguments.NodeName}");
 
-            implementationGroup.MapRequest(MdsLocalApplication.GetLocalKnownConfiguration, async (rc) =>
-            {
-                return await LocalDb.LoadKnownConfiguration(fullDbPath);
-            });
+            //        var deploymentId = await apiClient.GetFromJsonAsync<Guid>("GetCurrentDeploymentId");
 
-            implementationGroup.MapCommand(MdsLocalApplication.OverwriteLocalConfiguration, async (rc, snapshot) =>
-            {
-                await LocalDb.SetNewConfiguration(fullDbPath, snapshot);
-            });
+            //        return new GetUpToDateConfigurationResponse()
+            //        {
+            //            ServiceSnapshots = serviceSnapshots,
+            //            CurrentDeploymentId = deploymentId
+            //        };
+            //    });
 
-            implementationGroup.MapRequest(MdsLocalApplication.PerformStartupValidations, async (rc) =>
-            {
-                var fieldsDiff = await LocalDb.ValidateSchema(fullDbPath);
-                warnings = FieldsDiffAsWarnings(fieldsDiff);
-                return warnings;
-            });
+            //    implementationGroup.MapRequest(MdsLocalApplication.GetLocalKnownConfiguration, async (rc) =>
+            //    {
+            //        return await LocalDb.LoadKnownConfiguration(fullDbPath);
+            //    });
 
-            implementationGroup.MapRequest(MdsLocalApplication.GetWarnings, async (rc) => warnings);
+            //    implementationGroup.MapCommand(MdsLocalApplication.OverwriteLocalConfiguration, async (rc, snapshot) =>
+            //    {
+            //        await LocalDb.SetNewConfiguration(fullDbPath, snapshot);
+            //    });
 
-            implementationGroup.MapRequest(MdsLocalApplication.GetLocalSettings,
-                async (rc) => new LocalSettings()
-                {
-                    FullDbPath = fullDbPath,
-                    InfrastructureApiUrl = infrastructureUrl,
-                    NodeName = nodeName
-                });
+            //    implementationGroup.MapRequest(MdsLocalApplication.PerformStartupValidations, async (rc) =>
+            //    {
+            //        var fieldsDiff = await LocalDb.ValidateSchema(fullDbPath);
+            //        warnings = FieldsDiffAsWarnings(fieldsDiff);
+            //        return warnings;
+            //    });
 
-            implementationGroup.MapRequest(MdsLocalApplication.GetFullLocalStatus, async (rc) =>
-            {
-                return await LocalDb.LoadFullLocalStatus(fullDbPath, nodeName);
-            });
+            //    implementationGroup.MapRequest(MdsLocalApplication.GetWarnings, async (rc) => warnings);
 
-            implementationGroup.MapRequest(MdsLocalApplication.GetSyncHistory, async (rc) =>
-            {
-                return await LocalDb.LoadSyncHistory(fullDbPath);
-            });
+            //    implementationGroup.MapRequest(MdsLocalApplication.GetLocalSettings,
+            //        async (rc) => new LocalSettings()
+            //        {
+            //            FullDbPath = fullDbPath,
+            //            InfrastructureApiUrl = infrastructureUrl,
+            //            NodeName = nodeName
+            //        });
 
-            implementationGroup.MapRequest(MdsLocalApplication.GetRunningProcesses, async (rc) =>
-            {
-                List<RunningServiceProcess> processes = new();
+            //    implementationGroup.MapRequest(MdsLocalApplication.GetFullLocalStatus, async (rc) =>
+            //    {
+            //        return await LocalDb.LoadFullLocalStatus(fullDbPath, nodeName);
+            //    });
 
-                foreach (var osProcess in System.Diagnostics.Process.GetProcesses())
-                {
-                    if (osProcess.ProcessName.StartsWith(MdsLocalApplication.ExePrefix(nodeName)))
-                    {
-                        var maxRetries = 5;
-                        int retryCount = 0;
-                        while (true)
-                        {
-                            try
-                            {
-                                string exePath = osProcess.MainModule.FileName;
+            //    implementationGroup.MapRequest(MdsLocalApplication.GetSyncHistory, async (rc) =>
+            //    {
+            //        return await LocalDb.LoadSyncHistory(fullDbPath);
+            //    });
 
-                                processes.Add(new RunningServiceProcess()
-                                {
-                                    FullExePath = exePath,
-                                    ServiceName = MdsLocalApplication.GuessServiceName(nodeName, exePath),
-                                    Pid = osProcess.Id,
-                                    StartTimestampUtc = osProcess.StartTime.ToUniversalTime(),
-                                    UsedRamMB = (int)(osProcess.WorkingSet64 / (1024 * 1024))
-                                });
-                                break;
-                            }
-                            catch (Exception ex)
-                            {
-                                retryCount++;
-                                if (retryCount >= maxRetries)
-                                {
-                                    rc.Logger.LogException(ex);
-                                    break;
-                                }
-                                else
-                                {
-                                    await Task.Delay(1000);
-                                }
-                            }
-                        }
-                    }
-                }
+            //    implementationGroup.MapRequest(MdsLocalApplication.GetRunningProcesses, async (rc) =>
+            //    {
+            //        List<RunningServiceProcess> processes = new();
 
-                return processes;
-            });
+            //        foreach (var osProcess in System.Diagnostics.Process.GetProcesses())
+            //        {
+            //            if (osProcess.ProcessName.StartsWith(MdsLocalApplication.ExePrefix(nodeName)))
+            //            {
+            //                var maxRetries = 5;
+            //                int retryCount = 0;
+            //                while (true)
+            //                {
+            //                    try
+            //                    {
+            //                        string exePath = osProcess.MainModule.FileName;
 
-            implementationGroup.MapRequest(MdsCommon.Api.GetAllInfrastructureEvents, async (rc) =>
-            {
-                return await MdsCommon.Db.LoadAllInfrastructureEvents(fullDbPath);
-            });
+            //                        processes.Add(new RunningServiceProcess()
+            //                        {
+            //                            FullExePath = exePath,
+            //                            ServiceName = MdsLocalApplication.GuessServiceName(nodeName, exePath),
+            //                            Pid = osProcess.Id,
+            //                            StartTimestampUtc = osProcess.StartTime.ToUniversalTime(),
+            //                            UsedRamMB = (int)(osProcess.WorkingSet64 / (1024 * 1024))
+            //                        });
+            //                        break;
+            //                    }
+            //                    catch (Exception ex)
+            //                    {
+            //                        retryCount++;
+            //                        if (retryCount >= maxRetries)
+            //                        {
+            //                            rc.Logger.LogException(ex);
+            //                            break;
+            //                        }
+            //                        else
+            //                        {
+            //                            await Task.Delay(1000);
+            //                        }
+            //                    }
+            //                }
+            //            }
+            //        }
 
-            implementationGroup.MapCommand(MdsLocalApplication.StoreSyncResult, async (rc, syncResult) =>
-            {
-                await LocalDb.RegisterSyncResult(fullDbPath, syncResult);
-            });
+            //        return processes;
+            //    });
 
-            implementations.MapCommand(MdsLocalApplication.StopProcess, async (rc, runningProcess) =>
-            {
-                await Mds.WriteCommand(Mds.GetServiceCommandDbFile(arguments.ServicesDataPath, runningProcess.ServiceName), new Mds.Shutdown() { });
+            //    implementationGroup.MapRequest(MdsCommon.Api.GetAllInfrastructureEvents, async (rc) =>
+            //    {
+            //        return await MdsCommon.Db.LoadAllInfrastructureEvents(fullDbPath);
+            //    });
 
-                var process = System.Diagnostics.Process.GetProcessById(runningProcess.Pid);
-                var exited = process.WaitForExit(15000);
+            //    implementationGroup.MapCommand(MdsLocalApplication.StoreSyncResult, async (rc, syncResult) =>
+            //    {
+            //        await LocalDb.RegisterSyncResult(fullDbPath, syncResult);
+            //    });
 
-                if (!exited)
-                {
-                    process.Kill();
-                    exited = process.WaitForExit(5000);
-                }
-            });
+            //    implementations.MapCommand(MdsLocalApplication.StopProcess, async (rc, runningProcess) =>
+            //    {
+            //        await Mds.WriteCommand(Mds.GetServiceCommandDbFile(arguments.ServicesDataPath, runningProcess.ServiceName), new Mds.Shutdown() { });
 
-            #endregion Implementation mappings
+            //        var process = System.Diagnostics.Process.GetProcessById(runningProcess.Pid);
+            //        var exited = process.WaitForExit(15000);
+
+            //        if (!exited)
+            //        {
+            //            process.Kill();
+            //            exited = process.WaitForExit(5000);
+            //        }
+            //    });
+
+            //    #endregion Implementation mappings
 
             return new References()
             {
@@ -277,40 +296,26 @@ namespace MdsLocal
             };
         }
 
-        private static List<string> FieldsDiffAsWarnings(Metapsi.Sqlite.Validate.FieldsDiff fieldsDiff)
-        {
-            List<string> warnings = new List<string>();
+        //private static List<string> FieldsDiffAsWarnings(Metapsi.Sqlite.Validate.FieldsDiff fieldsDiff)
+        //{
+        //    List<string> warnings = new List<string>();
 
-            if (!fieldsDiff.SameFields)
-            {
-                if (fieldsDiff.MissingFields.Any())
-                {
-                    var missingFields = $" Missing fields: {string.Join(", ", fieldsDiff.MissingFields)}";
-                    warnings.Add(missingFields);
-                }
+        //    if (!fieldsDiff.SameFields)
+        //    {
+        //        if (fieldsDiff.MissingFields.Any())
+        //        {
+        //            var missingFields = $" Missing fields: {string.Join(", ", fieldsDiff.MissingFields)}";
+        //            warnings.Add(missingFields);
+        //        }
 
-                if (fieldsDiff.ExtraFields.Any())
-                {
-                    var extraFields = $" Extra fields: {string.Join(", ", fieldsDiff.ExtraFields)}";
-                    warnings.Add(extraFields);
-                }
-            }
+        //        if (fieldsDiff.ExtraFields.Any())
+        //        {
+        //            var extraFields = $" Extra fields: {string.Join(", ", fieldsDiff.ExtraFields)}";
+        //            warnings.Add(extraFields);
+        //        }
+        //    }
 
-            return warnings;
-        }
-
-        private static void SetupPostEvents(this ApplicationSetup setup, ImplementationGroup ig, InputArguments inputArguments)
-        {
-            var httpEventPoster = setup.AddBusinessState(new HttpClient());
-            var deploymentEventsUrl = inputArguments.InfrastructureApiUrl.Trim('/') + "/event";
-
-            setup.MapEvent<InfrastructureMessage>(e =>
-            {
-                e.Using(httpEventPoster, ig).EnqueueCommand(async (cc, state) =>
-                {
-                    await state.PostMessage(deploymentEventsUrl, e.EventData.Message);
-                });
-            });
-        }
+//            return warnings;
+        //}
     }
 }

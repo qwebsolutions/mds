@@ -9,6 +9,7 @@ using Metapsi.Html;
 using System.Collections.Generic;
 using Metapsi.Shoelace;
 using Metapsi.SignalR;
+using Microsoft.AspNetCore.Razor.TagHelpers;
 
 namespace MdsInfrastructure.Render
 {
@@ -70,16 +71,36 @@ namespace MdsInfrastructure.Render
                                     (b, dispatch) =>
                                     {
                                         b.DispatchCustomEvent(b.NewObj<RefreshDeploymentReviewModel>());
-                                    }))),
+                                    }),
+                                b.MakeEffect((SyntaxBuilder b) =>
+                                {
+                                    if (serverModel.DeploymentInProgress)
+                                    {
+                                        b.ShowDeploymentToast(MdsCommon.Controls.Controls.IdDeploymentStartedToast);
+                                    }
+                                }))),
                         (LayoutBuilder b, Var<DeploymentReview> model) => RenderClient(b, serverModel, model),
                         (b, model) => b.Listen(b.MakeAction((SyntaxBuilder b, Var<MdsInfrastructure.DeploymentReview> model, Var<RefreshDeploymentReviewModel> e) =>
                         {
-                            return b.MakeStateWithEffects(model, b.RefreshModelEffect<MdsInfrastructure.DeploymentReview>(b.AsString(b.Get(model, x => x.Deployment.Id))));
-                        })),
-                        (b, model) => b.Listen(b.MakeAction((SyntaxBuilder b, Var<MdsInfrastructure.DeploymentReview> model, Var<DeploymentEvent.Done> e) =>
-                        {
-                            b.ShowDeploymentToast(MdsCommon.Controls.Controls.IdDeploymentSuccessToast);
-                            return b.MakeStateWithEffects(model, b.RefreshModelEffect<MdsInfrastructure.DeploymentReview>(b.AsString(b.Get(model, x => x.Deployment.Id))));
+                            return b.MakeStateWithEffects(
+                                model, 
+                                b.RefreshModelEffect<MdsInfrastructure.DeploymentReview>(
+                                    b.AsString(b.Get(model, x => x.Deployment.Id)),
+                                    b.MakeAction((SyntaxBuilder b, Var<DeploymentReview> model, Var<DeploymentReview> newModel) =>
+                                    {
+                                        return b.MakeStateWithEffects(
+                                            newModel,
+                                            b =>
+                                            {
+                                                b.If(b.And(
+                                                    b.Get(model, x => x.DeploymentInProgress),
+                                                    b.Get(newModel, x => !x.DeploymentInProgress)),
+                                                    b =>
+                                                    {
+                                                        b.ShowDeploymentToast(MdsCommon.Controls.Controls.IdDeploymentSuccessToast);
+                                                    });
+                                            });
+                                    })));
                         }))));
             }
 
@@ -97,7 +118,7 @@ namespace MdsInfrastructure.Render
                         serverModel.User.IsSignedIn()),
                     b.Render(headerProps),
                     b.Optional(
-                        b.Get(clientModel, x => x.DeploymentEvents.Any() && (!x.DeploymentEvents.Any(x => x.EventType == nameof(DeploymentEvent.Done)))),
+                        b.Get(clientModel, x => x.DeploymentInProgress),
                         b =>
                         {
                             return b.SlProgressBar(b =>
@@ -310,35 +331,41 @@ namespace MdsInfrastructure.Render
 
         public static Var<IVNode> LiveServiceStatus(this LayoutBuilder b, Var<List<DbDeploymentEvent>> deploymentEvents)
         {
-            var lastEvent = b.Get(deploymentEvents, x => x.OrderByDescending(x => x.TimestampIso).First());
+            var lastEvent = b.Get(deploymentEvents, x => x.Where(x => x.EventType == nameof(DeploymentEvent.ServiceStart) || x.EventType == nameof(DeploymentEvent.ServiceStop)).OrderByDescending(x => x.TimestampIso).FirstOrDefault());
             return b.If(
-                b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceStopped)),
+                b.Not(b.HasObject(lastEvent)),
                 b =>
                 {
-                    return b.HtmlDiv(
-                        b =>
-                        {
-                            b.SetClass("flex flex-row gap-2 text-gray-800");
-                        },
-                        b.Svg(StopCircle, "w-6 h-6"),
-                        b.Text($"Service stopped"));
+                    return b.HtmlDiv(b.Text("Waiting for status..."));
                 },
-                b =>
-                {
-                    return b.If(
-                        b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceStarted)),
-                        b =>
-                        {
-                            return b.HtmlDiv(
-                                b =>
-                                {
-                                    b.SetClass("flex flex-row gap-2 text-green-800");
-                                },
-                                b.Svg(PlayCircle, "w-6 h-6"),
-                                b.Text($"Service started"));
-                        },
-                        b => b.HtmlDiv(b.Text("Waiting for status...")));
-                });
+                b => b.If(
+                    b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceStop)),
+                    b =>
+                    {
+                        return b.HtmlDiv(
+                            b =>
+                            {
+                                b.SetClass("flex flex-row gap-2 text-gray-800");
+                            },
+                            b.Svg(StopCircle, "w-6 h-6"),
+                            b.Text($"Service stopped"));
+                    },
+                    b =>
+                    {
+                        return b.If(
+                            b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceStart)),
+                            b =>
+                            {
+                                return b.HtmlDiv(
+                                    b =>
+                                    {
+                                        b.SetClass("flex flex-row gap-2 text-green-800");
+                                    },
+                                    b.Svg(PlayCircle, "w-6 h-6"),
+                                    b.Text($"Service started"));
+                            },
+                            b => b.HtmlDiv(b.Text("Waiting for status...")));
+                    }));
         }
 
         public static Var<IVNode> NewService(this LayoutBuilder b, Var<ServiceChange> serviceChange, Var<List<DbDeploymentEvent>> serviceDeploymentEvents)

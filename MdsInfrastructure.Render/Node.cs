@@ -208,13 +208,39 @@ namespace MdsInfrastructure.Render
             var envTypes = b.Get(clientModel, m => m.EnvironmentTypes.ToList());
             var saveUrl = b.Url<Routes.Node.Save, MdsInfrastructure.InfrastructureNode>();
             var toolbar = b.Toolbar(b => { },
-                b => b.SubmitButton<InfrastructureNode>(b =>
+                b =>
                 {
-                    b.Set(x => x.Label, "Save");
-                    b.Set(x => x.Href, saveUrl);
-                    b.Set(x => x.Payload, node);
-                    b.Set(x => x.ButtonClass, "rounded text-white py-2 px-4 shadow bg-sky-500");
-                }));
+                    return b.HtmlButton(
+                        b =>
+                        {
+                            b.AddPrimaryButtonStyle();
+                            b.OnClickAction((SyntaxBuilder b, Var<M.EditPage> clientModel) =>
+                            {
+                                return b.MakeStateWithEffects(
+                                    clientModel,
+                                    b.PostJson(
+                                        b.Const("/node/save"),
+                                        b.Get(clientModel, x => x.InfrastructureNode),
+                                        b.MakeAction((SyntaxBuilder b, Var<M.EditPage> clientModel) =>
+                                        {
+                                            return b.Clone(clientModel);
+                                        }),
+                                        b.MakeAction((SyntaxBuilder b, Var<M.EditPage> clientModel, Var<ClientSideException> ex) =>
+                                        {
+                                            b.Alert(ex);
+                                            return b.Clone(clientModel);
+                                        })));
+                            });
+                        },
+                        b.Text("Save"));
+                });
+                //b => b.SubmitButton<InfrastructureNode>(b =>
+                //{
+                //    b.Set(x => x.Label, "Save");
+                //    b.Set(x => x.Href, saveUrl);
+                //    b.Set(x => x.Payload, node);
+                //    b.Set(x => x.ButtonClass, "rounded text-white py-2 px-4 shadow bg-sky-500");
+                //}));
 
             var form = b.Form(
                 b =>

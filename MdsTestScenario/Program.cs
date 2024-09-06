@@ -17,8 +17,18 @@ public static class Program
         try
         {
             await Initialize();
-            await Task.Delay(10000);
-            await ManyNodes();
+            await Task.Delay(TimeSpan.FromSeconds(5));
+            var configuration = await CreateConfiguration(1, 1);
+            await DeployConfiguration(configuration);
+            await Task.Delay(System.TimeSpan.FromSeconds(30));
+
+            //foreach (var service in configuration.Services)
+            //{
+            //    service.Enabled = false;
+            //}
+
+            //await DeployConfiguration(configuration);
+
         }
         finally
         {
@@ -38,28 +48,28 @@ public static class Program
         UseCookies = true
     });
 
-    private static List<Process> GetNodeProcesses(string nodeName)
+    //private static List<Process> GetNodeProcesses(string nodeName)
+    //{
+    //    List<Process> nodeProcesses = new();
+
+    //    foreach (var osProcess in System.Diagnostics.Process.GetProcesses())
+    //    {
+    //        if (osProcess.ProcessName.StartsWith(MdsLocalApplication.ExePrefix(nodeName).TrimEnd('.')))
+    //        {
+    //            nodeProcesses.Add(osProcess);
+    //        }
+    //    }
+
+    //    return nodeProcesses;
+    //}
+
+    private static void KillProcesses(string prefix)
     {
-        List<Process> nodeProcesses = new();
-
-        foreach (var osProcess in System.Diagnostics.Process.GetProcesses())
-        {
-            if (osProcess.ProcessName.StartsWith(MdsLocalApplication.ExePrefix(nodeName).TrimEnd('.')))
-            {
-                nodeProcesses.Add(osProcess);
-            }
-        }
-
-        return nodeProcesses;
-    }
-
-    private static void KillProcesses(string nodeName)
-    {
-        var nodeProcesses = GetNodeProcesses(nodeName);
-
-        foreach (var osProcess in nodeProcesses)
+        var ownedProcesses = System.Diagnostics.Process.GetProcesses().Where(x => x.ProcessName.StartsWith("_" + prefix)).ToList();
+        foreach (var osProcess in ownedProcesses)
         {
             osProcess.Kill();
+            osProcess.WaitForExit();
         }
     }
 
@@ -100,23 +110,43 @@ public static class Program
         System.IO.File.Copy(localCleanDbPath, localDbPath, true);
     }
 
-    private static async Task DeclareLocalNode(
-        string mdsFolder,
+    //private static async Task DeclareLocalNode(
+    //    string mdsFolder,
+    //    string nodeName,
+    //    string ip,
+    //    int uiPort = 9234)
+    //{
+    //    var localDbPath = System.IO.Path.Combine(mdsFolder, "MdsInfrastructure.db");
+    //    await MdsInfrastructure.Db.SaveNode(
+    //        localDbPath,
+    //        new MdsInfrastructure.InfrastructureNode()
+    //        {
+    //            Active = true,
+    //            EnvironmentTypeId = Guid.Parse("80c2e861-19e8-4328-a317-cc6623bbe812"),
+    //            MachineIp = ip,
+    //            NodeName = nodeName,
+    //            UiPort = uiPort
+    //        });
+    //}
+
+    private static async Task SaveLocalNode(
+        string infraApi,
         string nodeName,
         string ip,
         int uiPort = 9234)
     {
-        var localDbPath = System.IO.Path.Combine(mdsFolder, "MdsInfrastructure.db");
-        await MdsInfrastructure.Db.SaveNode(
-            localDbPath,
-            new MdsInfrastructure.InfrastructureNode()
-            {
-                Active = true,
-                EnvironmentTypeId = Guid.Parse("80c2e861-19e8-4328-a317-cc6623bbe812"),
-                MachineIp = ip,
-                NodeName = nodeName,
-                UiPort = uiPort
-            });
+        var node = new MdsInfrastructure.InfrastructureNode()
+        {
+            Active = true,
+            EnvironmentTypeId = Guid.Parse("80c2e861-19e8-4328-a317-cc6623bbe812"),
+            MachineIp = ip,
+            NodeName = nodeName,
+            UiPort = uiPort
+        };
+
+        var r = await httpClient.PostAsJsonAsync(infraApi + "/node/save", node);
+
+        r.EnsureSuccessStatusCode();
     }
 
     private static async Task StartBuildController()
@@ -198,21 +228,21 @@ public static class Program
         await CheckUntilUrlAvailable("http://localhost:9125");
     }
 
-    private static async Task StartLocalController(string localNodeName)
+    private static async Task StartLocalController(string localNodeName, int uiPort)
     {
         var localControllerRefs = await MdsLocal.Program.SetupLocalController(new MdsLocal.InputArguments()
         {
             DbPath = System.IO.Path.Combine(MdsFolder, $"{localNodeName}.db"),
             NodeName = localNodeName,
             InfrastructureApiUrl = "http://localhost:9125/api/",
-            ServicesBasePath = System.IO.Path.Combine(MdsFolder, "services" + localNodeName),
+            ServicesBasePath = System.IO.Path.Combine(MdsFolder, "services", localNodeName),
             BuildTarget = "win10-x64",
             ServicesDataPath = System.IO.Path.Combine(MdsFolder, "data"),
-        }, 0, DateTime.UtcNow);
+        }, uiPort, DateTime.UtcNow);
 
         localControllerRefs.ApplicationSetup.Revive();
 
-        await CheckUntilUrlAvailable("http://localhost:9234");
+        await CheckUntilUrlAvailable($"http://localhost:{uiPort}");
     }
 
     private static async Task<HttpResponseMessage> SignIn()
@@ -343,137 +373,130 @@ public static class Program
         KillProcesses(LocalNodeName);
     }
 
-    public static async Task ConvertOldDateFormat()
+    //public static async Task ConvertOldDateFormat()
+    //{
+    //    Metapsi.Sqlite.Converters.RegisterAll();
+
+    //    const string localNodeName = "ms-test-node-convert-datetime";
+
+    //    var dateTimeConversionOriginalDbsFolder = "c:\\github\\qwebsolutions\\mds\\MdsTests\\LocalDateTimeConversionStart";
+
+    //    var mdsFolder = "c:\\github\\qwebsolutions\\mds\\MdsTests\\mds\\";
+    //    if (System.IO.Directory.Exists(mdsFolder))
+    //    {
+    //        System.IO.Directory.Delete(mdsFolder, true);
+    //    }
+    //    System.IO.Directory.CreateDirectory(mdsFolder);
+
+    //    var cleanStartFolder = "c:\\github\\qwebsolutions\\mds\\MdsTests\\CleanStart";
+
+    //    var infraCleanDbPath = System.IO.Path.Combine(cleanStartFolder, "MdsInfrastructure.db");
+    //    var infraDbPath = System.IO.Path.Combine(mdsFolder, "MdsInfrastructure.db");
+    //    System.IO.File.Copy(infraCleanDbPath, infraDbPath, true);
+
+    //    await DeclareLocalNode(mdsFolder, localNodeName, "127.0.0.1");
+
+    //    var infraReferences = await MdsInfrastructure.Program.SetupGlobalController(new MdsInfrastructure.MdsInfrastructureApplication.InputArguments()
+    //    {
+    //        AdminPassword = "admin!",
+    //        AdminUserName = "admin",
+    //        InfrastructureName = "mstest",
+    //        UiPort = 9125,
+    //        DbPath = System.IO.Path.Combine(mdsFolder, "MdsInfrastructure.db"),
+    //        NodeCommandOutputChannel = "",
+    //        BroadcastDeploymentOutputChannel = "161.35.193.157/ms-test.BroadcastDeployment",
+    //        HealthStatusInputChannel = "161.35.193.157/ms-test.HealthStatus",
+    //        BuildManagerUrl = "http://localhost:5011"
+    //    }, DateTime.UtcNow);
+
+    //    infraReferences.ApplicationSetup.Revive();
+
+    //    await Task.Delay(5000);
+
+
+    //    var localCleanDbPath = System.IO.Path.Combine(dateTimeConversionOriginalDbsFolder, "MdsLocal.db");
+    //    var localDbPath = System.IO.Path.Combine(mdsFolder, "MdsLocal.db");
+    //    System.IO.File.Copy(localCleanDbPath, localDbPath, true);
+
+    //    await MdsLocal.Migrate.All(localDbPath);
+
+    //    var localControllerRefs = await MdsLocal.Program.SetupLocalController(new MdsLocal.InputArguments()
+    //    {
+    //        DbPath = System.IO.Path.Combine(mdsFolder, "MdsLocal.db"),
+    //        NodeName = localNodeName,
+    //        InfrastructureApiUrl = "http://localhost:9125/api/",
+    //        ServicesBasePath = System.IO.Path.Combine(mdsFolder, "services"),
+    //        BuildTarget = "win10-x64",
+    //        ServicesDataPath = System.IO.Path.Combine(mdsFolder, "data")
+    //    }, 0, DateTime.UtcNow);
+
+    //    var app = localControllerRefs.ApplicationSetup.Revive();
+
+    //    await app.SuspendComplete;
+    //}
+
+    //public static async Task RedeployTwoServicesDisableOneOfThem()
+    //{
+    //    await DeclareLocalNode(MdsFolder, LocalNodeName, "127.0.0.1");
+    //    await StartLocalController(LocalNodeName, 9234);
+    //    var configuration = CreateConfiguration(LocalNodeName, 20);
+    //    await DeployConfiguration(configuration);
+
+    //    await CheckUntil(async () =>
+    //    {
+    //        var knownConfiguration = await LocalDb.LoadKnownConfiguration(System.IO.Path.Combine(MdsFolder, "MdsLocal.db"));
+    //        return knownConfiguration.Count() == 20;
+    //    });
+
+    //    await CheckUntil(async () =>
+    //    {
+    //        return MdsLocal.ServiceProcessExtensions.IdentifyOwnedProcesses(LocalNodeName).Count == 20;
+    //    }, 100);
+
+    //    var initialPids = MdsLocal.ServiceProcessExtensions.IdentifyOwnedProcesses(LocalNodeName).Select(x => x.Id).ToList();
+
+    //    configuration.Services[1].Enabled = false;
+
+    //    await DeployConfiguration(configuration);
+
+    //    await CheckUntil(async () =>
+    //    {
+    //        var knownConfiguration = await LocalDb.LoadKnownConfiguration(System.IO.Path.Combine(MdsFolder, "MdsLocal.db"));
+    //        return knownConfiguration.Count() == 19;
+    //    });
+
+    //    await CheckUntil(async () =>
+    //    {
+    //        var runningProcesses = MdsLocal.ServiceProcessExtensions.IdentifyOwnedProcesses(LocalNodeName);
+    //        var newPids = runningProcesses.Select(x => x.Id).ToList();
+    //        if (newPids.Any(x => !initialPids.Contains(x)))
+    //        {
+    //            throw new System.Exception("Process restarted!");
+    //        }
+    //        return newPids.Count() == 19;
+    //    }, 20);
+
+    //    //await Task.Delay(System.TimeSpan.FromMinutes(10));
+    //}
+
+    public static async Task<Simplified.Configuration> CreateConfiguration(int nodesCount, int servicesPerNode)
     {
-        Metapsi.Sqlite.Converters.RegisterAll();
-
-        const string localNodeName = "ms-test-node-convert-datetime";
-
-        var dateTimeConversionOriginalDbsFolder = "c:\\github\\qwebsolutions\\mds\\MdsTests\\LocalDateTimeConversionStart";
-
-        var mdsFolder = "c:\\github\\qwebsolutions\\mds\\MdsTests\\mds\\";
-        if (System.IO.Directory.Exists(mdsFolder))
-        {
-            System.IO.Directory.Delete(mdsFolder, true);
-        }
-        System.IO.Directory.CreateDirectory(mdsFolder);
-
-        var cleanStartFolder = "c:\\github\\qwebsolutions\\mds\\MdsTests\\CleanStart";
-
-        var infraCleanDbPath = System.IO.Path.Combine(cleanStartFolder, "MdsInfrastructure.db");
-        var infraDbPath = System.IO.Path.Combine(mdsFolder, "MdsInfrastructure.db");
-        System.IO.File.Copy(infraCleanDbPath, infraDbPath, true);
-
-        await DeclareLocalNode(mdsFolder, localNodeName, "127.0.0.1");
-
-        var infraReferences = await MdsInfrastructure.Program.SetupGlobalController(new MdsInfrastructure.MdsInfrastructureApplication.InputArguments()
-        {
-            AdminPassword = "admin!",
-            AdminUserName = "admin",
-            InfrastructureName = "mstest",
-            UiPort = 9125,
-            DbPath = System.IO.Path.Combine(mdsFolder, "MdsInfrastructure.db"),
-            NodeCommandOutputChannel = "",
-            BroadcastDeploymentOutputChannel = "161.35.193.157/ms-test.BroadcastDeployment",
-            HealthStatusInputChannel = "161.35.193.157/ms-test.HealthStatus",
-            BuildManagerUrl = "http://localhost:5011"
-        }, DateTime.UtcNow);
-
-        infraReferences.ApplicationSetup.Revive();
-
-        await Task.Delay(5000);
-
-
-        var localCleanDbPath = System.IO.Path.Combine(dateTimeConversionOriginalDbsFolder, "MdsLocal.db");
-        var localDbPath = System.IO.Path.Combine(mdsFolder, "MdsLocal.db");
-        System.IO.File.Copy(localCleanDbPath, localDbPath, true);
-
-        await MdsLocal.Migrate.All(localDbPath);
-
-        var localControllerRefs = await MdsLocal.Program.SetupLocalController(new MdsLocal.InputArguments()
-        {
-            DbPath = System.IO.Path.Combine(mdsFolder, "MdsLocal.db"),
-            NodeName = localNodeName,
-            InfrastructureApiUrl = "http://localhost:9125/api/",
-            ServicesBasePath = System.IO.Path.Combine(mdsFolder, "services"),
-            BuildTarget = "win10-x64",
-            ServicesDataPath = System.IO.Path.Combine(mdsFolder, "data")
-        }, 0, DateTime.UtcNow);
-
-        var app = localControllerRefs.ApplicationSetup.Revive();
-
-        await app.SuspendComplete;
-    }
-
-    public static async Task RedeployTwoServicesDisableOneOfThem()
-    {
-        await DeclareLocalNode(MdsFolder, LocalNodeName, "127.0.0.1");
-        await StartLocalController(LocalNodeName);
-        var configuration = CreateConfiguration(LocalNodeName, 20);
-        await DeployConfiguration(configuration);
-
-        await CheckUntil(async () =>
-        {
-            var knownConfiguration = await LocalDb.LoadKnownConfiguration(System.IO.Path.Combine(MdsFolder, "MdsLocal.db"));
-            return knownConfiguration.Count() == 20;
-        });
-
-        await CheckUntil(async () =>
-        {
-            return GetNodeProcesses(LocalNodeName).Count == 20;
-        }, 100);
-
-        var initialPids = GetNodeProcesses(LocalNodeName).Select(x => x.Id).ToList();
-
-        configuration.Services[1].Enabled = false;
-
-        await DeployConfiguration(configuration);
-
-        await CheckUntil(async () =>
-        {
-            var knownConfiguration = await LocalDb.LoadKnownConfiguration(System.IO.Path.Combine(MdsFolder, "MdsLocal.db"));
-            return knownConfiguration.Count() == 19;
-        });
-
-        await CheckUntil(async () =>
-        {
-            var runningProcesses = GetNodeProcesses(LocalNodeName);
-            var newPids = runningProcesses.Select(x => x.Id).ToList();
-            if (newPids.Any(x => !initialPids.Contains(x)))
-            {
-                throw new System.Exception("Process restarted!");
-            }
-            return newPids.Count() == 19;
-        }, 20);
-
-        //await Task.Delay(System.TimeSpan.FromMinutes(10));
-    }
-
-    public static async Task ManyNodes()
-    {
-        var nodesCount = 1;
-        var servicesPerNode = 1;
-
         var configuration = CreateConfiguration(LocalNodeName, nodesCount * servicesPerNode);
         for (int nodeIndex = 0; nodeIndex < nodesCount; nodeIndex++)
         {
             var nodeName = LocalNodeName + "-" + (nodeIndex + 1);
+            var uiPort = 9234 + nodeIndex;
             KillProcesses(nodeName);
             InitializeLocalDatabase(nodeName + ".db");
-            await DeclareLocalNode(MdsFolder, nodeName, "127.0.0.1", 9234 + nodeIndex);
-            await StartLocalController(nodeName);
+            await SaveLocalNode("http://localhost:9125" , nodeName, "127.0.0.1", uiPort);
+            await StartLocalController(nodeName, uiPort);
             for (int serviceIndex = 0; serviceIndex < servicesPerNode; serviceIndex++)
             {
-                configuration.Services[nodeIndex * nodesCount + (serviceIndex % servicesPerNode)].Node = nodeName;
+                configuration.Services[nodeIndex * servicesPerNode + (serviceIndex % servicesPerNode)].Node = nodeName;
             }
         }
 
-        await DeployConfiguration(configuration);
-        await Task.Delay(System.TimeSpan.FromSeconds(20));
-
-        //configuration.Services.First().Enabled = false;
-        //await DeployConfiguration(configuration);
-
+        return configuration;
     }
 
 }

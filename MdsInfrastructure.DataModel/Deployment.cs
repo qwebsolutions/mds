@@ -65,9 +65,7 @@ namespace MdsInfrastructure
         public Deployment Deployment { get; set; }
         public ChangesReport ChangesReport { get; set; }
         public MdsCommon.User User { get; set; }
-
-        //public List<DeploymentServiceStatus> DeploymentServiceStatuses { get; set; } = new();
-
+        public bool DeploymentInProgress { get; set; }
         public List<DbDeploymentEvent> DeploymentEvents { get; set; } = new();
     }
 
@@ -86,5 +84,14 @@ namespace MdsInfrastructure
         public ChangesReport ChangesReport { get; set; }
         public InfrastructureConfiguration SavedConfiguration { get; set; }
         public MdsCommon.User User { get; set; }
+    }
+
+    public class DbDeploymentEvent : IRecord
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+        public string EventType { get; set; } // DeploymentEventType
+        public Guid DeploymentId { get; set; }
+        public string TimestampIso { get; set; } = DateTime.UtcNow.Roundtrip();
+        public string ServiceName { get; set; }
     }
 }

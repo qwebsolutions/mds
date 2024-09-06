@@ -26,6 +26,8 @@ namespace MdsInfrastructure
         {
             public ApplicationSetup ApplicationSetup { get; set; }
             public ImplementationGroup ImplementationGroup { get; set; }
+            public TaskQueue DbTasksQueue { get; set; }
+            public string FullDbPath { get; set; }
         }
 
         public static References Setup(
@@ -94,6 +96,8 @@ namespace MdsInfrastructure
             var healthListener = applicationSetup.AddBusinessState(new RedisListener.State());
             var eventsListener = applicationSetup.AddBusinessState(new RedisListener.State());
 
+            applicationSetup.SetupMessagingApi(implementationGroup);
+
             implementationGroup.MapRequest(MdsCommon.Api.GetAllInfrastructureEvents, async (rc) =>
             {
                 return await MdsCommon.Db.LoadAllInfrastructureEvents(fullDbPath);
@@ -131,6 +135,10 @@ namespace MdsInfrastructure
                     e.Using(healthListener, implementationGroup).EnqueueCommand(RedisListener.StartListening, new RedisChannel(arguments.HealthStatusInputChannel));
                     e.Using(eventsListener, implementationGroup).EnqueueCommand(RedisListener.StartListening, new RedisChannel(arguments.InfrastructureEventsInputChannel));
                     e.Using(infrastructure, implementationGroup).EnqueueCommand(SyncBuilds);
+                    e.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
+                    {
+                        await cc.RegisterNodesMessaging(dbTaskQueue, fullDbPath);
+                    });
                 });
 
             applicationSetup.MapEvent<ApplicationIsShuttingDown>(
@@ -460,7 +468,9 @@ namespace MdsInfrastructure
             return new References()
             {
                 ApplicationSetup = applicationSetup,
-                ImplementationGroup = implementationGroup
+                ImplementationGroup = implementationGroup,
+                DbTasksQueue = dbTaskQueue,
+                FullDbPath = fullDbPath
             };
         }
 

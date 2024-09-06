@@ -24,17 +24,16 @@ namespace MdsInfrastructure.Render
                     {
                         return OnRender(b, serverModel, model);
                     },
-                    (b, model) => b.Listen(b.MakeAction((SyntaxBuilder b, Var<MdsInfrastructure.InfrastructureStatus> model, Var<DeploymentEvent.Started> e) =>
+                    (b, model) => b.Listen(b.MakeAction((SyntaxBuilder b, Var<MdsInfrastructure.InfrastructureStatus> model, Var<DeploymentEvent.DeploymentStart> e) =>
                     {
                         b.ShowDeploymentToast(MdsCommon.Controls.Controls.IdDeploymentStartedToast);
                         return model;
                     })),
-                    (b, model) => b.Listen(b.MakeAction((SyntaxBuilder b, Var<MdsInfrastructure.InfrastructureStatus> model, Var<DeploymentEvent.Done> e) =>
+                    (b, model) => b.Listen(b.MakeAction((SyntaxBuilder b, Var<MdsInfrastructure.InfrastructureStatus> model, Var<DeploymentEvent.DeploymentComplete> e) =>
                     {
                         b.ShowDeploymentToast(MdsCommon.Controls.Controls.IdDeploymentSuccessToast);
                         return b.MakeStateWithEffects(
-                            model,
-                            b.RefreshModelEffect<MdsInfrastructure.InfrastructureStatus>());
+                            model);
                     })),
                     (b, model) => b.Listen(b.MakeAction((SyntaxBuilder b, Var<MdsInfrastructure.InfrastructureStatus> model, Var<RefreshInfrastructureStatusModel> e) =>
                     {

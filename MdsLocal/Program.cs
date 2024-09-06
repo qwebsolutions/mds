@@ -111,6 +111,11 @@ namespace MdsLocal
 
             webServer.WebApplication.MapGet("/", () => Results.Redirect(WebServer.Url<Overview.ListProcesses>())).AllowAnonymous().ExcludeFromDescription();
 
+            string fullDbPath = Metapsi.RelativePath.SearchUpfolder(RelativePath.From.EntryPath, arguments.DbPath);
+
+            var dbTasksQueue = new TaskQueue();
+            webServer.WebApplication.MapGroup("event").MapIncomingEvents(arguments.NodeName, dbTasksQueue, fullDbPath);
+
             var api = webServer.WebApplication.MapGroup("api");
             api.MapGetCommand(Frontend.KillProcessByPid, async (CommandContext commandContext, HttpContext httpContext, string pid) =>
             {

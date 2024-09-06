@@ -14,6 +14,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\MdsCommon\MdsCommon.csproj" />
 		<ProjectReference Include="..\MdsInfrastructure.DataModel\MdsInfrastructure.DataModel.csproj" />
+		<ProjectReference Include="..\MdsInfrastructure.Db\MdsInfrastructure.Db.csproj" />
 	</ItemGroup>
 
 </Project>

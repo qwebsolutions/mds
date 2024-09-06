@@ -17,10 +17,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Metapsi.Html" Version="$(MetapsiVersion)" />
-		<PackageReference Include="Metapsi.Redis" Version="$(MetapsiVersion)" />
 		<PackageReference Include="Metapsi.Web" Version="$(MetapsiVersion)" />
 		<PackageReference Include="Metapsi.Mds" Version="$(MetapsiVersion)" />
-		<PackageReference Include="Metapsi.Timer" Version="$(MetapsiVersion)" />
 	</ItemGroup>
 
 	<ItemGroup>
