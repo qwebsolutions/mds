@@ -31,9 +31,17 @@ namespace MdsInfrastructure.Render
                     })),
                     (b, model) => b.Listen(b.MakeAction((SyntaxBuilder b, Var<MdsInfrastructure.InfrastructureStatus> model, Var<DeploymentEvent.DeploymentComplete> e) =>
                     {
-                        b.ShowDeploymentToast(MdsCommon.Controls.Controls.IdDeploymentSuccessToast);
-                        return b.MakeStateWithEffects(
-                            model);
+                        b.If(
+                            b.Get(e, x => x.HasErrors),
+                            b =>
+                            {
+                                b.ShowDeploymentToast(MdsCommon.Controls.Controls.IdDeploymentFailedToast);
+                            },
+                            b =>
+                            {
+                                b.ShowDeploymentToast(MdsCommon.Controls.Controls.IdDeploymentSuccessToast);
+                            });
+                        return b.MakeStateWithEffects(model);
                     })),
                     (b, model) => b.Listen(b.MakeAction((SyntaxBuilder b, Var<MdsInfrastructure.InfrastructureStatus> model, Var<RefreshInfrastructureStatusModel> e) =>
                     {

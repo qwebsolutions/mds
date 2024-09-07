@@ -18,16 +18,18 @@ public static class Program
         {
             await Initialize();
             await Task.Delay(TimeSpan.FromSeconds(5));
-            var configuration = await CreateConfiguration(1, 1);
+            var configuration = await CreateConfiguration(2, 2);
             await DeployConfiguration(configuration);
             await Task.Delay(System.TimeSpan.FromSeconds(30));
+
+            configuration.Services = configuration.Services.Skip(1).ToList();
 
             //foreach (var service in configuration.Services)
             //{
             //    service.Enabled = false;
             //}
 
-            //await DeployConfiguration(configuration);
+            await DeployConfiguration(configuration);
 
         }
         finally

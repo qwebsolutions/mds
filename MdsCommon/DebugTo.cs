@@ -15,10 +15,8 @@ public static class DebugTo
     {
         await FileCreatorQueue.Enqueue(async () =>
         {
-            Console.WriteLine("FileCreatorQueue.Contains check");
             if (!FileWriterQueues.ContainsKey(fileName))
             {
-                Console.WriteLine("FileCreatorQueue.Contains false");
                 FileWriterQueues.Add(fileName, new TaskQueue());
                 string dir = System.IO.Path.GetDirectoryName(fileName);
                 System.IO.Directory.CreateDirectory(dir);

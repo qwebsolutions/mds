@@ -74,7 +74,8 @@ namespace MdsInfrastructure
                 {
                     DeploymentId = message.DeploymentId,
                     EventType = nameof(DeploymentEvent.ServiceSynchronized),
-                    ServiceName = message.ServiceName
+                    ServiceName = message.ServiceName,
+                    Error = message.Error
                 });
 
                 var deployment = await cc.Do(Backend.LoadDeploymentById, message.DeploymentId);
@@ -87,8 +88,7 @@ namespace MdsInfrastructure
                     await cc.Do(Backend.SaveDeploymentEvent, new DbDeploymentEvent()
                     {
                         DeploymentId = message.DeploymentId,
-                        EventType = nameof(DeploymentEvent.DeploymentComplete),
-                        ServiceName = message.ServiceName
+                        EventType = nameof(DeploymentEvent.DeploymentComplete)
                     });
                     complete = true;
                 }
@@ -96,7 +96,12 @@ namespace MdsInfrastructure
                 await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(new RefreshDeploymentReviewModel());
                 if (complete)
                 {
-                    await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(new DeploymentEvent.DeploymentComplete());
+                    var hasErrors = deploymentEvents.Any(x => !string.IsNullOrEmpty(x.Error));
+                    await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(new DeploymentEvent.DeploymentComplete()
+                    {
+                        DeploymentId = message.DeploymentId,
+                        HasErrors = hasErrors
+                    });
                 }
             });
 

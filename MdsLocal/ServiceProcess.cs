@@ -208,7 +208,12 @@ public static class ServiceProcessExtensions
 
                     if (snapshot.Enabled)
                     {
-                        await StartServiceProcess(commandContext, serviceName, nodeName, servicesBasePath, deploymentId);
+                        // If there was no change, we still attempt to force the service to start if it's not running
+                        var alreadyRunning = GetServiceProcess(nodeName, serviceName);
+                        if (alreadyRunning == null)
+                        {
+                            await StartServiceProcess(commandContext, serviceName, nodeName, servicesBasePath, deploymentId);
+                        }
                     }
                     else
                     {
@@ -337,11 +342,12 @@ public static class ServiceProcessExtensions
         string servicesBasePath,
         Guid deploymentId)
     {
-        var alreadyRunningByAccident = GetServiceProcess(nodeName, serviceName);
-        if (alreadyRunningByAccident != null)
+        var alreadyRunning = GetServiceProcess(nodeName, serviceName);
+
+        if (alreadyRunning != null)
         {
-            alreadyRunningByAccident.Kill();
-            alreadyRunningByAccident.WaitForExit(5000);
+            Console.WriteLine($"Service {serviceName} already running on {nodeName}");
+            return;
         }
 
         string serviceExePath = System.IO.Path.Combine(servicesBasePath, serviceName, GetServiceExeName(nodeName, serviceName));

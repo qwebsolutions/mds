@@ -81,6 +81,7 @@ public static class DeploymentEvent
     {
         public Guid DeploymentId { get; set; }
         public string TimestampIso { get; set; } = DateTime.UtcNow.Roundtrip();
+        public bool HasErrors { get; set; }
     }
 
     public class ServiceStart
@@ -121,7 +122,7 @@ public static class DeploymentEvent
         public string ServiceName { get; set; }
         public string NodeName { get; set; }
         public string ServiceStatus { get; set; }
-        public string Error { get; set; }
+        public string Error { get; set; } = string.Empty;
     }
 }
 

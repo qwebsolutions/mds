@@ -97,7 +97,19 @@ namespace MdsInfrastructure.Render
                                                     b.Get(newModel, x => !x.DeploymentInProgress)),
                                                     b =>
                                                     {
-                                                        b.ShowDeploymentToast(MdsCommon.Controls.Controls.IdDeploymentSuccessToast);
+                                                        b.If(
+                                                            b.Get(
+                                                                newModel,
+                                                                b.Def((SyntaxBuilder b, Var<string> s) => b.HasValue(s)),
+                                                                (newModel, hasValue) => newModel.DeploymentEvents.Any(x => hasValue(x.Error))),
+                                                            b =>
+                                                            {
+                                                                b.ShowDeploymentToast(MdsCommon.Controls.Controls.IdDeploymentFailedToast);
+                                                            },
+                                                            b =>
+                                                            {
+                                                                b.ShowDeploymentToast(MdsCommon.Controls.Controls.IdDeploymentSuccessToast);
+                                                            });
                                                     });
                                             });
                                     })));
@@ -246,6 +258,123 @@ namespace MdsInfrastructure.Render
                 });
         }
 
+        public const string IdEventsDialog = nameof(IdEventsDialog);
+        public static Reference<List<DbDeploymentEvent>> SelectedServiceEvents { get; set; } = new() { Value = new List<DbDeploymentEvent>() };
+
+        public static Var<IVNode> ServiceEventsDialog(this LayoutBuilder b)
+        {
+            var tableBuilder = new DataTableBuilder<DbDeploymentEvent>();
+
+            tableBuilder.SetTableProps = b =>
+            {
+                b.AddStyle("border-collapse", "collapse");
+                b.AddStyle("width", "100%");
+                b.AddStyle("text-align", "left");
+                //border: 1px solid #ddd;
+                b.AddStyle("border", "1px solid #ddd");
+            };
+            tableBuilder.OverrideHeaderCell(
+                nameof(DbDeploymentEvent.TimestampIso),
+                b =>
+                {
+                    return b.Text("Timestamp");
+                });
+            tableBuilder.SetTdProps = (b, data, column) =>
+            {
+                b.SetClass("p-2");
+            };
+
+            tableBuilder.SetThProps = (b, data) =>
+            {
+                b.SetClass("p-2 bg-gray-100");
+            };
+
+            tableBuilder.OverrideHeaderCell(
+                nameof(DbDeploymentEvent.EventType),
+                b =>
+                {
+                    return b.Text("Action");
+                });
+
+            tableBuilder.OverrideDataCell(
+                nameof(DbDeploymentEvent.TimestampIso),
+                (b, data) => b.Text(b.ItalianFormat(b.ParseDate(b.Get(data, x => x.TimestampIso)))));
+
+            tableBuilder.OverrideDataCell(
+                nameof(DbDeploymentEvent.EventType),
+                (b, data) =>
+                b.HtmlSpan(
+                    b =>
+                    {
+                        b.If(
+                            b.HasValue(b.Get(data, x => x.Error)),
+                            b =>
+                            {
+                                b.SetClass("text-red-500");
+                            });
+                    },
+                    b.Text(
+                        b.Switch(
+                            b.Get(data, x => x.EventType),
+                            b => b.Get(data, x => x.EventType),
+                            (nameof(DeploymentEvent.ServiceInstall), b => b.Const("Installed")),
+                            (nameof(DeploymentEvent.ServiceUninstall), b => b.Const("Uninstalled")),
+                            (nameof(DeploymentEvent.ServiceStart), b => b.Const("Started")),
+                            (nameof(DeploymentEvent.ServiceStop), b => b.Const("Stopped")),
+                            (nameof(DeploymentEvent.ServiceSynchronized), b => b.Get(data, x => x.Error))))));
+
+            var selectedServiceEvents =
+                b.Get(b.GetRef(b.Const(SelectedServiceEvents)),
+                    x => x.Where(
+                        x => x.EventType != nameof(DeploymentEvent.ServiceSynchronized) 
+                        || x.Error != "")
+                    .OrderBy(x => x.TimestampIso).ToList());
+
+            var serviceName = b.If(
+                b.Get(selectedServiceEvents, x => x.Any()),
+                b => b.Get(selectedServiceEvents, x => x.First().ServiceName),
+                b => b.Const(string.Empty));
+
+            return b.SlDialog(
+                    b =>
+                    {
+                        b.SetId(IdEventsDialog);
+                        b.SetClass("text-sm");
+                    },
+                    b.HtmlSpan(
+                        b =>
+                        {
+                            b.SetSlot(SlDialog.Slot.Label);
+                        },
+                        b.Text(serviceName)),
+                    b.HtmlSpan(
+                        b=>
+                        {
+                            b.SetSlot(SlDialog.Slot.Footer);
+                        },
+                        b.HtmlDiv(
+                            b=>
+                            {
+                                b.SetClass("flex flex-row justify-end");
+                            },
+                            b.HtmlButton(
+                                b=>
+                                {
+                                    b.AddPrimaryButtonStyle();
+                                    b.OnClickAction((SyntaxBuilder b, Var<DeploymentReview> model) =>
+                                    {
+                                        b.HideDialog(Render.Deployment.IdEventsDialog);
+                                        return b.Clone(model);
+                                    });
+                                },
+                                b.Text("Close")))),
+                    b.DataTable<DbDeploymentEvent>(
+                        tableBuilder,
+                        selectedServiceEvents,
+                        nameof(DbDeploymentEvent.TimestampIso),
+                        nameof(DbDeploymentEvent.EventType)));
+        }
+
         public static Var<IVNode> ReviewDeployment(this LayoutBuilder b, Var<DeploymentReview> model)
         {
             var view = b.HtmlDiv(
@@ -253,6 +382,7 @@ namespace MdsInfrastructure.Render
                 {
                     b.SetClass("flex flex-col");
                 },
+                b.ServiceEventsDialog(),
                 b.HtmlDiv(
                     b =>
                     {
@@ -329,8 +459,15 @@ namespace MdsInfrastructure.Render
                     b.Text($"Service will be started")));
         }
 
+        public static Var<bool> HasErrorEvent(this SyntaxBuilder b, Var<List<DbDeploymentEvent>> events)
+        {
+            return b.Get(events, x => x.Any(x => x.Error != ""));
+        }
+
         public static Var<IVNode> LiveServiceStatus(this LayoutBuilder b, Var<List<DbDeploymentEvent>> deploymentEvents)
         {
+            var errorEvents = b.Get(deploymentEvents, x => x.Where(x => x.Error != ""));
+
             var lastEvent = b.Get(
                 deploymentEvents,
                 x => x.Where(
@@ -339,6 +476,16 @@ namespace MdsInfrastructure.Render
                     x.EventType == nameof(DeploymentEvent.ServiceUninstall) ||
                     x.EventType == nameof(DeploymentEvent.ServiceInstall)).OrderByDescending(x => x.TimestampIso).FirstOrDefault());
 
+            var serviceErrorStatus = (LayoutBuilder b) =>
+            {
+                return b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("flex flex-row gap-2 text-red-500");
+                    },
+                    b.Svg(Icon.ErrorCircleSolid, "w-6 h-6 text-red-500"),
+                    b.Text($"Deployment error"));
+            };
 
             var serviceStoppedStatus = (LayoutBuilder b) =>
             {
@@ -384,27 +531,44 @@ namespace MdsInfrastructure.Render
                     b.Text($"Service installed"));
             };
 
-            return b.If(
-                b.Not(b.HasObject(lastEvent)),
-                b =>
-                {
-                    return b.HtmlDiv(b.Text("Waiting for status..."));
-                },
-                b => b.If(
-                    b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceStop)),
-                    serviceStoppedStatus,
-                    b =>
-                    {
-                        return b.If(
-                            b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceStart)),
-                            serviceStartedStatus,
+            return b.HtmlDiv(
+                        b =>
+                        {
+                            b.SetClass("flex flex-row items-center justify-between");
+                        },
+                        b.If(
+                            b.Get(errorEvents, x => x.Any()),
+                            serviceErrorStatus,
                             b => b.If(
-                                b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceInstall)),
-                                serviceInstalledStatus,
-                                b => b.If(b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceUninstall)),
-                                    serviceUninstalledStatus,
-                                    b => b.VoidNode())));
-                    }));
+                                b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceStop)),
+                                serviceStoppedStatus,
+                                b =>
+                                {
+                                    return b.If(
+                                        b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceStart)),
+                                        serviceStartedStatus,
+                                        b => b.If(
+                                            b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceInstall)),
+                                            serviceInstalledStatus,
+                                            b => b.If(b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceUninstall)),
+                                                serviceUninstalledStatus,
+                                                b => b.VoidNode())));
+                                })),
+                            b.HtmlButton(
+                                b =>
+                                {
+                                    b.OnClickAction((SyntaxBuilder b, Var<DeploymentReview> model) =>
+                                    {
+                                        b.SetRef(b.Const(Render.Deployment.SelectedServiceEvents), deploymentEvents);
+                                        return b.MakeStateWithEffects(
+                                            b.Clone(model),
+                                            b =>
+                                            {
+                                                b.ShowDialog(Render.Deployment.IdEventsDialog);
+                                            });
+                                    });
+                                },
+                                b.Svg(Icon.ListBullet, "w-5 h-5")));
         }
 
         public static Var<IVNode> NewService(this LayoutBuilder b, Var<ServiceChange> serviceChange, Var<List<DbDeploymentEvent>> serviceDeploymentEvents)
@@ -419,6 +583,7 @@ namespace MdsInfrastructure.Render
                 b.Get(serviceChange, x => x.NodeName.NewValue),
                 b.Const("bg-green-100"),
                 b.Const("bg-green-200"),
+                serviceDeploymentEvents,
                 b.ListParameterChanges(serviceChange),
                 b.ListBinariesChanges(serviceChange),
                 processStatus);
@@ -445,6 +610,7 @@ namespace MdsInfrastructure.Render
                 b.Get(serviceChange, x => x.NodeName.OldValue),
                 b.Const("bg-red-100"),
                 b.Const("bg-red-200"),
+                serviceDeploymentEvents,
                 processStatus);
         }
 
@@ -454,6 +620,7 @@ namespace MdsInfrastructure.Render
             Var<string> nodeName,
             Var<string> bgColor,
             Var<string> titleBgColor,
+            Var<List<DbDeploymentEvent>> serviceEvents,
             params Var<IVNode>[] children)
         {
             var container = b.HtmlDiv(
@@ -468,12 +635,17 @@ namespace MdsInfrastructure.Render
                        b.SetClass($"flex flex-row items-center justify-between p-4 rounded-t");
                        b.AddClass(titleBgColor);
                    },
-                   b.HtmlSpanText(
-                       b =>
+                   b.HtmlSpan(
+                       b=>
                        {
-                           b.SetClass($"font-semibold");
+                           b.SetClass("flex flex-row items-center gap-1");
                        },
-                       serviceName),
+                       b.HtmlSpan(
+                           b =>
+                           {
+                               b.SetClass($"font-semibold");
+                           },
+                           b.Text(serviceName))),
                    b.HtmlSpan(
                        b =>
                        {
@@ -568,6 +740,7 @@ namespace MdsInfrastructure.Render
                 b.Get(serviceChange, x => x.NodeName.NewValue),
                 b.Const("bg-sky-100"),
                 b.Const("bg-sky-200"),
+                deploymentEvents,
                 b.ListParameterChanges(serviceChange),
                 b.ListBinariesChanges(serviceChange),
                 serviceStatus);
