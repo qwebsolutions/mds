@@ -225,12 +225,12 @@ namespace MdsLocal
     //    }
     }
 
-    public class UnstableServiceDropped : IData
-    {
-        public string ServiceName { get; set; }
-        public int RestartCount { get; set; }
-        public int InSeconds { get; set; }
-    }
+    //public class UnstableServiceDropped : IData
+    //{
+    //    public string ServiceName { get; set; }
+    //    public int RestartCount { get; set; }
+    //    public int InSeconds { get; set; }
+    //}
 
     //public class MisconfiguredServiceDropped: MetapsiRuntime.IData
     //{

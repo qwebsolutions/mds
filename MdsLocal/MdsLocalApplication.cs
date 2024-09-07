@@ -8,9 +8,6 @@ namespace MdsLocal
 {
     public static partial class MdsLocalApplication
     {
-        //public static Command<MdsCommon.InfrastructureEvent> BroadcastEvent { get; set; } = new Command<MdsCommon.InfrastructureEvent>(nameof(BroadcastEvent));
-        public static Request<List<MdsCommon.ServiceConfigurationSnapshot>> GetLocalKnownConfiguration { get; set; } = new(nameof(GetLocalKnownConfiguration));
-        public static Command<List<MdsCommon.ServiceConfigurationSnapshot>> OverwriteLocalConfiguration { get; set; } = new(nameof(OverwriteLocalConfiguration));
         public static Request<List<string>> PerformStartupValidations { get; set; } = new Request<List<string>>(nameof(PerformStartupValidations));
         public static Request<List<string>> GetWarnings { get; set; } = new Request<List<string>>(nameof(GetWarnings));
         public static Request<LocalSettings> GetLocalSettings { get; set; } = new Request<LocalSettings>(nameof(GetLocalSettings));
@@ -40,7 +37,7 @@ namespace MdsLocal
             public string NodeName { get; set; } = string.Empty;
             public bool RestartProcessAfterCrash { get; set; }
             public List<string> StartupWarnings = new List<string>();
-            public List<ServiceCrashEvent> ServiceCrashEvents = new List<ServiceCrashEvent>();
+            //public List<ServiceCrashEvent> ServiceCrashEvents = new List<ServiceCrashEvent>();
             public HashSet<string> DroppedServices { get; set; } = new HashSet<string>();
         }
 

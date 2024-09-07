@@ -20,7 +20,7 @@ namespace MdsLocal
             public ImplementationGroup ImplementationGroup { get; set; }
         }
 
-        public static References Setup(InputArguments arguments, DateTime start)
+        public static References Setup(InputArguments arguments, DateTime start, DbQueue dbQueue)
         {
 
             string infrastructureUrl = arguments.InfrastructureApiUrl;
@@ -120,7 +120,7 @@ namespace MdsLocal
             applicationSetup.MapInternalEvents(
                 implementationGroup,
                 localAppState,
-                fullDbPath,
+                dbQueue,
                 arguments.BuildTarget);
 
             #endregion Application setup
@@ -154,7 +154,7 @@ namespace MdsLocal
             //SetupHealth(applicationSetup, implementationGroup, infrastructureConfiguration, mdsLocalApplication, arguments.NodeName);
 
 
-            //    List<string> warnings = new List<string>();
+            List<string> warnings = new List<string>();
 
 
             //    #region Implementation mappings
@@ -192,32 +192,32 @@ namespace MdsLocal
             //        await LocalDb.SetNewConfiguration(fullDbPath, snapshot);
             //    });
 
-            //    implementationGroup.MapRequest(MdsLocalApplication.PerformStartupValidations, async (rc) =>
-            //    {
-            //        var fieldsDiff = await LocalDb.ValidateSchema(fullDbPath);
-            //        warnings = FieldsDiffAsWarnings(fieldsDiff);
-            //        return warnings;
-            //    });
+            implementationGroup.MapRequest(MdsLocalApplication.PerformStartupValidations, async (rc) =>
+            {
+                var fieldsDiff = await LocalDb.ValidateSchema(fullDbPath);
+                warnings = FieldsDiffAsWarnings(fieldsDiff);
+                return warnings;
+            });
 
-            //    implementationGroup.MapRequest(MdsLocalApplication.GetWarnings, async (rc) => warnings);
+            implementationGroup.MapRequest(MdsLocalApplication.GetWarnings, async (rc) => warnings);
 
-            //    implementationGroup.MapRequest(MdsLocalApplication.GetLocalSettings,
-            //        async (rc) => new LocalSettings()
-            //        {
-            //            FullDbPath = fullDbPath,
-            //            InfrastructureApiUrl = infrastructureUrl,
-            //            NodeName = nodeName
-            //        });
+            implementationGroup.MapRequest(MdsLocalApplication.GetLocalSettings,
+                async (rc) => new LocalSettings()
+                {
+                    FullDbPath = fullDbPath,
+                    InfrastructureApiUrl = infrastructureUrl,
+                    NodeName = nodeName
+                });
 
-            //    implementationGroup.MapRequest(MdsLocalApplication.GetFullLocalStatus, async (rc) =>
-            //    {
-            //        return await LocalDb.LoadFullLocalStatus(fullDbPath, nodeName);
-            //    });
+            implementationGroup.MapRequest(MdsLocalApplication.GetFullLocalStatus, async (rc) =>
+            {
+                return await LocalDb.LoadFullLocalStatus(fullDbPath, nodeName);
+            });
 
-            //    implementationGroup.MapRequest(MdsLocalApplication.GetSyncHistory, async (rc) =>
-            //    {
-            //        return await LocalDb.LoadSyncHistory(fullDbPath);
-            //    });
+            implementationGroup.MapRequest(MdsLocalApplication.GetSyncHistory, async (rc) =>
+            {
+                return await LocalDb.LoadSyncHistory(fullDbPath);
+            });
 
             implementationGroup.MapRequest(MdsLocalApplication.GetRunningProcesses, async (rc) =>
             {
@@ -265,10 +265,10 @@ namespace MdsLocal
                 return processes;
             });
 
-            //    implementationGroup.MapRequest(MdsCommon.Api.GetAllInfrastructureEvents, async (rc) =>
-            //    {
-            //        return await MdsCommon.Db.LoadAllInfrastructureEvents(fullDbPath);
-            //    });
+            implementationGroup.MapRequest(MdsCommon.Api.GetAllInfrastructureEvents, async (rc) =>
+            {
+                return await MdsCommon.Db.LoadAllInfrastructureEvents(fullDbPath);
+            });
 
             //    implementationGroup.MapCommand(MdsLocalApplication.StoreSyncResult, async (rc, syncResult) =>
             //    {
@@ -298,26 +298,26 @@ namespace MdsLocal
             };
         }
 
-        //private static List<string> FieldsDiffAsWarnings(Metapsi.Sqlite.Validate.FieldsDiff fieldsDiff)
-        //{
-        //    List<string> warnings = new List<string>();
+        private static List<string> FieldsDiffAsWarnings(Metapsi.Sqlite.Validate.FieldsDiff fieldsDiff)
+        {
+            List<string> warnings = new List<string>();
 
-        //    if (!fieldsDiff.SameFields)
-        //    {
-        //        if (fieldsDiff.MissingFields.Any())
-        //        {
-        //            var missingFields = $" Missing fields: {string.Join(", ", fieldsDiff.MissingFields)}";
-        //            warnings.Add(missingFields);
-        //        }
+            if (!fieldsDiff.SameFields)
+            {
+                if (fieldsDiff.MissingFields.Any())
+                {
+                    var missingFields = $" Missing fields: {string.Join(", ", fieldsDiff.MissingFields)}";
+                    warnings.Add(missingFields);
+                }
 
-        //        if (fieldsDiff.ExtraFields.Any())
-        //        {
-        //            var extraFields = $" Extra fields: {string.Join(", ", fieldsDiff.ExtraFields)}";
-        //            warnings.Add(extraFields);
-        //        }
-        //    }
+                if (fieldsDiff.ExtraFields.Any())
+                {
+                    var extraFields = $" Extra fields: {string.Join(", ", fieldsDiff.ExtraFields)}";
+                    warnings.Add(extraFields);
+                }
+            }
 
-//            return warnings;
-        //}
+            return warnings;
+        }
     }
 }

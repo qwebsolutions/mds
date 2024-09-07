@@ -2,6 +2,7 @@
 using Metapsi;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -40,11 +41,55 @@ public static partial class MdsLocalApplication
         this ApplicationSetup applicationSetup,
         ImplementationGroup ig,
         MdsLocalApplication.State appState,
-        string fullDbPath,
+        DbQueue dbQueue,
         string buildTarget)
     {
 
         PendingStopTracker pendingStopTracker = new PendingStopTracker();
+
+        applicationSetup.MapEvent<ApplicationRevived>(e =>
+        {
+            e.Using(appState, ig).EnqueueCommand(async (CommandContext commandContext, MdsLocalApplication.State state) =>
+            {
+                var nodeStartedEvent = new NodeEvent.Started()
+                {
+                    NodeName = state.NodeName
+                };
+
+                foreach (var serviceName in await ServiceProcessExtensions.GetInstalledServices(state.ServicesBasePath))
+                {
+                    nodeStartedEvent.InstalledServices.Add(serviceName);
+                    try
+                    {
+                        var serviceProcess = ServiceProcessExtensions.GetServiceProcess(state.NodeName, serviceName);
+                        if (serviceProcess == null)
+                        {
+                            nodeStartedEvent.NotRunningServices.Add(serviceName);
+                        }
+                        else
+                        {
+                            nodeStartedEvent.RunningServices.Add(serviceName);
+                            ServiceProcessExtensions.AttachExitHandler(serviceProcess, state.NodeName, state.ServicesBasePath, sp =>
+                            {
+                                commandContext.PostEvent(new ProcessExited()
+                                {
+                                    ExitCode = serviceProcess.ExitCode,
+                                    ServiceName = serviceName,
+                                    FullExePath = sp.FullExePath,
+                                    Pid = sp.Pid
+                                });
+                            });
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        nodeStartedEvent.Errors.Add(ex.Message);
+                    }
+                }
+                nodeStartedEvent.NodeStatus = await GetNodeStatus(commandContext, state.NodeName);
+                commandContext.NotifyGlobal(nodeStartedEvent);
+            });
+        });
 
         applicationSetup.MapEvent<ConfigurationChanged>(e =>
         {
@@ -53,7 +98,7 @@ public static partial class MdsLocalApplication
                 await ServiceProcessExtensions.SyncServices(
                     commandContext,
                     appState.NodeName,
-                    fullDbPath,
+                    dbQueue,
                     appState.ServicesBasePath,
                     appState.BaseDataFolder,
                     buildTarget,
@@ -78,6 +123,15 @@ public static partial class MdsLocalApplication
                     // Fatal crash, unrelated to a deployment
                     e.Using(appState, ig).EnqueueCommand(async (cc, state) =>
                     {
+                        await dbQueue.SaveInfrastructureEvent(new InfrastructureEvent()
+                        {
+                            Criticality = InfrastructureEventCriticality.Fatal,
+                            Source = e.EventData.ServiceName,
+                            FullDescription = $"Service {e.EventData.ServiceName} crashed. ({e.EventData.FullExePath})",
+                            ShortDescription = "Service crash",
+                            Type = InfrastructureEventType.ProcessExit
+                        });
+
                         cc.NotifyGlobal(new ServiceCrash()
                         {
                             ExitCode = e.EventData.ExitCode,
@@ -89,6 +143,15 @@ public static partial class MdsLocalApplication
                         await Task.Delay(10000);
 
                         await ServiceProcessExtensions.StartServiceProcess(cc, e.EventData.ServiceName, appState.NodeName, appState.ServicesBasePath, Guid.Empty);
+
+                        await dbQueue.SaveInfrastructureEvent(new InfrastructureEvent()
+                        {
+                            Criticality = InfrastructureEventCriticality.Info,
+                            Source = e.EventData.ServiceName,
+                            FullDescription = $"Service {e.EventData.ServiceName} started. ({e.EventData.FullExePath})",
+                            ShortDescription = "Service recovery",
+                            Type = InfrastructureEventType.ProcessStart
+                        });
 
                         cc.NotifyGlobal(new ServiceRecovered()
                         {

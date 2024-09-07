@@ -1,15 +1,17 @@
 ﻿using MdsCommon;
+using MdsInfrastructure.Flow;
 using Metapsi;
 using Metapsi.SignalR;
 using Microsoft.AspNetCore.Routing;
 using System;
 using System.Linq;
+using System.Text;
 
 namespace MdsInfrastructure
 {
     public static partial class MdsInfrastructureApplication
     {
-        public static void MapIncomingEvents(this IEndpointRouteBuilder endpoint)
+        public static void MapIncomingEvents(this IEndpointRouteBuilder endpoint, InputArguments arguments)
         {
             endpoint.OnMessage<DeploymentEvent.DeploymentComplete>(async (cc, message) =>
             {
@@ -140,6 +142,70 @@ namespace MdsInfrastructure
                     ShortDescription = "Service recovery",
                     Type = InfrastructureEventType.ProcessStart
                 });
+            });
+
+            endpoint.OnMessage<NodeEvent.Started>(async (cc, message) =>
+            {
+                StringBuilder stringBuilder = new StringBuilder();
+
+                if (message.Errors.Any())
+                {
+                    stringBuilder.AppendLine("Errors:");
+                }
+
+                foreach (var error in message.Errors)
+                {
+                    stringBuilder.AppendLine(error);
+                }
+
+                if (message.NotRunningServices.Any())
+                {
+                    stringBuilder.AppendLine("Not running:");
+                }
+
+                foreach (var notRunning in message.NotRunningServices)
+                {
+                    stringBuilder.AppendLine(notRunning);
+                }
+
+                if (message.RunningServices.Any())
+                {
+                    stringBuilder.AppendLine("Running:");
+                }
+                foreach (var running in message.RunningServices)
+                {
+                    stringBuilder.AppendLine(running);
+                }
+
+                var fullDescription = stringBuilder.ToString();
+
+                if (string.IsNullOrEmpty(fullDescription))
+                    fullDescription = "No service running";
+
+                await cc.Do(MdsCommon.Api.SaveInfrastructureEvent, new InfrastructureEvent()
+                {
+                    Criticality = message.Errors.Any() ? InfrastructureEventCriticality.Warning : InfrastructureEventCriticality.Info,
+                    ShortDescription = $"Node started",
+                    Source = message.NodeName,
+                    Type = InfrastructureEventType.MdsLocalRestart,
+                    FullDescription = fullDescription
+                });
+
+                await cc.Do(Backend.StoreHealthStatus, message.NodeStatus);
+                await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(new RefreshInfrastructureStatusModel());
+
+                var currentDeployment = await cc.Do(Backend.LoadCurrentDeployment);
+                if (currentDeployment != null)
+                {
+                    var deployedServices = currentDeployment.GetDeployedServices().Where(x => x.NodeName == message.NodeName).ToList();
+                    cc.NotifyNode(message.NodeName, new NodeConfigurationUpdate()
+                    {
+                        InfrastructureName = arguments.InfrastructureName,
+                        Snapshots = deployedServices,
+                        BinariesApiUrl = arguments.BuildManagerUrl,
+                        DeploymentId = currentDeployment.Id
+                    });
+                }
             });
         }
     }

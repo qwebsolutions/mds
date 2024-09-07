@@ -62,7 +62,7 @@ public static class ServiceProcessExtensions
     public static async Task SyncServices(
         this CommandContext commandContext,
         string nodeName,
-        string fullDbPath,
+        DbQueue dbQueue,
         string servicesBasePath,
         string servicesDataPath,
         string buildTarget,
@@ -72,7 +72,7 @@ public static class ServiceProcessExtensions
         Guid deploymentId)
     {
         var installedServices = await GetInstalledServices(servicesBasePath);
-        var currentConfiguration = await dbQueue.Enqueue(async () => await MdsLocal.LocalDb.LoadKnownConfiguration(fullDbPath));
+        var currentConfiguration = await dbQueue.Enqueue(LocalDb.LoadKnownConfiguration);
 
         var union = installedServices.Union(currentConfiguration.Select(x => x.ServiceName)).Distinct().ToList();
 
@@ -386,7 +386,7 @@ public static class ServiceProcessExtensions
         });
     }
 
-    private static void AttachExitHandler(
+    public static void AttachExitHandler(
         System.Diagnostics.Process process,
         string nodeName,
         string servicesBasePath,

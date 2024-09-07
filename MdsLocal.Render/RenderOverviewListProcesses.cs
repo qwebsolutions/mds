@@ -124,7 +124,7 @@ namespace MdsLocal
                             {
                                 b.OnClickAction(b.MakeActionDescriptor<OverviewPage, ProcessRow>(KillProcessAction, row));
                             },
-                            b.Svg(Metapsi.Heroicons.Solid.ArrowPath, "w-8 h-8 text-red-500")));
+                            b.Svg(Metapsi.Heroicons.Solid.ArrowPath, "w-6 h-6 text-red-500")));
                 });
 
             var columns = DataTable.GetColumns<ProcessRow>().ToList().Except(new List<string>() { nameof(ProcessRow.Running), nameof(ProcessRow.Disabled) });

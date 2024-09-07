@@ -10,12 +10,12 @@ namespace MdsLocal
 {
     public static partial class MdsLocalApplication
     {
-        public static Metapsi.Mds.InstallationData GetServiceVersionData(
-            string servicesBasePath,
-            string serviceName)
-        {
-            return Metapsi.Serialize.FromJson<Metapsi.Mds.InstallationData>(System.IO.File.ReadAllText(GetMdsParametersPath(servicesBasePath, serviceName)));
-        }
+        //public static Metapsi.Mds.InstallationData GetServiceVersionData(
+        //    string servicesBasePath,
+        //    string serviceName)
+        //{
+        //    return Metapsi.Serialize.FromJson<Metapsi.Mds.InstallationData>(System.IO.File.ReadAllText(GetMdsParametersPath(servicesBasePath, serviceName)));
+        //}
 
         //public static async Task<bool> PrepareServiceBinaries(
         //    CommandContext commandContext,
@@ -67,34 +67,34 @@ namespace MdsLocal
         //    return true;
         //}
 
-        public static Dictionary<string, string> GetInstalledParameters(
-            State state,
-            MdsCommon.ServiceConfigurationSnapshot serviceConfiguration)
-        {
-            string parametersFullPath = GetServiceParametersPath(state.ServicesBasePath, serviceConfiguration);
+        //public static Dictionary<string, string> GetInstalledParameters(
+        //    State state,
+        //    MdsCommon.ServiceConfigurationSnapshot serviceConfiguration)
+        //{
+        //    string parametersFullPath = GetServiceParametersPath(state.ServicesBasePath, serviceConfiguration);
 
-            if (!System.IO.File.Exists(parametersFullPath))
-                return new Dictionary<string, string>();
+        //    if (!System.IO.File.Exists(parametersFullPath))
+        //        return new Dictionary<string, string>();
 
-            var previousParameters = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(System.IO.File.ReadAllText(parametersFullPath));
-            return previousParameters;
-        }
+        //    var previousParameters = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(System.IO.File.ReadAllText(parametersFullPath));
+        //    return previousParameters;
+        //}
 
-        private static string GetAlgorithmParametersJson(MdsCommon.ServiceConfigurationSnapshot serviceConfiguration)
-        {
-            Dictionary<string, string> parameters = new Dictionary<string, string>();
+        //private static string GetAlgorithmParametersJson(MdsCommon.ServiceConfigurationSnapshot serviceConfiguration)
+        //{
+        //    Dictionary<string, string> parameters = new Dictionary<string, string>();
 
-            foreach (var parameter in serviceConfiguration.ServiceConfigurationSnapshotParameters)
-            {
-                parameters[parameter.ParameterName] = parameter.DeployedValue;
-            }
+        //    foreach (var parameter in serviceConfiguration.ServiceConfigurationSnapshotParameters)
+        //    {
+        //        parameters[parameter.ParameterName] = parameter.DeployedValue;
+        //    }
 
-            string jsonParameters = System.Text.Json.JsonSerializer.Serialize(parameters, options: new System.Text.Json.JsonSerializerOptions()
-            {
-                WriteIndented = true
-            });
-            return jsonParameters;
-        }
+        //    string jsonParameters = System.Text.Json.JsonSerializer.Serialize(parameters, options: new System.Text.Json.JsonSerializerOptions()
+        //    {
+        //        WriteIndented = true
+        //    });
+        //    return jsonParameters;
+        //}
 
 
         ///// <summary>
@@ -109,23 +109,23 @@ namespace MdsLocal
         //    return fullExePath;
         //}
 
-        public static string GetServiceParametersPath(string baseServicesFolder, MdsCommon.ServiceConfigurationSnapshot localService)
-        {
-            string parametersPath = System.IO.Path.Combine(baseServicesFolder, localService.ServiceName, "parameters.json");
-            return parametersPath;
-        }
+        //public static string GetServiceParametersPath(string baseServicesFolder, MdsCommon.ServiceConfigurationSnapshot localService)
+        //{
+        //    string parametersPath = System.IO.Path.Combine(baseServicesFolder, localService.ServiceName, "parameters.json");
+        //    return parametersPath;
+        //}
 
-        public static string GetMdsParametersPath(string baseServicesFolder, string serviceName)
-        {
-            string supervisorConfigPath = System.IO.Path.Combine(baseServicesFolder, serviceName, "mds.json");
-            return supervisorConfigPath;
-        }
+        //public static string GetMdsParametersPath(string baseServicesFolder, string serviceName)
+        //{
+        //    string supervisorConfigPath = System.IO.Path.Combine(baseServicesFolder, serviceName, "mds.json");
+        //    return supervisorConfigPath;
+        //}
 
-        public static string GetSupervisorParametersPath(string baseServicesFolder, MdsCommon.ServiceConfigurationSnapshot localService)
-        {
-            string supervisorConfigPath = System.IO.Path.Combine(baseServicesFolder, localService.ServiceName, "supervisor.json");
-            return supervisorConfigPath;
-        }
+        //public static string GetSupervisorParametersPath(string baseServicesFolder, MdsCommon.ServiceConfigurationSnapshot localService)
+        //{
+        //    string supervisorConfigPath = System.IO.Path.Combine(baseServicesFolder, localService.ServiceName, "supervisor.json");
+        //    return supervisorConfigPath;
+        //}
 
 
         //public static string GetMesParametersPath(string baseServicesFolder, MdsCommon.LocalService localService)
@@ -135,19 +135,19 @@ namespace MdsLocal
         //}
 
 
-        public static string GetServiceFolderPath(string baseServicesFolder, MdsCommon.ServiceConfigurationSnapshot localService)
-        {
-            string serviceFolderPath = System.IO.Path.Combine(baseServicesFolder, localService.ServiceName);
-            return serviceFolderPath;
-        }
+        //public static string GetServiceFolderPath(string baseServicesFolder, MdsCommon.ServiceConfigurationSnapshot localService)
+        //{
+        //    string serviceFolderPath = System.IO.Path.Combine(baseServicesFolder, localService.ServiceName);
+        //    return serviceFolderPath;
+        //}
 
-        public class MesParameters
-        {
-            public string InstanceId { get; set; }
-            public string RedisListenerUrl { get; set; }
-            public string RedisListenerChannel { get; set; }
-            public string ConfirmationListenerChannel { get; set; }
-        }
+        //public class MesParameters
+        //{
+        //    public string InstanceId { get; set; }
+        //    public string RedisListenerUrl { get; set; }
+        //    public string RedisListenerChannel { get; set; }
+        //    public string ConfirmationListenerChannel { get; set; }
+        //}
 
         /// <summary>
         /// BasePath/ServiceName
@@ -155,11 +155,11 @@ namespace MdsLocal
         /// <param name="servicesBasePath"></param>
         /// <param name="serviceName"></param>
         /// <returns></returns>
-        private static string GetServiceFolderPath(string servicesBasePath, string serviceName)
-        {
-            string folderPath = System.IO.Path.Combine(servicesBasePath, serviceName);
-            return folderPath;
-        }
+        //private static string GetServiceFolderPath(string servicesBasePath, string serviceName)
+        //{
+        //    string folderPath = System.IO.Path.Combine(servicesBasePath, serviceName);
+        //    return folderPath;
+        //}
 
         //public enum Os
         //{

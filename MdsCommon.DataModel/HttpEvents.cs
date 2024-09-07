@@ -15,19 +15,6 @@ public class NodeConfigurationUpdate
     public List<MdsCommon.ServiceConfigurationSnapshot> Snapshots { get; set; } = new();
 }
 
-
-///// <summary>
-///// Sent by local when a service is stopped by the controller
-///// </summary>
-//public class ServiceStop
-//{
-//    public Guid DeploymentId { get; set; }
-//    public string ServiceName { get; set; }
-//    public string NodeName { get; set; }
-//    public int ExitCode { get; set; }
-//    public string ServicePath { get; set; }
-//}
-
 /// <summary>
 /// Sent by local when a service crashes by itself
 /// </summary>
@@ -51,23 +38,19 @@ public class ServiceRecovered
     public string ServicePath { get; set; }
 }
 
-//public static class NodeEvent
-//{
-//    public class ControllerStarted
-//    {
-//        public Guid Id { get; set; } = Guid.NewGuid();
-//        public string NodeName { get; set; }
-//        public string TimestampIso { get; set; } = DateTime.Now.Roundtrip();
-//    }
-//}
-
-//public static class GlobalEvent
-//{
-//    public class ControllerStarted
-//    {
-//        public Guid Id { get; set; } = Guid.NewGuid();
-//    }
-//}
+public static class NodeEvent
+{
+    public class Started
+    {
+        public string TimestampIso { get; set; } = DateTime.Now.Roundtrip();
+        public string NodeName { get; set; }
+        public MachineStatus NodeStatus { get; set; }
+        public List<string> InstalledServices { get; set; } = new();
+        public List<string> RunningServices { get; set; } = new();
+        public List<string> NotRunningServices { get; set; } = new();
+        public List<string> Errors { get; set; } = new();
+    }
+}
 
 public static class DeploymentEvent
 {
