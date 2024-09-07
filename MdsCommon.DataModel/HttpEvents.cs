@@ -40,6 +40,17 @@ public class ServiceCrash
     public string ServicePath { get; set; }
 }
 
+/// <summary>
+/// Sent by local when a service is restarted after a crash
+/// </summary>
+public class ServiceRecovered
+{
+    public string TimestampIso { get; set; } = DateTime.Now.Roundtrip();
+    public string ServiceName { get; set; }
+    public string NodeName { get; set; }
+    public string ServicePath { get; set; }
+}
+
 //public static class NodeEvent
 //{
 //    public class ControllerStarted

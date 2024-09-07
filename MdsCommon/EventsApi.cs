@@ -69,6 +69,12 @@ public static class MessagingApi
                 {
                     var response = await state.HttpClient.PostMessage(url, e.EventData.Message);
                     response.EnsureSuccessStatusCode();
+#if DEBUG
+                    await DebugTo.File(
+                        "c:\\github\\qwebsolutions\\mds\\debug\\notify.txt", 
+                        $"{response.RequestMessage.RequestUri.ToString()} {response.StatusCode}");
+                    //await DebugTo.File("c:\\github\\qwebsolutions\\mds\\debug\\notify.txt", response.StatusCode.ToString());
+#endif
                 }
             });
         });

@@ -123,6 +123,19 @@ namespace MdsInfrastructure
                     Type = InfrastructureEventType.ProcessExit
                 });
             });
+
+            endpoint.OnMessage<ServiceRecovered>(async (cc, message) =>
+            {
+                await cc.Do(MdsCommon.Api.SaveInfrastructureEvent, new InfrastructureEvent()
+                {
+                    Criticality = InfrastructureEventCriticality.Info,
+                    Source = message.ServiceName,
+                    Timestamp = MetapsiDateTime.FromRoundTrip(message.TimestampIso),
+                    FullDescription = $"Service {message.ServiceName} started. ({message.NodeName} {message.ServicePath})",
+                    ShortDescription = "Service recovery",
+                    Type = InfrastructureEventType.ProcessStart
+                });
+            });
         }
     }
 }

@@ -89,6 +89,13 @@ public static partial class MdsLocalApplication
                         await Task.Delay(10000);
 
                         await ServiceProcessExtensions.StartServiceProcess(cc, e.EventData.ServiceName, appState.NodeName, appState.ServicesBasePath, Guid.Empty);
+
+                        cc.NotifyGlobal(new ServiceRecovered()
+                        {
+                            NodeName = appState.NodeName,
+                            ServiceName = e.EventData.ServiceName,
+                            ServicePath = e.EventData.FullExePath,
+                        });
                     });
                 }
                 else
@@ -96,15 +103,7 @@ public static partial class MdsLocalApplication
                     // Process killed by controller
                     pendingStopTracker.PendingStops.Remove(pendingStop);
 
-                    e.Using(appState, ig).EnqueueCommand(async (cc, state) =>
-                    {
-                        cc.NotifyGlobal(new DeploymentEvent.ServiceStop()
-                        {
-                            DeploymentId = pendingStop.DeploymentId,
-                            NodeName = appState.NodeName,
-                            ServiceName = e.EventData.ServiceName
-                        });
-                    });
+                    // Global notification was already handled on the spot by the function that triggered the stop
                 }
             });
         });
