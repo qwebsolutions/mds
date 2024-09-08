@@ -12,7 +12,7 @@ namespace MdsLocal
         public System.Guid Id { get; set; } = System.Guid.NewGuid();
         [DataItemField("4aced480-ddc8-4868-85a0-d24931c5cf04")]
         [ScalarTypeName("Timestamp")]
-        public System.DateTime Timestamp { get; set; }
+        public System.DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
         [DataItemField("4d1ed7ba-0ae8-479a-bee0-3cac19c888c7")]
         [ScalarTypeName("String")]

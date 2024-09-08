@@ -23,6 +23,14 @@ public class ProcessExited : IData
     public string FullExePath { get; set; }
 }
 
+public class SyncResultBuilder: TaskQueue<SyncResult>
+{
+    public SyncResultBuilder(): base(new SyncResult())
+    {
+
+    }
+}
+
 public static partial class MdsLocalApplication
 {
     public class PendingStopTracker
@@ -88,6 +96,15 @@ public static partial class MdsLocalApplication
                 }
                 nodeStartedEvent.NodeStatus = await GetNodeStatus(commandContext, state.NodeName);
                 commandContext.NotifyGlobal(nodeStartedEvent);
+
+                await dbQueue.SaveInfrastructureEvent(new InfrastructureEvent()
+                {
+                    Criticality = nodeStartedEvent.Errors.Any() ? InfrastructureEventCriticality.Warning : InfrastructureEventCriticality.Info,
+                    ShortDescription = $"Node started",
+                    Source = nodeStartedEvent.NodeName,
+                    Type = InfrastructureEventType.MdsLocalRestart,
+                    FullDescription = nodeStartedEvent.GetFullDescription()
+                });
             });
         });
 

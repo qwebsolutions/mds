@@ -71,6 +71,9 @@ public static class ServiceProcessExtensions
         MdsLocalApplication.PendingStopTracker pendingStopTracker,
         Guid deploymentId)
     {
+        SyncResultBuilder syncResultBuilder = new SyncResultBuilder();
+        await syncResultBuilder.Enqueue(async (state) => state.Trigger = "Deployment");
+
         var installedServices = await GetInstalledServices(servicesBasePath);
         var currentConfiguration = await dbQueue.Enqueue(LocalDb.LoadKnownConfiguration);
 
@@ -101,7 +104,7 @@ public static class ServiceProcessExtensions
             var binariesContent = await GetBinariesZipContent(httpClient, neededBinaries.projectName, neededBinaries.versionName, buildTarget, binariesApiUrl);
 
             var tempFile = System.IO.Path.GetTempFileName();
-
+            await syncResultBuilder.Enqueue(async (r) => r.AddInfo($"Downloading {neededBinaries.projectName} {neededBinaries.versionName}"));
             using (var fileStream = System.IO.File.Create(tempFile))
             {
                 await fileStream.WriteAsync(binariesContent);
@@ -132,7 +135,8 @@ public static class ServiceProcessExtensions
                     temporaryBinaries,
                     infrastructureName,
                     pendingStopTracker,
-                    deploymentId));
+                    deploymentId,
+                    syncResultBuilder));
         }
 
         await Task.WhenAll(serviceProcessSyncTasks);
@@ -141,6 +145,27 @@ public static class ServiceProcessExtensions
         {
             System.IO.File.Delete(tempBinaries.TemporaryZipPath);
         }
+
+        await syncResultBuilder.Enqueue(async (r) =>
+        {
+            if (!r.Log.Any())
+            {
+                r.ResultCode = SyncStatusCodes.UpToDate;
+            }
+            else
+            {
+                if (r.Log.Any(x => x.Type == SyncResultLogType.Error))
+                {
+                    r.ResultCode = SyncStatusCodes.Failed;
+                }
+                else
+                {
+                    r.ResultCode = SyncStatusCodes.Changed;
+                }
+            }
+        });
+
+        await dbQueue.Enqueue(async (dbPath) => await MdsLocal.LocalDb.RegisterSyncResult(dbPath, await syncResultBuilder.GetState()));
     }
 
     // null snapshot = uninstall
@@ -154,7 +179,8 @@ public static class ServiceProcessExtensions
         List<TemporaryBinaries> temporaryBinaries,
         string infrastructureName,
         MdsLocalApplication.PendingStopTracker pendingStopTracker,
-        Guid deploymentId)
+        Guid deploymentId,
+        SyncResultBuilder syncResultBuilder)
     {
         try
         {
@@ -162,7 +188,9 @@ public static class ServiceProcessExtensions
             {
                 // Service is not valid anymore, it needs to be uninstalled
                 await StopServiceProcess(commandContext, nodeName, serviceName, servicesBaseDataPath, pendingStopTracker, deploymentId);
+                await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} stopped"));
                 await UninstallService(commandContext, servicesBasePath, serviceName, nodeName, deploymentId);
+                await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} uninstalled"));
             }
             else
             {
@@ -175,12 +203,14 @@ public static class ServiceProcessExtensions
                 {
                     // Service was not previously installed, install now
                     await InstallServiceBinaries(commandContext, serviceName, snapshot.ProjectName, snapshot.ProjectVersionTag, nodeName, servicesBasePath, temporaryBinaries, deploymentId);
+                    await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} installed ({snapshot.ProjectName} {snapshot.ProjectVersionTag})"));
                     await CreateServiceParametersFile(snapshot, servicesBasePath);
                     await CreateServiceInstallFile(snapshot, infrastructureName, servicesBaseDataPath, servicesBasePath);
 
                     if (snapshot.Enabled)
                     {
                         await StartServiceProcess(commandContext, serviceName, nodeName, servicesBasePath, deploymentId);
+                        await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} started"));
                     }
                 }
                 else
@@ -190,8 +220,11 @@ public static class ServiceProcessExtensions
                     {
                         // Project or version is different, update
                         await StopServiceProcess(commandContext, nodeName, serviceName, servicesBasePath, pendingStopTracker, deploymentId);
+                        await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} stopped"));
                         await UninstallService(commandContext, servicesBasePath, serviceName, nodeName, deploymentId);
+                        await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} uninstalled ({installData.ProjectName} {installData.Version})"));
                         await InstallServiceBinaries(commandContext, serviceName, snapshot.ProjectName, snapshot.ProjectVersionTag, nodeName, servicesBasePath, temporaryBinaries, deploymentId);
+                        await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} installed ({snapshot.ProjectName} {snapshot.ProjectVersionTag})"));
                         await CreateServiceInstallFile(snapshot, infrastructureName, servicesBaseDataPath, servicesBasePath);
                         await CreateServiceParametersFile(snapshot, servicesBasePath);
                     }
@@ -201,6 +234,7 @@ public static class ServiceProcessExtensions
                         if (!ServiceParametersAreIdentical(snapshot, installedParameters))
                         {
                             await StopServiceProcess(commandContext, nodeName, serviceName, servicesBasePath, pendingStopTracker, deploymentId);
+                            await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} stopped"));
                             await CreateServiceInstallFile(snapshot, infrastructureName, servicesBaseDataPath, servicesBasePath);
                             await CreateServiceParametersFile(snapshot, servicesBasePath);
                         }
@@ -213,11 +247,13 @@ public static class ServiceProcessExtensions
                         if (alreadyRunning == null)
                         {
                             await StartServiceProcess(commandContext, serviceName, nodeName, servicesBasePath, deploymentId);
+                            await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} started"));
                         }
                     }
                     else
                     {
                         await StopServiceProcess(commandContext, nodeName, serviceName, servicesBaseDataPath, pendingStopTracker, deploymentId);
+                        await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} stopped"));
                     }
                 }
             }
@@ -247,6 +283,8 @@ public static class ServiceProcessExtensions
                 Type = InfrastructureEventType.ExceptionProcessing,
                 FullDescription = $"Service {serviceName} could not be synchronized: {ex.Message}",
             });
+
+            await syncResultBuilder.Enqueue(async (b) => b.AddError($"Service {serviceName} error: {ex.Message}"));
         }
     }
 

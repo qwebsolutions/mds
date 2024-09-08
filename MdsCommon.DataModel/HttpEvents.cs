@@ -1,6 +1,8 @@
 ﻿using Metapsi;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 
 namespace MdsCommon;
 
@@ -49,6 +51,50 @@ public static class NodeEvent
         public List<string> RunningServices { get; set; } = new();
         public List<string> NotRunningServices { get; set; } = new();
         public List<string> Errors { get; set; } = new();
+    }
+}
+
+public static class NodeEventExtensions
+{
+    public static string GetFullDescription(this NodeEvent.Started message)
+    {
+        StringBuilder stringBuilder = new StringBuilder();
+
+        if (message.Errors.Any())
+        {
+            stringBuilder.AppendLine("Errors:");
+        }
+
+        foreach (var error in message.Errors)
+        {
+            stringBuilder.AppendLine(error);
+        }
+
+        if (message.NotRunningServices.Any())
+        {
+            stringBuilder.AppendLine("Not running:");
+        }
+
+        foreach (var notRunning in message.NotRunningServices)
+        {
+            stringBuilder.AppendLine(notRunning);
+        }
+
+        if (message.RunningServices.Any())
+        {
+            stringBuilder.AppendLine("Running:");
+        }
+        foreach (var running in message.RunningServices)
+        {
+            stringBuilder.AppendLine(running);
+        }
+
+        var fullDescription = stringBuilder.ToString();
+
+        if (string.IsNullOrEmpty(fullDescription))
+            fullDescription = "No service running";
+
+        return fullDescription;
     }
 }
 

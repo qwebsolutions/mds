@@ -38,7 +38,14 @@ namespace MdsLocal
                         b.HasObject(selectedResult),
                         b =>
                         {
-                            return b.MdsMainPanel(b => { }, SyncLogTable(b, selectedResult));
+                            return b.MdsMainPanel(b => { },
+                                b.If(
+                                    b.Get(dataModel, x => x.SelectedResult.ResultCode == SyncStatusCodes.UpToDate),
+                                    b =>
+                                    {
+                                        return b.Text("No changes");
+                                    },
+                                    b => SyncLogTable(b, selectedResult)));
                         });
                 }),
                 b.MdsMainPanel(b => { }, SyncHistoryTable(b, dataModel)));
@@ -106,7 +113,6 @@ namespace MdsLocal
                                     b.MakeAction((SyntaxBuilder b, Var<DataModel> page, Var<FullSyncResultResponse> response) =>
                                     {
                                         b.Set(page, x => x.SelectedResult, b.Get(response, x => x.SyncResult));
-                                        b.Log(page);
                                         b.HideLoading(page);
                                         b.ShowSidePanel();
                                         return b.Clone(page);
@@ -130,6 +136,14 @@ namespace MdsLocal
                     b.Optional(
                         b.Get(syncResult, x => x.Log.Any(x => x.Type == SyncResultLogType.Error)),
                         b => b.Badge(b.Const("error"), b.Const("bg-red-600"))));
+            });
+            tableBuilder.OverrideDataCell(nameof(SyncResult.ResultCode), (b, syncResult) =>
+            {
+                return b.Text(
+                    b.If(
+                        b.Get(syncResult, x => x.ResultCode == "UpToDate"),
+                        b => b.Const("No changes"),
+                        b => b.Get(syncResult, x => x.ResultCode)));
             });
 
             return b.DataTable(
