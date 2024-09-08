@@ -3,10 +3,13 @@
 
   <PropertyGroup Condition="$(SolutionFileName) == 'Mds.Dev.sln'">
   	<MetapsiVersion>0.0.0-dev</MetapsiVersion>
+	<MetapsiServiceVersion>0.0.0-dev</MetapsiServiceVersion>
+	
   </PropertyGroup>	
   
   <PropertyGroup Condition="$(SolutionFileName) != 'Mds.Dev.sln'">
   	<MetapsiVersion>0.11.1</MetapsiVersion>
+	<MetapsiServiceVersion>0.1.1</MetapsiServiceVersion>
   </PropertyGroup>	
   
 </Project>

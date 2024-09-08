@@ -11,7 +11,7 @@ namespace MdsInfrastructure
 {
     public static class Register
     {
-        public static void Everything(WebServer.References refs, TaskQueue dbQueue, string fullDbPath)
+        public static void Everything(WebServer.References refs, DbQueue dbQueue)
         {
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Status.Infra, Routes.Status.Infra>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Status.Application, Routes.Status.Application, string>();
@@ -28,7 +28,7 @@ namespace MdsInfrastructure
             refs.WebApplication.MapPost("/node/save", async (CommandContext commandContext, HttpContext httpContext, MdsInfrastructure.InfrastructureNode node) =>
             {
                 await commandContext.Do(Backend.SaveNode, node);
-                await commandContext.RegisterNodesMessaging(dbQueue, fullDbPath);
+                await commandContext.RegisterNodesMessaging(dbQueue);
             });
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Project.List, Routes.Project.List>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Deployment.List, Routes.Deployment.List>();

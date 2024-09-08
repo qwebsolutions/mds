@@ -501,19 +501,34 @@ namespace MdsInfrastructure
 
             var stringIds = toSnapshotIds.Select(x => x.ToString()).ToList();
 
-            var remainingChanges = await transaction.Connection.QueryAsync<LastDeployedChange>(
-                $@"select dep.Timestamp as {nameof(LastDeployedChange.DeploymentTimestamp)}, t.{nameof(DeploymentServiceTransition.ToServiceConfigurationSnapshotId)} as {nameof(LastDeployedChange.SnapshotId)} from Deployment dep 
-                            inner join {nameof(DeploymentServiceTransition)} t on t.DeploymentId = dep.id 
-                            where {nameof(DeploymentServiceTransition.FromServiceConfigurationSnapshotId)} != {nameof(DeploymentServiceTransition.ToServiceConfigurationSnapshotId)} and 
-                            {nameof(DeploymentServiceTransition.ToServiceConfigurationSnapshotId)} in @stringIds", new { stringIds }, transaction);
+            // I think this attempted to check for each service when was the last actual change (in any deployment)
+
+            //var remainingChanges = await transaction.Connection.QueryAsync<LastDeployedChange>(
+            //    $@"select dep.Timestamp as {nameof(LastDeployedChange.DeploymentTimestamp)}, t.{nameof(DeploymentServiceTransition.ToServiceConfigurationSnapshotId)} as {nameof(LastDeployedChange.SnapshotId)} from Deployment dep 
+            //                inner join {nameof(DeploymentServiceTransition)} t on t.DeploymentId = dep.id 
+            //                where {nameof(DeploymentServiceTransition.FromServiceConfigurationSnapshotId)} != {nameof(DeploymentServiceTransition.ToServiceConfigurationSnapshotId)} and 
+            //                {nameof(DeploymentServiceTransition.ToServiceConfigurationSnapshotId)} in @stringIds", new { stringIds }, transaction);
 
             foreach(var t in deployment.Transitions.Where(x=>x.ToServiceConfigurationSnapshotId != Guid.Empty))
             {
-                deployment.LastConfigurationChanges.Add(new ConfigurationTime()
+                if (t.ToSnapshot != null)
                 {
-                    ServiceName = t.ToSnapshot.ServiceName,
-                    LastConfigurationChangeTimestamp = remainingChanges.Where(x=>x.SnapshotId == t.ToServiceConfigurationSnapshotId).OrderByDescending(x=>x.DeploymentTimestamp).First().DeploymentTimestamp
-                });
+                    // Just use the snapshot timestamp and hope for the best
+
+                    deployment.LastConfigurationChanges.Add(new ConfigurationTime()
+                    {
+                        ServiceName = t.ToSnapshot.ServiceName,
+                        LastConfigurationChangeTimestamp = t.ToSnapshot.SnapshotTimestamp
+                    });
+                }
+
+                // So then was attempting to match the actual deployment timestamp to the transition
+
+                //deployment.LastConfigurationChanges.Add(new ConfigurationTime()
+                //{
+                //    ServiceName = t.ToSnapshot.ServiceName,
+                //    LastConfigurationChangeTimestamp = remainingChanges.Where(x=>x.SnapshotId == t.ToServiceConfigurationSnapshotId).OrderByDescending(x=>x.DeploymentTimestamp).First().DeploymentTimestamp
+                //});
             }
 
             return deployment;

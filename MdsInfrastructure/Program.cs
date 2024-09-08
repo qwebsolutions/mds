@@ -82,7 +82,7 @@ namespace MdsInfrastructure
             await app.SuspendComplete;
         }
 
-        public static async Task<WebServer.References> SetupGlobalController(MdsInfrastructureApplication.InputArguments arguments, DateTime start)
+        public static async Task<MdsInfrastructureApplication.References> SetupGlobalController(MdsInfrastructureApplication.InputArguments arguments, DateTime start)
         {
             Metapsi.Sqlite.Converters.RegisterAll();
 
@@ -106,14 +106,16 @@ namespace MdsInfrastructure
 
                 // Redirect to default page
                 app.MapGet("/", () => Results.Redirect(WebServer.Url<Routes.Status.Infra>())).AllowAnonymous().ExcludeFromDescription();
+                await app.MapConfigDocs(references.ApplicationSetup, references.ImplementationGroup, references.DbQueue, references.InfrastructureState);
 
                 app.MapSignIn();
                 var api = app.MapGroup("api");
                 api.MapFrontendApi(arguments);
                 api.MapGroup("event").MapIncomingEvents(arguments);
 
-                Register.Everything(webServerRefs, references.DbTasksQueue, references.FullDbPath);
-                return webServerRefs;
+                Register.Everything(webServerRefs, references.DbQueue);
+                references.WebApplication = webServerRefs.WebApplication;
+                return references;
             }
         }
 

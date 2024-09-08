@@ -3,12 +3,6 @@ using MdsCommon;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Text;
-using System.Web;
-using System.Net.Http.Headers;
 
 namespace MdsInfrastructure
 {
@@ -26,8 +20,9 @@ namespace MdsInfrastructure
         {
             public ApplicationSetup ApplicationSetup { get; set; }
             public ImplementationGroup ImplementationGroup { get; set; }
-            public TaskQueue DbTasksQueue { get; set; }
-            public string FullDbPath { get; set; }
+            public DbQueue DbQueue { get; set; }
+            public MdsInfrastructureApplication.State InfrastructureState { get; set; }
+            public Microsoft.AspNetCore.Builder.WebApplication WebApplication { get; set; }
         }
 
         public static References Setup(
@@ -87,7 +82,7 @@ namespace MdsInfrastructure
             #region Execution queue states
 
             MdsInfrastructureApplication.State infrastructure = applicationSetup.AddBusinessState(new MdsInfrastructureApplication.State());
-            var dbTaskQueue = new TaskQueue();
+            var dbQueue = new DbQueue(fullDbPath);
             HttpServer.State httpGateway = applicationSetup.AddBusinessState(new HttpServer.State());
 
             var redisNotifier = applicationSetup.AddBusinessState(new RedisNotifier.State());
@@ -95,6 +90,8 @@ namespace MdsInfrastructure
             var binariesListener = applicationSetup.AddBusinessState(new RedisListener.State());
             var healthListener = applicationSetup.AddBusinessState(new RedisListener.State());
             var eventsListener = applicationSetup.AddBusinessState(new RedisListener.State());
+
+            applicationSetup.AddCleanup(implementationGroup, infrastructure, dbQueue);
 
             applicationSetup.SetupMessagingApi(implementationGroup);
 
@@ -137,7 +134,7 @@ namespace MdsInfrastructure
                     e.Using(infrastructure, implementationGroup).EnqueueCommand(SyncBuilds);
                     e.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
                     {
-                        await cc.RegisterNodesMessaging(dbTaskQueue, fullDbPath);
+                        await cc.RegisterNodesMessaging(dbQueue);
                     });
                 });
 
@@ -170,7 +167,7 @@ namespace MdsInfrastructure
 
                     e.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
                     {
-                        await dbTaskQueue.Enqueue(async () => MdsCommon.Db.SaveInfrastructureEvent(fullDbPath, infraEvent));
+                        await dbQueue.Enqueue(async (fullDbPath) => await MdsCommon.Db.SaveInfrastructureEvent(fullDbPath, infraEvent));
                     });
 
                     if (mailSender != null)
@@ -236,7 +233,7 @@ namespace MdsInfrastructure
 
             #region Operation mappings
 
-            implementationGroup.MapBackendApi(dbTaskQueue, fullDbPath, arguments.InfrastructureName);
+            implementationGroup.MapBackendApi(dbQueue, arguments.InfrastructureName);
 
             implementationGroup.MapRequest(MdsCommon.Api.GetAdminCredentials, async (rc) =>
             {
@@ -252,7 +249,7 @@ namespace MdsInfrastructure
                 // TODO: Does this even compile?
                 await rc.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
                 {
-                    var serviceConfiguration = await dbTaskQueue.Enqueue(async () =>
+                    var serviceConfiguration = await dbQueue.Enqueue(async (fullDbPath) =>
                     {
                         return await Db.LoadServiceConfiguration(fullDbPath, serviceName);
                     });
@@ -469,8 +466,8 @@ namespace MdsInfrastructure
             {
                 ApplicationSetup = applicationSetup,
                 ImplementationGroup = implementationGroup,
-                DbTasksQueue = dbTaskQueue,
-                FullDbPath = fullDbPath
+                DbQueue = dbQueue,
+                InfrastructureState = infrastructure
             };
         }
 

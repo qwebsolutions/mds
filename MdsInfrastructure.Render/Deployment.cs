@@ -476,6 +476,10 @@ namespace MdsInfrastructure.Render
                     x.EventType == nameof(DeploymentEvent.ServiceUninstall) ||
                     x.EventType == nameof(DeploymentEvent.ServiceInstall)).OrderByDescending(x => x.TimestampIso).FirstOrDefault());
 
+            var disabledWithJustParameterChanges = b.And(
+                b.Get(errorEvents, errorEvents => !errorEvents.Any()),
+                b.Not(b.HasObject(lastEvent)));
+
             var serviceErrorStatus = (LayoutBuilder b) =>
             {
                 return b.HtmlDiv(
@@ -520,6 +524,11 @@ namespace MdsInfrastructure.Render
                     b.Text($"Service uninstalled"));
             };
 
+            var disabledWithJustParametersUpdateStatus = (LayoutBuilder b) =>
+            {
+                return b.Text("Parameters updated");
+            };
+
             var serviceInstalledStatus = (LayoutBuilder b) =>
             {
                 return b.HtmlDiv(
@@ -539,21 +548,24 @@ namespace MdsInfrastructure.Render
                         b.If(
                             b.Get(errorEvents, x => x.Any()),
                             serviceErrorStatus,
-                            b => b.If(
-                                b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceStop)),
-                                serviceStoppedStatus,
-                                b =>
-                                {
-                                    return b.If(
-                                        b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceStart)),
-                                        serviceStartedStatus,
-                                        b => b.If(
-                                            b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceInstall)),
-                                            serviceInstalledStatus,
-                                            b => b.If(b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceUninstall)),
-                                                serviceUninstalledStatus,
-                                                b => b.VoidNode())));
-                                })),
+                            b=> b.If(
+                                disabledWithJustParameterChanges, 
+                                disabledWithJustParametersUpdateStatus,
+                                b => b.If(
+                                    b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceStop)),
+                                    serviceStoppedStatus,
+                                    b =>
+                                    {
+                                        return b.If(
+                                            b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceStart)),
+                                            serviceStartedStatus,
+                                            b => b.If(
+                                                b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceInstall)),
+                                                serviceInstalledStatus,
+                                                b => b.If(b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceUninstall)),
+                                                    serviceUninstalledStatus,
+                                                    b => b.VoidNode())));
+                                    }))),
                             b.HtmlButton(
                                 b =>
                                 {

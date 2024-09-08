@@ -9,7 +9,7 @@ namespace MdsCommon
         public System.DateTime Timestamp { get; set; } = DateTime.UtcNow;
         public System.String Type { get; set; } = System.String.Empty;
         public System.String Source { get; set; } = System.String.Empty;
-        public System.String Criticality { get; set; } = System.String.Empty;
+        public System.String Criticality { get; set; } = InfrastructureEventCriticality.Info;
         public System.String ShortDescription { get; set; } = System.String.Empty;
         public System.String FullDescription { get; set; } = System.String.Empty;
     }

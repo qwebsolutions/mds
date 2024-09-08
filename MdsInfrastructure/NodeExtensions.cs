@@ -30,10 +30,9 @@ namespace MdsInfrastructure
 
         public static async Task RegisterNodesMessaging(
             this CommandContext commandContext,
-            TaskQueue dbQueue,
-            string fullDbPath)
+            DbQueue dbQueue)
         {
-            var allNodes = await dbQueue.Enqueue(async () => await Db.LoadAllNodes(fullDbPath));
+            var allNodes = await dbQueue.Enqueue(Db.LoadAllNodes);
             foreach (var node in allNodes)
             {
                 commandContext.MapMessaging(node.NodeName, $"http://{node.MachineIp}:{node.UiPort}/event");

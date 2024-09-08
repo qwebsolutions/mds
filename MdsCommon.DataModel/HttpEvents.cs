@@ -54,6 +54,12 @@ public static class NodeEvent
     }
 }
 
+public class CleanupInfrastructureEvents
+{
+    public int KeepMaxCount { get; set; }
+    public int KeepMaxDays { get; set; }
+}
+
 public static class NodeEventExtensions
 {
     public static string GetFullDescription(this NodeEvent.Started message)

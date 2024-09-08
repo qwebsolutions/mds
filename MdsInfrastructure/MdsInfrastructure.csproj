@@ -25,6 +25,7 @@
 		<PackageReference Include="Metapsi.Web" Version="$(MetapsiVersion)" />
 		<PackageReference Include="Metapsi.Html" Version="$(MetapsiVersion)" />
 		<PackageReference Include="Metapsi.Mds" Version="$(MetapsiVersion)" />
+		<PackageReference Include="Metapsi.ServiceDoc" Version="$(MetapsiServiceVersion)" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.Negotiate" Version="7.0.0" />
 	</ItemGroup>
 

@@ -12,13 +12,19 @@ public static partial class Status
 {
     public static async Task<InfrastructureStatus> LoadInfrastructureStatusPageModel(CommandContext commandContext)
     {
+        System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
+        await DebugTo.File("c:\\github\\qwebsolutions\\mds\\debug\\InfraStatus.txt", DateTime.UtcNow.Roundtrip());
         var statusPage = await Load.FullStatusData(commandContext);
-        return new MdsInfrastructure.InfrastructureStatus()
+        var r = new MdsInfrastructure.InfrastructureStatus()
         {
             InfrastructureStatusData = statusPage,
             ApplicationPanels = Load.GetApplicationPanelData(statusPage, statusPage.Deployment.GetDeployedServices().Select(x => x.ApplicationName).Distinct()),
             NodePanels = Load.GetNodePanelsData(statusPage, statusPage.InfrastructureNodes.Select(x => x.NodeName))
         };
+
+        await DebugTo.File("c:\\github\\qwebsolutions\\mds\\debug\\InfraStatus.txt", DateTime.UtcNow.Roundtrip());
+        await DebugTo.File("c:\\github\\qwebsolutions\\mds\\debug\\InfraStatus.txt", $"{sw.ElapsedMilliseconds.ToString()} ms");
+        return r;
     }
 
     public static async Task<ApplicationStatus> LoadApplicationStatusPageModel(CommandContext commandContext, string applicationName)
@@ -248,17 +254,20 @@ internal static partial class Load
         }
 
         var chronologicalEvents = status.InfrastructureEvents.Where(x => x.Source == serviceName).OrderBy(x => x.Timestamp);
-        var lastConfigurationChange = status.Deployment.LastConfigurationChanges.Single(x => x.ServiceName == serviceName);
-        // Kinda flimsy based on timestamp, ain't it?
-        var eventsSinceLastReconfigured = chronologicalEvents.Where(x => x.Timestamp > lastConfigurationChange.LastConfigurationChangeTimestamp);
-
-        // If started multiple times since last deployment, could be a problem
-        var exitEvents = eventsSinceLastReconfigured.Where(x => x.Type == MdsCommon.InfrastructureEventType.ProcessExit);
-
-        if (exitEvents.Count() > 30)
+        var lastConfigurationChange = status.Deployment.LastConfigurationChanges.SingleOrDefault(x => x.ServiceName == serviceName);
+        if (lastConfigurationChange != null)
         {
-            servicePanelData.StatusCode = "warning";
-            servicePanelData.StatusText = $"Crashed {exitEvents.Count()} times since deployed";
+            // Kinda flimsy based on timestamp, ain't it?
+            var eventsSinceLastReconfigured = chronologicalEvents.Where(x => x.Timestamp > lastConfigurationChange.LastConfigurationChangeTimestamp);
+
+            // If started multiple times since last deployment, could be a problem
+            var exitEvents = eventsSinceLastReconfigured.Where(x => x.Type == MdsCommon.InfrastructureEventType.ProcessExit);
+
+            if (exitEvents.Count() > 30)
+            {
+                servicePanelData.StatusCode = "warning";
+                servicePanelData.StatusText = $"Crashed {exitEvents.Count()} times since deployed";
+            }
         }
 
         servicePanelData.StartedTimeUtc = serviceStatus.StartTimeUtc.Roundtrip();

@@ -13,25 +13,23 @@ namespace MdsInfrastructure
     {
         public static void MapBackendApi(
             this ImplementationGroup ig,
-            TaskQueue taskQueue,
-            string fullDbPath,
+            DbQueue dbQueue,
             string infrastructureName)
         {
             void MapRequest<T>(Request<T> request, Func<string, System.Threading.Tasks.Task<T>> dbCall)
             {
-                ig.MapRequest(request, async (rc) => await taskQueue.Enqueue(async () => await dbCall(fullDbPath)));
+                ig.MapRequest(request, async (rc) => await dbQueue.Enqueue(async (fullDbPath) => await dbCall(fullDbPath)));
             }
 
             void MapRequest1<T, P>(Request<T, P> request, Func<string, P, System.Threading.Tasks.Task<T>> dbCall)
             {
-                ig.MapRequest(request, async (rc, p) => await taskQueue.Enqueue(async () => await dbCall(fullDbPath, p)));
+                ig.MapRequest(request, async (rc, p) => await dbQueue.Enqueue(async (fullDbPath) => await dbCall(fullDbPath, p)));
             }
 
             void MapCommand<P>(Command<P> command, Func<string, P, System.Threading.Tasks.Task> dbCall)
             {
-                ig.MapCommand(command, async (rc, p) => await taskQueue.Enqueue(async () => await dbCall(fullDbPath, p)));
+                ig.MapCommand(command, async (rc, p) => await dbQueue.Enqueue(async (fullDbPath) => await dbCall(fullDbPath, p)));
             }
-
 
             MapRequest(Backend.ValidateSchema, Db.ValidateSchema);
             MapRequest(Backend.LoadInfraStatus, Db.LoadInfrastructureStatus);
@@ -49,7 +47,7 @@ namespace MdsInfrastructure
             MapRequest(Backend.LoadAllNodes, Db.LoadAllNodes);
             MapRequest(Backend.LoadAllServices, Db.LoadAllServices);
             MapRequest1(Backend.RefreshBinaries, Db.RefreshBinaries);
-            ig.MapRequest(Backend.ConfirmDeployment, async (rc, input) => await taskQueue.Enqueue(async () => await Db.ConfirmDeployment(fullDbPath, input.Snapshots, input.Configuration)));
+            ig.MapRequest(Backend.ConfirmDeployment, async (rc, input) => await dbQueue.Enqueue(async (fullDbPath) => await Db.ConfirmDeployment(fullDbPath, input.Snapshots, input.Configuration)));
             MapRequest(Backend.GetAllParameterTypes, Db.LoadParameterTypes);
             MapRequest(Backend.LoadEnvironmentTypes, Db.LoadEnvironmentTypes);
             MapRequest(Backend.LoadHealthStatus, Db.LoadFullInfrastructureHealthStatus);
