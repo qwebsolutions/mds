@@ -19,7 +19,8 @@ public static partial class Status
         {
             InfrastructureStatusData = statusPage,
             ApplicationPanels = Load.GetApplicationPanelData(statusPage, statusPage.Deployment.GetDeployedServices().Select(x => x.ApplicationName).Distinct()),
-            NodePanels = Load.GetNodePanelsData(statusPage, statusPage.InfrastructureNodes.Select(x => x.NodeName))
+            NodePanels = Load.GetNodePanelsData(statusPage, statusPage.InfrastructureNodes.Select(x => x.NodeName)),
+            ServicePanels = Load.GetServicePanelData(statusPage, statusPage.Deployment.GetDeployedServices().Select(x => x.ServiceName))
         };
 
         await DebugTo.File("c:\\github\\qwebsolutions\\mds\\debug\\InfraStatus.txt", DateTime.UtcNow.Roundtrip());

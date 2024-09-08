@@ -592,6 +592,10 @@ video {
   visibility: visible;
 }
 
+.collapse {
+  visibility: collapse;
+}
+
 .static {
   position: static;
 }
@@ -730,6 +734,10 @@ video {
 
 .flex-none {
   flex: none;
+}
+
+.border-collapse {
+  border-collapse: collapse;
 }
 
 .-translate-y-5 {
@@ -6584,6 +6592,10 @@ video {
 
 .pt-4 {
   padding-top: 1rem;
+}
+
+.pt-6 {
+  padding-top: 1.5rem;
 }
 
 .text-left {

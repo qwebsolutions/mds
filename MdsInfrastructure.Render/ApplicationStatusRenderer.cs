@@ -51,7 +51,8 @@ namespace MdsInfrastructure.Render
                     4,
                     b.Map(
                         b.Get(clientModel, x => x.ServicePanels),
-                        (b, panel) => b.ServicePanel(panel))));
+                        (b, panel) => b.ServicePanel(panel))),
+                b.HtmlDiv(b => b.SetClass("p-4")));
         }
     }
 }

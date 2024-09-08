@@ -204,7 +204,7 @@ public static class ServiceProcessExtensions
                     // Service was not previously installed, install now
                     await InstallServiceBinaries(commandContext, serviceName, snapshot.ProjectName, snapshot.ProjectVersionTag, nodeName, servicesBasePath, temporaryBinaries, deploymentId);
                     await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} installed ({snapshot.ProjectName} {snapshot.ProjectVersionTag})"));
-                    await CreateServiceParametersFile(snapshot, servicesBasePath);
+                    await CreateServiceParametersFile(commandContext, snapshot, servicesBasePath, deploymentId);
                     await CreateServiceInstallFile(snapshot, infrastructureName, servicesBaseDataPath, servicesBasePath);
 
                     if (snapshot.Enabled)
@@ -226,7 +226,7 @@ public static class ServiceProcessExtensions
                         await InstallServiceBinaries(commandContext, serviceName, snapshot.ProjectName, snapshot.ProjectVersionTag, nodeName, servicesBasePath, temporaryBinaries, deploymentId);
                         await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} installed ({snapshot.ProjectName} {snapshot.ProjectVersionTag})"));
                         await CreateServiceInstallFile(snapshot, infrastructureName, servicesBaseDataPath, servicesBasePath);
-                        await CreateServiceParametersFile(snapshot, servicesBasePath);
+                        await CreateServiceParametersFile(commandContext, snapshot, servicesBasePath, deploymentId);
                     }
                     else
                     {
@@ -236,7 +236,7 @@ public static class ServiceProcessExtensions
                             await StopServiceProcess(commandContext, nodeName, serviceName, servicesBasePath, pendingStopTracker, deploymentId);
                             await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} stopped"));
                             await CreateServiceInstallFile(snapshot, infrastructureName, servicesBaseDataPath, servicesBasePath);
-                            await CreateServiceParametersFile(snapshot, servicesBasePath);
+                            await CreateServiceParametersFile(commandContext, snapshot, servicesBasePath, deploymentId);
                         }
                     }
 
@@ -738,11 +738,19 @@ public static class ServiceProcessExtensions
     }
 
     public static async Task CreateServiceParametersFile(
+        CommandContext commandContext,
         MdsCommon.ServiceConfigurationSnapshot serviceConfiguration,
-        string servicesBasePath)
+        string servicesBasePath,
+        Guid deploymentId)
     {
         string parametersFullPath = GetServiceParametersPath(servicesBasePath, serviceConfiguration.ServiceName);
         await System.IO.File.WriteAllTextAsync(parametersFullPath, Metapsi.Serialize.ToJson(serviceConfiguration.GetParametersDictionary()));
+        commandContext.NotifyGlobal(new DeploymentEvent.ParametersSet()
+        {
+            DeploymentId = deploymentId,
+            NodeName = serviceConfiguration.NodeName,
+            ServiceName = serviceConfiguration.ServiceName,
+        });
     }
 
     public static bool ServiceParametersAreIdentical(ServiceConfigurationSnapshot snapshot, Dictionary<string, string> installParameters)

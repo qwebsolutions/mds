@@ -70,6 +70,18 @@ namespace MdsInfrastructure
                 await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(new RefreshDeploymentReviewModel());
             });
 
+            endpoint.OnMessage<DeploymentEvent.ParametersSet>(async (cc, message) =>
+            {
+                await cc.Do(Backend.SaveDeploymentEvent, new DbDeploymentEvent()
+                {
+                    DeploymentId = message.DeploymentId,
+                    EventType = nameof(DeploymentEvent.ParametersSet),
+                    ServiceName = message.ServiceName
+                });
+
+                await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(new RefreshDeploymentReviewModel());
+            });
+
             endpoint.OnMessage<DeploymentEvent.ServiceSynchronized>(async (cc, message) =>
             {
                 await cc.Do(Backend.SaveDeploymentEvent, new DbDeploymentEvent()

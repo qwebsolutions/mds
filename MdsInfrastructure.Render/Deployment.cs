@@ -321,6 +321,7 @@ namespace MdsInfrastructure.Render
                             (nameof(DeploymentEvent.ServiceUninstall), b => b.Const("Uninstalled")),
                             (nameof(DeploymentEvent.ServiceStart), b => b.Const("Started")),
                             (nameof(DeploymentEvent.ServiceStop), b => b.Const("Stopped")),
+                            (nameof(DeploymentEvent.ParametersSet), b => b.Const("Parameters updated")),
                             (nameof(DeploymentEvent.ServiceSynchronized), b => b.Get(data, x => x.Error))))));
 
             var selectedServiceEvents =
@@ -474,11 +475,12 @@ namespace MdsInfrastructure.Render
                     x => x.EventType == nameof(DeploymentEvent.ServiceStart) ||
                     x.EventType == nameof(DeploymentEvent.ServiceStop) ||
                     x.EventType == nameof(DeploymentEvent.ServiceUninstall) ||
-                    x.EventType == nameof(DeploymentEvent.ServiceInstall)).OrderByDescending(x => x.TimestampIso).FirstOrDefault());
+                    x.EventType == nameof(DeploymentEvent.ServiceInstall) ||
+                    x.EventType == nameof(DeploymentEvent.ParametersSet)).OrderByDescending(x => x.TimestampIso).FirstOrDefault());
 
-            var disabledWithJustParameterChanges = b.And(
-                b.Get(errorEvents, errorEvents => !errorEvents.Any()),
-                b.Not(b.HasObject(lastEvent)));
+            //var disabledWithJustParameterChanges = b.And(
+            //    b.Get(errorEvents, errorEvents => !errorEvents.Any()),
+            //    b.Not(b.HasObject(lastEvent)));
 
             var serviceErrorStatus = (LayoutBuilder b) =>
             {
@@ -524,9 +526,15 @@ namespace MdsInfrastructure.Render
                     b.Text($"Service uninstalled"));
             };
 
-            var disabledWithJustParametersUpdateStatus = (LayoutBuilder b) =>
+            var parametersUpdateStatus = (LayoutBuilder b) =>
             {
-                return b.Text("Parameters updated");
+                return b.HtmlDiv(
+                    b =>
+                    {
+                        b.SetClass("flex flex-row gap-2 text-gray-800");
+                    },
+                    b.Svg(StopCircle, "w-6 h-6"),
+                    b.Text($"Parameters updated"));
             };
 
             var serviceInstalledStatus = (LayoutBuilder b) =>
@@ -549,8 +557,9 @@ namespace MdsInfrastructure.Render
                             b.Get(errorEvents, x => x.Any()),
                             serviceErrorStatus,
                             b=> b.If(
-                                disabledWithJustParameterChanges, 
-                                disabledWithJustParametersUpdateStatus,
+                                // The only operation when updating parameters on a disabled service
+                                b.Get(lastEvent, x=>x.EventType == nameof(DeploymentEvent.ParametersSet)),
+                                parametersUpdateStatus,
                                 b => b.If(
                                     b.Get(lastEvent, x => x.EventType == nameof(DeploymentEvent.ServiceStop)),
                                     serviceStoppedStatus,

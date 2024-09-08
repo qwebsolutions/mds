@@ -2,6 +2,7 @@
 
 using MdsInfrastructure;
 using MdsLocal;
+using Metapsi;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,11 +19,13 @@ public static class Program
         {
             await Initialize();
             await Task.Delay(TimeSpan.FromSeconds(5));
-            var configuration = await CreateConfiguration(2, 2);
+            var configuration = await CreateConfiguration(3, 9);
+            configuration.Services[0].Enabled = false;
             await DeployConfiguration(configuration);
             await Task.Delay(System.TimeSpan.FromSeconds(30));
 
-            configuration.Services = configuration.Services.Skip(1).ToList();
+            //configuration.Services = configuration.Services.Skip(1).ToList();
+            configuration.Services[0].Parameters[0].Value = "1001";
 
             //foreach (var service in configuration.Services)
             //{
@@ -225,12 +228,48 @@ public static class Program
             BuildManagerUrl = "http://localhost:5011"
         }, DateTime.UtcNow);
 
+        //infraReferences.ApplicationSetup.MapEvent<ApplicationRevived>(e =>
+        //{
+        //    e.Using(infraReferences.InfrastructureState, infraReferences.ImplementationGroup).EnqueueCommand(async (cc, state) =>
+        //    {
+        //        await cc.SaveDoc(new ConfigKey()
+        //        {
+        //            Key = ConfigKey.CleanupRunDailyAt,
+        //            Value = $"{DateTime.Now.Hour}:{DateTime.Now.AddSeconds(90).Minute}"
+        //        });
+
+        //        await cc.SaveDoc(new ConfigKey()
+        //        {
+        //            Key = ConfigKey.CleanupDeploymentsKeepMaxCount,
+        //            Value = "0"
+        //        });
+
+        //        await cc.SaveDoc(new ConfigKey()
+        //        {
+        //            Key = ConfigKey.CleanupDeploymentsKeepMaxDays,
+        //            Value = "1"
+        //        });
+
+        //        await cc.SaveDoc(new ConfigKey()
+        //        {
+        //            Key = ConfigKey.CleanupEventsKeepMaxCount,
+        //            Value = "0"
+        //        });
+
+        //        await cc.SaveDoc(new ConfigKey()
+        //        {
+        //            Key = ConfigKey.CleanupEventsKeepMaxDays,
+        //            Value = "1"
+        //        });
+        //    });
+        //});
+
         infraReferences.ApplicationSetup.Revive();
 
         await CheckUntilUrlAvailable("http://localhost:9125");
     }
 
-    private static async Task StartLocalController(string localNodeName, int uiPort)
+    private static async Task<Metapsi.WebServer.References> StartLocalController(string localNodeName, int uiPort)
     {
         var localControllerRefs = await MdsLocal.Program.SetupLocalController(new MdsLocal.InputArguments()
         {
@@ -245,6 +284,7 @@ public static class Program
         localControllerRefs.ApplicationSetup.Revive();
 
         await CheckUntilUrlAvailable($"http://localhost:{uiPort}");
+        return localControllerRefs;
     }
 
     private static async Task<HttpResponseMessage> SignIn()
@@ -481,6 +521,8 @@ public static class Program
     //    //await Task.Delay(System.TimeSpan.FromMinutes(10));
     //}
 
+    public static WebServer.References LastLocalController = null;
+
     public static async Task<Simplified.Configuration> CreateConfiguration(int nodesCount, int servicesPerNode)
     {
         var configuration = CreateConfiguration(LocalNodeName, nodesCount * servicesPerNode);
@@ -491,7 +533,7 @@ public static class Program
             KillProcesses(nodeName);
             InitializeLocalDatabase(nodeName + ".db");
             await SaveLocalNode("http://localhost:9125" , nodeName, "127.0.0.1", uiPort);
-            await StartLocalController(nodeName, uiPort);
+            LastLocalController = await StartLocalController(nodeName, uiPort);
             for (int serviceIndex = 0; serviceIndex < servicesPerNode; serviceIndex++)
             {
                 configuration.Services[nodeIndex * servicesPerNode + (serviceIndex % servicesPerNode)].Node = nodeName;

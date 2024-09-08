@@ -94,17 +94,34 @@ namespace MdsInfrastructure.Render
                     Panel.Style.Info,
                     b.Concat(b.Const("Last deployment: "), b.Get(clientModel, x => x.InfrastructureStatusData.Deployment.ConfigurationName)),
                     b.Concat(b.ItalianFormat(b.Get(clientModel, x => x.InfrastructureStatusData.Deployment.Timestamp)), b.Const(" total services "), b.AsString(totalServices), b.Const(" total infrastructure nodes "), b.AsString(totalNodes))),
+                b.Optional(
+                    b.Get(clientModel, x => x.NodePanels.Any()),
+                    b =>
+                    b.HtmlSpan(
+                        b =>
+                        {
+                            b.SetClass("font-semibold text-gray-600 px-4 pt-6");
+                        },
+                        b.Text("Nodes"))),
                 b.PanelsContainer(
-                    4,
-                    b.Map(
-                        b.Get(clientModel, x => x.NodePanels),
-                        (b, panelData) =>
-                        b.HtmlA(
-                            b =>
-                            {
-                                b.SetHref(b.Url<Routes.Status.Node, string>(b.Get(panelData, x => x.NodeName)));
-                            },
-                            b.NodePanel(panelData)))),
+                        4,
+                        b.Map(
+                            b.Get(clientModel, x => x.NodePanels),
+                            (b, panelData) =>
+                            b.HtmlA(
+                                b =>
+                                {
+                                    b.SetHref(b.Url<Routes.Status.Node, string>(b.Get(panelData, x => x.NodeName)));
+                                },
+                                b.NodePanel(panelData)))),
+                b.Optional(
+                    b.Get(clientModel, x => x.ApplicationPanels.Any()),
+                    b => b.HtmlSpan(
+                        b =>
+                        {
+                            b.SetClass("font-semibold text-gray-600 px-4 pt-6");
+                        },
+                        b.Text("Applications"))),
                 b.PanelsContainer(
                     4,
                     b.Map(
@@ -115,7 +132,22 @@ namespace MdsInfrastructure.Render
                             {
                                 b.SetHref(b.Url<Routes.Status.Application, string>(b.Get(panelData, x => x.ApplicationName)));
                             },
-                            b.ApplicationPanel(panelData)))));
+                            b.ApplicationPanel(panelData)))),
+                b.Optional(
+                    b.Get(clientModel, x => x.ServicePanels.Any()),
+                    b => b.HtmlSpan(
+                        b =>
+                        {
+                            b.SetClass("font-semibold text-gray-600 px-4 pt-6");
+                        },
+                        b.Text("Services"))),
+                b.PanelsContainer(
+                    4,
+                    b.Map(
+                        b.Get(clientModel, x => x.ServicePanels),
+                        (b, panelData) => b.ServicePanel(panelData))),
+                b.HtmlDiv(b => b.SetClass("p-4"))
+                );
         }
     }
 }
