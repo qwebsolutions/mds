@@ -25,6 +25,7 @@ namespace MdsInfrastructure
             public SqliteQueue DbQueue { get; set; }
             public MdsInfrastructureApplication.State InfrastructureState { get; set; }
             public Microsoft.AspNetCore.Builder.WebApplication WebApplication { get; set; }
+            public MailSender.State MailSender { get; set; }
         }
 
         public static References Setup(
@@ -186,44 +187,6 @@ namespace MdsInfrastructure
             //        {
             //            await cc.Do(Backend.StoreHealthStatus, healthStatus);
             //        });
-            //    });
-
-            //applicationSetup.MapEventIf<RedisListener.Event.NotificationReceived>(
-            //    e => e.NotificationType == nameof(InfrastructureEvent),
-            //    e =>
-            //    {
-            //        e.Logger.LogDebug($"Event received on {e.EventData.ChannelName} {e.EventData.Payload}");
-
-            //        var infraEvent = Metapsi.Serialize.FromJson<InfrastructureEvent>(e.EventData.Payload);
-
-            //        e.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
-            //        {
-            //            await MdsCommon.Db.SaveInfrastructureEvent(dbQueue, infraEvent);
-            //        });
-
-            //        if (mailSender != null)
-            //        {
-            //            e.Logger.LogDebug($"{mailSender.SmtpHostName} {mailSender.Sender}");
-
-            //            if (AlertTag.IsAlertTag(infraEvent.Criticality))
-            //            {
-            //                string subject = $"{arguments.InfrastructureName} {infraEvent.ShortDescription} {infraEvent.Source}";
-            //                string body = $"Event timestamp (UTC) {infraEvent.Timestamp.ToString("G", new System.Globalization.CultureInfo("it-IT"))}\n\n";
-            //                body += $"Infrastructure name   {arguments.InfrastructureName}\n\n";
-            //                body += $"Event source          {infraEvent.Source}\n\n";
-            //                body += $"Details\n{infraEvent.FullDescription}";
-
-            //                e.Using(mailSender, implementationGroup).EnqueueCommand(MailSender.Send, new MailSender.Mail()
-            //                {
-            //                    Subject = subject,
-            //                    ToAddresses = arguments.ErrorEmails,
-            //                    Body = body
-            //                });
-
-            //                e.Logger.LogDebug($"Mail sent: {subject}");
-            //            }
-            //        }
-
             //    });
 
             //applicationSetup.MapEvent<Backend.Event.BroadcastDeployment>(
@@ -501,7 +464,8 @@ namespace MdsInfrastructure
                 ApplicationSetup = applicationSetup,
                 ImplementationGroup = implementationGroup,
                 DbQueue = dbQueue,
-                InfrastructureState = infrastructure
+                InfrastructureState = infrastructure,
+                MailSender = mailSender,
             };
         }
 

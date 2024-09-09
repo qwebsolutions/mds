@@ -11,7 +11,7 @@ namespace MdsInfrastructure
 {
     public static partial class MdsInfrastructureApplication
     {
-        public static void MapIncomingEvents(this IEndpointRouteBuilder endpoint, InputArguments arguments)
+        public static void MapIncomingEvents(this IEndpointRouteBuilder endpoint, InputArguments arguments, MailSender.State mailSender)
         {
             endpoint.OnMessage<DeploymentEvent.DeploymentComplete>(async (cc, message) =>
             {
@@ -134,7 +134,7 @@ namespace MdsInfrastructure
 
             endpoint.OnMessage<ServiceCrash>(async (cc, message) =>
             {
-                await cc.Do(MdsCommon.Api.SaveInfrastructureEvent, new InfrastructureEvent()
+                var infraEvent = new InfrastructureEvent()
                 {
                     Criticality = InfrastructureEventCriticality.Fatal,
                     Source = message.ServiceName,
@@ -142,7 +142,24 @@ namespace MdsInfrastructure
                     FullDescription = $"Service {message.ServiceName} crashed. ({message.NodeName} {message.ServicePath})",
                     ShortDescription = "Service crash",
                     Type = InfrastructureEventType.ProcessExit
-                });
+                };
+
+                await cc.Do(MdsCommon.Api.SaveInfrastructureEvent, infraEvent);
+                if (mailSender != null)
+                {
+                    string subject = $"{arguments.InfrastructureName} {infraEvent.ShortDescription} {infraEvent.Source}";
+                    string body = $"Event timestamp (UTC) {infraEvent.Timestamp.ToString("G", new System.Globalization.CultureInfo("it-IT"))}\n\n";
+                    body += $"Infrastructure name   {arguments.InfrastructureName}\n\n";
+                    body += $"Event source          {infraEvent.Source}\n\n";
+                    body += $"Details\n{infraEvent.FullDescription}";
+
+                    await MailSender.Send(cc, mailSender, new MailSender.Mail()
+                    {
+                        Subject = subject,
+                        ToAddresses = arguments.ErrorEmails,
+                        Body = body
+                    });
+                }
             });
 
             endpoint.OnMessage<ServiceRecovered>(async (cc, message) =>
