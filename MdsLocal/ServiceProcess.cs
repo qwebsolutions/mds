@@ -1,5 +1,6 @@
 ﻿using MdsCommon;
 using Metapsi;
+using Metapsi.Sqlite;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -62,7 +63,7 @@ public static class ServiceProcessExtensions
     public static async Task SyncServices(
         this CommandContext commandContext,
         string nodeName,
-        DbQueue dbQueue,
+        SqliteQueue dbQueue,
         string servicesBasePath,
         string servicesDataPath,
         string buildTarget,
@@ -75,7 +76,7 @@ public static class ServiceProcessExtensions
         await syncResultBuilder.Enqueue(async (state) => state.Trigger = "Deployment");
 
         var installedServices = await GetInstalledServices(servicesBasePath);
-        var currentConfiguration = await dbQueue.Enqueue(LocalDb.LoadKnownConfiguration);
+        var currentConfiguration = await LocalDb.LoadKnownConfiguration(dbQueue);
 
         var union = installedServices.Union(currentConfiguration.Select(x => x.ServiceName)).Distinct().ToList();
 
@@ -165,7 +166,7 @@ public static class ServiceProcessExtensions
             }
         });
 
-        await dbQueue.Enqueue(async (dbPath) => await MdsLocal.LocalDb.RegisterSyncResult(dbPath, await syncResultBuilder.GetState()));
+        await LocalDb.RegisterSyncResult(dbQueue, await syncResultBuilder.GetState());
     }
 
     // null snapshot = uninstall

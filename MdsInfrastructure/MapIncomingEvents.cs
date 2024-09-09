@@ -42,7 +42,6 @@ namespace MdsInfrastructure
                     EventType = nameof(DeploymentEvent.ServiceStart),
                     ServiceName = message.ServiceName
                 });
-
                 await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(new RefreshDeploymentReviewModel());
             });
 
@@ -54,7 +53,6 @@ namespace MdsInfrastructure
                     EventType = nameof(DeploymentEvent.ServiceInstall),
                     ServiceName = message.ServiceName
                 });
-
                 await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(new RefreshDeploymentReviewModel());
             });
 
@@ -66,7 +64,6 @@ namespace MdsInfrastructure
                     EventType = nameof(DeploymentEvent.ServiceUninstall),
                     ServiceName = message.ServiceName
                 });
-
                 await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(new RefreshDeploymentReviewModel());
             });
 
@@ -116,6 +113,11 @@ namespace MdsInfrastructure
                         DeploymentId = message.DeploymentId,
                         HasErrors = hasErrors
                     });
+                }
+                else
+                {
+                    Console.WriteLine("!!!!!!!!!!! RefreshInfrastructureStatusModel");
+                    await DefaultMetapsiSignalRHub.HubContext.Clients.All.RaiseEvent(new RefreshInfrastructureStatusModel());
                 }
             });
 

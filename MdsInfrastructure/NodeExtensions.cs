@@ -30,9 +30,9 @@ namespace MdsInfrastructure
 
         public static async Task RegisterNodesMessaging(
             this CommandContext commandContext,
-            DbQueue dbQueue)
+            Metapsi.Sqlite.SqliteQueue dbQueue)
         {
-            var allNodes = await dbQueue.Enqueue(Db.LoadAllNodes);
+            var allNodes = await dbQueue.LoadAllNodes();
             foreach (var node in allNodes)
             {
                 commandContext.MapMessaging(node.NodeName, $"http://{node.MachineIp}:{node.UiPort}/event");

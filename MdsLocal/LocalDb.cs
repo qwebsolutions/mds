@@ -6,6 +6,7 @@ using Metapsi;
 using Metapsi.Sqlite;
 using Dapper;
 using System;
+using System.Transactions;
 
 namespace MdsLocal
 {
@@ -31,25 +32,24 @@ namespace MdsLocal
             return await Metapsi.Sqlite.Validate.ValidateSqliteSchema(fullDbPath, SchemaRecords);
         }
 
-        public static async Task<List<MdsCommon.ServiceConfigurationSnapshot>> LoadKnownConfiguration(string fullDbPath)
+        public static async Task<List<MdsCommon.ServiceConfigurationSnapshot>> LoadKnownConfiguration(SqliteQueue sqliteQueue)
         {
-            return await Db.WithRollback(fullDbPath, async c =>
+            return await sqliteQueue.WithRollback(async c =>
             {
-                return await c.Transaction.LoadStructures(MdsCommon.ServiceConfigurationSnapshot.Data);
+                return await c.LoadStructures(MdsCommon.ServiceConfigurationSnapshot.Data);
             });
         }
 
-        public static async Task<IEnumerable<SyncResult>> LoadSyncHistory(string fullDbPath)
+        public static async Task<IEnumerable<SyncResult>> LoadSyncHistory(SqliteQueue sqliteQueue)
         {
-            var syncHistory = await Db.WithRollback(
-                fullDbPath,
+            var syncHistory = await sqliteQueue.WithRollback(
                 async c =>
                 {
-                    var syncResults = await c.Transaction.LoadRecords<SyncResult>();
+                    var syncResults = await c.LoadRecords<SyncResult>();
                     foreach (var syncResult in syncResults)
                     {
                         var errorsQuery = $"select * from [{nameof(SyncResultLog)}] where {nameof(SyncResultLog.SyncResultId)} = @Id and \"type\" = '{SyncResultLogType.Error}'";
-                        var errors = await c.Connection.QueryAsync<SyncResultLog>(errorsQuery, new { syncResult.Id }, c.Transaction);
+                        var errors = await c.Connection.QueryAsync<SyncResultLog>(errorsQuery, new { syncResult.Id }, c);
                         syncResult.Log.AddRange(errors);
                     }
                     return syncResults;
@@ -58,13 +58,13 @@ namespace MdsLocal
             return syncHistory.OrderByDescending(x => x.Timestamp);
         }
 
-        public static async Task<SyncResult> LoadFullSyncResult(string fullDbPath, Guid id)
+        public static async Task<SyncResult> LoadFullSyncResult(SqliteQueue sqliteQueue, Guid id)
         {
-            var fullSyncResult = await Db.WithRollback(fullDbPath, async c =>
+            var fullSyncResult = await sqliteQueue.WithRollback(async c =>
             {
-                var syncResult = await c.Transaction.LoadRecord<SyncResult>(id);
+                var syncResult = await c.LoadRecord<SyncResult>(id);
 
-                var log = await c.Connection.QueryAsync<SyncResultLog>($"select * from [{nameof(SyncResultLog)}] where {nameof(SyncResultLog.SyncResultId)} = @id", new { id }, c.Transaction);
+                var log = await c.Connection.QueryAsync<SyncResultLog>($"select * from [{nameof(SyncResultLog)}] where {nameof(SyncResultLog.SyncResultId)} = @id", new { id }, c);
                 syncResult.Log.AddRange(log.OrderBy(x => x.Index));
 
                 return syncResult;
@@ -74,59 +74,55 @@ namespace MdsLocal
         }
 
         public static async Task SetNewConfiguration(
-            string fullDbPath,
+            SqliteQueue sqliteQueue,
             List<MdsCommon.ServiceConfigurationSnapshot> localControllerConfiguration)
         {
-            await Db.WithCommit(fullDbPath, async c =>
+            await sqliteQueue.WithCommit(async c =>
             {
-                await c.Connection.ExecuteAsync($"delete from {nameof(MdsCommon.ServiceConfigurationSnapshotParameter)}", transaction: c.Transaction);
-                await c.Connection.ExecuteAsync($"delete from {nameof(MdsCommon.ServiceConfigurationSnapshot)}", transaction: c.Transaction);
+                await c.Connection.ExecuteAsync($"delete from {nameof(MdsCommon.ServiceConfigurationSnapshotParameter)}", transaction: c);
+                await c.Connection.ExecuteAsync($"delete from {nameof(MdsCommon.ServiceConfigurationSnapshot)}", transaction: c);
 
-                await c.Transaction.InsertRecords(typeof(MdsCommon.ServiceConfigurationSnapshot), localControllerConfiguration);
-                await c.Transaction.InsertRecords(typeof(MdsCommon.ServiceConfigurationSnapshotParameter), localControllerConfiguration.SelectMany(x => x.ServiceConfigurationSnapshotParameters));
+                await c.InsertRecords(typeof(MdsCommon.ServiceConfigurationSnapshot), localControllerConfiguration);
+                await c.InsertRecords(typeof(MdsCommon.ServiceConfigurationSnapshotParameter), localControllerConfiguration.SelectMany(x => x.ServiceConfigurationSnapshotParameters));
             });
         }
 
-        public static LocalSettings GetLocalSettings(string nodeName, string fullDbPath, string infrastructureApiUrl)
-        {
-            return new LocalSettings()
-            {
-                FullDbPath = fullDbPath,
-                InfrastructureApiUrl = infrastructureApiUrl,
-                NodeName = nodeName
-            };
-        }
+        //public static LocalSettings GetLocalSettings(string nodeName, string fullDbPath, string infrastructureApiUrl)
+        //{
+        //    return new LocalSettings()
+        //    {
+        //        FullDbPath = fullDbPath,
+        //        InfrastructureApiUrl = infrastructureApiUrl,
+        //        NodeName = nodeName
+        //    };
+        //}
 
-        public static async Task RegisterSyncResult(string fullDbPath, SyncResult syncResult)
+        public static async Task RegisterSyncResult(SqliteQueue sqliteQueue, SyncResult syncResult)
         {
-            using (SQLiteConnection conn = new SQLiteConnection($"Data Source = {fullDbPath}"))
+            await sqliteQueue.WithCommit(async t =>
             {
-                conn.Open();
-                var transaction = conn.BeginTransaction();
-                Metapsi.Sqlite.DbAccess.Save(syncResult, transaction);
+                Metapsi.Sqlite.DbAccess.Save(syncResult, t);
 
-                await transaction.CreateTableIfNotExists<SyncResultLog>(f =>
+                await t.CreateTableIfNotExists<SyncResultLog>(f =>
                 {
                     if (f.FieldName == nameof(SyncResultLog.Id))
                     {
                         f.Definition = "ID STRING PRIMARY KEY";
                     }
                 });
-                Metapsi.Sqlite.DbAccess.SaveCollection(nameof(SyncResultLog.SyncResultId), syncResult.Log, transaction);
-                await transaction.CommitAsync();
-            }
+                Metapsi.Sqlite.DbAccess.SaveCollection(nameof(SyncResultLog.SyncResultId), syncResult.Log, t);
+            });
         }
 
 
-        public static async Task<FullLocalStatus> LoadFullLocalStatus(string fullDbPath, string nodeName)
+        public static async Task<FullLocalStatus> LoadFullLocalStatus(SqliteQueue sqliteQueue, string nodeName)
         {
-            return await Db.WithRollback(fullDbPath,
+            return await sqliteQueue.WithRollback(
                 async c =>
                 {
-                    var transaction = c.Transaction;
                     FullLocalStatus localStatus = new();
-                    localStatus.LocalServiceSnapshots.AddRange(await transaction.LoadRecords<MdsCommon.ServiceConfigurationSnapshot>());
-                    localStatus.SyncResults.AddRange(await transaction.LoadRecords<SyncResult>());
+                    localStatus.LocalServiceSnapshots.AddRange(await c.LoadRecords<MdsCommon.ServiceConfigurationSnapshot>());
+                    localStatus.SyncResults.AddRange(await c.LoadRecords<SyncResult>());
                     return localStatus;
                 });
         }

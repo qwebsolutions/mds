@@ -2,6 +2,7 @@
 using Metapsi;
 using Metapsi.Html;
 using Metapsi.Hyperapp;
+using Metapsi.Sqlite;
 using Metapsi.Syntax;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -11,7 +12,7 @@ namespace MdsInfrastructure
 {
     public static class Register
     {
-        public static void Everything(WebServer.References refs, DbQueue dbQueue)
+        public static void Everything(WebServer.References refs, SqliteQueue dbQueue)
         {
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Status.Infra, Routes.Status.Infra>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Status.Application, Routes.Status.Application, string>();

@@ -15,6 +15,7 @@ using System.Net;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Metapsi.Sqlite;
 
 namespace MdsInfrastructure
 {
@@ -22,13 +23,14 @@ namespace MdsInfrastructure
     public static class MdsInfrastructureApi
     {
 
-        public static void AddMdsLegacyApi(this WebApplication app, MdsInfrastructureApplication.InputArguments arguments)
+        public static void AddMdsLegacyApi(
+            this WebApplication app, 
+            MdsInfrastructureApplication.InputArguments arguments,
+            SqliteQueue sqliteQueue)
         {
-            string fullDbPath = Metapsi.RelativePath.SearchUpfolder(RelativePath.From.EntryPath, arguments.DbPath);
-
             app.MapGet("getinfrastructureconfiguration", async (CommandContext cc, string nodeName) =>
             {
-                var allNodes = await Db.LoadAllNodes(fullDbPath);
+                var allNodes = await sqliteQueue.LoadAllNodes();
                 InfrastructureNode node = allNodes.Single(x => x.NodeName == nodeName);
 
                 cc.Logger.LogDebug($"GetInfrastructureConfiguration: node name {nodeName}");
@@ -47,29 +49,29 @@ namespace MdsInfrastructure
 
             app.MapGet("getcontrollerconfiguration", async (string nodeName) =>
             {
-                var nodeServicesSnapshot = await Db.LoadNodeConfiguration(fullDbPath, nodeName);
+                var nodeServicesSnapshot = await Db.LoadNodeConfiguration(sqliteQueue, nodeName);
                 return nodeServicesSnapshot;
             });
 
             app.MapGet("getserviceconfiguration", async (string serviceName) =>
             {
-                var serviceSnapshot = await Db.LoadServiceConfiguration(fullDbPath, serviceName);
+                var serviceSnapshot = await Db.LoadServiceConfiguration(sqliteQueue, serviceName);
                 return serviceSnapshot;
             });
 
             app.MapGet("getcurrentdeployment", async () =>
             {
-                return await Db.LoadActiveDeployment(fullDbPath);
+                return await Db.LoadActiveDeployment(sqliteQueue);
             });
 
             app.MapGet("getinfrastructurestatus", async () =>
             {
-                return await Db.LoadFullInfrastructureHealthStatus(fullDbPath);
+                return await Db.LoadFullInfrastructureHealthStatus(sqliteQueue);
             });
 
             app.MapGet("getservicestatus/{serviceName}", async (string serviceName) =>
             {
-                var fullStatus = await Db.LoadFullInfrastructureHealthStatus(fullDbPath);
+                var fullStatus = await Db.LoadFullInfrastructureHealthStatus(sqliteQueue);
                 if (!fullStatus.SelectMany(x => x.ServiceStatuses).Any(x => x.ServiceName == serviceName))
                 {
                     //throw new System.NotImplementedException("Typed json response!"); // Keep the old API, maybe the new one can be attached to /api?

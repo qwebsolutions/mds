@@ -9,23 +9,23 @@ namespace MdsCommon
     public static partial class MdsCommonFunctions
     {
 
-        public static void AddInfrastructureEventsToSqlite(this ImplementationGroup implementationGroup, string fullDbPath)
-        {
-            //implementationGroup.MapCommand(SaveInfrastructureEvent, async (rc, infrastructureEvent) =>
-            //{
-            //    await Db.SaveInfrastructureEvent(fullDbPath, infrastructureEvent);
-            //});
+        //public static void AddInfrastructureEventsToSqlite(this ImplementationGroup implementationGroup, string fullDbPath)
+        //{
+        //    //implementationGroup.MapCommand(SaveInfrastructureEvent, async (rc, infrastructureEvent) =>
+        //    //{
+        //    //    await Db.SaveInfrastructureEvent(fullDbPath, infrastructureEvent);
+        //    //});
 
-            implementationGroup.MapRequest(MdsCommon.Api.GetAllInfrastructureEvents, async (rc) =>
-            {
-                return await Db.LoadAllInfrastructureEvents(fullDbPath);
-            });
+        //    implementationGroup.MapRequest(MdsCommon.Api.GetAllInfrastructureEvents, async (rc) =>
+        //    {
+        //        return await Db.LoadAllInfrastructureEvents(fullDbPath);
+        //    });
 
-            implementationGroup.MapRequest(MdsCommon.Api.GetMostRecentEventOfService, async (rc, serviceName) =>
-            {
-                return await Db.LoadMostRecentInfrastructureEvent(fullDbPath, serviceName);
-            });
-        }
+        //    implementationGroup.MapRequest(MdsCommon.Api.GetMostRecentEventOfService, async (rc, serviceName) =>
+        //    {
+        //        return await Db.LoadMostRecentInfrastructureEvent(fullDbPath, serviceName);
+        //    });
+        //}
 
         public static Guid EventsGridId = Guid.Parse("5fafc6be-aec9-49f7-9c9c-a95831dda204");
 
@@ -167,15 +167,15 @@ namespace MdsCommon
         //}
 
 
-        public static async Task<MdsCommon.ListInfrastructureEventsPage> ListInfrastructureEvents(CommandContext commandContext)
-        {
-            var allEvents = await commandContext.Do(MdsCommon.Api.GetAllInfrastructureEvents);
+        //public static async Task<MdsCommon.ListInfrastructureEventsPage> ListInfrastructureEvents(CommandContext commandContext)
+        //{
+        //    var allEvents = await commandContext.Do(MdsCommon.Api.GetAllInfrastructureEvents);
 
-            MdsCommon.ListInfrastructureEventsPage listInfrastructureEventsPage = new MdsCommon.ListInfrastructureEventsPage();
-            listInfrastructureEventsPage.InfrastructureEvents.AddRange(allEvents);
+        //    MdsCommon.ListInfrastructureEventsPage listInfrastructureEventsPage = new MdsCommon.ListInfrastructureEventsPage();
+        //    listInfrastructureEventsPage.InfrastructureEvents.AddRange(allEvents);
 
-            return listInfrastructureEventsPage;
-        }
+        //    return listInfrastructureEventsPage;
+        //}
 
         //public static UI.View RenderViewInfrastructureEventPage(MdsCommon.ViewInfrastructureEventPage dataModel, UI.ViewBuilder viewBuilder)
         //{
@@ -241,20 +241,20 @@ namespace MdsCommon
         //    page.SetValue(Keys.Persisted(key), serializedSingle);
         //}
 
-        public static HashSet<string> AlertTags()
-        {
-            HashSet<string> alertTags = new HashSet<string>();
-            alertTags.Add("critical");
-            alertTags.Add("fatal");
-            alertTags.Add("error");
+        //public static HashSet<string> AlertTags()
+        //{
+        //    HashSet<string> alertTags = new HashSet<string>();
+        //    alertTags.Add("critical");
+        //    alertTags.Add("fatal");
+        //    alertTags.Add("error");
 
-            return alertTags;
-        }
+        //    return alertTags;
+        //}
 
-        public static bool IsAlertTag(string tag)
-        {
-            return AlertTags().Contains(tag.ToLower());
-        }
+        //public static bool IsAlertTag(string tag)
+        //{
+        //    return AlertTags().Contains(tag.ToLower());
+        //}
 
     }
 }

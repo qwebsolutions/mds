@@ -8,34 +8,48 @@ using System.Threading.Tasks;
 
 namespace MdsCommon;
 
-public class DbQueue : TaskQueue<string>
-{
-    public DbQueue(string fullDbPath) : base(fullDbPath)
-    {
-    }
-}
+//public class DbQueue : TaskQueue<string>
+//{
+//    public long TotalMilliseconds { get; set; } = 0;
+//    public int TotalCalls { get; set; } = 0;
+
+//    public DbQueue(string fullDbPath) : base(fullDbPath)
+//    {
+//    }
+
+//    public override async Task Enqueue(Func<string, Task> task)
+//    {
+//        System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
+//        await base.Enqueue(task);
+//        TotalMilliseconds += sw.ElapsedMilliseconds;
+//        TotalCalls += 1;
+//    }
+
+//    public override async Task<TResult> Enqueue<TResult>(Func<string, Task<TResult>> task)
+//    {
+//        System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
+//        var result = await base.Enqueue(task);
+//        TotalMilliseconds += sw.ElapsedMilliseconds;
+//        TotalCalls += 1;
+//        var total = TimeSpan.FromMilliseconds(TotalMilliseconds);
+//        return result;
+//    }
+//}
 
 public static class DbQueueExtensions
 {
-    public static async Task SaveInfrastructureEvent(this DbQueue queue, MdsCommon.InfrastructureEvent infrastructureEvent)
+    public static async Task<List<InfrastructureEvent>> GetAllInfrastructureEvents(this SqliteQueue queue)
     {
-        await queue.Enqueue(async (dbPath) => await MdsCommon.Db.SaveInfrastructureEvent(dbPath, infrastructureEvent));
+        return await Db.LoadAllInfrastructureEvents(queue);
     }
 
-    public static async Task<List<InfrastructureEvent>> GetAllInfrastructureEvents(this DbQueue queue)
+    public static async Task DeleteInfrastructureEvent(this SqliteQueue queue, Guid id)
     {
-        return await queue.Enqueue(Db.LoadAllInfrastructureEvents);
+        await queue.WithCommit(
+                async c => await c.DeleteRecord<InfrastructureEvent>(id));
     }
 
-    public static async Task DeleteInfrastructureEvent(this DbQueue queue, Guid id)
-    {
-        await queue.Enqueue(
-            async (path) => await Metapsi.Sqlite.Db.WithCommit(
-                path, 
-                async c => await c.Transaction.DeleteRecord<InfrastructureEvent>(id)));
-    }
-
-    public static async Task<int> CleanupInfrastructureEvents(this DbQueue dbQueue, int keepMaxCount, int keepMaxDays)
+    public static async Task<int> CleanupInfrastructureEvents(this SqliteQueue dbQueue, int keepMaxCount, int keepMaxDays)
     {
         var allInfrastructureEvents = await dbQueue.GetAllInfrastructureEvents();
 

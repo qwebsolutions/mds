@@ -1,5 +1,7 @@
 #!/bin/sh
 
+dotnet clean ../Mds.Dev.sln
+
 source ./projects.sh
 for p in ${projects[@]}
 do

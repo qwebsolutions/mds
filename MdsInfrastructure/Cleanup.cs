@@ -36,7 +36,7 @@ public static class Cleanup
         this ApplicationSetup applicationSetup,
         ImplementationGroup implementationGroup,
         MdsInfrastructureApplication.State state,
-        DbQueue dbQueue)
+        SqliteQueue dbQueue)
     {
         var cleanupState = applicationSetup.AddBusinessState(new Cleanup.State());
 
@@ -130,7 +130,7 @@ public static class Cleanup
             {
                 try
                 {
-                    var allDeploymentHeaders = new List<Deployment>(await dbQueue.Enqueue(async (dbPath) => await Metapsi.Sqlite.Db.Records<Deployment>(dbPath)));
+                    var allDeploymentHeaders = new List<Deployment>(await dbQueue.WithRollback(async t => await t.LoadRecords<Deployment>()));
                     allDeploymentHeaders = allDeploymentHeaders.OrderByDescending(x => x.Timestamp).ToList();
 
                     var removedDeploymentsCount = 0;
@@ -158,22 +158,21 @@ public static class Cleanup
 
                         // Now it gets tricky. We need to remove snapshots only if they are not used by any deployment transition anymore
 
-                        await dbQueue.Enqueue(async (dbPath) => await Metapsi.Sqlite.Db.WithCommit(
-                            dbPath,
+                        await dbQueue.WithCommit(
                             async c =>
                             {
                                 foreach (var deploymentId in toRemoveIds)
                                 {
                                     if (deploymentId != activeDeploymentId)
                                     {
-                                        await c.Transaction.DeleteRecords<DbDeploymentEvent, Guid>(x => x.DeploymentId, new List<Guid>() { deploymentId });
-                                        await c.Transaction.DeleteRecords<DeploymentServiceTransition, Guid>(x => x.DeploymentId, new List<Guid>() { deploymentId });
-                                        await c.Transaction.DeleteRecord<Deployment>(deploymentId);
+                                        await c.DeleteRecords<DbDeploymentEvent, Guid>(x => x.DeploymentId, new List<Guid>() { deploymentId });
+                                        await c.DeleteRecords<DeploymentServiceTransition, Guid>(x => x.DeploymentId, new List<Guid>() { deploymentId });
+                                        await c.DeleteRecord<Deployment>(deploymentId);
                                     }
                                 }
 
-                                var allRemainingTransitions = await c.Transaction.LoadRecords<DeploymentServiceTransition>();
-                                var allSnapshotIds = await c.Connection.QueryAsync<Guid>($"select Id from {nameof(ServiceConfigurationSnapshot)}", transaction: c.Transaction);
+                                var allRemainingTransitions = await c.LoadRecords<DeploymentServiceTransition>();
+                                var allSnapshotIds = await c.Connection.QueryAsync<Guid>($"select Id from {nameof(ServiceConfigurationSnapshot)}", transaction: c);
                                 var stillUsedSnapshotIds = new List<Guid>();
                                 stillUsedSnapshotIds.AddRange(allRemainingTransitions.Select(x => x.FromServiceConfigurationSnapshotId));
                                 stillUsedSnapshotIds.AddRange(allRemainingTransitions.Select(x => x.ToServiceConfigurationSnapshotId));
@@ -183,10 +182,10 @@ public static class Cleanup
 
                                 foreach (var notUsedSnapshotId in notUsedSnapshotIds)
                                 {
-                                    await c.Transaction.DeleteRecord<ServiceConfigurationSnapshot>(notUsedSnapshotId);
-                                    await c.Transaction.DeleteRecords<ServiceConfigurationSnapshotParameter, Guid>(x => x.ServiceConfigurationSnapshotId, new List<Guid>() { notUsedSnapshotId });
+                                    await c.DeleteRecord<ServiceConfigurationSnapshot>(notUsedSnapshotId);
+                                    await c.DeleteRecords<ServiceConfigurationSnapshotParameter, Guid>(x => x.ServiceConfigurationSnapshotId, new List<Guid>() { notUsedSnapshotId });
                                 }
-                            }));
+                            });
 
                         removedDeploymentsCount = toRemoveIds.Count;
                     }
@@ -195,7 +194,7 @@ public static class Cleanup
                     
                     if (e.EventData.KeepEventsMaxCount > 0 || e.EventData.KeepEventsMaxDays > 0)
                     {
-                        var allNodes = await dbQueue.Enqueue(Db.LoadAllNodes);
+                        var allNodes = await Db.LoadAllNodes(dbQueue);
                         foreach (var node in allNodes)
                         {
                             commandContext.NotifyNode(node.NodeName, new CleanupInfrastructureEvents()

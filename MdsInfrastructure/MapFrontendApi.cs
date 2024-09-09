@@ -18,6 +18,7 @@ using System.Net.Http.Json;
 using System.Net;
 using Metapsi.SignalR;
 using System.Security.Cryptography.Xml;
+using Metapsi.Sqlite;
 
 namespace MdsInfrastructure
 {
@@ -68,11 +69,13 @@ namespace MdsInfrastructure
             }).RequireAuthorization().ExcludeFromDescription();
         }
 
-        public static void MapFrontendApi(this IEndpointRouteBuilder api, MdsInfrastructureApplication.InputArguments arguments)
+        public static void MapFrontendApi(
+            this IEndpointRouteBuilder api, 
+            MdsInfrastructureApplication.InputArguments arguments,
+            SqliteQueue sqliteQueue)
         {
             HttpClient httpClient = new HttpClient();
 
-            string fullDbPath = arguments.DbPath;
             string infrastructureName = arguments.InfrastructureName;
 
             api.MapPostCommand(Frontend.ToggleVersionEnabled, async (commandContext, httpContext, input) =>
@@ -476,7 +479,7 @@ namespace MdsInfrastructure
             api.MapGetRequest(MdsCommon.Api.GetInfrastructureNodeSettings,
                     async (CommandContext cc, HttpContext http, string nodeName) =>
                     {
-                        var allNodes = await Db.LoadAllNodes(fullDbPath);
+                        var allNodes = await sqliteQueue.LoadAllNodes();
                         InfrastructureNode node = allNodes.Single(x => x.NodeName == nodeName);
 
                         var buildManagerNodeUrl = arguments.BuildManagerNodeUrl;
@@ -500,7 +503,7 @@ namespace MdsInfrastructure
             api.MapGetRequest(MdsCommon.Api.GetCurrentNodeSnapshot,
                 async (CommandContext cc, HttpContext http, string nodeName) =>
                 {
-                    return await Db.LoadNodeConfiguration(arguments.DbPath, nodeName);
+                    return await Db.LoadNodeConfiguration(sqliteQueue, nodeName);
                 });
 
             api.MapGroup("model").RegisterModelApi();

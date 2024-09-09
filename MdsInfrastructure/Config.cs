@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using MdsCommon;
+using Metapsi.Sqlite;
 
 namespace MdsInfrastructure;
 
@@ -28,14 +29,13 @@ public static class ConfigExtensions
         this IEndpointRouteBuilder endpoint,
         ApplicationSetup applicationSetup,
         ImplementationGroup implementationGroup,
-        DbQueue dbQueue,
+        SqliteQueue sqliteQueue,
         MdsInfrastructureApplication.State infrastructureState)
     {
-        var fullDbPath = await dbQueue.GetState();
         var rootEndpoint = await endpoint.UseDocs(
             applicationSetup,
             implementationGroup,
-            fullDbPath,
+            sqliteQueue,
             b =>
             {
                 b.SetOverviewUrl("config");

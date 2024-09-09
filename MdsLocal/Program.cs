@@ -80,10 +80,9 @@ namespace MdsLocal
 
             await Migrate.All(arguments.DbPath);
 
-            string fullDbPath = Metapsi.RelativePath.SearchUpfolder(RelativePath.From.EntryPath, arguments.DbPath);
-            var dbQueue = new DbQueue(fullDbPath);
 
-            var localReferences = MdsLocalApplication.Setup(arguments, start, dbQueue);
+            var localReferences = MdsLocalApplication.Setup(arguments, start);
+            var dbQueue = localReferences.SqliteQueue;
 
             WebServer.References webServer = null;
 
@@ -137,7 +136,7 @@ namespace MdsLocal
             api.MapGetRequest(Frontend.LoadFullSyncResult, async (CommandContext commandContext, HttpContext httpContext, Guid syncResultId) =>
             {
 
-                var fullSyncResult = await LocalDb.LoadFullSyncResult(arguments.DbPath, syncResultId);
+                var fullSyncResult = await LocalDb.LoadFullSyncResult(dbQueue, syncResultId);
 
                 return new FullSyncResultResponse()
                 {

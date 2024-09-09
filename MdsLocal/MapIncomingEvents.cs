@@ -1,5 +1,6 @@
 ﻿using MdsCommon;
 using Metapsi;
+using Metapsi.Sqlite;
 using Microsoft.AspNetCore.Routing;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,11 +13,11 @@ public static partial class MdsLocalApplication
     public static void MapIncomingEvents(
         this IEndpointRouteBuilder endpoint,
         string nodeName,
-        DbQueue dbQueue)
+        SqliteQueue dbQueue)
     {
         endpoint.OnMessage<NodeConfigurationUpdate>(async (commandContext, newConfiguration) =>
         {
-            await dbQueue.Enqueue(async (fullDbPath) => await LocalDb.SetNewConfiguration(fullDbPath, newConfiguration.Snapshots.Where(snapshot => snapshot.NodeName == nodeName).ToList()));
+            await LocalDb.SetNewConfiguration(dbQueue, newConfiguration.Snapshots.Where(snapshot => snapshot.NodeName == nodeName).ToList());
             commandContext.PostEvent(new ConfigurationChanged()
             {
                 BinariesApiUrl = newConfiguration.BinariesApiUrl,

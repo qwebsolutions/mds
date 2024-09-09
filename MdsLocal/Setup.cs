@@ -1,5 +1,6 @@
 ﻿using MdsCommon;
 using Metapsi;
+using Metapsi.Sqlite;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,14 +19,16 @@ namespace MdsLocal
         {
             public ApplicationSetup ApplicationSetup { get; set; }
             public ImplementationGroup ImplementationGroup { get; set; }
+            public SqliteQueue SqliteQueue { get; set; }
         }
 
-        public static References Setup(InputArguments arguments, DateTime start, DbQueue dbQueue)
+        public static References Setup(InputArguments arguments, DateTime start)
         {
 
             string infrastructureUrl = arguments.InfrastructureApiUrl;
             string nodeName = arguments.NodeName;
             string fullDbPath = Metapsi.RelativePath.SearchUpfolder(RelativePath.From.EntryPath, arguments.DbPath);
+            SqliteQueue sqliteQueue = new SqliteQueue(fullDbPath);
 
             Mds.LogToServiceText(arguments.LogFilePath, start, new LogMessage()
             {
@@ -120,7 +123,7 @@ namespace MdsLocal
             applicationSetup.MapInternalEvents(
                 implementationGroup,
                 localAppState,
-                dbQueue,
+                sqliteQueue,
                 arguments.BuildTarget);
 
             #endregion Application setup
@@ -211,12 +214,12 @@ namespace MdsLocal
 
             implementationGroup.MapRequest(MdsLocalApplication.GetFullLocalStatus, async (rc) =>
             {
-                return await LocalDb.LoadFullLocalStatus(fullDbPath, nodeName);
+                return await LocalDb.LoadFullLocalStatus(sqliteQueue, nodeName);
             });
 
             implementationGroup.MapRequest(MdsLocalApplication.GetSyncHistory, async (rc) =>
             {
-                return await LocalDb.LoadSyncHistory(fullDbPath);
+                return await LocalDb.LoadSyncHistory(sqliteQueue);
             });
 
             implementationGroup.MapRequest(MdsLocalApplication.GetRunningProcesses, async (rc) =>
@@ -267,7 +270,7 @@ namespace MdsLocal
 
             implementationGroup.MapRequest(MdsCommon.Api.GetAllInfrastructureEvents, async (rc) =>
             {
-                return await MdsCommon.Db.LoadAllInfrastructureEvents(fullDbPath);
+                return await MdsCommon.Db.LoadAllInfrastructureEvents(sqliteQueue);
             });
 
             //    implementationGroup.MapCommand(MdsLocalApplication.StoreSyncResult, async (rc, syncResult) =>
@@ -294,7 +297,8 @@ namespace MdsLocal
             return new References()
             {
                 ApplicationSetup = applicationSetup,
-                ImplementationGroup = implementationGroup
+                ImplementationGroup = implementationGroup,
+                SqliteQueue = sqliteQueue
             };
         }
 

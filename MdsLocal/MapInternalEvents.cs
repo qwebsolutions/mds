@@ -1,5 +1,6 @@
 ﻿using MdsCommon;
 using Metapsi;
+using Metapsi.Sqlite;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
@@ -49,7 +50,7 @@ public static partial class MdsLocalApplication
         this ApplicationSetup applicationSetup,
         ImplementationGroup ig,
         MdsLocalApplication.State appState,
-        DbQueue dbQueue,
+        SqliteQueue sqliteQueue,
         string buildTarget)
     {
 
@@ -97,7 +98,7 @@ public static partial class MdsLocalApplication
                 nodeStartedEvent.NodeStatus = await GetNodeStatus(commandContext, state.NodeName);
                 commandContext.NotifyGlobal(nodeStartedEvent);
 
-                await dbQueue.SaveInfrastructureEvent(new InfrastructureEvent()
+                await sqliteQueue.SaveInfrastructureEvent(new InfrastructureEvent()
                 {
                     Criticality = nodeStartedEvent.Errors.Any() ? InfrastructureEventCriticality.Warning : InfrastructureEventCriticality.Info,
                     ShortDescription = $"Node started",
@@ -115,7 +116,7 @@ public static partial class MdsLocalApplication
                 await ServiceProcessExtensions.SyncServices(
                     commandContext,
                     appState.NodeName,
-                    dbQueue,
+                    sqliteQueue,
                     appState.ServicesBasePath,
                     appState.BaseDataFolder,
                     buildTarget,
@@ -140,7 +141,7 @@ public static partial class MdsLocalApplication
                     // Fatal crash, unrelated to a deployment
                     e.Using(appState, ig).EnqueueCommand(async (cc, state) =>
                     {
-                        await dbQueue.SaveInfrastructureEvent(new InfrastructureEvent()
+                        await sqliteQueue.SaveInfrastructureEvent(new InfrastructureEvent()
                         {
                             Criticality = InfrastructureEventCriticality.Fatal,
                             Source = e.EventData.ServiceName,
@@ -161,7 +162,7 @@ public static partial class MdsLocalApplication
 
                         await ServiceProcessExtensions.StartServiceProcess(cc, e.EventData.ServiceName, appState.NodeName, appState.ServicesBasePath, Guid.Empty);
 
-                        await dbQueue.SaveInfrastructureEvent(new InfrastructureEvent()
+                        await sqliteQueue.SaveInfrastructureEvent(new InfrastructureEvent()
                         {
                             Criticality = InfrastructureEventCriticality.Info,
                             Source = e.EventData.ServiceName,

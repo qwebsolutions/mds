@@ -7,15 +7,17 @@ using System.Collections.Generic;
 using MdsCommon;
 using Metapsi;
 using Metapsi.Sqlite;
+using System.Transactions;
+using System.Data.Common;
 
 namespace MdsInfrastructure
 {
     public static class Db
     {
         public static async Task<string> ValidateSchema(
-            string fullDbPath)
+            SqliteQueue sqliteQueue)
         {
-            var fieldsDiff = await Validate.ValidateSqliteSchema(fullDbPath, new System.Collections.Generic.List<Type>()
+            var fieldsDiff = await Validate.ValidateSqliteSchema(sqliteQueue.DbPath, new System.Collections.Generic.List<Type>()
             {
                 typeof(Application),
                 typeof(InfrastructureConfiguration),
@@ -44,69 +46,60 @@ namespace MdsInfrastructure
 
             if (fieldsDiff.SameFields == false)
             {
-                return $"Db schema mismatch: extra fields {Metapsi.Serialize.ToJson(fieldsDiff.ExtraFields)}, missing fields {Metapsi.Serialize.ToJson(fieldsDiff.MissingFields)}, db path {fullDbPath}";
+                return $"Db schema mismatch: extra fields {Metapsi.Serialize.ToJson(fieldsDiff.ExtraFields)}, missing fields {Metapsi.Serialize.ToJson(fieldsDiff.MissingFields)}, db path {sqliteQueue.DbPath}";
             }
 
             return string.Empty;
         }
 
         public static async Task<InfrastructureStatusData> LoadInfrastructureStatus(
-            string fullDbPath)
+            SqliteQueue sqliteQueue)
         {
-            return await Metapsi.Sqlite.Db.WithRollback(fullDbPath, async c =>
+            return await sqliteQueue.WithRollback(async c =>
             {
-                var activeDeployment = await c.Transaction.LoadActiveDeployment();
+                var activeDeployment = await c.LoadActiveDeployment();
                 var currentConfiguration = 
                 activeDeployment.ConfigurationHeaderId == Guid.Empty ?
-                new InfrastructureConfiguration() : await c.Transaction.LoadSpecificConfiguration(activeDeployment.ConfigurationHeaderId);
+                new InfrastructureConfiguration() : await c.LoadSpecificConfiguration(activeDeployment.ConfigurationHeaderId);
 
                 return new InfrastructureStatusData()
                 {
                     Deployment = activeDeployment,
-                    HealthStatus = await c.Transaction.LoadFullInfrastructureHealthStatus(),
-                    InfrastructureEvents = await c.Transaction.LoadAllInfrastructureEvents(),
+                    HealthStatus = await c.LoadFullInfrastructureHealthStatus(),
+                    InfrastructureEvents = await c.LoadAllInfrastructureEvents(),
                     InfrastructureConfiguration = currentConfiguration,
-                    InfrastructureNodes = (await c.Transaction.LoadRecords<InfrastructureNode>()).ToList()
+                    InfrastructureNodes = (await c.LoadRecords<InfrastructureNode>()).ToList()
                 };
             });
         }
 
         public static async Task<List<Deployment>> LoadDeploymentHistory(
-            string fullDbPath)
+            SqliteQueue sqliteQueue)
         {
-            using (SQLiteConnection conn = new SQLiteConnection($"Data Source = {fullDbPath}"))
-            {
-                conn.Open();
-                var transaction = conn.BeginTransaction();
-
-                return (await transaction.LoadRecords<Deployment>()).OrderByDescending(x => x.Timestamp).ToList();
-            }
+            var records = await sqliteQueue.WithRollback(async t => await t.LoadRecords<Deployment>());
+            return records.OrderByDescending(x => x.Timestamp).ToList();
         }
 
         public static async Task<List<Project>> LoadAllProjects(
-            string fullDbPath)
+            SqliteQueue sqliteQueue)
         {
-            return await Metapsi.Sqlite.Db.WithRollback(fullDbPath, x =>
-            {
-                return x.Transaction.LoadStructures(Project.Data);
-            });
+            return await sqliteQueue.WithRollback(async t => await t.LoadStructures(Project.Data));
         }
 
-        public static async Task<List<InfrastructureNode>> LoadAllNodes(
-            string fullDbPath)
+        public static async Task<List<InfrastructureNode>> LoadAllNodes(this SqliteQueue sqliteQueue)
         {
-            return await Metapsi.Sqlite.Db.WithRollback(fullDbPath, async x =>
+            return await sqliteQueue.WithRollback(async x =>
             {
-                return (await x.Transaction.LoadRecords<InfrastructureNode>()).ToList();
+                return (await x.LoadRecords<InfrastructureNode>()).ToList();
             });
         }
 
         public static async Task<List<InfrastructureService>> LoadAllServices(
-            string fullDbPath)
+            SqliteQueue sqliteQueue)
         {
-            return await Metapsi.Sqlite.Db.WithRollback(fullDbPath, async x =>
+            return await sqliteQueue.WithRollback(async x =>
             {
-                return (await x.Transaction.LoadRecords<InfrastructureService>()).ToList();
+                return (await x.LoadRecords<InfrastructureService>()).ToList();
             });
         }
 
@@ -116,13 +109,13 @@ namespace MdsInfrastructure
         /// <param name="fullDbPath"></param>
         /// <param name="remoteBinaries"></param>
         /// <returns></returns>
-        public static async Task<List<AlgorithmInfo>> RefreshBinaries(string fullDbPath, List<MdsCommon.AlgorithmInfo> remoteBinaries)
+        public static async Task<List<AlgorithmInfo>> RefreshBinaries(SqliteQueue sqliteQueue, List<MdsCommon.AlgorithmInfo> remoteBinaries)
         {
             List<AlgorithmInfo> newBinaries = new List<AlgorithmInfo>();
 
-            await Metapsi.Sqlite.Db.WithCommit(fullDbPath, async c =>
+            await sqliteQueue.WithCommit(async c =>
             {
-                var allProjects = await c.Transaction.LoadStructures(Project.Data);
+                var allProjects = await c.LoadStructures(Project.Data);
 
                 // Delete old entries
                 foreach (var project in allProjects)
@@ -134,20 +127,20 @@ namespace MdsInfrastructure
                             var stillValid = remoteBinaries.FirstOrDefault(x => x.Name == project.Name && x.Version == version.VersionTag && x.Target == binaries.Target);
                             if (stillValid == null)
                             {
-                                await c.Transaction.DeleteRecord(binaries);
+                                await c.DeleteRecord(binaries);
                                 version.Binaries.Remove(binaries);
                             }
                         }
                         if (!version.Binaries.Any())
                         {
-                            await c.Transaction.DeleteRecord(version);
+                            await c.DeleteRecord(version);
                             project.Versions.Remove(version);
                         }
                     }
 
                     if (!project.Versions.Any())
                     {
-                        await c.Transaction.DeleteRecord(project);
+                        await c.DeleteRecord(project);
                     }
                 }
 
@@ -155,7 +148,7 @@ namespace MdsInfrastructure
 
                 foreach (AlgorithmInfo algorithmInfo in remoteBinaries)
                 {
-                    var project = await c.Transaction.LoadRecord((Project x) => x.Name, algorithmInfo.Name);
+                    var project = await c.LoadRecord((Project x) => x.Name, algorithmInfo.Name);
 
                     if (project == null)
                     {
@@ -165,9 +158,9 @@ namespace MdsInfrastructure
                             Name = algorithmInfo.Name
                         };
 
-                        await c.Transaction.InsertRecord(project);
+                        await c.InsertRecord(project);
                     }
-                    var versions = await c.Transaction.LoadRecords((ProjectVersion x) => x.VersionTag, algorithmInfo.Version);
+                    var versions = await c.LoadRecords((ProjectVersion x) => x.VersionTag, algorithmInfo.Version);
                     var version = versions.SingleOrDefault(x => x.ProjectId == project.Id);
                     if (version == null)
                     {
@@ -178,10 +171,10 @@ namespace MdsInfrastructure
                             VersionTag = algorithmInfo.Version,
                         };
 
-                        await c.Transaction.InsertRecord(version);
+                        await c.InsertRecord(version);
                     }
 
-                    version = await c.Transaction.LoadStructure(ProjectVersion.Data, version.Id);
+                    version = await c.LoadStructure(ProjectVersion.Data, version.Id);
 
                     var build = version.Binaries.SingleOrDefault(x => x.ProjectVersionId == version.Id && x.Target == algorithmInfo.Target);
 
@@ -193,7 +186,7 @@ namespace MdsInfrastructure
                             ProjectVersionId = version.Id,
                             Target = algorithmInfo.Target
                         };
-                        await c.Transaction.InsertRecord(build);
+                        await c.InsertRecord(build);
                         newBinaries.Add(algorithmInfo);
                     }
                 }
@@ -202,34 +195,31 @@ namespace MdsInfrastructure
             return newBinaries;
         }
 
-        public static async Task SaveVersionEnabled(string fullDbPath, ProjectVersion projectVersion)
+        public static async Task SaveVersionEnabled(SqliteQueue sqliteQueue, ProjectVersion projectVersion)
         {
-            using (SQLiteConnection conn = new SQLiteConnection($"Data Source = {fullDbPath}"))
+            await sqliteQueue.WithCommit(async t =>
             {
-                conn.Open();
-                await conn.ExecuteAsync("update ProjectVersion set Enabled = @Enabled where Id = @Id", projectVersion);
-            }
+                await t.Connection.ExecuteAsync("update ProjectVersion set Enabled = @Enabled where Id = @Id", projectVersion, t);
+            });
         }
 
         public static async Task SaveConfiguration(
-            string fullDbPath,
+            SqliteQueue sqliteQueue,
             InfrastructureConfiguration singleConfiguration)
         {
-            await Metapsi.Sqlite.Db.WithCommit(fullDbPath,
-                async c =>
+            await sqliteQueue.WithCommit(async c =>
                 {
-                    await c.Transaction.SaveStructure(InfrastructureConfiguration.Data, singleConfiguration);
+                    await c.SaveStructure(InfrastructureConfiguration.Data, singleConfiguration);
                 });
         }
 
         public static async Task SaveNode(
-            string fullDbPath,
+            SqliteQueue sqliteQueue,
             InfrastructureNode node)
         {
-            await Metapsi.Sqlite.Db.WithCommit(fullDbPath,
-                async c =>
+            await sqliteQueue.WithCommit(async c =>
                 {
-                    await c.Transaction.SaveRecord(node);
+                    await c.SaveRecord(node);
                 });
         }
 
@@ -245,7 +235,7 @@ namespace MdsInfrastructure
         }
 
         public static async Task<bool> DeleteConfiguration(
-            string fullDbPath,
+            SqliteQueue sqliteQueue,
             Guid configurationId)
         {
             throw new NotImplementedException();
@@ -266,16 +256,16 @@ namespace MdsInfrastructure
         }
 
         public static async Task<Guid> ConfirmDeployment(
-            string fullDbPath,
+            SqliteQueue sqliteQueue,
             List<ServiceConfigurationSnapshot> infraSnapshot,
             InfrastructureConfiguration infrastructureConfiguration)
         {
-            var previousDeployment = await LoadActiveDeployment(fullDbPath);
+            var previousDeployment = await LoadActiveDeployment(sqliteQueue);
             var previousServiceConfigurations = previousDeployment.GetDeployedServices();
 
             Guid deploymentGuid = Guid.NewGuid();
 
-            await Metapsi.Sqlite.Db.WithCommit(fullDbPath, async c =>
+            await sqliteQueue.WithCommit(async c =>
             {
                 Deployment deployment = new Deployment()
                 {
@@ -287,7 +277,7 @@ namespace MdsInfrastructure
                     Timestamp = DateTime.UtcNow
                 };
 
-                await c.Transaction.InsertRecord(deployment);
+                await c.InsertRecord(deployment);
 
                 var allServiceNames = previousServiceConfigurations.Select(x => x.ServiceName).Union(infraSnapshot.Select(x => x.ServiceName));
 
@@ -302,7 +292,7 @@ namespace MdsInfrastructure
                             throw new ArgumentException();
                         case (ServiceConfigurationSnapshot removed, null):
                             {
-                                await c.Transaction.InsertRecord(new DeploymentServiceTransition()
+                                await c.InsertRecord(new DeploymentServiceTransition()
                                 {
                                     DeploymentId = deployment.Id,
                                     FromServiceConfigurationSnapshotId = removed.Id,
@@ -313,7 +303,7 @@ namespace MdsInfrastructure
                             break;
                         case (null, ServiceConfigurationSnapshot added):
                             {
-                                await c.Transaction.InsertRecord(new DeploymentServiceTransition()
+                                await c.InsertRecord(new DeploymentServiceTransition()
                                 {
                                     DeploymentId = deployment.Id,
                                     FromServiceConfigurationSnapshotId = Guid.Empty,
@@ -321,16 +311,16 @@ namespace MdsInfrastructure
                                 });
 
                                 // If snapshot is not yet saved, save it
-                                var savedSnapshot = await c.Transaction.LoadRecord<ServiceConfigurationSnapshot>(afterSnapshot.Id);
+                                var savedSnapshot = await c.LoadRecord<ServiceConfigurationSnapshot>(afterSnapshot.Id);
                                 if (savedSnapshot == null)
                                 {
-                                    await c.Transaction.SaveStructure(ServiceConfigurationSnapshot.Data, afterSnapshot);
+                                    await c.SaveStructure(ServiceConfigurationSnapshot.Data, afterSnapshot);
                                 }
                             }
                             break;
                         default:
                             {
-                                await c.Transaction.InsertRecord(new DeploymentServiceTransition()
+                                await c.InsertRecord(new DeploymentServiceTransition()
                                 {
                                     DeploymentId = deployment.Id,
                                     FromServiceConfigurationSnapshotId = beforeSnapshot.Id,
@@ -338,10 +328,10 @@ namespace MdsInfrastructure
                                 });
 
                                 // If snapshot is not yet saved, save it
-                                var savedSnapshot = await c.Transaction.LoadRecord<ServiceConfigurationSnapshot>(afterSnapshot.Id);
+                                var savedSnapshot = await c.LoadRecord<ServiceConfigurationSnapshot>(afterSnapshot.Id);
                                 if (savedSnapshot == null)
                                 {
-                                    await c.Transaction.SaveStructure(ServiceConfigurationSnapshot.Data, afterSnapshot);
+                                    await c.SaveStructure(ServiceConfigurationSnapshot.Data, afterSnapshot);
                                 }
                             }
                             break;
@@ -353,17 +343,13 @@ namespace MdsInfrastructure
         }
 
         public static async Task<List<NoteType>> LoadAllNoteTypes(
-            string fullDbPath)
+            SqliteQueue sqliteQueue)
         {
-            using (SQLiteConnection conn = new SQLiteConnection($"Data Source = {fullDbPath}"))
+            return await sqliteQueue.WithRollback(async t =>
             {
-                conn.Open();
-                var transaction = conn.BeginTransaction();
-
-                var allNoteTypes = await transaction.LoadRecords<NoteType>();
-                await transaction.RollbackAsync();
+                var allNoteTypes = await t.LoadRecords<NoteType>();
                 return allNoteTypes.ToList();
-            }
+            });
         }
 
 
@@ -382,34 +368,34 @@ namespace MdsInfrastructure
             }
         }
 
-        public static async Task<Deployment> LoadActiveDeployment(string fullDbPath)
+        public static async Task<Deployment> LoadActiveDeployment(SqliteQueue sqliteQueue)
         {
-            return await Metapsi.Sqlite.Db.WithRollback(fullDbPath, async c =>
+            return await sqliteQueue.WithRollback(async c =>
             {
-                return await c.Transaction.LoadActiveDeployment();
+                return await c.LoadActiveDeployment();
             });
         }
 
-        public static async Task SaveDeploymentEvent(string fullDbPath, DbDeploymentEvent dbDeploymentEvent)
+        public static async Task SaveDeploymentEvent(SqliteQueue sqliteQueue, DbDeploymentEvent dbDeploymentEvent)
         {
-            await Metapsi.Sqlite.Db.WithCommit(fullDbPath, async c =>
+            await sqliteQueue.WithCommit(async c =>
             {
-                await c.Transaction.SaveRecord(dbDeploymentEvent);
+                await c.SaveRecord(dbDeploymentEvent);
             });
         }
 
-        public static async Task<List<DbDeploymentEvent>> GetDeploymentEvents(string fullDbPath, Guid deploymentId)
+        public static async Task<List<DbDeploymentEvent>> GetDeploymentEvents(SqliteQueue sqliteQueue, Guid deploymentId)
         {
-            return await Metapsi.Sqlite.Db.WithRollback(fullDbPath, async c =>
+            return await sqliteQueue.WithRollback(async c =>
             {
-                var deploymentEvents = await c.Transaction.LoadRecords<DbDeploymentEvent, Guid>(x => x.DeploymentId, deploymentId);
+                var deploymentEvents = await c.LoadRecords<DbDeploymentEvent, Guid>(x => x.DeploymentId, deploymentId);
                 return deploymentEvents.ToList();
             });
         }
 
-        public static async Task<MdsCommon.ServiceConfigurationSnapshot> LoadIdenticalSnapshot(string fullDbPath, MdsCommon.ServiceConfigurationSnapshot expectedSnapshot)
+        public static async Task<MdsCommon.ServiceConfigurationSnapshot> LoadIdenticalSnapshot(SqliteQueue sqliteQueue, MdsCommon.ServiceConfigurationSnapshot expectedSnapshot)
         {
-            return await Metapsi.Sqlite.Db.WithRollback(fullDbPath,
+            return await sqliteQueue.WithRollback(
                 async c =>
                 {
 
@@ -419,7 +405,7 @@ namespace MdsInfrastructure
 
                     var headQuery = $"select * from {nameof(ServiceConfigurationSnapshot)} where {whereFields}";
 
-                    var multipleSnapshotsWithSameHeaderData = await c.Connection.QueryAsync<MdsCommon.ServiceConfigurationSnapshot>(headQuery, expectedSnapshot, c.Transaction);
+                    var multipleSnapshotsWithSameHeaderData = await c.Connection.QueryAsync<MdsCommon.ServiceConfigurationSnapshot>(headQuery, expectedSnapshot, c);
 
                     // If there is no snapshot with same header data, for sure parameters are not relevant anymore
                     if (!multipleSnapshotsWithSameHeaderData.Any())
@@ -429,7 +415,7 @@ namespace MdsInfrastructure
 
                     foreach (var savedSnapshotHeader in multipleSnapshotsWithSameHeaderData)
                     {
-                        var savedFullSnapshot = await c.Transaction.LoadStructure(ServiceConfigurationSnapshot.Data, savedSnapshotHeader.Id);
+                        var savedFullSnapshot = await c.LoadStructure(ServiceConfigurationSnapshot.Data, savedSnapshotHeader.Id);
 
                         if (MatchesAllParameters(savedFullSnapshot, expectedSnapshot))
                         {
@@ -534,20 +520,20 @@ namespace MdsInfrastructure
             return deployment;
         }
 
-        public static async Task<Deployment> LoadSpecificDeployment(string fullDbPath, Guid deploymentId)
+        public static async Task<Deployment> LoadSpecificDeployment(SqliteQueue sqliteQueue, Guid deploymentId)
         {
-            return await Metapsi.Sqlite.Db.WithRollback(fullDbPath, async c =>
+            return await sqliteQueue.WithRollback(async c =>
             {
-                return await c.Transaction.LoadSpecificDeployment(deploymentId);
+                return await c.LoadSpecificDeployment(deploymentId);
             });
         }
 
 
         public static async Task<List<MdsCommon.ServiceConfigurationSnapshot>> LoadNodeConfiguration(
-            string fullDbPath,
+            SqliteQueue sqliteQueue,
             string nodeName)
         {
-            var lastDeployment = await LoadActiveDeployment(fullDbPath);
+            var lastDeployment = await LoadActiveDeployment(sqliteQueue);
 
             if (!lastDeployment.GetDeployedServices().Any(x => x.NodeName == nodeName))
                 return new();
@@ -559,22 +545,22 @@ namespace MdsInfrastructure
         private static int healthStatusCalls = 0;
 
         public static async Task StoreHealthStatus(
-            string fullDbPath,
+            SqliteQueue sqliteQueue,
             MdsCommon.MachineStatus healthStatus)
         {
             System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
 
-            await Metapsi.Sqlite.Db.WithCommit(fullDbPath, async c =>
+            await sqliteQueue.WithCommit(async c =>
             {
                 var nodeName = new List<string>() { healthStatus.NodeName };
-                var previous = await c.Transaction.LoadStructures<MachineStatus, string>(MachineStatus.Data, x => x.NodeName, nodeName);
+                var previous = await c.LoadStructures<MachineStatus, string>(MachineStatus.Data, x => x.NodeName, nodeName);
                 Console.WriteLine(Metapsi.Serialize.ToJson(previous));
                 if (previous.SingleOrDefault() != null)
                 {
-                    await c.Transaction.DeleteStructure(previous.Single(), MachineStatus.Data.ChildrenNodes);
+                    await c.DeleteStructure(previous.Single(), MachineStatus.Data.ChildrenNodes);
                 }
 
-                await c.Transaction.InsertStructure(healthStatus, MachineStatus.Data.ChildrenNodes);
+                await c.InsertStructure(healthStatus, MachineStatus.Data.ChildrenNodes);
             });
 
             System.Diagnostics.Debug.WriteLine($"Store health status: {sw.ElapsedMilliseconds} ms");
@@ -585,10 +571,10 @@ namespace MdsInfrastructure
         }
 
         public static async Task<MdsCommon.ServiceConfigurationSnapshot> LoadServiceConfiguration(
-            string fullDbPath,
+            SqliteQueue sqliteQueue,
             string serviceName)
         {
-            var currentDeployment = await LoadActiveDeployment(fullDbPath);
+            var currentDeployment = await LoadActiveDeployment(sqliteQueue);
 
             var toSnapshots = currentDeployment.Transitions.Where(x => x.ToSnapshot != null).Select(x => x.ToSnapshot);
             var config = toSnapshots.SingleOrDefault(x => x.ServiceName == serviceName);
@@ -601,49 +587,42 @@ namespace MdsInfrastructure
             return lastDeployment;
         }
 
-        public static async Task<Deployment> LoadLastDeploymentOfConfiguration(string fullDbPath, Guid configurationId)
+        public static async Task<Deployment> LoadLastDeploymentOfConfiguration(SqliteQueue sqliteQueue, Guid configurationId)
         {
-            using (SQLiteConnection conn = new SQLiteConnection($"Data Source = {fullDbPath}"))
+            return await sqliteQueue.WithRollback(async t =>
             {
-                conn.Open();
-                Deployment lastDeployment = await conn.QueryFirstOrDefaultAsync<Deployment>("select * from Deployment where ConfigurationHeaderId = @configurationId order by datetime(timestamp) desc limit 1", new { configurationId });
+                Deployment lastDeployment = await t.Connection.QueryFirstOrDefaultAsync<Deployment>("select * from Deployment where ConfigurationHeaderId = @configurationId order by datetime(timestamp) desc limit 1", new { configurationId }, t);
                 return lastDeployment;
-            }
-        }
-
-        public static async Task<List<EnvironmentType>> LoadEnvironmentTypes(string fullDbPath)
-        {
-            return await Metapsi.Sqlite.Db.WithRollback(fullDbPath, async c =>
-            {
-                return (await c.Transaction.LoadRecords<EnvironmentType>()).ToList();
             });
         }
 
-        public static async Task<System.Collections.Generic.List<ParameterType>> LoadParameterTypes(string fullDbPath)
+        public static async Task<List<EnvironmentType>> LoadEnvironmentTypes(SqliteQueue sqliteQueue)
         {
-            using (SQLiteConnection conn = new SQLiteConnection($"Data Source = {fullDbPath}"))
+            return await sqliteQueue.WithRollback(async c =>
             {
-                conn.Open();
-                var transaction = conn.BeginTransaction();
-
-                System.Collections.Generic.List<ParameterType> parameterTypes = new System.Collections.Generic.List<ParameterType>();
-
-                parameterTypes.AddRange(await transaction.LoadRecords<ParameterType>());
-
-                transaction.Commit();
-
-                return parameterTypes;
-            }
+                return (await c.LoadRecords<EnvironmentType>()).ToList();
+            });
         }
 
-        public static async Task<ConfigurationHeadersList> LoadConfigurationHeaders(string fullDbPath)
+        public static async Task<System.Collections.Generic.List<ParameterType>> LoadParameterTypes(SqliteQueue sqliteQueue)
         {
-            return await Metapsi.Sqlite.Db.WithRollback(
-                fullDbPath,
+            return await sqliteQueue.WithRollback(async t =>
+            {
+                System.Collections.Generic.List<ParameterType> parameterTypes = new System.Collections.Generic.List<ParameterType>();
+
+                parameterTypes.AddRange(await t.LoadRecords<ParameterType>());
+
+                return parameterTypes;
+            });
+        }
+
+        public static async Task<ConfigurationHeadersList> LoadConfigurationHeaders(SqliteQueue sqliteQueue)
+        {
+            return await sqliteQueue.WithRollback(
                 async c =>
                 {
-                    var configRows = (await c.Transaction.LoadRecords<InfrastructureConfiguration>()).ToList();
-                    var serviceRows = await c.Transaction.LoadRecords<InfrastructureService>();
+                    var configRows = (await c.LoadRecords<InfrastructureConfiguration>()).ToList();
+                    var serviceRows = await c.LoadRecords<InfrastructureService>();
 
                     foreach (var config in configRows)
                     {
@@ -657,13 +636,12 @@ namespace MdsInfrastructure
                 });
         }
 
-        public static async Task<InfrastructureConfiguration> LoadSpecificConfiguration(string fullDbPath, Guid id)
+        public static async Task<InfrastructureConfiguration> LoadSpecificConfiguration(SqliteQueue sqliteQueue, Guid id)
         {
-            return await Metapsi.Sqlite.Db.WithRollback(
-                fullDbPath,
+            return await sqliteQueue.WithRollback(
                 async c =>
                 {
-                    return await c.Transaction.LoadSpecificConfiguration(id);
+                    return await c.LoadSpecificConfiguration(id);
                 });
         }
 
@@ -674,13 +652,12 @@ namespace MdsInfrastructure
             return await transaction.LoadStructure(InfrastructureConfiguration.Data, id);
         }
 
-        public static async Task<InfrastructureConfiguration> LoadCurrentConfiguration(string fullDbPath)
+        public static async Task<InfrastructureConfiguration> LoadCurrentConfiguration(SqliteQueue sqliteQueue)
         {
-            return await Metapsi.Sqlite.Db.WithRollback(
-                fullDbPath,
+            return await sqliteQueue.WithRollback(
                 async c =>
                 {
-                    return await c.Transaction.LoadCurrentConfiguration();
+                    return await c.LoadCurrentConfiguration();
                 });
         }
 
@@ -693,13 +670,12 @@ namespace MdsInfrastructure
             return await transaction.LoadStructure(InfrastructureConfiguration.Data, activeDeployment.ConfigurationHeaderId);
         }
 
-        public static async Task<List<MdsCommon.MachineStatus>> LoadFullInfrastructureHealthStatus(string fullDbPath)
+        public static async Task<List<MdsCommon.MachineStatus>> LoadFullInfrastructureHealthStatus(SqliteQueue sqliteQueue)
         {
-            return await Metapsi.Sqlite.Db.WithRollback(
-                fullDbPath,
+            return await sqliteQueue.WithRollback(
                 async c =>
                 {
-                    return await c.Transaction.LoadFullInfrastructureHealthStatus();
+                    return await c.LoadFullInfrastructureHealthStatus();
                 });
         }
 

@@ -3,6 +3,8 @@ using MdsCommon;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Metapsi.Sqlite;
+using System.Collections;
 
 namespace MdsInfrastructure
 {
@@ -20,7 +22,7 @@ namespace MdsInfrastructure
         {
             public ApplicationSetup ApplicationSetup { get; set; }
             public ImplementationGroup ImplementationGroup { get; set; }
-            public DbQueue DbQueue { get; set; }
+            public SqliteQueue DbQueue { get; set; }
             public MdsInfrastructureApplication.State InfrastructureState { get; set; }
             public Microsoft.AspNetCore.Builder.WebApplication WebApplication { get; set; }
         }
@@ -30,6 +32,8 @@ namespace MdsInfrastructure
             DateTime start)
         {
             string fullDbPath = Metapsi.RelativePath.SearchUpfolder(RelativePath.From.EntryPath, arguments.DbPath);
+
+            var dbQueue = new SqliteQueue(fullDbPath);
 
             Metapsi.Mds.LogToServiceText(arguments.LogFilePath, start, new LogMessage()
             {
@@ -49,7 +53,7 @@ namespace MdsInfrastructure
                 {
                     case Metapsi.Log.Error error:
                         {
-                            await MdsCommon.Db.SaveInfrastructureEvent(fullDbPath, new InfrastructureEvent()
+                            await MdsCommon.Db.SaveInfrastructureEvent(dbQueue, new InfrastructureEvent()
                             {
                                 Criticality = "Error",
                                 FullDescription = error.ToString(),
@@ -63,7 +67,7 @@ namespace MdsInfrastructure
 
                     case Metapsi.Log.Exception ex:
                         {
-                            await MdsCommon.Db.SaveInfrastructureEvent(fullDbPath, new InfrastructureEvent()
+                            await MdsCommon.Db.SaveInfrastructureEvent(dbQueue, new InfrastructureEvent()
                             {
                                 Criticality = "Error",
                                 FullDescription = ex.ToString(),
@@ -82,7 +86,6 @@ namespace MdsInfrastructure
             #region Execution queue states
 
             MdsInfrastructureApplication.State infrastructure = applicationSetup.AddBusinessState(new MdsInfrastructureApplication.State());
-            var dbQueue = new DbQueue(fullDbPath);
             HttpServer.State httpGateway = applicationSetup.AddBusinessState(new HttpServer.State());
 
             var redisNotifier = applicationSetup.AddBusinessState(new RedisNotifier.State());
@@ -97,12 +100,12 @@ namespace MdsInfrastructure
 
             implementationGroup.MapRequest(MdsCommon.Api.GetAllInfrastructureEvents, async (rc) =>
             {
-                return await MdsCommon.Db.LoadAllInfrastructureEvents(fullDbPath);
+                return await MdsCommon.Db.LoadAllInfrastructureEvents(dbQueue);
             });
 
             implementationGroup.MapRequest(MdsCommon.Api.GetMostRecentEventOfService, async (rc, serviceName) =>
             {
-                return await MdsCommon.Db.LoadMostRecentInfrastructureEvent(fullDbPath, serviceName);
+                return await MdsCommon.Db.LoadMostRecentInfrastructureEvent(dbQueue, serviceName);
             });
 
             MailSender.State mailSender = null;
@@ -167,7 +170,7 @@ namespace MdsInfrastructure
 
                     e.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
                     {
-                        await dbQueue.Enqueue(async (fullDbPath) => await MdsCommon.Db.SaveInfrastructureEvent(fullDbPath, infraEvent));
+                        await MdsCommon.Db.SaveInfrastructureEvent(dbQueue, infraEvent);
                     });
 
                     if (mailSender != null)
@@ -210,7 +213,7 @@ namespace MdsInfrastructure
             applicationSetup.MapEvent<Backend.Event.BinariesSynchronized>(
                 e =>
                 {
-                    var _ = MdsCommon.Db.SaveInfrastructureEvent(fullDbPath, new MdsCommon.InfrastructureEvent()
+                    var _ = MdsCommon.Db.SaveInfrastructureEvent(dbQueue, new MdsCommon.InfrastructureEvent()
                     {
                         Criticality = "Info",
                         ShortDescription = "Binaries synchronized",
@@ -249,10 +252,7 @@ namespace MdsInfrastructure
                 // TODO: Does this even compile?
                 await rc.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
                 {
-                    var serviceConfiguration = await dbQueue.Enqueue(async (fullDbPath) =>
-                    {
-                        return await Db.LoadServiceConfiguration(fullDbPath, serviceName);
-                    });
+                    var serviceConfiguration = await Db.LoadServiceConfiguration(dbQueue, serviceName);
 
                     var service = serviceConfiguration;
 
@@ -329,7 +329,7 @@ namespace MdsInfrastructure
                             case "getinfrastructureconfiguration":
                                 {
                                     string nodeName = getRequest.Segments.ElementAt(1);
-                                    var allNodes = await Db.LoadAllNodes(fullDbPath);
+                                    var allNodes = await Db.LoadAllNodes(dbQueue);
                                     InfrastructureNode node = allNodes.Single(x => x.NodeName == nodeName);
                                     rc.Logger.LogDebug($"GetInfrastructureConfiguration: node name {nodeName}");
 
@@ -367,29 +367,29 @@ namespace MdsInfrastructure
                             case "getcontrollerconfiguration":
                                 {
                                     string nodeName = getRequest.Segments.ElementAt(1);
-                                    var nodeServicesSnapshot = await Db.LoadNodeConfiguration(fullDbPath, nodeName);
+                                    var nodeServicesSnapshot = await Db.LoadNodeConfiguration(dbQueue, nodeName);
                                     return ToJsonResponse(nodeServicesSnapshot);
                                 }
                             case "getserviceconfiguration":
                                 {
                                     string serviceName = getRequest.Segments.ElementAt(1);
-                                    var serviceSnapshot = await Db.LoadServiceConfiguration(fullDbPath, serviceName);
+                                    var serviceSnapshot = await Db.LoadServiceConfiguration(dbQueue, serviceName);
                                     substitutionValues.Add("ServiceName", serviceName);
                                     return ToJsonResponse(serviceSnapshot);
                                 }
                             case "getcurrentdeployment":
                                 {
-                                    var deployment = await Db.LoadActiveDeployment(fullDbPath);
+                                    var deployment = await Db.LoadActiveDeployment(dbQueue);
                                     return ToJsonResponse(deployment);
                                 }
                             case "getinfrastructurestatus":
                                 {
-                                    return ToJsonResponse(await Db.LoadFullInfrastructureHealthStatus(fullDbPath));
+                                    return ToJsonResponse(await Db.LoadFullInfrastructureHealthStatus(dbQueue));
                                 }
                             case "getservicestatus":
                                 {
                                     string serviceName = getRequest.Segments.ElementAt(1);
-                                    var fullStatus = await Db.LoadFullInfrastructureHealthStatus(fullDbPath);
+                                    var fullStatus = await Db.LoadFullInfrastructureHealthStatus(dbQueue);
                                     if (!fullStatus.SelectMany(x => x.ServiceStatuses).Any(x => x.ServiceName == serviceName))
                                     {
                                         return ToTypedJsonResponse(new ServiceStatus() { ServiceName = serviceName });
@@ -400,7 +400,7 @@ namespace MdsInfrastructure
                             case "restartservice":
                                 {
                                     string serviceName = getRequest.Segments.ElementAt(1);
-                                    var serviceConfiguration = await Db.LoadServiceConfiguration(fullDbPath, serviceName);
+                                    var serviceConfiguration = await Db.LoadServiceConfiguration(dbQueue, serviceName);
 
                                     var service = serviceConfiguration;
 
@@ -413,7 +413,7 @@ namespace MdsInfrastructure
                                         };
                                     }
 
-                                    var nodes = await Db.LoadAllNodes(fullDbPath);
+                                    var nodes = await Db.LoadAllNodes(dbQueue);
                                     var node = nodes.FirstOrDefault(x => x.NodeName == service.NodeName);
 
                                     if (node == null)
