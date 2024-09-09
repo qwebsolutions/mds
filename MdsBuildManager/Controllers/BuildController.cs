@@ -3,38 +3,34 @@ using Microsoft.TeamFoundation.Build.WebApi;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
 //using Microsoft.VisualStudio.Services.ServiceHooks.WebApi;
-using Serilog;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.AspNet.WebHooks.Payloads;
-using System.Security.Cryptography;
 using System.IO.Compression;
 using MdsCommon;
 using MdsBuildManager;
 using Metapsi;
 using Microsoft.AspNetCore.Http;
+using Metapsi.Sqlite;
+using System.Transactions;
 
 namespace Algorithm
 {
     [Route("")]
     public partial class BuildController : Controller
     {
-        private readonly Processor processor;
         private InputArguments InputArguments = null;
         private readonly HashHelper hashHelper;
         private readonly CommandContext commandContext;
 
         public BuildController(
-            Processor processor,
             InputArguments inputArguments,
             HashHelper hashHelper,
             CommandContext commandContext)
         {
-            this.processor = processor;
             this.InputArguments = inputArguments;
             this.hashHelper = hashHelper;
             this.commandContext = commandContext;
@@ -80,7 +76,7 @@ namespace Algorithm
                                         buildId: buildId,
                                         artifactName: InputArguments.ArtifactsFolder);
 
-                    var knownHashes = this.hashHelper.GetBinariesData();
+                    var knownHashes = this.hashHelper.GetBinariesData(Program.SqliteQueue);
 
                     using (var archive = new ZipArchive(artifact))
                     {
@@ -104,7 +100,8 @@ namespace Algorithm
                                     commitsha,
                                     tag,
                                     version,
-                                    buildId);
+                                    buildId,
+                                    Program.SqliteQueue);
                             }
                         }
                     }
@@ -114,7 +111,7 @@ namespace Algorithm
                     Console.WriteLine(ex.Message);
                 }
             };
-            await processor.AddProcess(work);
+            var notAwaited = work();
 
             return Ok();
         }
@@ -131,8 +128,8 @@ namespace Algorithm
         {
             try
             {
-                var knownBuilds = await hashHelper.GetBuildData();
-                var knownBinaries = await hashHelper.GetBinariesData();
+                var knownBuilds = await hashHelper.GetBuildData(Program.SqliteQueue);
+                var knownBinaries = await hashHelper.GetBinariesData(Program.SqliteQueue);
 
                 var projectName = Request.Form["project"];
                 var version = Request.Form["version"];
@@ -195,7 +192,8 @@ namespace Algorithm
                     revision, 
                     revision, 
                     version, 
-                    0);
+                    0,
+                    Program.SqliteQueue);
 
                 commandContext.PostEvent(new UploadComplete());
 
@@ -211,8 +209,8 @@ namespace Algorithm
         public async Task<IActionResult> ListBinaries()
         {
             var algorithms = new List<AlgorithmInfo>();
-            var allBinaries = await this.hashHelper.GetBinariesData();
-            var allBuildData = await this.hashHelper.GetBuildData();
+            var allBinaries = await this.hashHelper.GetBinariesData(Program.SqliteQueue);
+            var allBuildData = await this.hashHelper.GetBuildData(Program.SqliteQueue);
 
             foreach (var binary in allBinaries)
             {
@@ -246,8 +244,8 @@ namespace Algorithm
         [HttpPost("DeleteBuilds")]
         public async Task<IActionResult> DeleteBuilds([FromBody] List<AlgorithmInfo> toRemoveList)
         {
-            var allBinaries = await this.hashHelper.GetBinariesData();
-            var allBuildData = await this.hashHelper.GetBuildData();
+            var allBinaries = await this.hashHelper.GetBinariesData(Program.SqliteQueue);
+            var allBuildData = await this.hashHelper.GetBuildData(Program.SqliteQueue);
 
             foreach (var toRemove in toRemoveList)
             {
@@ -261,18 +259,15 @@ namespace Algorithm
                     {
                         var proceed = false;
 
-                        using (var connection = await hashHelper.OpenNewConnectionAsync())
+                        await Program.SqliteQueue.WithCommit(async t =>
                         {
-                            var transaction = connection.BeginTransaction();
-
-                            var rows = await hashHelper.DeleteBinaries(transaction, toRemove);
+                            var rows = await hashHelper.DeleteBinaries(t, toRemove);
                             if (rows > 2)
                             {
                                 throw new Exception("Multiple builds with same properties where identified. Skipping...");
                             }
-                            transaction.Commit();
                             proceed = true;
-                        }
+                        });
 
                         if (proceed)
                         {
@@ -303,8 +298,8 @@ namespace Algorithm
         [HttpGet("GetBinaries/{target}/{algorithmName}/{algorithmVersion}")]
         public async Task<IActionResult> GetAlgorithmFile(string target, string algorithmName, string algorithmVersion)
         {
-            var builds = await this.hashHelper.GetBuildData();
-            var binaries = await this.hashHelper.GetBinariesData();
+            var builds = await this.hashHelper.GetBuildData(Program.SqliteQueue);
+            var binaries = await this.hashHelper.GetBinariesData(Program.SqliteQueue);
 
             var knownProject = builds.SingleOrDefault(x => x.ProjectName == algorithmName && x.Version == algorithmVersion && x.Target == target);
 
@@ -344,16 +339,14 @@ namespace Algorithm
             string commitsha,
             string tag,
             string version,
-            int buildId)
+            int buildId,
+            SqliteQueue sqliteQueue)
         {
-            await hashHelper.CreateDbSchema();
-
-
             // If build is new, register it
             // If binaries are duplicate of previous, notify & do not save
 
-            var knownBuilds = await hashHelper.GetBuildData();
-            var knownBinaries = await hashHelper.GetBinariesData();
+            var knownBuilds = await hashHelper.GetBuildData(sqliteQueue);
+            var knownBinaries = await hashHelper.GetBinariesData(sqliteQueue);
 
             string hash = hashHelper.GetProjectFilesHash(projectArchiveStream);
                         
@@ -374,14 +367,10 @@ namespace Algorithm
                 {
                     // Add just the version, the binaries are already available
 
-                    using (var connection = await hashHelper.OpenNewConnectionAsync())
+                    await sqliteQueue.WithCommit(async t =>
                     {
-                        var transaction = connection.BeginTransaction();
-
-                        await hashHelper.AddNewVersion(transaction, tag, buildNumber, commitsha, projectName, version, buildId, hash, osTarget);
-
-                        transaction.Commit();
-                    }
+                        await hashHelper.AddNewVersion(t, tag, buildNumber, commitsha, projectName, version, buildId, hash, osTarget);
+                    });
 
                     if (commandContext != null && inputArguments.NotifyDuplicateBinaries)
                     {
@@ -415,15 +404,11 @@ namespace Algorithm
                     await projectArchiveStream.CopyToAsync(file);
                 }
 
-                using (var connection = await hashHelper.OpenNewConnectionAsync())
+                await sqliteQueue.WithCommit(async t =>
                 {
-                    var transaction = connection.BeginTransaction();
-
-                    await hashHelper.AddNewBinaries(transaction, hash, path);
-                    await hashHelper.AddNewVersion(transaction, tag, buildNumber, commitsha, projectName, version, buildId, hash, osTarget);
-
-                    transaction.Commit();
-                }
+                    await hashHelper.AddNewBinaries(t, hash, path);
+                    await hashHelper.AddNewVersion(t, tag, buildNumber, commitsha, projectName, version, buildId, hash, osTarget);
+                });
 
                 if (commandContext != null && inputArguments.NotifyNewBinaries)
                 {

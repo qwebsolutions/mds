@@ -1,10 +1,15 @@
 ﻿
 
+using Dapper;
+using MdsCommon;
 using MdsInfrastructure;
 using MdsLocal;
 using Metapsi;
+using Metapsi.Syntax;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
+using System.Data.SQLite;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.Http;
@@ -13,32 +18,224 @@ using System.Threading.Tasks;
 
 public static class Program
 {
+    public class SqliteTraceListener : TraceListener
+    {
+        public long TotalMs { get; set; } = 0;
+        public int TotalCalls { get; set; } = 0;
+
+        TaskQueue<string> DebuggerTaskQueue = new TaskQueue<string>("c:\\github\\qwebsolutions\\mds\\debug\\sqlite.txt");
+
+        public override void Write(string message)
+        {
+            this.WriteLine(message);
+            //if (message.Contains("WithCommit") || message.Contains("WithRollback"))
+            //{
+            //    var ms = Int32.Parse(message.Split(" ").Last());
+            //    totalMs += ms;
+            //    totalCalls += 1;
+            //    DebuggerTaskQueue.Enqueue(async (filePath) => await DebugTo.File(filePath, message));
+            //}
+        }
+
+        public override void WriteLine(string message)
+        {
+            if (message.Contains("WithCommit") || message.Contains("WithRollback"))
+            {
+                var ms = Int32.Parse(message.Split(" ").Last());
+                this.TotalMs += ms;
+                this.TotalCalls += 1;
+                //DebuggerTaskQueue.Enqueue(async (filePath) => await DebugTo.File(filePath, message));
+            }
+        }
+    }
+
     public static async Task Main()
     {
         try
         {
+            //var infraDbPath = System.IO.Path.Combine(MdsFolder, "MdsInfrastructure.db");
+
+            ////var sqliteTraceListener = new SqliteTraceListener();
+            ////System.Diagnostics.Trace.Listeners.Add(sqliteTraceListener);
+
+            //var insertCount = 1000;
+
+            //var separateNoTransaction = await SeparateConnectionsWithNoTransactions(infraDbPath, insertCount);
+            //var separateWithTransaction = await SeparateConnectionsWithTransactions(infraDbPath, insertCount);
+            //var commonNoTransaction = await CommonConnectionNoTransactions(infraDbPath, insertCount);
+            //var commonWithTransaction = await CommonConnectionWithTransactions(infraDbPath, insertCount);
+            //var commonTransaction = await CommonTransaction(infraDbPath, insertCount);
+
+            //Console.WriteLine($"Separate connections no transaction: {separateNoTransaction} ms");
+            //Console.WriteLine($"Separate connections with transaction: {separateWithTransaction} ms");
+            //Console.WriteLine($"Common connection no transaction: {commonNoTransaction} ms");
+            //Console.WriteLine($"Common connection with transaction: {commonWithTransaction} ms");
+            //Console.WriteLine($"Common transaction : {commonTransaction} ms");
+
+            //await Task.Delay(TimeSpan.FromMinutes(30));
+
             await Initialize();
             await Task.Delay(TimeSpan.FromSeconds(5));
-            var configuration = await CreateConfiguration(3, 9);
-            configuration.Services[0].Enabled = false;
-            await DeployConfiguration(configuration);
-            await Task.Delay(System.TimeSpan.FromSeconds(30));
+
+            var configuration = await CreateConfiguration(1, 5);
+            //configuration.Services[0].Enabled = false;
+            //await DeployConfiguration(configuration);
+            await Task.Delay(System.TimeSpan.FromSeconds(10));
+
+            await UploadV1();
 
             //configuration.Services = configuration.Services.Skip(1).ToList();
-            configuration.Services[0].Parameters[0].Value = "1001";
+            //configuration.Services[0].Parameters[0].Value = "1001";
 
             //foreach (var service in configuration.Services)
             //{
             //    service.Enabled = false;
             //}
 
-            await DeployConfiguration(configuration);
-
+            //await DeployConfiguration(configuration);
         }
         finally
         {
             await Task.Delay(System.TimeSpan.FromMinutes(30));
         }
+    }
+
+    public static List<string> InfrastructureEventFields()
+    {
+        var fields = new List<string>();
+        fields.Add(nameof(InfrastructureEvent.Id));
+        fields.Add(nameof(InfrastructureEvent.Type));
+        fields.Add(nameof(InfrastructureEvent.FullDescription));
+        fields.Add(nameof(InfrastructureEvent.ShortDescription));
+        fields.Add(nameof(InfrastructureEvent.Type));
+        fields.Add(nameof(InfrastructureEvent.Timestamp));
+        fields.Add(nameof(InfrastructureEvent.Criticality));
+        fields.Add(nameof(InfrastructureEvent.Source));
+        return fields;
+    }
+
+    public static string InsertFields()
+    {
+        var insertFields = $"(" + string.Join(",", InfrastructureEventFields()) + ")";
+        return insertFields;
+    }
+
+    public static string InsertValues()
+    {
+        var insertValues = $"(" + string.Join(",", InfrastructureEventFields().Select(x => "@" + x)) + ")";
+        return insertValues;
+    }
+
+    public static string InsertQuery()
+    {
+        var sql = $"INSERT INTO {nameof(InfrastructureEvent)} {InsertFields()} VALUES {InsertValues()}";
+        return sql;
+    }
+
+    public static InfrastructureEvent CreateEvent(int i)
+    {
+        return new InfrastructureEvent()
+        {
+            Criticality = InfrastructureEventCriticality.Critical,
+            FullDescription = $"Full description of event {i}",
+            ShortDescription = $"Short description of event {i}",
+            Source = "Performance test",
+            Type = InfrastructureEventType.ProcessStart
+        };
+    }
+
+    public static async Task<long> SeparateConnectionsWithNoTransactions(string dbPath, int insertCount)
+    {
+        var sql = InsertQuery();
+
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        for (int i = 0; i <= insertCount; i++)
+        {
+            var connection = new SQLiteConnection(Metapsi.Sqlite.Db.ToConnectionString(dbPath));
+            await connection.OpenAsync();
+            await connection.ExecuteAsync(sql, CreateEvent(i));
+            await connection.CloseAsync();
+        }
+
+        return sw.ElapsedMilliseconds;
+    }
+
+    public static async Task<long> SeparateConnectionsWithTransactions(string dbPath, int insertCount)
+    {
+        var sql = InsertQuery();
+
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+
+        for (int i = 0; i <= insertCount; i++)
+        {
+            var connection = new SQLiteConnection(Metapsi.Sqlite.Db.ToConnectionString(dbPath));
+            await connection.OpenAsync();
+            var transaction = await connection.BeginTransactionAsync();
+            await connection.ExecuteAsync(sql, CreateEvent(i), transaction);
+            await transaction.CommitAsync();
+            await connection.CloseAsync();
+        }
+
+        return sw.ElapsedMilliseconds;
+    }
+
+    public static async Task<long> CommonConnectionNoTransactions(string dbPath, int insertCount)
+    {
+        var sql = InsertQuery();
+
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+
+        var connection = new SQLiteConnection(Metapsi.Sqlite.Db.ToConnectionString(dbPath));
+        await connection.OpenAsync();
+
+        for (int i = 0; i <= insertCount; i++)
+        {
+            await connection.ExecuteAsync(sql, CreateEvent(i));
+        }
+        await connection.CloseAsync();
+
+        return sw.ElapsedMilliseconds;
+    }
+
+    public static async Task<long> CommonConnectionWithTransactions(string dbPath, int insertCount)
+    {
+        var sql = InsertQuery();
+
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+
+        var connection = new SQLiteConnection(Metapsi.Sqlite.Db.ToConnectionString(dbPath));
+        await connection.OpenAsync();
+
+        for (int i = 0; i <= insertCount; i++)
+        {
+            var transaction = await connection.BeginTransactionAsync();
+            await connection.ExecuteAsync(sql, CreateEvent(i), transaction);
+            await transaction.CommitAsync();
+        }
+        await connection.CloseAsync();
+
+        return sw.ElapsedMilliseconds;
+    }
+
+    public static async Task<long> CommonTransaction(string dbPath, int insertCount)
+    {
+        var sql = InsertQuery();
+
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+
+        var connection = new SQLiteConnection(Metapsi.Sqlite.Db.ToConnectionString(dbPath));
+        await connection.OpenAsync();
+        var transaction = await connection.BeginTransactionAsync();
+
+        for (int i = 0; i <= insertCount; i++)
+        {
+            await transaction.Connection.ExecuteAsync(sql, CreateEvent(i), transaction);
+        }
+
+        await transaction.CommitAsync();
+        await connection.CloseAsync();
+
+        return sw.ElapsedMilliseconds;
     }
 
     public const string LocalNodeName = "ms-test-node";
@@ -193,7 +390,19 @@ public static class Program
         await httpClient.PostAsync(new Uri(new Uri(binariesManagerBaseUrl), "/UploadBinaries"), requestContent);
     }
 
-    private static async Task UploadTestProjectBinaries()
+    private static async Task UploadV1()
+    {
+        await UploadBinaries(
+            MdsBinariesApiUrl,
+            TestProjectName,
+            "0.1",
+            "e9e58d251de5d3b4612acb9a03fc7dea1d184773",
+            "win-x64",
+            System.IO.Path.Combine(CleanStartFolder, "MdsTests.CrashTestService.e9e58d251de5d3b4612acb9a03fc7dea1d184773.zip"));
+    }
+
+
+    private static async Task UploadV2()
     {
         await UploadBinaries(
             MdsBinariesApiUrl,
@@ -203,13 +412,12 @@ public static class Program
             "win-x64",
             System.IO.Path.Combine(CleanStartFolder, "MdsTests.CrashTestService.0fb5d33167268a188bb44d575073ccb0ce61f1b5.zip"));
 
-        await UploadBinaries(
-            MdsBinariesApiUrl,
-            TestProjectName,
-            "0.1",
-            "e9e58d251de5d3b4612acb9a03fc7dea1d184773",
-            "win-x64",
-            System.IO.Path.Combine(CleanStartFolder, "MdsTests.CrashTestService.e9e58d251de5d3b4612acb9a03fc7dea1d184773.zip"));
+    }
+
+    private static async Task UploadTestProjectBinaries()
+    {
+        await UploadV1();
+        await UploadV2();
     }
 
     private static async Task StartInfraController()
@@ -406,7 +614,7 @@ public static class Program
         InitializeBuildManagerDatabase();
         InitializeInfraDatabase();
         await StartBuildController();
-        await UploadTestProjectBinaries();
+        await UploadV2();
         await StartInfraController();
     }
 

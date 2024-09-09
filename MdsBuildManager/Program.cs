@@ -6,11 +6,18 @@ using Metapsi;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Collections.Generic;
+using MdsCommon;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.AspNetCore.Builder;
+using Metapsi.Sqlite;
 
 namespace MdsBuildManager
 {
     public class Program
     {
+        // I'm tired
+        public static SqliteQueue SqliteQueue { get; set; }
+
         public static async Task Main(string[] args)
         {
             if (args.Length < 1)
@@ -24,8 +31,17 @@ namespace MdsBuildManager
             var refs = await StartBuildController(args, inputArguments);
 
             var app = refs.ApplicationSetup.Revive();
+            //Task.Run(() =>
+            //{
+            //    refs.WebApplication.Run();
+            //});
+            
 
-            await BindStop(refs, app);
+            //var stopToken = new System.Threading.CancellationToken();
+            //var shutdownTask = refs.WebApplication.RunAsync(stopToken);
+
+            //shutdownTask.ContinueWith(async (t) => app.Suspend());
+            ////await BindStop(refs, app);
 
             await app.SuspendComplete;
         }
@@ -33,14 +49,85 @@ namespace MdsBuildManager
         public class BuildControllerReferences
         {
             public ApplicationSetup ApplicationSetup { get; set; }
-            public WebService.State WebService { get; set; }
+            public Microsoft.AspNetCore.Builder.WebApplication WebApplication { get; set; }
         }
 
         public static async Task<BuildControllerReferences> StartBuildController(string[] args, InputArguments inputArguments)
         {
-            var setup = ApplicationBuilder.New();
+            var setup = Metapsi.ApplicationBuilder.New();
             var ig = setup.AddImplementationGroup();
-            var webService = setup.AddBusinessState(new WebService.State() { Args = args, InputArguments = inputArguments });
+
+
+            var dbPath = System.IO.Path.Combine(inputArguments.BinariesFolder, "MdsBuildManager.db");
+
+            Program.SqliteQueue = await HashHelper.GetDbQueue(dbPath);
+
+            HashHelper hashHelper = new HashHelper(inputArguments);
+            var azureQueue = setup.AddBusinessState(new AzureBuilds.State());
+            setup.MapEvent<ApplicationRevived>(e =>
+            {
+                e.Using(azureQueue, ig).EnqueueCommand(async (cc, state) => await AzureBuilds.CheckForever(cc, inputArguments, hashHelper, Program.SqliteQueue));
+            });
+
+            var builder = Microsoft.AspNetCore.Builder.WebApplication.CreateBuilder(args);
+            builder.AddMetapsi(setup, ig);
+            var services = builder.Services;
+            services.AddOptions();
+            services.AddMvcCore();
+
+
+            services.AddSingleton(inputArguments);
+            services.AddSingleton<HashHelper>();
+
+            var assembly = typeof(Program).Assembly;
+            // This creates an AssemblyPart, but does not create any related parts for items such as views.
+            var part = new AssemblyPart(assembly);
+            services.AddControllersWithViews()
+                .ConfigureApplicationPartManager(apm => apm.ApplicationParts.Add(part));
+
+            var app = builder.Build();
+            app.UseMetapsi(setup);
+            app.Urls.Add(inputArguments.ListeningUrl);
+
+            // Call Configure method
+            app.UseRouting();
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
+
+            await app.UseDocs(setup, ig, Program.SqliteQueue,
+                b =>
+                {
+                    b.SetOverviewUrl("config");
+                    b.AddDoc<InfrastructureController>(x => x.Name);
+                });
+
+            var eventsEndpoint = app.MapGroup("event");
+
+            eventsEndpoint.OnMessage<InfrastructureControllerStarted>(async (cc, message) =>
+            {
+                var knownInfrastructure = await cc.GetDoc<InfrastructureController>(message.InfrastructureName);
+                if (knownInfrastructure == null)
+                {
+                    await cc.SaveDoc(new InfrastructureController()
+                    {
+                        Name = message.InfrastructureName,
+                        InternalBaseUrl = message.InternalBaseUrl
+                    });
+                }
+            });
+
+            setup.SetupMessagingApi(ig);
+
+            //setup.MapEvent<ApplicationRevived>(e =>
+            //{
+            //    app.Run();
+            //});
+
+            //var webService = setup.AddBusinessState(new WebService.State() { Args = args, InputArguments = inputArguments });
+
             var redisNotifier = setup.AddBusinessState(new RedisNotifier.State());
 
             MailSender.State mailSender = null;
@@ -49,6 +136,8 @@ namespace MdsBuildManager
             {
                 mailSender = setup.AddMailSender(inputArguments.SmtpHostName, inputArguments.FromMailAddress, inputArguments.SenderMailPassword);
             }
+
+            var binariesNotifierState = setup.AddBusinessState(new object());
 
             BinariesPublishData binariesPublishData = new BinariesPublishData();
 
@@ -67,6 +156,15 @@ namespace MdsBuildManager
                             string.Empty));
                     }
                 }
+
+                e.Using(binariesNotifierState, ig).EnqueueCommand(async (cc, state) =>
+                {
+                    var allControllers = await cc.ListDocs<InfrastructureController>();
+                    foreach (var controller in allControllers)
+                    {
+                        cc.NotifyUrl(controller.InternalBaseUrl.TrimEnd('/') + "/api/event", new BinariesAvailable());
+                    }
+                });
 
                 if (mailSender != null)
                 {
@@ -101,10 +199,10 @@ namespace MdsBuildManager
                 binariesPublishData.NewBinaries.Clear();
             }
 
-            setup.MapEvent<ApplicationRevived>(e =>
-            {
-                e.Using(webService, ig).EnqueueCommand(WebService.StartListening);
-            });
+            //setup.MapEvent<ApplicationRevived>(e =>
+            //{
+            //    e.Using(webService, ig).EnqueueCommand(WebService.StartListening);
+            //});
 
             setup.MapEvent<DuplicateBinaries>(e => binariesPublishData.DuplicateBinaries.Add(e.EventData));
             setup.MapEvent<NewBinaries>(e => binariesPublishData.NewBinaries.Add(e.EventData));
@@ -122,7 +220,7 @@ namespace MdsBuildManager
             return new BuildControllerReferences()
             {
                 ApplicationSetup = setup,
-                WebService = webService
+                WebApplication = app
             };
         }
 
@@ -140,52 +238,52 @@ namespace MdsBuildManager
         /// <returns></returns>
         public static async Task BindStop(BuildControllerReferences references, Application application)
         {
-            Task webHostTask = null;
-            while (true)
-            {
-                await Task.Delay(200);
-                if (references.WebService != null)
-                    if (references.WebService.RunningServiceTask != null)
-                    {
-                        webHostTask = references.WebService.RunningServiceTask;
-                        break;
-                    }
-            }
+            //Task webHostTask = null;
+            //while (true)
+            //{
+            //    await Task.Delay(200);
+            //    if (references.WebService != null)
+            //        if (references.WebService.RunningServiceTask != null)
+            //        {
+            //            webHostTask = references.WebService.RunningServiceTask;
+            //            break;
+            //        }
+            //}
 
-            var _ = webHostTask.ContinueWith(async (_) => application.Suspend());
+            //var _ = webHostTask.ContinueWith(async (_) => application.Suspend());
         }
     }
 
-    public static class WebService
-    {
-        public class State
-        {
-            public string[] Args { get; set; }
-            public InputArguments InputArguments { get; set; }
-            public IHost Host { get; set; }
-            public Task RunningServiceTask { get; set; }
-        }
+    //public static class WebService
+    //{
+    //    public class State
+    //    {
+    //        public string[] Args { get; set; }
+    //        public InputArguments InputArguments { get; set; }
+    //        public IHost Host { get; set; }
+    //        public Task RunningServiceTask { get; set; }
+    //    }
 
 
-        public static async Task StartListening(CommandContext commandContext, State state)
-        {
-            state.Host = CreateHostBuilder(state.Args, state.InputArguments, commandContext).Build();
-            state.RunningServiceTask = state.Host.RunAsync();
-        }
+    //    public static async Task StartListening(CommandContext commandContext, State state)
+    //    {
+    //        state.Host = CreateHostBuilder(state.Args, state.InputArguments, commandContext).Build();
+    //        state.RunningServiceTask = state.Host.RunAsync();
+    //    }
 
-        public static IHostBuilder CreateHostBuilder(string[] args, InputArguments inputArguments, CommandContext commandContext) =>
-            Host.CreateDefaultBuilder(args)
-            .UseSystemd()
-            .UseWindowsService()
-            .ConfigureWebHostDefaults(webBuilder =>
-            {
-                // I still don't understand how to use this thing
-                webBuilder.ConfigureServices(services => services.AddSingleton(typeof(InputArguments), inputArguments));
-                webBuilder.ConfigureServices(services => services.AddSingleton(typeof(CommandContext), commandContext));
-                webBuilder.UseStartup<Startup>();
-                webBuilder.UseUrls(inputArguments.ListeningUrl);
-            });
-    }
+    //    public static IHostBuilder CreateHostBuilder(string[] args, InputArguments inputArguments, CommandContext commandContext) =>
+    //        Host.CreateDefaultBuilder(args)
+    //        .UseSystemd()
+    //        .UseWindowsService()
+    //        .ConfigureWebHostDefaults(webBuilder =>
+    //        {
+    //            // I still don't understand how to use this thing
+    //            webBuilder.ConfigureServices(services => services.AddSingleton(typeof(InputArguments), inputArguments));
+    //            webBuilder.ConfigureServices(services => services.AddSingleton(typeof(CommandContext), commandContext));
+    //            webBuilder.UseStartup<Startup>();
+    //            webBuilder.UseUrls(inputArguments.ListeningUrl);
+    //        });
+    //}
 
     public class NewBinaries : IData
     {

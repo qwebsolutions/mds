@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using MdsCommon;
+using Metapsi.Sqlite;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -42,53 +43,32 @@ namespace MdsBuildManager
             throw new Exception("Archived file cannot be hashed!");
         }
 
-        private string GetHashesDbPath()
-        {
-            return System.IO.Path.Combine(inputArguments.BinariesFolder, "MdsBuildManager.db");
-        }
+        //private string GetHashesDbPath()
+        //{
+        //    //return System.IO.Path.Combine(inputArguments.BinariesFolder, "MdsBuildManager.db");
+        //}
 
         public static bool BuildAlreadyChecked(List<MdsBuildManager.Build> knownBuilds, int buildId, string version, string commitSha)
         {
             return knownBuilds.Any(x => x.BuildId == buildId && x.Version == version && x.CommitSha == commitSha);
         }
 
-        public async Task<List<Binaries>> GetBinariesData()
+        public async Task<List<Binaries>> GetBinariesData(SqliteQueue sqliteQueue)
         {
-            if (!System.IO.File.Exists(GetHashesDbPath()))
+            return await sqliteQueue.WithRollback(async t =>
             {
-                return new List<Binaries>();
-            }
-
-            using (var connection =  new System.Data.SQLite.SQLiteConnection($"Data source={GetHashesDbPath()}"))
-            {
-                connection.Open();
-
-                var binaries = await connection.QueryAsync<Binaries>("select * from Binaries");
+                var binaries = await t.Connection.QueryAsync<Binaries>("select * from Binaries", transaction: t);
                 return binaries.ToList();
-            }
+            });
         }
 
-        public async Task<List<Build>> GetBuildData()
+        public async Task<List<Build>> GetBuildData(SqliteQueue sqliteQueue)
         {
-            if (!System.IO.File.Exists(GetHashesDbPath()))
+            return await sqliteQueue.WithRollback(async t =>
             {
-                return new List<Build>();
-            }
-
-            using (var connection = new System.Data.SQLite.SQLiteConnection($"Data source={GetHashesDbPath()}"))
-            {
-                connection.Open();
-
-                var build = await connection.QueryAsync<Build>("select * from Build");
+                var build = await t.Connection.QueryAsync<Build>("select * from Build", transaction: t);
                 return build.ToList();
-            }
-        }
-
-        public async Task<System.Data.IDbConnection> OpenNewConnectionAsync()
-        {
-            var connection = new System.Data.SQLite.SQLiteConnection($"Data source = {GetHashesDbPath()}");
-            connection.Open();
-            return connection;
+            });
         }
 
         public async Task AddNewVersion(System.Data.IDbTransaction dbTransaction, string tag, string buildNumber, string commitSha, string projectName, string version, int buildId, string base64Hash, string target)
@@ -109,22 +89,25 @@ namespace MdsBuildManager
                 new { ProjectName = algorithmInfo.Name, Version = algorithmInfo.Version, Target = algorithmInfo.Target }, dbTransaction);
         }
 
-        public async Task CreateDbSchema()
+        public static async Task<SqliteQueue> GetDbQueue(string fullDbPath)
         {
-            if (!System.IO.File.Exists(GetHashesDbPath()))
+            if (!System.IO.File.Exists(fullDbPath))
             {
-                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(GetHashesDbPath()));
-
-                using (var connection = await OpenNewConnectionAsync())
-                {
-                    await connection.ExecuteAsync(BinariesTable);
-                    await connection.ExecuteAsync(BuildTable);
-                }
+                System.IO.Directory.CreateDirectory(System.IO.Path.GetDirectoryName(fullDbPath));
             }
+
+            SqliteQueue sqliteQueue = new SqliteQueue(fullDbPath);
+            await sqliteQueue.WithCommit(async t =>
+            {
+                await t.Connection.ExecuteAsync(BinariesTable, transaction: t);
+                await t.Connection.ExecuteAsync(BuildTable, transaction: t);
+            });
+
+            return sqliteQueue;
         }
 
         private const string BuildTable =
-            @"CREATE TABLE ""Build"" (
+            @"CREATE TABLE IF NOT EXISTS ""Build"" (
 	            ""Id""	TEXT NOT NULL,
 	            ""Tag""	TEXT,
 	            ""BuildNumber""	TEXT,
@@ -139,7 +122,7 @@ namespace MdsBuildManager
             )";
 
         private const string BinariesTable =
-            @"CREATE TABLE ""Binaries"" (
+            @"CREATE TABLE IF NOT EXISTS ""Binaries"" (
 	        ""Id""	TEXT,
 	        ""Base64Hash""	TEXT,
 	        ""BinaryPath""	TEXT

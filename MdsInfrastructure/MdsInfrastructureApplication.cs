@@ -88,10 +88,10 @@ namespace MdsInfrastructure
             public ApplicationSetup ApplicationSetup { get; set; }
             public ImplementationGroup ImplementationGroup { get; set; }
             public HttpServer.State HttpGateway { get; set; }
-            public RedisReader.State RedisReader { get; set; }
-            public RedisWriter.State RedisWriter { get; set; }
-            public RedisListener.State RedisListener { get; set; }
-            public RedisNotifier.State RedisNotifier { get; set; }
+            //public RedisReader.State RedisReader { get; set; }
+            //public RedisWriter.State RedisWriter { get; set; }
+            //public RedisListener.State RedisListener { get; set; }
+            //public RedisNotifier.State RedisNotifier { get; set; }
         }
 
 

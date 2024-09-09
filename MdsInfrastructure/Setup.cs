@@ -88,11 +88,11 @@ namespace MdsInfrastructure
             MdsInfrastructureApplication.State infrastructure = applicationSetup.AddBusinessState(new MdsInfrastructureApplication.State());
             HttpServer.State httpGateway = applicationSetup.AddBusinessState(new HttpServer.State());
 
-            var redisNotifier = applicationSetup.AddBusinessState(new RedisNotifier.State());
+            //var redisNotifier = applicationSetup.AddBusinessState(new RedisNotifier.State());
 
-            var binariesListener = applicationSetup.AddBusinessState(new RedisListener.State());
-            var healthListener = applicationSetup.AddBusinessState(new RedisListener.State());
-            var eventsListener = applicationSetup.AddBusinessState(new RedisListener.State());
+            //var binariesListener = applicationSetup.AddBusinessState(new RedisListener.State());
+            //var healthListener = applicationSetup.AddBusinessState(new RedisListener.State());
+            //var eventsListener = applicationSetup.AddBusinessState(new RedisListener.State());
 
             applicationSetup.AddCleanup(implementationGroup, infrastructure, dbQueue);
 
@@ -131,84 +131,112 @@ namespace MdsInfrastructure
                         Port = arguments.InfrastructureApiPort
                     });
 
-                    e.Using(binariesListener, implementationGroup).EnqueueCommand(RedisListener.StartListening, new RedisChannel(arguments.BinariesAvailableInputChannel));
-                    e.Using(healthListener, implementationGroup).EnqueueCommand(RedisListener.StartListening, new RedisChannel(arguments.HealthStatusInputChannel));
-                    e.Using(eventsListener, implementationGroup).EnqueueCommand(RedisListener.StartListening, new RedisChannel(arguments.InfrastructureEventsInputChannel));
+                    //e.Using(binariesListener, implementationGroup).EnqueueCommand(RedisListener.StartListening, new RedisChannel(arguments.BinariesAvailableInputChannel));
+                    //e.Using(healthListener, implementationGroup).EnqueueCommand(RedisListener.StartListening, new RedisChannel(arguments.HealthStatusInputChannel));
+                    //e.Using(eventsListener, implementationGroup).EnqueueCommand(RedisListener.StartListening, new RedisChannel(arguments.InfrastructureEventsInputChannel));
                     e.Using(infrastructure, implementationGroup).EnqueueCommand(SyncBuilds);
                     e.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
                     {
                         await cc.RegisterNodesMessaging(dbQueue);
                     });
+                    e.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
+                    {
+                        await cc.InitializeDefaultConfigKeys(arguments);
+                    });
+                    e.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
+                    {
+                        if (!string.IsNullOrEmpty(arguments.BuildManagerUrl))
+                        {
+                            var ownBaseUrl = await cc.GetDoc<ConfigKey>(ConfigKey.InfrastructureInternalBaseUrl);
+
+                            if (ownBaseUrl != null)
+                            {
+                                if (!string.IsNullOrWhiteSpace(ownBaseUrl.Value))
+                                {
+                                    cc.NotifyUrl(arguments.BuildManagerUrl.TrimEnd('/') + "/event", new InfrastructureControllerStarted()
+                                    {
+                                        InfrastructureName = arguments.InfrastructureName,
+                                        InternalBaseUrl = ownBaseUrl.Value
+                                    });
+                                }
+                            }
+                        }
+                    });
                 });
+
+            applicationSetup.MapEvent<BinariesAvailable>(e =>
+            {
+                e.Using(infrastructure, implementationGroup).EnqueueCommand(SyncBuilds);
+            });
 
             applicationSetup.MapEvent<ApplicationIsShuttingDown>(
                 e => e.Using(httpGateway, implementationGroup).EnqueueCommand(HttpServer.Stop));
 
-            applicationSetup.MapEventIf<RedisListener.Event.NotificationReceived>(
-                e => e.NotificationType == nameof(NodeStatus) || e.NotificationType == "HealthStatus",
-                async e =>
-                {
-                    e.Logger.LogInfo("NodeStatus");
-                    e.Logger.LogInfo(e.EventData.Payload);
-                    MdsCommon.SerializableHealthStatus serializableHealthStatus = Metapsi.Serialize.FromJson<MdsCommon.SerializableHealthStatus>(e.EventData.Payload);
-                    var healthStatus = MdsCommon.NodeStatus.FromSerializable(serializableHealthStatus);
-                    e.Logger.LogInfo($"HealthStatus notification {Metapsi.Serialize.ToJson(healthStatus)}");
+            //applicationSetup.MapEventIf<RedisListener.Event.NotificationReceived>(
+            //    e => e.NotificationType == nameof(NodeStatus) || e.NotificationType == "HealthStatus",
+            //    async e =>
+            //    {
+            //        e.Logger.LogInfo("NodeStatus");
+            //        e.Logger.LogInfo(e.EventData.Payload);
+            //        MdsCommon.SerializableHealthStatus serializableHealthStatus = Metapsi.Serialize.FromJson<MdsCommon.SerializableHealthStatus>(e.EventData.Payload);
+            //        var healthStatus = MdsCommon.NodeStatus.FromSerializable(serializableHealthStatus);
+            //        e.Logger.LogInfo($"HealthStatus notification {Metapsi.Serialize.ToJson(healthStatus)}");
 
-                    e.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
-                    {
-                        await cc.Do(Backend.StoreHealthStatus, healthStatus);
-                    });
-                });
+            //        e.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
+            //        {
+            //            await cc.Do(Backend.StoreHealthStatus, healthStatus);
+            //        });
+            //    });
 
-            applicationSetup.MapEventIf<RedisListener.Event.NotificationReceived>(
-                e => e.NotificationType == nameof(InfrastructureEvent),
-                e =>
-                {
-                    e.Logger.LogDebug($"Event received on {e.EventData.ChannelName} {e.EventData.Payload}");
+            //applicationSetup.MapEventIf<RedisListener.Event.NotificationReceived>(
+            //    e => e.NotificationType == nameof(InfrastructureEvent),
+            //    e =>
+            //    {
+            //        e.Logger.LogDebug($"Event received on {e.EventData.ChannelName} {e.EventData.Payload}");
 
-                    var infraEvent = Metapsi.Serialize.FromJson<InfrastructureEvent>(e.EventData.Payload);
+            //        var infraEvent = Metapsi.Serialize.FromJson<InfrastructureEvent>(e.EventData.Payload);
 
-                    e.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
-                    {
-                        await MdsCommon.Db.SaveInfrastructureEvent(dbQueue, infraEvent);
-                    });
+            //        e.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
+            //        {
+            //            await MdsCommon.Db.SaveInfrastructureEvent(dbQueue, infraEvent);
+            //        });
 
-                    if (mailSender != null)
-                    {
-                        e.Logger.LogDebug($"{mailSender.SmtpHostName} {mailSender.Sender}");
+            //        if (mailSender != null)
+            //        {
+            //            e.Logger.LogDebug($"{mailSender.SmtpHostName} {mailSender.Sender}");
 
-                        if (AlertTag.IsAlertTag(infraEvent.Criticality))
-                        {
-                            string subject = $"{arguments.InfrastructureName} {infraEvent.ShortDescription} {infraEvent.Source}";
-                            string body = $"Event timestamp (UTC) {infraEvent.Timestamp.ToString("G", new System.Globalization.CultureInfo("it-IT"))}\n\n";
-                            body += $"Infrastructure name   {arguments.InfrastructureName}\n\n";
-                            body += $"Event source          {infraEvent.Source}\n\n";
-                            body += $"Details\n{infraEvent.FullDescription}";
+            //            if (AlertTag.IsAlertTag(infraEvent.Criticality))
+            //            {
+            //                string subject = $"{arguments.InfrastructureName} {infraEvent.ShortDescription} {infraEvent.Source}";
+            //                string body = $"Event timestamp (UTC) {infraEvent.Timestamp.ToString("G", new System.Globalization.CultureInfo("it-IT"))}\n\n";
+            //                body += $"Infrastructure name   {arguments.InfrastructureName}\n\n";
+            //                body += $"Event source          {infraEvent.Source}\n\n";
+            //                body += $"Details\n{infraEvent.FullDescription}";
 
-                            e.Using(mailSender, implementationGroup).EnqueueCommand(MailSender.Send, new MailSender.Mail()
-                            {
-                                Subject = subject,
-                                ToAddresses = arguments.ErrorEmails,
-                                Body = body
-                            });
+            //                e.Using(mailSender, implementationGroup).EnqueueCommand(MailSender.Send, new MailSender.Mail()
+            //                {
+            //                    Subject = subject,
+            //                    ToAddresses = arguments.ErrorEmails,
+            //                    Body = body
+            //                });
 
-                            e.Logger.LogDebug($"Mail sent: {subject}");
-                        }
-                    }
+            //                e.Logger.LogDebug($"Mail sent: {subject}");
+            //            }
+            //        }
 
-                });
+            //    });
 
-            applicationSetup.MapEvent<Backend.Event.BroadcastDeployment>(
-                e =>
-                {
-                    e.Logger.LogDebug($"Broadcast deployment on {arguments.BroadcastDeploymentOutputChannel}");
-                    e.Using(redisNotifier, implementationGroup).EnqueueCommand(
-                        RedisNotifier.NotifyChannel,
-                        new RedisChannelMessage(
-                            arguments.BroadcastDeploymentOutputChannel,
-                            "ConfigurationUpdate",
-                            String.Empty));
-                });
+            //applicationSetup.MapEvent<Backend.Event.BroadcastDeployment>(
+            //    e =>
+            //    {
+            //        e.Logger.LogDebug($"Broadcast deployment on {arguments.BroadcastDeploymentOutputChannel}");
+            //        e.Using(redisNotifier, implementationGroup).EnqueueCommand(
+            //            RedisNotifier.NotifyChannel,
+            //            new RedisChannelMessage(
+            //                arguments.BroadcastDeploymentOutputChannel,
+            //                "ConfigurationUpdate",
+            //                String.Empty));
+            //    });
 
             applicationSetup.MapEvent<Backend.Event.BinariesSynchronized>(
                 e =>
@@ -225,12 +253,12 @@ namespace MdsInfrastructure
                     });
                 });
 
-            applicationSetup.MapEventIf<RedisListener.Event.NotificationReceived>(
-                e => e.ChannelName == new RedisChannel(arguments.BinariesAvailableInputChannel).ChannelName,
-                e =>
-                {
-                    e.Using(infrastructure, implementationGroup).EnqueueCommand(SyncBuilds);
-                });
+            //applicationSetup.MapEventIf<RedisListener.Event.NotificationReceived>(
+            //    e => e.ChannelName == new RedisChannel(arguments.BinariesAvailableInputChannel).ChannelName,
+            //    e =>
+            //    {
+            //        e.Using(infrastructure, implementationGroup).EnqueueCommand(SyncBuilds);
+            //    });
 
             #endregion Event mappings
 
@@ -247,38 +275,38 @@ namespace MdsInfrastructure
                 };
             });
 
-            implementationGroup.MapCommand(Backend.RestartService, async (rc, serviceName) =>
-            {
-                // TODO: Does this even compile?
-                await rc.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
-                {
-                    var serviceConfiguration = await Db.LoadServiceConfiguration(dbQueue, serviceName);
+            //implementationGroup.MapCommand(Backend.RestartService, async (rc, serviceName) =>
+            //{
+            //    // TODO: Does this even compile?
+            //    await rc.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
+            //    {
+            //        var serviceConfiguration = await Db.LoadServiceConfiguration(dbQueue, serviceName);
 
-                    var service = serviceConfiguration;
+            //        var service = serviceConfiguration;
 
-                    if (service == null)
-                    {
-                        throw new Exception($"Service {serviceName} not configured");
-                    }
+            //        if (service == null)
+            //        {
+            //            throw new Exception($"Service {serviceName} not configured");
+            //        }
 
-                    var nodes = await cc.Do(Backend.LoadAllNodes);
-                    var node = nodes.FirstOrDefault(x => x.NodeName == service.NodeName);
+            //        var nodes = await cc.Do(Backend.LoadAllNodes);
+            //        var node = nodes.FirstOrDefault(x => x.NodeName == service.NodeName);
 
-                    if (node == null)
-                    {
-                        throw new Exception($"Service {serviceName} misconfigured on node {service.NodeName}");
-                    }
+            //        if (node == null)
+            //        {
+            //            throw new Exception($"Service {serviceName} misconfigured on node {service.NodeName}");
+            //        }
 
-                    var nodeCommandChannel = arguments.NodeCommandOutputChannel.Replace("$NodeName", node.NodeName);
+            //        var nodeCommandChannel = arguments.NodeCommandOutputChannel.Replace("$NodeName", node.NodeName);
 
-                    await rc.Using(redisNotifier, implementationGroup).EnqueueCommand(
-                        RedisNotifier.NotifyChannel,
-                        new RedisChannelMessage(
-                            nodeCommandChannel,
-                            "RestartService",
-                            serviceName));
-                });
-            });
+            //        await rc.Using(redisNotifier, implementationGroup).EnqueueCommand(
+            //            RedisNotifier.NotifyChannel,
+            //            new RedisChannelMessage(
+            //                nodeCommandChannel,
+            //                "RestartService",
+            //                serviceName));
+                //});
+            //});
 
             implementationGroup.MapRequest(Backend.GetRemoteBuilds,
                 async (rc) =>
@@ -399,42 +427,48 @@ namespace MdsInfrastructure
 
                             case "restartservice":
                                 {
-                                    string serviceName = getRequest.Segments.ElementAt(1);
-                                    var serviceConfiguration = await Db.LoadServiceConfiguration(dbQueue, serviceName);
-
-                                    var service = serviceConfiguration;
-
-                                    if (service == null)
+                                    return new HttpServer.Response()
                                     {
-                                        return new HttpServer.Response()
-                                        {
-                                            ResponseCode = 404,
-                                            ResponseContent = $"Service {serviceName} not found"
-                                        };
-                                    }
+                                        ResponseCode = 404,
+                                        ResponseContent = $"Not supported not found"
+                                    };
 
-                                    var nodes = await Db.LoadAllNodes(dbQueue);
-                                    var node = nodes.FirstOrDefault(x => x.NodeName == service.NodeName);
+                                    //string serviceName = getRequest.Segments.ElementAt(1);
+                                    //var serviceConfiguration = await Db.LoadServiceConfiguration(dbQueue, serviceName);
 
-                                    if (node == null)
-                                    {
-                                        return new HttpServer.Response()
-                                        {
-                                            ResponseCode = 404,
-                                            ResponseContent = $"Node {node.NodeName} not configured correctly"
-                                        };
-                                    }
+                                    //var service = serviceConfiguration;
 
-                                    var nodeCommandChannel = arguments.NodeCommandOutputChannel.Replace("$NodeName", node.NodeName);
+                                    //if (service == null)
+                                    //{
+                                    //    return new HttpServer.Response()
+                                    //    {
+                                    //        ResponseCode = 404,
+                                    //        ResponseContent = $"Service {serviceName} not found"
+                                    //    };
+                                    //}
 
-                                    await rc.Using(redisNotifier, implementationGroup).EnqueueCommand(
-                                        RedisNotifier.NotifyChannel,
-                                        new RedisChannelMessage(
-                                            nodeCommandChannel,
-                                            "RestartService",
-                                            serviceName));
+                                    //var nodes = await Db.LoadAllNodes(dbQueue);
+                                    //var node = nodes.FirstOrDefault(x => x.NodeName == service.NodeName);
 
-                                    return ToJsonResponse("OK");
+                                    //if (node == null)
+                                    //{
+                                    //    return new HttpServer.Response()
+                                    //    {
+                                    //        ResponseCode = 404,
+                                    //        ResponseContent = $"Node {node.NodeName} not configured correctly"
+                                    //    };
+                                    //}
+
+                                    //var nodeCommandChannel = arguments.NodeCommandOutputChannel.Replace("$NodeName", node.NodeName);
+
+                                    //await rc.Using(redisNotifier, implementationGroup).EnqueueCommand(
+                                    //    RedisNotifier.NotifyChannel,
+                                    //    new RedisChannelMessage(
+                                    //        nodeCommandChannel,
+                                    //        "RestartService",
+                                    //        serviceName));
+
+                                    //return ToJsonResponse("OK");
                                 }
 
                             default:

@@ -42,6 +42,9 @@ public class ServiceRecovered
 
 public static class NodeEvent
 {
+    /// <summary>
+    /// Raised by local controller at start
+    /// </summary>
     public class Started
     {
         public string TimestampIso { get; set; } = DateTime.Now.Roundtrip();
@@ -54,10 +57,31 @@ public static class NodeEvent
     }
 }
 
+/// <summary>
+/// Raised by infrastructure controller to start cleanup on nodes as well
+/// </summary>
 public class CleanupInfrastructureEvents
 {
     public int KeepMaxCount { get; set; }
     public int KeepMaxDays { get; set; }
+}
+
+/// <summary>
+/// Raised by global controller at start
+/// </summary>
+public class InfrastructureControllerStarted
+{
+    public string InfrastructureName { get; set; }
+    public string InternalBaseUrl { get; set; }
+    //public string PublicBaseUrl { get; set; }
+}
+
+
+/// <summary>
+/// Sent by build manager to the infra controller
+/// </summary>
+public class BinariesAvailable : IData
+{
 }
 
 public static class NodeEventExtensions

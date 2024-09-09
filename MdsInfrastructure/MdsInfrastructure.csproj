@@ -21,7 +21,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Metapsi.Redis" Version="$(MetapsiVersion)" />
 		<PackageReference Include="Metapsi.Web" Version="$(MetapsiVersion)" />
 		<PackageReference Include="Metapsi.Html" Version="$(MetapsiVersion)" />
 		<PackageReference Include="Metapsi.Mds" Version="$(MetapsiVersion)" />

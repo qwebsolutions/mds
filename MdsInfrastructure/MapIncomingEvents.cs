@@ -185,6 +185,11 @@ namespace MdsInfrastructure
                     });
                 }
             });
+
+            endpoint.OnMessage<BinariesAvailable>(async (cc, message) =>
+            {
+                cc.PostEvent(message);
+            });
         }
     }
 }

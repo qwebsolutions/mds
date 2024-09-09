@@ -106,7 +106,7 @@ namespace MdsInfrastructure
 
                 // Redirect to default page
                 app.MapGet("/", () => Results.Redirect(WebServer.Url<Routes.Status.Infra>())).AllowAnonymous().ExcludeFromDescription();
-                await app.MapConfigDocs(references.ApplicationSetup, references.ImplementationGroup, references.DbQueue, references.InfrastructureState);
+                await app.MapConfigDocs(references.ApplicationSetup, references.ImplementationGroup, references.DbQueue, references.InfrastructureState, arguments);
 
                 app.MapSignIn();
                 var api = app.MapGroup("api");
