@@ -9,6 +9,7 @@
     <ProjectReference Include="..\MdsBuildManager\MdsBuildManager.csproj" />
     <ProjectReference Include="..\MdsInfrastructure\MdsInfrastructure.csproj" />
     <ProjectReference Include="..\MdsLocal\MdsLocal.csproj" />
+    <ProjectReference Include="..\MdsTests.CrashTestService\MdsTests.CrashTestService.csproj" />
   </ItemGroup>
 
 </Project>

@@ -204,6 +204,8 @@ public static class ServiceProcessExtensions
                 {
                     // Service was not previously installed, install now
                     await InstallServiceBinaries(commandContext, serviceName, snapshot.ProjectName, snapshot.ProjectVersionTag, nodeName, servicesBasePath, temporaryBinaries, deploymentId);
+                    Mds.CreateServiceCommandDbFile(Mds.GetServiceCommandDbFile(servicesBaseDataPath, serviceName));
+                    Mds.CreateServiceLogDbFile(Mds.GetServiceLogDbFile(servicesBasePath, serviceName));
                     await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} installed ({snapshot.ProjectName} {snapshot.ProjectVersionTag})"));
                     await CreateServiceParametersFile(commandContext, snapshot, servicesBasePath, deploymentId);
                     await CreateServiceInstallFile(snapshot, infrastructureName, servicesBaseDataPath, servicesBasePath);
@@ -225,6 +227,8 @@ public static class ServiceProcessExtensions
                         await UninstallService(commandContext, servicesBasePath, serviceName, nodeName, deploymentId);
                         await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} uninstalled ({installData.ProjectName} {installData.Version})"));
                         await InstallServiceBinaries(commandContext, serviceName, snapshot.ProjectName, snapshot.ProjectVersionTag, nodeName, servicesBasePath, temporaryBinaries, deploymentId);
+                        Mds.CreateServiceCommandDbFile(Mds.GetServiceCommandDbFile(servicesBaseDataPath, serviceName));
+                        Mds.CreateServiceLogDbFile(Mds.GetServiceLogDbFile(servicesBasePath, serviceName));
                         await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} installed ({snapshot.ProjectName} {snapshot.ProjectVersionTag})"));
                         await CreateServiceInstallFile(snapshot, infrastructureName, servicesBaseDataPath, servicesBasePath);
                         await CreateServiceParametersFile(commandContext, snapshot, servicesBasePath, deploymentId);

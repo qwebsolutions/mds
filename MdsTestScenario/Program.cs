@@ -16,6 +16,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
+using static Metapsi.Mds;
 
 public static class Program
 {
@@ -54,6 +55,24 @@ public static class Program
     {
         try
         {
+
+            //var setup = Metapsi.Mds.ServiceSetup.New(new Dictionary<string, string>()
+            //{
+            //    { "ServiceName", "Test" },
+            //    {"InfrastructureName", "ms-test" }
+            //});
+            //var ig = setup.ApplicationSetup.AddImplementationGroup();
+            //CrashTestService.TestService.AddTestService(setup.ApplicationSetup, ig, new CrashTestService.InputArguments()
+            //{
+            //    CrashAfterSeconds = 100,
+            //    ThrowExceptionIntervalSeconds = 10,
+            //    ExitCode = 3
+            //});
+
+
+            //var testApp = setup.Revive();
+            //await testApp.SuspendComplete;
+
             var webhookPort = 3002;
             var webhook_receiver = Task.Run(async () =>
             {
@@ -61,11 +80,18 @@ public static class Program
                 var ig = setup.AddImplementationGroup();
                 var webhookApp = WebApplication.CreateBuilder().Build();
                 webhookApp.Urls.Add($"http://localhost:{webhookPort}");
-                webhookApp.MapPost("/servicecrash", async (Mds.Event.ServiceCrash message) =>
+                webhookApp.MapPost("/servicecrash", async (Mds.Webhook.ServiceCrash message) =>
                 {
                     Console.WriteLine(Metapsi.Serialize.ToJson(message));
                     // Send mail
                 });
+
+                webhookApp.MapPost("/serviceerror", async (Mds.Webhook.ServiceError message) =>
+                {
+                    Console.WriteLine(Metapsi.Serialize.ToJson(message));
+                    // Send mail
+                });
+
                 await webhookApp.RunAsync();
             });
 
@@ -432,6 +458,17 @@ public static class Program
 
     }
 
+    private static async Task UploadV3()
+    {
+        await UploadBinaries(
+            MdsBinariesApiUrl,
+            TestProjectName,
+            "0.3",
+            "4e690a0af24801a51407f2d8f692b65121034725",
+            "win-x64",
+            System.IO.Path.Combine(CleanStartFolder, "MdsTests.CrashTestService.4e690a0af24801a51407f2d8f692b65121034725.zip"));
+    }
+
     private static async Task UploadTestProjectBinaries()
     {
         await UploadV1();
@@ -461,9 +498,16 @@ public static class Program
                 {
                     await cc.SaveDoc<WebHook>(new WebHook()
                     {
-                        Name = "TestHook",
-                        Type = WebHook.WebHookType.ServiceCrash,
+                        Name = "TestHookCrash",
+                        Type = typeof(Mds.Webhook.ServiceCrash).Name,
                         Url = "http://localhost:3002/servicecrash"
+                    });
+
+                    await cc.SaveDoc<WebHook>(new WebHook()
+                    {
+                        Name = "TestHookError",
+                        Type = typeof(Mds.Webhook.ServiceError).Name,
+                        Url = "http://localhost:3002/serviceerror"
                     });
                 });
             });
@@ -560,13 +604,42 @@ public static class Program
                     Name = "DoesNotCrash" + i,
                     Node = localNodeName,
                     Project = TestProjectName,
-                    Version = "0.2",
+                    Version = "0.3",
                     Parameters = new()
                     {
                         new Simplified.Parameter()
                         {
+                            Name = "LogToTextFile",
+                            Value = "shutdown.txt",
+                            //Value = "0",
+                            Type = "Value"
+                        },
+                        new Simplified.Parameter()
+                        {
+                            Name = "LogInfoIntervalSeconds",
+                            Value = "5",
+                            //Value = "0",
+                            Type = "Value"
+                        },
+                        new Simplified.Parameter()
+                        {
+                            Name = "LogErrorIntervalSeconds",
+                            Value = "10",
+                            //Value = "0",
+                            Type = "Value"
+                        },
+                        new Simplified.Parameter()
+                        {
+                            Name = "ThrowExceptionIntervalSeconds",
+                            Value = "20",
+                            //Value = "0",
+                            Type = "Value"
+                        },
+                        new Simplified.Parameter()
+                        {
                             Name = "CrashAfterSeconds",
-                            Value = "1000",
+                            Value = (60+i*5).ToString(),
+                            //Value = "0",
                             Type = "Value"
                         },
                         new Simplified.Parameter()
@@ -646,7 +719,7 @@ public static class Program
         InitializeBuildManagerDatabase();
         InitializeInfraDatabase();
         await StartBuildController();
-        await UploadV2();
+        await UploadV3();
         await StartInfraController();
     }
 

@@ -133,6 +133,8 @@ namespace MdsInfrastructure
             endpoint.OnMessage<InfrastructureEvent>(async (cc, message) =>
             {
                 await cc.Do(MdsCommon.Api.SaveInfrastructureEvent, message);
+
+                
             });
 
             endpoint.OnMessage<ServiceCrash>(async (cc, message) =>
@@ -153,7 +155,7 @@ namespace MdsInfrastructure
                 {
 
                     var allWebHooks = await cc.ListDocs<WebHook>();
-                    var serviceCrashWebHooks = allWebHooks.Where(x => x.Type == WebHook.WebHookType.ServiceCrash);
+                    var serviceCrashWebHooks = allWebHooks.Where(x => x.Type == typeof(Mds.Webhook.ServiceCrash).Name);
 
                     foreach (var wh in serviceCrashWebHooks)
                     {
@@ -161,7 +163,7 @@ namespace MdsInfrastructure
                         {
                             if (!string.IsNullOrWhiteSpace(wh.Url))
                             {
-                                await httpClient.PostAsJsonAsync<Mds.Event.ServiceCrash>(wh.Url, new Mds.Event.ServiceCrash()
+                                await httpClient.PostAsJsonAsync(wh.Url, new Mds.Webhook.ServiceCrash()
                                 {
                                     // TODO: Load last exception from somewhere
                                     Exception = string.Empty,
@@ -216,6 +218,45 @@ namespace MdsInfrastructure
                     FullDescription = $"Service {message.ServiceName} started. ({message.NodeName} {message.ServicePath})",
                     ShortDescription = "Service recovery",
                     Type = InfrastructureEventType.ProcessStart
+                });
+            });
+
+            endpoint.OnMessage<ServiceError>(async (cc, message) =>
+            {
+                var _ = Task.Run(async () =>
+                {
+                    var allWebHooks = await cc.ListDocs<WebHook>();
+                    var serviceCrashWebHooks = allWebHooks.Where(x => x.Type == typeof(Mds.Webhook.ServiceError).Name);
+
+                    foreach (var wh in serviceCrashWebHooks)
+                    {
+                        try
+                        {
+                            if (!string.IsNullOrWhiteSpace(wh.Url))
+                            {
+                                await httpClient.PostAsJsonAsync(wh.Url, new Mds.Webhook.ServiceError()
+                                {
+                                    NodeName = message.NodeName,
+                                    TimestampIso = message.TimestampIso,
+                                    Error = message.Error,
+                                    ServiceName = message.ServiceName,
+                                    ProcessPath = message.ServicePath,
+                                    InfrastructureName = arguments.InfrastructureName
+                                });
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            await cc.Do(MdsCommon.Api.SaveInfrastructureEvent, new InfrastructureEvent()
+                            {
+                                Criticality = InfrastructureEventCriticality.Warning,
+                                Source = arguments.InfrastructureName,
+                                FullDescription = $"Cannot post to webhook {wh.Name}",
+                                ShortDescription = "Webhook post failed",
+                                Type = InfrastructureEventType.ExceptionProcessing
+                            });
+                        }
+                    }
                 });
             });
 

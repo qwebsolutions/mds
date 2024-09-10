@@ -40,6 +40,18 @@ public class ServiceRecovered
     public string ServicePath { get; set; }
 }
 
+/// <summary>
+/// Sent by local when a service has exception or logs error
+/// </summary>
+public class ServiceError
+{
+    public string TimestampIso { get; set; } = DateTime.Now.Roundtrip();
+    public string ServiceName { get; set; }
+    public string NodeName { get; set; }
+    public string ServicePath { get; set; }
+    public string Error { get; set; }
+}
+
 public static class NodeEvent
 {
     /// <summary>

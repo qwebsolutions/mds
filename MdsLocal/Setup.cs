@@ -119,6 +119,7 @@ namespace MdsLocal
             });
 
             applicationSetup.PoolHealthStatus(implementationGroup, nodeName);
+            applicationSetup.PoolServiceLog(implementationGroup, localAppState, sqliteQueue);
 
             applicationSetup.MapInternalEvents(
                 implementationGroup,
