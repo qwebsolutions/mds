@@ -6,6 +6,7 @@ using MdsInfrastructure;
 using MdsLocal;
 using Metapsi;
 using Metapsi.Syntax;
+using Microsoft.AspNetCore.Builder;
 using System;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -53,6 +54,21 @@ public static class Program
     {
         try
         {
+            var webhookPort = 3002;
+            var webhook_receiver = Task.Run(async () =>
+            {
+                var setup = Metapsi.ApplicationBuilder.New();
+                var ig = setup.AddImplementationGroup();
+                var webhookApp = WebApplication.CreateBuilder().Build();
+                webhookApp.Urls.Add($"http://localhost:{webhookPort}");
+                webhookApp.MapPost("/servicecrash", async (Mds.Event.ServiceCrash message) =>
+                {
+                    Console.WriteLine(Metapsi.Serialize.ToJson(message));
+                    // Send mail
+                });
+                await webhookApp.RunAsync();
+            });
+
             //var infraDbPath = System.IO.Path.Combine(MdsFolder, "MdsInfrastructure.db");
 
             ////var sqliteTraceListener = new SqliteTraceListener();
@@ -79,13 +95,15 @@ public static class Program
 
             var configuration = await CreateConfiguration(1, 5);
             //configuration.Services[0].Enabled = false;
-            //await DeployConfiguration(configuration);
+            await DeployConfiguration(configuration);
             await Task.Delay(System.TimeSpan.FromSeconds(10));
 
             await UploadV1();
 
-            //configuration.Services = configuration.Services.Skip(1).ToList();
-            //configuration.Services[0].Parameters[0].Value = "1001";
+
+
+            configuration.Services = configuration.Services.Skip(1).ToList();
+            configuration.Services[0].Parameters[0].Value = "1001";
 
             //foreach (var service in configuration.Services)
             //{
@@ -435,6 +453,20 @@ public static class Program
             InfrastructureEventsInputChannel = "161.35.193.157/ms-test.Events",
             BuildManagerUrl = "http://localhost:5011"
         }, DateTime.UtcNow);
+
+        infraReferences.ApplicationSetup.MapEvent<ApplicationRevived>(
+            e =>
+            {
+                e.Using(infraReferences.InfrastructureState, infraReferences.ImplementationGroup).EnqueueCommand(async (cc, state) =>
+                {
+                    await cc.SaveDoc<WebHook>(new WebHook()
+                    {
+                        Name = "TestHook",
+                        Type = WebHook.WebHookType.ServiceCrash,
+                        Url = "http://localhost:3002/servicecrash"
+                    });
+                });
+            });
 
         //infraReferences.ApplicationSetup.MapEvent<ApplicationRevived>(e =>
         //{

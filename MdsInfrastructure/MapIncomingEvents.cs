@@ -5,13 +5,16 @@ using Metapsi.SignalR;
 using Microsoft.AspNetCore.Routing;
 using System;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace MdsInfrastructure
 {
     public static partial class MdsInfrastructureApplication
     {
-        public static void MapIncomingEvents(this IEndpointRouteBuilder endpoint, InputArguments arguments, MailSender.State mailSender)
+        public static void MapIncomingEvents(this IEndpointRouteBuilder endpoint, InputArguments arguments, MailSender.State mailSender, HttpClient httpClient)
         {
             endpoint.OnMessage<DeploymentEvent.DeploymentComplete>(async (cc, message) =>
             {
@@ -145,6 +148,47 @@ namespace MdsInfrastructure
                 };
 
                 await cc.Do(MdsCommon.Api.SaveInfrastructureEvent, infraEvent);
+
+                var _ = Task.Run(async () =>
+                {
+
+                    var allWebHooks = await cc.ListDocs<WebHook>();
+                    var serviceCrashWebHooks = allWebHooks.Where(x => x.Type == WebHook.WebHookType.ServiceCrash);
+
+                    foreach (var wh in serviceCrashWebHooks)
+                    {
+                        try
+                        {
+                            if (!string.IsNullOrWhiteSpace(wh.Url))
+                            {
+                                await httpClient.PostAsJsonAsync<Mds.Event.ServiceCrash>(wh.Url, new Mds.Event.ServiceCrash()
+                                {
+                                    // TODO: Load last exception from somewhere
+                                    Exception = string.Empty,
+                                    ExitCode = message.ExitCode,
+                                    ProcessPath = message.ServicePath,
+                                    ServiceName = message.ServiceName,
+                                    InfrastructureName = arguments.InfrastructureName,
+                                    NodeName = message.NodeName
+                                });
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            await cc.Do(MdsCommon.Api.SaveInfrastructureEvent, new InfrastructureEvent()
+                            {
+                                Criticality = InfrastructureEventCriticality.Warning,
+                                Source = arguments.InfrastructureName,
+                                Timestamp = MetapsiDateTime.FromRoundTrip(message.TimestampIso),
+                                FullDescription = $"Cannot post to webhook {wh.Name}",
+                                ShortDescription = "Webhook post failed",
+                                Type = InfrastructureEventType.ExceptionProcessing
+                            });
+                        }
+                    }
+                });
+
+
                 if (mailSender != null)
                 {
                     string subject = $"{arguments.InfrastructureName} {infraEvent.ShortDescription} {infraEvent.Source}";

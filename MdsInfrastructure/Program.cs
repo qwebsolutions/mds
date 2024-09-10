@@ -111,7 +111,7 @@ namespace MdsInfrastructure
                 app.MapSignIn();
                 var api = app.MapGroup("api");
                 api.MapFrontendApi(arguments, references.DbQueue);
-                api.MapGroup("event").MapIncomingEvents(arguments, references.MailSender);
+                api.MapGroup("event").MapIncomingEvents(arguments, references.MailSender, references.HttpClient);
 
                 Register.Everything(webServerRefs, references.DbQueue);
                 references.WebApplication = webServerRefs.WebApplication;

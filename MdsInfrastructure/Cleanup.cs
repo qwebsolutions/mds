@@ -191,8 +191,8 @@ public static class Cleanup
                     }
 
                     var removedEventsCount = await dbQueue.CleanupInfrastructureEvents(e.EventData.KeepEventsMaxCount, e.EventData.KeepEventsMaxDays);
-                    
-                    if (e.EventData.KeepEventsMaxCount > 0 || e.EventData.KeepEventsMaxDays > 0)
+
+                    if (e.EventData.KeepEventsMaxCount >= 0 || e.EventData.KeepEventsMaxDays >= 0)
                     {
                         var allNodes = await Db.LoadAllNodes(dbQueue);
                         foreach (var node in allNodes)

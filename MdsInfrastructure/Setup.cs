@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Metapsi.Sqlite;
 using System.Collections;
+using System.Net.Http;
 
 namespace MdsInfrastructure
 {
@@ -26,6 +27,7 @@ namespace MdsInfrastructure
             public MdsInfrastructureApplication.State InfrastructureState { get; set; }
             public Microsoft.AspNetCore.Builder.WebApplication WebApplication { get; set; }
             public MailSender.State MailSender { get; set; }
+            public HttpClient HttpClient { get; set; }
         }
 
         public static References Setup(
@@ -35,6 +37,8 @@ namespace MdsInfrastructure
             string fullDbPath = Metapsi.RelativePath.SearchUpfolder(RelativePath.From.EntryPath, arguments.DbPath);
 
             var dbQueue = new SqliteQueue(fullDbPath);
+
+            HttpClient httpClient = new HttpClient();
 
             Metapsi.Mds.LogToServiceText(arguments.LogFilePath, start, new LogMessage()
             {
@@ -277,8 +281,6 @@ namespace MdsInfrastructure
                     if (string.IsNullOrEmpty(arguments.BuildManagerUrl))
                         return new List<AlgorithmInfo>();
 
-                    System.Net.Http.HttpClient httpClient = new System.Net.Http.HttpClient();
-
                     var result = await httpClient.GetAsync($"{arguments.BuildManagerUrl}/ListBinaries");
                     var buildsJson = await result.Content.ReadAsStringAsync();
                     var THEOptions = new System.Text.Json.JsonSerializerOptions()
@@ -466,6 +468,7 @@ namespace MdsInfrastructure
                 DbQueue = dbQueue,
                 InfrastructureState = infrastructure,
                 MailSender = mailSender,
+                HttpClient = httpClient
             };
         }
 

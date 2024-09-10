@@ -54,6 +54,7 @@ public static class ConfigExtensions
                 });
 
                 b.AddDoc<ConfigKey>(x => x.Key);
+                b.AddDoc<WebHook>(x => x.Name);
             });
     }
 
