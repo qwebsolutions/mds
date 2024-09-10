@@ -13,6 +13,7 @@ public static class DebugTo
 
     public static async Task File(string fileName, string text)
     {
+#if DEBUG
         await FileCreatorQueue.Enqueue(async () =>
         {
             if (!FileWriterQueues.ContainsKey(fileName))
@@ -33,5 +34,6 @@ public static class DebugTo
             builder.AppendLine(text);
             await System.IO.File.AppendAllTextAsync(fileName, builder.ToString());
         });
+#endif
     }
 }
