@@ -8,8 +8,8 @@
   </PropertyGroup>	
   
   <PropertyGroup Condition="$(SolutionFileName) != 'Mds.Dev.sln'">
-  	<MetapsiVersion>0.11.1</MetapsiVersion>
-	<MetapsiServiceVersion>0.1.1</MetapsiServiceVersion>
+  	<MetapsiVersion>*</MetapsiVersion>
+	<MetapsiServiceVersion>*</MetapsiServiceVersion>
   </PropertyGroup>	
   
 </Project>
