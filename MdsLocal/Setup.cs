@@ -69,6 +69,14 @@ namespace MdsLocal
                 sqliteQueue,
                 arguments.BuildTarget);
 
+            implementationGroup.MapRequest(MdsLocalApplication.GetLocalSettings,
+                async (rc) => new LocalSettings()
+                {
+                    FullDbPath = fullDbPath,
+                    InfrastructureApiUrl = infrastructureUrl,
+                    NodeName = nodeName
+                });
+
             implementationGroup.MapRequest(MdsLocalApplication.GetFullLocalStatus, async (rc) =>
             {
                 return await LocalDb.LoadFullLocalStatus(sqliteQueue, nodeName);
