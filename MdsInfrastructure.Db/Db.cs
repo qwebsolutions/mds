@@ -14,44 +14,6 @@ namespace MdsInfrastructure
 {
     public static class Db
     {
-        public static async Task<string> ValidateSchema(
-            SqliteQueue sqliteQueue)
-        {
-            var fieldsDiff = await Validate.ValidateSqliteSchema(sqliteQueue.DbPath, new System.Collections.Generic.List<Type>()
-            {
-                typeof(Application),
-                typeof(InfrastructureConfiguration),
-                //typeof(ConfigurationNote),
-                typeof(Project),
-                typeof(ProjectVersion),
-                typeof(ProjectVersionBinaries),
-                typeof(Deployment),
-                typeof(DeploymentServiceTransition),
-                typeof(EnvironmentType),
-                typeof(MdsCommon.InfrastructureEvent),
-                typeof(InfrastructureNode),
-                typeof(InfrastructureService),
-                typeof(InfrastructureServiceParameterBinding),
-                typeof(InfrastructureServiceParameterDeclaration),
-                typeof(InfrastructureServiceParameterValue),
-                typeof(InfrastructureVariable),
-                typeof(MdsCommon.MachineStatus),
-                typeof(MdsCommon.ServiceConfigurationSnapshot),
-                typeof(MdsCommon.ServiceConfigurationSnapshotParameter),
-                typeof(MdsCommon.ServiceStatus),
-                typeof(ParameterType),
-                typeof(NoteType),
-                typeof(InfrastructureServiceNote)
-            });
-
-            if (fieldsDiff.SameFields == false)
-            {
-                return $"Db schema mismatch: extra fields {Metapsi.Serialize.ToJson(fieldsDiff.ExtraFields)}, missing fields {Metapsi.Serialize.ToJson(fieldsDiff.MissingFields)}, db path {sqliteQueue.DbPath}";
-            }
-
-            return string.Empty;
-        }
-
         public static async Task<InfrastructureStatusData> LoadInfrastructureStatus(
             SqliteQueue sqliteQueue)
         {

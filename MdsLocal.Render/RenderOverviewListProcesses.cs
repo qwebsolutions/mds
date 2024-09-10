@@ -35,27 +35,6 @@ namespace MdsLocal
                 {
                     b.SetClass("flex flex-col space-y-4");
                 },
-                b.Optional(
-                    b.Get(model, x => x.Warnings.Any()),
-                    b =>
-                    {
-                        return b.HtmlDiv(
-                            b =>
-                            {
-                                b.SetClass("w-full flex flex-col gap-4");
-                            },
-                            b.Map(
-                                b.Get(model, x => x.Warnings),
-                                (b, w) =>
-                                {
-                                    return b.HtmlDiv(
-                                        b =>
-                                        {
-                                            b.SetClass("border border-solid border-red-300 bg-red-100 text-red-300 rounded w-full p-2 mb-4 drop-shadow transition-all");
-                                        },
-                                        b.Text(w));
-                                }));
-                    }),
                 b.InfoPanel(
                     b.Const(Panel.Style.Info),
                     b => b.Text(title),

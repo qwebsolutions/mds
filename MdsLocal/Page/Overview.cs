@@ -23,7 +23,6 @@ namespace MdsLocal
             var page = new OverviewPage()
             {
                 LocalSettings = await commandContext.Do(MdsLocalApplication.GetLocalSettings),
-                Warnings = await commandContext.Do(MdsLocalApplication.GetWarnings),
                 FullLocalStatus = await commandContext.Do(MdsLocalApplication.GetFullLocalStatus),
                 ServiceProcesses = await commandContext.Do(MdsLocalApplication.GetRunningProcesses)
             };

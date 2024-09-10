@@ -13,7 +13,6 @@ public static partial class Status
     public static async Task<InfrastructureStatus> LoadInfrastructureStatusPageModel(CommandContext commandContext)
     {
         System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
-        await DebugTo.File("c:\\github\\qwebsolutions\\mds\\debug\\InfraStatus.txt", DateTime.UtcNow.Roundtrip());
         var statusPage = await Load.FullStatusData(commandContext);
         var r = new MdsInfrastructure.InfrastructureStatus()
         {
@@ -22,9 +21,6 @@ public static partial class Status
             NodePanels = Load.GetNodePanelsData(statusPage, statusPage.InfrastructureNodes.Select(x => x.NodeName)),
             ServicePanels = Load.GetServicePanelData(statusPage, statusPage.Deployment.GetDeployedServices().Select(x => x.ServiceName))
         };
-
-        await DebugTo.File("c:\\github\\qwebsolutions\\mds\\debug\\InfraStatus.txt", DateTime.UtcNow.Roundtrip());
-        await DebugTo.File("c:\\github\\qwebsolutions\\mds\\debug\\InfraStatus.txt", $"{sw.ElapsedMilliseconds.ToString()} ms");
         return r;
     }
 
@@ -93,16 +89,6 @@ internal static partial class Load
 
     public static async Task<InfrastructureStatusData> FullStatusData(CommandContext commandContext)
     {
-        string validation = await commandContext.Do(Backend.ValidateSchema);
-
-        if (!string.IsNullOrEmpty(validation))
-        {
-            return new InfrastructureStatusData()
-            {
-                SchemaValidationMessage = validation
-            };
-        }
-
         var infrastructureStatus = await commandContext.Do(Backend.LoadInfraStatus);
         return infrastructureStatus;
     }

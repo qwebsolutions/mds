@@ -8,8 +8,6 @@ namespace MdsLocal
 {
     public static partial class MdsLocalApplication
     {
-        public static Request<List<string>> PerformStartupValidations { get; set; } = new Request<List<string>>(nameof(PerformStartupValidations));
-        public static Request<List<string>> GetWarnings { get; set; } = new Request<List<string>>(nameof(GetWarnings));
         public static Request<LocalSettings> GetLocalSettings { get; set; } = new Request<LocalSettings>(nameof(GetLocalSettings));
         public static Request<FullLocalStatus> GetFullLocalStatus { get; set; } = new Request<FullLocalStatus>(nameof(GetFullLocalStatus));
         public static Request<IEnumerable<SyncResult>> GetSyncHistory { get; set; } = new Request<IEnumerable<SyncResult>>(nameof(GetSyncHistory));
@@ -51,27 +49,5 @@ namespace MdsLocal
             public string CallStack { get; set; }
             public int Processed { get; set; }
         }
-
-
-        
-
-        //public static async Task SendCommand(CommandContext commandContext, State state, string serviceName, string command)
-        //{
-        //    switch (command)
-        //    {
-        //        case MdsCommon.NodeCommand.StopService:
-        //            commandContext.Logger.LogInfo($"Attempting to restart service {serviceName}");
-        //            var serviceProcesses = await commandContext.Do(GetRunningProcesses);
-        //            var runningService = serviceProcesses.SingleOrDefault(x => x.ServiceName == serviceName);
-
-        //            if (runningService == null)
-        //            {
-        //                commandContext.Logger.LogError($"Cannot restart! Service {serviceName} is not running!");
-        //                return;
-        //            }
-        //            await commandContext.Do(StopProcess, runningService);
-        //            break;
-        //    }
-        //}
     }
 }

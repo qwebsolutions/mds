@@ -27,11 +27,6 @@ namespace MdsLocal
             typeof(MdsCommon.InfrastructureEvent)
         };
 
-        public static async Task<Metapsi.Sqlite.Validate.FieldsDiff> ValidateSchema(string fullDbPath)
-        {
-            return await Metapsi.Sqlite.Validate.ValidateSqliteSchema(fullDbPath, SchemaRecords);
-        }
-
         public static async Task<List<MdsCommon.ServiceConfigurationSnapshot>> LoadKnownConfiguration(SqliteQueue sqliteQueue)
         {
             return await sqliteQueue.WithRollback(async c =>

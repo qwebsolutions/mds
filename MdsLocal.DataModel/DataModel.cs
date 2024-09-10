@@ -38,7 +38,6 @@ namespace MdsLocal
         public LocalSettings LocalSettings { get; set; } = new();
         public FullLocalStatus FullLocalStatus { get; set; } = new();
         public List<MdsLocal.RunningServiceProcess> ServiceProcesses { get; set; } = new();
-        public List<string> Warnings { get; set; } = new List<string>();
         public List<ProcessRow> Processes { get; set; } = new();
         public string OverviewText { get; set; } = string.Empty;
         public ProcessRow RestartProcess { get; set; } = new();

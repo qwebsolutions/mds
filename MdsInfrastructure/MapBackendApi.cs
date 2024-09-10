@@ -32,7 +32,6 @@ namespace MdsInfrastructure
                 ig.MapCommand(command, async (rc, p) => await dbCall(dbQueue, p));
             }
 
-            MapRequest(Backend.ValidateSchema, Db.ValidateSchema);
             MapRequest(Backend.LoadInfraStatus, Db.LoadInfrastructureStatus);
             MapRequest(Backend.LoadAllConfigurationHeaders, Db.LoadConfigurationHeaders);
             MapRequest1(Backend.LoadConfiguration, Db.LoadSpecificConfiguration);
