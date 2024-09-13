@@ -67,6 +67,8 @@ namespace MdsBuildManager
             //var newBuilds = builds
             //                .Where(build => !knownHashes.Any(h => h.BuildId == build.Id));
 
+            var buildsFound = false;
+
             foreach (var build in builds)
             {
                 var buildNumber = build.BuildNumber;
@@ -110,9 +112,18 @@ namespace MdsBuildManager
                                     version,
                                     build.Id,
                                     sqliteQueue);
+                                buildsFound = true;
                             }
                         }
                     }
+                }
+            }
+
+            if (buildsFound)
+            {
+                if (commandContext != null)
+                {
+                    commandContext.PostEvent(new PollingComplete());
                 }
             }
         }
