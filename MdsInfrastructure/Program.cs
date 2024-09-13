@@ -106,14 +106,14 @@ namespace MdsInfrastructure
 
                 // Redirect to default page
                 app.MapGet("/", () => Results.Redirect(WebServer.Url<Routes.Status.Infra>())).AllowAnonymous().ExcludeFromDescription();
-                await app.MapConfigDocs(references.ApplicationSetup, references.ImplementationGroup, references.DbQueue, references.InfrastructureState, arguments);
+                await app.MapConfigDocs(references.ApplicationSetup, references.ImplementationGroup, references.SqliteQueue, references.InfrastructureState, arguments);
 
                 app.MapSignIn();
                 var api = app.MapGroup("api");
-                api.MapFrontendApi(arguments, references.DbQueue);
-                api.MapGroup("event").MapIncomingEvents(arguments, references.MailSender, references.HttpClient);
+                api.MapFrontendApi(arguments, references.SqliteQueue);
+                api.MapGroup("event").MapIncomingEvents(arguments, references.MailSender, references.HttpClient, references.SqliteQueue);
 
-                Register.Everything(webServerRefs, references.DbQueue);
+                Register.Everything(webServerRefs, references.SqliteQueue);
                 references.WebApplication = webServerRefs.WebApplication;
                 return references;
             }

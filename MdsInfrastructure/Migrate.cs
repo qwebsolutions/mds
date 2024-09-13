@@ -22,6 +22,7 @@ namespace MdsInfrastructure
                 {
                     await MdsCommon.Db.AddSnapshotEnabledField(t);
                     await MdsCommon.Db.DropSnapshotHashField(t);
+                    await Db.AddDbDeploymentEventErrorField(t);
                 });
 
             await Metapsi.Sqlite.Db.WithCommit(fullDbPath, async c =>

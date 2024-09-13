@@ -39,8 +39,6 @@ public static class ConfigExtensions
         MdsInfrastructureApplication.InputArguments inputArguments)
     {
         var rootEndpoint = await endpoint.UseDocs(
-            applicationSetup,
-            implementationGroup,
             sqliteQueue,
             b =>
             {
@@ -58,12 +56,12 @@ public static class ConfigExtensions
             });
     }
 
-    private static async Task InitializeConfigKey(this CommandContext commandContext, string keyName,string defaultValue, string description)
+    private static async Task InitializeConfigKey(this SqliteQueue sqliteQueue, string keyName, string defaultValue, string description)
     {
-        var configKey = await commandContext.GetDoc<ConfigKey>(keyName);
+        var configKey = await sqliteQueue.GetDocument<ConfigKey>(keyName);
         if (configKey == null)
         {
-            await commandContext.SaveDoc(new ConfigKey()
+            await sqliteQueue.SaveDocument(new ConfigKey()
             {
                 Key = keyName,
                 Value = defaultValue,
@@ -72,7 +70,7 @@ public static class ConfigExtensions
         }
     }
 
-    public static async Task InitializeDefaultConfigKeys(this CommandContext commandContext, MdsInfrastructureApplication.InputArguments inputArguments)
+    public static async Task InitializeDefaultConfigKeys(this SqliteQueue sqliteQueue, MdsInfrastructureApplication.InputArguments inputArguments)
     {
         string localIP;
         using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
@@ -82,7 +80,7 @@ public static class ConfigExtensions
             localIP = endPoint.Address.ToString();
         }
 
-        await commandContext.InitializeConfigKey(
+        await sqliteQueue.InitializeConfigKey(
             ConfigKey.InfrastructureInternalBaseUrl,
             $"http://{localIP}:{inputArguments.UiPort}",
             "The base url for internal API calls.");
@@ -92,27 +90,27 @@ public static class ConfigExtensions
         //    $"http://localhost",
         //    "The base url for external HTTP.");
 
-        await commandContext.InitializeConfigKey(
+        await sqliteQueue.InitializeConfigKey(
             ConfigKey.CleanupRunDailyAt,
             "02:00",
             "Runs all cleanup procedures daily at the specified hour. Must be in 24 hours format. Empty value disables automatic cleanup");
 
-        await commandContext.InitializeConfigKey(
+        await sqliteQueue.InitializeConfigKey(
             ConfigKey.CleanupDeploymentsKeepMaxCount,
             "10",
             "Maximum amount of recent deployments to keep after a cleanup (excluding current deployment). Must be an int number. The most recent deployment is active and never deleted. 0 = always keep just current. Empty value disables cleanup based on count");
 
-        await commandContext.InitializeConfigKey(
+        await sqliteQueue.InitializeConfigKey(
             ConfigKey.CleanupDeploymentsKeepMaxDays,
             "30",
             "Only deployments newer than X days are kept after cleanup. Must be an int number. The most recent deployment is active and never deleted. Empty value disables cleanup based on timestamp");
 
-        await commandContext.InitializeConfigKey(
+        await sqliteQueue.InitializeConfigKey(
             ConfigKey.CleanupEventsKeepMaxCount,
             "100",
             "Maximum amount of recent infrastructure events to keep after a cleanup. Must be an int number. Empty value disables cleanup based on count");
 
-        await commandContext.InitializeConfigKey(
+        await sqliteQueue.InitializeConfigKey(
             ConfigKey.CleanupEventsKeepMaxDays,
             "30",
             "Only infrastructure events newer than X days are kept after cleanup. Must be an int number. Empty value disables cleanup based on timestamp");

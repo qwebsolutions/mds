@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using Metapsi;
 using System.Threading.Tasks;
@@ -97,7 +95,7 @@ namespace MdsBuildManager
                 endpoints.MapControllers();
             });
 
-            await app.UseDocs(setup, ig, Program.SqliteQueue,
+            await app.UseDocs(Program.SqliteQueue,
                 b =>
                 {
                     b.SetOverviewUrl("config");
@@ -106,12 +104,12 @@ namespace MdsBuildManager
 
             var eventsEndpoint = app.MapGroup("event");
 
-            eventsEndpoint.OnMessage<InfrastructureControllerStarted>(async (cc, message) =>
+            eventsEndpoint.OnMessage<InfrastructureControllerStarted>(async (message) =>
             {
-                var knownInfrastructure = await cc.GetDoc<InfrastructureController>(message.InfrastructureName);
+                var knownInfrastructure = await SqliteQueue.GetDocument<InfrastructureController>(message.InfrastructureName);
                 if (knownInfrastructure == null)
                 {
-                    await cc.SaveDoc(new InfrastructureController()
+                    await SqliteQueue.SaveDocument(new InfrastructureController()
                     {
                         Name = message.InfrastructureName,
                         InternalBaseUrl = message.InternalBaseUrl
@@ -159,7 +157,7 @@ namespace MdsBuildManager
 
                 e.Using(binariesNotifierState, ig).EnqueueCommand(async (cc, state) =>
                 {
-                    var allControllers = await cc.ListDocs<InfrastructureController>();
+                    var allControllers = await SqliteQueue.ListDocuments<InfrastructureController>();
                     foreach (var controller in allControllers)
                     {
                         cc.NotifyUrl(controller.InternalBaseUrl.TrimEnd('/') + "/api/event", new BinariesAvailable());

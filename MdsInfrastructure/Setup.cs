@@ -23,7 +23,7 @@ namespace MdsInfrastructure
         {
             public ApplicationSetup ApplicationSetup { get; set; }
             public ImplementationGroup ImplementationGroup { get; set; }
-            public SqliteQueue DbQueue { get; set; }
+            public SqliteQueue SqliteQueue { get; set; }
             public MdsInfrastructureApplication.State InfrastructureState { get; set; }
             public Microsoft.AspNetCore.Builder.WebApplication WebApplication { get; set; }
             public MailSender.State MailSender { get; set; }
@@ -36,7 +36,7 @@ namespace MdsInfrastructure
         {
             string fullDbPath = Metapsi.RelativePath.SearchUpfolder(RelativePath.From.EntryPath, arguments.DbPath);
 
-            var dbQueue = new SqliteQueue(fullDbPath);
+            var sqliteQueue = new SqliteQueue(fullDbPath);
 
             HttpClient httpClient = new HttpClient();
 
@@ -58,7 +58,7 @@ namespace MdsInfrastructure
                 {
                     case Metapsi.Log.Error error:
                         {
-                            await MdsCommon.Db.SaveInfrastructureEvent(dbQueue, new InfrastructureEvent()
+                            await MdsCommon.Db.SaveInfrastructureEvent(sqliteQueue, new InfrastructureEvent()
                             {
                                 Criticality = "Error",
                                 FullDescription = error.ToString(),
@@ -72,7 +72,7 @@ namespace MdsInfrastructure
 
                     case Metapsi.Log.Exception ex:
                         {
-                            await MdsCommon.Db.SaveInfrastructureEvent(dbQueue, new InfrastructureEvent()
+                            await MdsCommon.Db.SaveInfrastructureEvent(sqliteQueue, new InfrastructureEvent()
                             {
                                 Criticality = "Error",
                                 FullDescription = ex.ToString(),
@@ -99,18 +99,18 @@ namespace MdsInfrastructure
             //var healthListener = applicationSetup.AddBusinessState(new RedisListener.State());
             //var eventsListener = applicationSetup.AddBusinessState(new RedisListener.State());
 
-            applicationSetup.AddCleanup(implementationGroup, infrastructure, dbQueue);
+            applicationSetup.AddCleanup(implementationGroup, infrastructure, sqliteQueue);
 
             applicationSetup.SetupMessagingApi(implementationGroup);
 
             implementationGroup.MapRequest(MdsCommon.Api.GetAllInfrastructureEvents, async (rc) =>
             {
-                return await MdsCommon.Db.LoadAllInfrastructureEvents(dbQueue);
+                return await MdsCommon.Db.LoadAllInfrastructureEvents(sqliteQueue);
             });
 
             implementationGroup.MapRequest(MdsCommon.Api.GetMostRecentEventOfService, async (rc, serviceName) =>
             {
-                return await MdsCommon.Db.LoadMostRecentInfrastructureEvent(dbQueue, serviceName);
+                return await MdsCommon.Db.LoadMostRecentInfrastructureEvent(sqliteQueue, serviceName);
             });
 
             MailSender.State mailSender = null;
@@ -142,17 +142,17 @@ namespace MdsInfrastructure
                     e.Using(infrastructure, implementationGroup).EnqueueCommand(SyncBuilds);
                     e.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
                     {
-                        await cc.RegisterNodesMessaging(dbQueue);
+                        await cc.RegisterNodesMessaging(sqliteQueue);
                     });
                     e.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
                     {
-                        await cc.InitializeDefaultConfigKeys(arguments);
+                        await sqliteQueue.InitializeDefaultConfigKeys(arguments);
                     });
                     e.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
                     {
                         if (!string.IsNullOrEmpty(arguments.BuildManagerUrl))
                         {
-                            var ownBaseUrl = await cc.GetDoc<ConfigKey>(ConfigKey.InfrastructureInternalBaseUrl);
+                            var ownBaseUrl = await sqliteQueue.GetDocument<ConfigKey>(ConfigKey.InfrastructureInternalBaseUrl);
 
                             if (ownBaseUrl != null)
                             {
@@ -208,7 +208,7 @@ namespace MdsInfrastructure
             applicationSetup.MapEvent<Backend.Event.BinariesSynchronized>(
                 e =>
                 {
-                    var _ = MdsCommon.Db.SaveInfrastructureEvent(dbQueue, new MdsCommon.InfrastructureEvent()
+                    var _ = MdsCommon.Db.SaveInfrastructureEvent(sqliteQueue, new MdsCommon.InfrastructureEvent()
                     {
                         Criticality = "Info",
                         ShortDescription = "Binaries synchronized",
@@ -231,7 +231,7 @@ namespace MdsInfrastructure
 
             #region Operation mappings
 
-            implementationGroup.MapBackendApi(dbQueue, arguments.InfrastructureName);
+            implementationGroup.MapBackendApi(sqliteQueue, arguments.InfrastructureName);
 
             implementationGroup.MapRequest(MdsCommon.Api.GetAdminCredentials, async (rc) =>
             {
@@ -322,7 +322,7 @@ namespace MdsInfrastructure
                             case "getinfrastructureconfiguration":
                                 {
                                     string nodeName = getRequest.Segments.ElementAt(1);
-                                    var allNodes = await Db.LoadAllNodes(dbQueue);
+                                    var allNodes = await Db.LoadAllNodes(sqliteQueue);
                                     InfrastructureNode node = allNodes.Single(x => x.NodeName == nodeName);
                                     rc.Logger.LogDebug($"GetInfrastructureConfiguration: node name {nodeName}");
 
@@ -360,29 +360,29 @@ namespace MdsInfrastructure
                             case "getcontrollerconfiguration":
                                 {
                                     string nodeName = getRequest.Segments.ElementAt(1);
-                                    var nodeServicesSnapshot = await Db.LoadNodeConfiguration(dbQueue, nodeName);
+                                    var nodeServicesSnapshot = await Db.LoadNodeConfiguration(sqliteQueue, nodeName);
                                     return ToJsonResponse(nodeServicesSnapshot);
                                 }
                             case "getserviceconfiguration":
                                 {
                                     string serviceName = getRequest.Segments.ElementAt(1);
-                                    var serviceSnapshot = await Db.LoadServiceConfiguration(dbQueue, serviceName);
+                                    var serviceSnapshot = await Db.LoadServiceConfiguration(sqliteQueue, serviceName);
                                     substitutionValues.Add("ServiceName", serviceName);
                                     return ToJsonResponse(serviceSnapshot);
                                 }
                             case "getcurrentdeployment":
                                 {
-                                    var deployment = await Db.LoadActiveDeployment(dbQueue);
+                                    var deployment = await Db.LoadActiveDeployment(sqliteQueue);
                                     return ToJsonResponse(deployment);
                                 }
                             case "getinfrastructurestatus":
                                 {
-                                    return ToJsonResponse(await Db.LoadFullInfrastructureHealthStatus(dbQueue));
+                                    return ToJsonResponse(await Db.LoadFullInfrastructureHealthStatus(sqliteQueue));
                                 }
                             case "getservicestatus":
                                 {
                                     string serviceName = getRequest.Segments.ElementAt(1);
-                                    var fullStatus = await Db.LoadFullInfrastructureHealthStatus(dbQueue);
+                                    var fullStatus = await Db.LoadFullInfrastructureHealthStatus(sqliteQueue);
                                     if (!fullStatus.SelectMany(x => x.ServiceStatuses).Any(x => x.ServiceName == serviceName))
                                     {
                                         return ToTypedJsonResponse(new ServiceStatus() { ServiceName = serviceName });
@@ -465,7 +465,7 @@ namespace MdsInfrastructure
             {
                 ApplicationSetup = applicationSetup,
                 ImplementationGroup = implementationGroup,
-                DbQueue = dbQueue,
+                SqliteQueue = sqliteQueue,
                 InfrastructureState = infrastructure,
                 MailSender = mailSender,
                 HttpClient = httpClient

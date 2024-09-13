@@ -8,6 +8,10 @@ echo $(git -C $frameworkRoot rev-parse HEAD) > ../framework_commit.txt
 echo $(git -C $servicesRoot rev-parse HEAD) > ../services_commit.txt
 
 rm ../nugets -rf
+mkdir ../nugets
+
+rm ../global -rf
+mkdir ../global
 
 echo "Output folder: $outputFolder"
 
@@ -17,6 +21,7 @@ do
 	dotnet pack $frameworkRoot/$p -o $outputFolder -c Debug -p:Version="0.0.0-dev" -p:MetapsiVersion="0.0.0-dev" -p:RestoreAdditionalProjectSources=$(pwd)/../nugets
 done
 
+echo $services
 
 for p in ${services[@]}
 do

@@ -12,4 +12,9 @@
 	<MetapsiServiceVersion>*</MetapsiServiceVersion>
   </PropertyGroup>	
   
+	<Target Name="NugetVersion" AfterTargets="Build" >
+		<Message Text="Metapsi version:$(MetapsiVersion)" Importance="high"/>
+		<Message Text="Metapsi services:$(MetapsiServiceVersion)" Importance="high"/>
+	</Target>
+  
 </Project>

@@ -56,22 +56,42 @@ public static class Program
         try
         {
 
-            //var setup = Metapsi.Mds.ServiceSetup.New(new Dictionary<string, string>()
-            //{
-            //    { "ServiceName", "Test" },
-            //    {"InfrastructureName", "ms-test" }
-            //});
-            //var ig = setup.ApplicationSetup.AddImplementationGroup();
-            //CrashTestService.TestService.AddTestService(setup.ApplicationSetup, ig, new CrashTestService.InputArguments()
-            //{
-            //    CrashAfterSeconds = 100,
-            //    ThrowExceptionIntervalSeconds = 10,
-            //    ExitCode = 3
-            //});
+            var infraReferences = await MdsInfrastructure.Program.SetupGlobalController(new MdsInfrastructure.MdsInfrastructureApplication.InputArguments()
+            {
+                AdminPassword = "admin!",
+                AdminUserName = "admin",
+                InfrastructureName = "mstest",
+                UiPort = 9125,
+                DbPath = "c:\\github\\qwebsolutions\\mds\\tests\\MdsInfrastructure.freeze2.db",
+                NodeCommandOutputChannel = "",
+                BroadcastDeploymentOutputChannel = "161.35.193.157/ms-test.BroadcastDeployment",
+                HealthStatusInputChannel = "161.35.193.157/ms-test.HealthStatus",
+                InfrastructureEventsInputChannel = "161.35.193.157/ms-test.Events",
+                BuildManagerUrl = "http://localhost:5011"
+            }, DateTime.UtcNow);
+
+            var app = infraReferences.ApplicationSetup.Revive();
+
+            await app.SuspendComplete;
 
 
-            //var testApp = setup.Revive();
-            //await testApp.SuspendComplete;
+
+            ////var setup = Metapsi.Mds.ServiceSetup.New(new Dictionary<string, string>()
+            ////{
+            ////    { "ServiceName", "Test" },
+            ////    {"InfrastructureName", "ms-test" }
+            ////});
+            ////var ig = setup.ApplicationSetup.AddImplementationGroup();
+            ////CrashTestService.TestService.AddTestService(setup.ApplicationSetup, ig, new CrashTestService.InputArguments()
+            ////{
+            ////    CrashAfterSeconds = 100,
+            ////    ThrowExceptionIntervalSeconds = 10,
+            ////    ExitCode = 3
+            ////});
+
+
+            ////var testApp = setup.Revive();
+            ////await testApp.SuspendComplete;
 
             var webhookPort = 3002;
             var webhook_receiver = Task.Run(async () =>
@@ -496,14 +516,14 @@ public static class Program
             {
                 e.Using(infraReferences.InfrastructureState, infraReferences.ImplementationGroup).EnqueueCommand(async (cc, state) =>
                 {
-                    await cc.SaveDoc<WebHook>(new WebHook()
+                    await infraReferences.SqliteQueue.SaveDocument<WebHook>(new WebHook()
                     {
                         Name = "TestHookCrash",
                         Type = typeof(Mds.Webhook.ServiceCrash).Name,
                         Url = "http://localhost:3002/servicecrash"
                     });
 
-                    await cc.SaveDoc<WebHook>(new WebHook()
+                    await infraReferences.SqliteQueue.SaveDocument<WebHook>(new WebHook()
                     {
                         Name = "TestHookError",
                         Type = typeof(Mds.Webhook.ServiceError).Name,

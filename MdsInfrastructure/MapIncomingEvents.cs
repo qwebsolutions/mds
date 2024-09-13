@@ -2,6 +2,7 @@
 using MdsInfrastructure.Flow;
 using Metapsi;
 using Metapsi.SignalR;
+using Metapsi.Sqlite;
 using Microsoft.AspNetCore.Routing;
 using System;
 using System.Linq;
@@ -14,7 +15,12 @@ namespace MdsInfrastructure
 {
     public static partial class MdsInfrastructureApplication
     {
-        public static void MapIncomingEvents(this IEndpointRouteBuilder endpoint, InputArguments arguments, MailSender.State mailSender, HttpClient httpClient)
+        public static void MapIncomingEvents(
+            this IEndpointRouteBuilder endpoint, 
+            InputArguments arguments, 
+            MailSender.State mailSender, 
+            HttpClient httpClient,
+            SqliteQueue sqliteQueue)
         {
             endpoint.OnMessage<DeploymentEvent.DeploymentComplete>(async (cc, message) =>
             {
@@ -154,7 +160,7 @@ namespace MdsInfrastructure
                 var _ = Task.Run(async () =>
                 {
 
-                    var allWebHooks = await cc.ListDocs<WebHook>();
+                    var allWebHooks = await sqliteQueue.ListDocuments<WebHook>();
                     var serviceCrashWebHooks = allWebHooks.Where(x => x.Type == typeof(Mds.Webhook.ServiceCrash).Name);
 
                     foreach (var wh in serviceCrashWebHooks)
@@ -225,7 +231,7 @@ namespace MdsInfrastructure
             {
                 var _ = Task.Run(async () =>
                 {
-                    var allWebHooks = await cc.ListDocs<WebHook>();
+                    var allWebHooks = await sqliteQueue.ListDocuments<WebHook>();
                     var serviceCrashWebHooks = allWebHooks.Where(x => x.Type == typeof(Mds.Webhook.ServiceError).Name);
 
                     foreach (var wh in serviceCrashWebHooks)

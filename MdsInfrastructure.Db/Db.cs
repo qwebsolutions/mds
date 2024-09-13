@@ -646,5 +646,23 @@ namespace MdsInfrastructure
         {
             return await transaction.LoadStructures(MdsCommon.MachineStatus.Data);
         }
+
+        /// <summary>
+        /// Added May 2024
+        /// </summary>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        public static async Task AddDbDeploymentEventErrorField(OpenTransaction t)
+        {
+            await t.Transaction.Migrate<DbDeploymentEvent>(async (transaction, diff) =>
+            {
+                var errorField = diff.ExpectedField(nameof(DbDeploymentEvent.Error));
+                errorField.dflt_value = "";
+                var columnDefinition = errorField.ColumnDefinition();
+                await t.Connection.ExecuteAsync(
+                    $"ALTER TABLE {Ddl.QuoteIdentifier(nameof(DbDeploymentEvent))} ADD {columnDefinition}",
+                    transaction: transaction);
+            });
+        }
     }
 }

@@ -27,6 +27,14 @@ public static class MessagingApi
         }).AllowAnonymous();
     }
 
+    public static void OnMessage<T>(this IEndpointRouteBuilder builder, Func<T, Task> onMessage)
+    {
+        builder.MapPost(TypeUrl(typeof(T)), async (HttpContext httpContext, [FromBody] T message) =>
+        {
+            await onMessage(message);
+        }).AllowAnonymous();
+    }
+
     public static async Task<HttpResponseMessage> PostMessage<T>(this HttpClient httpClient, string baseUrl, T message)
     {
         var messageApiPath = baseUrl.TrimEnd('/') + "/" + TypeUrl(message.GetType());

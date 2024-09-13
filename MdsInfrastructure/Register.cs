@@ -54,6 +54,7 @@ namespace MdsInfrastructure
             refs.WebApplication.UseRenderer<MdsInfrastructure.DeploymentPreview>(MdsInfrastructure.Render.Deployment.Preview.Render);
             refs.WebApplication.UseRenderer<MdsInfrastructure.ListProjectsPage>(MdsInfrastructure.Render.Project.List.Render);
             refs.WebApplication.UseRenderer<MdsCommon.ListInfrastructureEventsPage>(MdsInfrastructure.RenderInfrastructureEventsList.Render);
+            refs.WebApplication.UseRenderer<System.Exception>(Metapsi.WebServer.DefaultExceptionHandler);
         }
     }
 }

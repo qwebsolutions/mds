@@ -36,7 +36,7 @@ public static class Cleanup
         this ApplicationSetup applicationSetup,
         ImplementationGroup implementationGroup,
         MdsInfrastructureApplication.State state,
-        SqliteQueue dbQueue)
+        SqliteQueue sqliteQueue)
     {
         var cleanupState = applicationSetup.AddBusinessState(new Cleanup.State());
 
@@ -68,7 +68,7 @@ public static class Cleanup
         {
             e.Using(cleanupState, implementationGroup).EnqueueCommand(async (cc, state) =>
             {
-                var runDaily = await cc.GetDoc<ConfigKey>(ConfigKey.CleanupRunDailyAt);
+                var runDaily = await sqliteQueue.GetDocument<ConfigKey>(ConfigKey.CleanupRunDailyAt);
                 if (runDaily == null)
                     return;
 
@@ -84,10 +84,10 @@ public static class Cleanup
 
                 if (e.EventData.Hour == hour && e.EventData.Minute == minute)
                 {
-                    var keepDeploymentsMaxCount = await cc.GetDoc<ConfigKey>(ConfigKey.CleanupDeploymentsKeepMaxCount);
-                    var keepDeploymentsMaxDays = await cc.GetDoc<ConfigKey>(ConfigKey.CleanupDeploymentsKeepMaxDays);
-                    var keepEventsMaxCount = await cc.GetDoc<ConfigKey>(ConfigKey.CleanupEventsKeepMaxCount);
-                    var keepEventsMaxDays = await cc.GetDoc<ConfigKey>(ConfigKey.CleanupEventsKeepMaxDays);
+                    var keepDeploymentsMaxCount = await sqliteQueue.GetDocument<ConfigKey>(ConfigKey.CleanupDeploymentsKeepMaxCount);
+                    var keepDeploymentsMaxDays = await sqliteQueue.GetDocument<ConfigKey>(ConfigKey.CleanupDeploymentsKeepMaxDays);
+                    var keepEventsMaxCount = await sqliteQueue.GetDocument<ConfigKey>(ConfigKey.CleanupEventsKeepMaxCount);
+                    var keepEventsMaxDays = await sqliteQueue.GetDocument<ConfigKey>(ConfigKey.CleanupEventsKeepMaxDays);
 
                     if (keepDeploymentsMaxDays != null || keepDeploymentsMaxCount != null || keepEventsMaxCount != null || keepEventsMaxDays != null)
                     {
@@ -130,7 +130,7 @@ public static class Cleanup
             {
                 try
                 {
-                    var allDeploymentHeaders = new List<Deployment>(await dbQueue.WithRollback(async t => await t.LoadRecords<Deployment>()));
+                    var allDeploymentHeaders = new List<Deployment>(await sqliteQueue.WithRollback(async t => await t.LoadRecords<Deployment>()));
                     allDeploymentHeaders = allDeploymentHeaders.OrderByDescending(x => x.Timestamp).ToList();
 
                     var removedDeploymentsCount = 0;
@@ -158,7 +158,7 @@ public static class Cleanup
 
                         // Now it gets tricky. We need to remove snapshots only if they are not used by any deployment transition anymore
 
-                        await dbQueue.WithCommit(
+                        await sqliteQueue.WithCommit(
                             async c =>
                             {
                                 foreach (var deploymentId in toRemoveIds)
@@ -190,11 +190,11 @@ public static class Cleanup
                         removedDeploymentsCount = toRemoveIds.Count;
                     }
 
-                    var removedEventsCount = await dbQueue.CleanupInfrastructureEvents(e.EventData.KeepEventsMaxCount, e.EventData.KeepEventsMaxDays);
+                    var removedEventsCount = await sqliteQueue.CleanupInfrastructureEvents(e.EventData.KeepEventsMaxCount, e.EventData.KeepEventsMaxDays);
 
                     if (e.EventData.KeepEventsMaxCount >= 0 || e.EventData.KeepEventsMaxDays >= 0)
                     {
-                        var allNodes = await Db.LoadAllNodes(dbQueue);
+                        var allNodes = await Db.LoadAllNodes(sqliteQueue);
                         foreach (var node in allNodes)
                         {
                             commandContext.NotifyNode(node.NodeName, new CleanupInfrastructureEvents()
@@ -233,12 +233,12 @@ public static class Cleanup
                             FullDescription = stringBuilder.ToString()
                         };
 
-                        await dbQueue.SaveInfrastructureEvent(cleanupCompleteEvent);
+                        await sqliteQueue.SaveInfrastructureEvent(cleanupCompleteEvent);
                     }
                 }
                 catch (Exception ex)
                 {
-                    await dbQueue.SaveInfrastructureEvent(new InfrastructureEvent()
+                    await sqliteQueue.SaveInfrastructureEvent(new InfrastructureEvent()
                     {
                         ShortDescription = "Deployments cleanup error",
                         FullDescription = ex.Message,

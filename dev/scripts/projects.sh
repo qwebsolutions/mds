@@ -1,5 +1,8 @@
 #!/bin/sh
 
+export NUGET_PACKAGES=$(pwd)/../global
+echo Using global $NUGET_PACKAGES
+
 # if you want to build a specific project comment the list
 projects=("Metapsi.Runtime")
 
