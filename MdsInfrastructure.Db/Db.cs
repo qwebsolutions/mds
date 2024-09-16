@@ -20,7 +20,7 @@ namespace MdsInfrastructure
             return await sqliteQueue.WithRollback(async c =>
             {
                 var activeDeployment = await c.LoadActiveDeployment();
-                var currentConfiguration = 
+                var currentConfiguration =
                 activeDeployment.ConfigurationHeaderId == Guid.Empty ?
                 new InfrastructureConfiguration() : await c.LoadSpecificConfiguration(activeDeployment.ConfigurationHeaderId);
 
@@ -430,7 +430,7 @@ namespace MdsInfrastructure
 
             var toSnapshotIds = deployment.Transitions.Where(x => x.ToServiceConfigurationSnapshotId != Guid.Empty).Select(x => x.ToServiceConfigurationSnapshotId).ToList();
             var allSnapshotIds = new List<Guid>(toSnapshotIds);
-            allSnapshotIds.AddRange(deployment.Transitions.Where(x => x.FromServiceConfigurationSnapshotId != Guid.Empty).Select(x=>x.FromServiceConfigurationSnapshotId));
+            allSnapshotIds.AddRange(deployment.Transitions.Where(x => x.FromServiceConfigurationSnapshotId != Guid.Empty).Select(x => x.FromServiceConfigurationSnapshotId));
             allSnapshotIds = allSnapshotIds.Distinct().ToList();
 
             var allSnapshots = await transaction.LoadStructures(ServiceConfigurationSnapshot.Data, allSnapshotIds);
@@ -457,7 +457,7 @@ namespace MdsInfrastructure
             //                where {nameof(DeploymentServiceTransition.FromServiceConfigurationSnapshotId)} != {nameof(DeploymentServiceTransition.ToServiceConfigurationSnapshotId)} and 
             //                {nameof(DeploymentServiceTransition.ToServiceConfigurationSnapshotId)} in @stringIds", new { stringIds }, transaction);
 
-            foreach(var t in deployment.Transitions.Where(x=>x.ToServiceConfigurationSnapshotId != Guid.Empty))
+            foreach (var t in deployment.Transitions.Where(x => x.ToServiceConfigurationSnapshotId != Guid.Empty))
             {
                 if (t.ToSnapshot != null)
                 {
@@ -657,11 +657,14 @@ namespace MdsInfrastructure
             await t.Transaction.Migrate<DbDeploymentEvent>(async (transaction, diff) =>
             {
                 var errorField = diff.ExpectedField(nameof(DbDeploymentEvent.Error));
-                errorField.dflt_value = "";
-                var columnDefinition = errorField.ColumnDefinition();
-                await t.Connection.ExecuteAsync(
-                    $"ALTER TABLE {Ddl.QuoteIdentifier(nameof(DbDeploymentEvent))} ADD {columnDefinition}",
-                    transaction: transaction);
+                if (errorField != null)
+                {
+                    errorField.dflt_value = "";
+                    var columnDefinition = errorField.ColumnDefinition();
+                    await t.Connection.ExecuteAsync(
+                        $"ALTER TABLE {Ddl.QuoteIdentifier(nameof(DbDeploymentEvent))} ADD {columnDefinition}",
+                        transaction: transaction);
+                }
             });
         }
     }
