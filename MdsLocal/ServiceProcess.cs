@@ -114,6 +114,7 @@ public static class ServiceProcessExtensions
                 ProjectVersion = neededBinaries.versionName,
                 TemporaryZipPath = tempFile
             });
+            binariesContent = null;
         }
 
         List<Task> serviceProcessSyncTasks = new List<Task>();
@@ -163,6 +164,7 @@ public static class ServiceProcessExtensions
         });
 
         await LocalDb.RegisterSyncResult(dbQueue, await syncResultBuilder.GetState());
+        GC.Collect();
     }
 
     // null snapshot = uninstall
@@ -735,7 +737,9 @@ public static class ServiceProcessExtensions
         // Throws HttpRequestException, which is handled
         response.EnsureSuccessStatusCode();
 
-        return await response.Content.ReadAsByteArrayAsync();
+        var zipBytes = await response.Content.ReadAsByteArrayAsync();
+        response.Dispose(); // Would this have any effect?
+        return zipBytes;
     }
 
     public static async Task CreateServiceParametersFile(
