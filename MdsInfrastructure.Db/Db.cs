@@ -656,14 +656,20 @@ namespace MdsInfrastructure
         {
             await t.Transaction.Migrate<DbDeploymentEvent>(async (transaction, diff) =>
             {
-                var errorField = diff.ExpectedField(nameof(DbDeploymentEvent.Error));
-                if (errorField != null)
+                string tableExists = $"SELECT name FROM sqlite_master WHERE type='table' AND name={Ddl.QuoteIdentifier(nameof(DbDeploymentEvent))};";
+
+                var exists = await t.Connection.QueryAsync(tableExists, transaction: t.Transaction);
+                if (exists.Any())
                 {
-                    errorField.dflt_value = "";
-                    var columnDefinition = errorField.ColumnDefinition();
-                    await t.Connection.ExecuteAsync(
-                        $"ALTER TABLE {Ddl.QuoteIdentifier(nameof(DbDeploymentEvent))} ADD {columnDefinition}",
-                        transaction: transaction);
+                    var errorField = diff.ExpectedField(nameof(DbDeploymentEvent.Error));
+                    if (errorField != null)
+                    {
+                        errorField.dflt_value = "";
+                        var columnDefinition = errorField.ColumnDefinition();
+                        await t.Connection.ExecuteAsync(
+                            $"ALTER TABLE {Ddl.QuoteIdentifier(nameof(DbDeploymentEvent))} ADD {columnDefinition}",
+                            transaction: transaction);
+                    }
                 }
             });
         }

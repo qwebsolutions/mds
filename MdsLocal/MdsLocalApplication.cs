@@ -12,9 +12,8 @@ namespace MdsLocal
         public static Request<FullLocalStatus> GetFullLocalStatus { get; set; } = new Request<FullLocalStatus>(nameof(GetFullLocalStatus));
         public static Request<IEnumerable<SyncResult>> GetSyncHistory { get; set; } = new Request<IEnumerable<SyncResult>>(nameof(GetSyncHistory));
         public static Request<List<RunningServiceProcess>> GetRunningProcesses { get; set; } = new Request<List<RunningServiceProcess>>(nameof(GetRunningProcesses));
-        public static Command<SyncResult> StoreSyncResult { get; set; } = new Command<SyncResult>(nameof(StoreSyncResult));
-        public static Request<ProjectBinary, /*project name*/ string, /*project version*/string, /*into path*/ string> GetProjectBinaries { get; set; } = new Request<ProjectBinary, string, string, string>(nameof(GetProjectBinaries));
-        public static Command<RunningServiceProcess> StopProcess { get; set; } = new Command<RunningServiceProcess>(nameof(StopProcess));
+        //public static Command<SyncResult> StoreSyncResult { get; set; } = new Command<SyncResult>(nameof(StoreSyncResult));
+        //public static Command<RunningServiceProcess> StopProcess { get; set; } = new Command<RunningServiceProcess>(nameof(StopProcess));
 
         public class State
         {

@@ -3,13 +3,9 @@ using Metapsi;
 using Metapsi.Sqlite;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using static MdsLocal.ApiBinariesRetriever;
 
 namespace MdsLocal;
 
