@@ -124,6 +124,8 @@ namespace MdsBuildManager
                         }
                     }
                 }
+
+                GC.Collect();
             }
 
             if (buildsFound)
