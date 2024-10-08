@@ -181,7 +181,7 @@ internal static partial class Load
         }
 
         // Should theoretically be only one anyway
-        var nodeStatus = infrastructureStatus.HealthStatus.OrderByDescending(x => x.TimestampUtc).FirstOrDefault();
+        var nodeStatus = infrastructureStatus.HealthStatus.Where(x=>x.NodeName == nodeName).OrderByDescending(x => x.TimestampUtc).FirstOrDefault();
         if (nodeStatus == null)
         {
             return new NodePanelModel()

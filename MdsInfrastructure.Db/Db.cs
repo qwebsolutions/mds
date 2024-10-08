@@ -522,7 +522,7 @@ namespace MdsInfrastructure
             {
                 var nodeName = new List<string>() { healthStatus.NodeName };
                 var previous = await c.LoadStructures<MachineStatus, string>(MachineStatus.Data, x => x.NodeName, nodeName);
-                Console.WriteLine(Metapsi.Serialize.ToJson(previous));
+                //Console.WriteLine(Metapsi.Serialize.ToJson(previous));
                 if (previous.SingleOrDefault() != null)
                 {
                     await c.DeleteStructure(previous.Single(), MachineStatus.Data.ChildrenNodes);
