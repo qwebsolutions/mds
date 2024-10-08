@@ -1,27 +1,100 @@
 ﻿using MdsCommon;
 using Metapsi;
+using Metapsi.Sqlite;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using static MdsInfrastructure.Flow.Status;
 
 namespace MdsInfrastructure.Flow;
 
 public static partial class Status
 {
-    public static async Task<InfrastructureStatus> LoadInfrastructureStatusPageModel(CommandContext commandContext)
+    private static TaskQueue<RecentInfrastructureStatus> infraStatusQueue = new TaskQueue<RecentInfrastructureStatus>(new RecentInfrastructureStatus()
     {
-        System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
-        var statusPage = await Load.FullStatusData(commandContext);
-        var r = new MdsInfrastructure.InfrastructureStatus()
+        Timestamp = DateTime.MinValue,
+        InfrastructureStatus = null
+    });
+
+    public class RecentInfrastructureStatus
+    {
+        public DateTime Timestamp { get; set; }
+        public InfrastructureStatus InfrastructureStatus { get; set; }
+    }
+
+    //public static async Task<InfrastructureStatus> LoadInfrastructureStatusPageModel(CommandContext commandContext)
+    //{
+    //    return await infraStatusQueue.Enqueue(async recentStatus =>
+    //    {
+    //        var isOld = Math.Abs((DateTime.UtcNow - recentStatus.Timestamp).TotalSeconds) > 5;
+    //        if (isOld)
+    //        {
+    //            recentStatus.InfrastructureStatus = null;
+    //        }
+
+    //        if(recentStatus.InfrastructureStatus == null)
+    //        {
+    //            System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
+                
+    //            var statusPage = await Load.FullStatusData(commandContext);
+    //            var r = new MdsInfrastructure.InfrastructureStatus()
+    //            {
+    //                InfrastructureStatusData = statusPage,
+    //                ApplicationPanels = Load.GetApplicationPanelData(statusPage, statusPage.Deployment.GetDeployedServices().Select(x => x.ApplicationName).Distinct()),
+    //                NodePanels = Load.GetNodePanelsData(statusPage, statusPage.InfrastructureNodes.Select(x => x.NodeName)),
+    //                ServicePanels = Load.GetServicePanelData(statusPage, statusPage.Deployment.GetDeployedServices().Select(x => x.ServiceName))
+    //            };
+
+    //            recentStatus.InfrastructureStatus = r;
+    //            recentStatus.Timestamp = DateTime.UtcNow;
+    //        }
+
+    //        return recentStatus.InfrastructureStatus;
+    //    });
+    //}
+
+    public static async Task<InfrastructureStatus> LoadInfrastructureStatusPageModel(SqliteQueue sqliteQueue)
+    {
+        int reused = 0;
+
+        return await infraStatusQueue.Enqueue(async recentStatus =>
         {
-            InfrastructureStatusData = statusPage,
-            ApplicationPanels = Load.GetApplicationPanelData(statusPage, statusPage.Deployment.GetDeployedServices().Select(x => x.ApplicationName).Distinct()),
-            NodePanels = Load.GetNodePanelsData(statusPage, statusPage.InfrastructureNodes.Select(x => x.NodeName)),
-            ServicePanels = Load.GetServicePanelData(statusPage, statusPage.Deployment.GetDeployedServices().Select(x => x.ServiceName))
-        };
-        return r;
+            var isOld = Math.Abs((DateTime.UtcNow - recentStatus.Timestamp).TotalSeconds) > 5;
+            if (isOld)
+            {
+                recentStatus.InfrastructureStatus = null;
+            }
+
+            if (recentStatus.InfrastructureStatus == null)
+            {
+                System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
+
+                var statusPage = await Db.LoadInfrastructureStatus(sqliteQueue);
+
+                var r = new MdsInfrastructure.InfrastructureStatus()
+                {
+                    InfrastructureStatusData = statusPage,
+                    ApplicationPanels = Load.GetApplicationPanelData(statusPage, statusPage.Deployment.GetDeployedServices().Select(x => x.ApplicationName).Distinct()),
+                    NodePanels = Load.GetNodePanelsData(statusPage, statusPage.InfrastructureNodes.Select(x => x.NodeName)),
+                    ServicePanels = Load.GetServicePanelData(statusPage, statusPage.Deployment.GetDeployedServices().Select(x => x.ServiceName))
+                };
+
+                recentStatus.InfrastructureStatus = r;
+                recentStatus.Timestamp = DateTime.UtcNow;
+                await DebugTo.File("c:\\github\\qwebsolutions\\mds\\debug\\LoadStatus.txt", $"Load status {sw.ElapsedMilliseconds} ms");
+            }
+
+            if (!isOld)
+            {
+                reused++;
+            }
+
+            await DebugTo.File("c:\\github\\qwebsolutions\\mds\\debug\\LoadStatus.txt", $"Reused count: {reused}");
+
+            return recentStatus.InfrastructureStatus;
+        });
     }
 
     public static async Task<ApplicationStatus> LoadApplicationStatusPageModel(CommandContext commandContext, string applicationName)
@@ -48,15 +121,15 @@ public static partial class Status
         };
     }
 
-    public class Infra : Metapsi.Http.Get<Routes.Status.Infra>
-    {
-        public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext)
-        {
-            var statusPage = await LoadInfrastructureStatusPageModel(commandContext);
-            statusPage.User = httpContext.User();
-            return Page.Result(statusPage);
-        }
-    }
+    //public class Infra : Metapsi.Http.Get<Routes.Status.Infra>
+    //{
+    //    public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext)
+    //    {
+    //        var statusPage = await LoadInfrastructureStatusPageModel(commandContext);
+    //        statusPage.User = httpContext.User();
+    //        return Page.Result(statusPage);
+    //    }
+    //}
 
     public class Application : Metapsi.Http.Get<Routes.Status.Application, string>
     {

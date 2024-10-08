@@ -506,7 +506,7 @@ namespace MdsInfrastructure
                     return await Db.LoadNodeConfiguration(sqliteQueue, nodeName);
                 });
 
-            api.MapGroup("model").RegisterModelApi();
+            api.MapGroup("model").RegisterModelApi(sqliteQueue);
         }
 
 

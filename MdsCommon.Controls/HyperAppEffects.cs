@@ -54,7 +54,8 @@ public static partial class HyperAppEffects
                 }),
                 b.Def((SyntaxBuilder b, Var<ClientSideException> ex) =>
                 {
-                    b.CallOnObject(b.Window(), "alert", b.Get(ex, x => x.message));
+                    b.Log(b.Get(ex, x => x.message));
+                    //b.CallOnObject(b.Window(), "alert", b.Get(ex, x => x.message));
                 }));
         });
     }

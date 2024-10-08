@@ -17,22 +17,28 @@ namespace MdsInfrastructure
         public static async Task<InfrastructureStatusData> LoadInfrastructureStatus(
             SqliteQueue sqliteQueue)
         {
-            return await sqliteQueue.WithRollback(async c =>
+            return await sqliteQueue.WithRollback(async t =>
             {
-                var activeDeployment = await c.LoadActiveDeployment();
-                var currentConfiguration =
-                activeDeployment.ConfigurationHeaderId == Guid.Empty ?
-                new InfrastructureConfiguration() : await c.LoadSpecificConfiguration(activeDeployment.ConfigurationHeaderId);
-
-                return new InfrastructureStatusData()
-                {
-                    Deployment = activeDeployment,
-                    HealthStatus = await c.LoadFullInfrastructureHealthStatus(),
-                    InfrastructureEvents = await c.LoadAllInfrastructureEvents(),
-                    InfrastructureConfiguration = currentConfiguration,
-                    InfrastructureNodes = (await c.LoadRecords<InfrastructureNode>()).ToList()
-                };
+                return await LoadInfrastructureStatus(t);
             });
+        }
+
+        public static async Task<InfrastructureStatusData> LoadInfrastructureStatus(
+            SQLiteTransaction dbTransaction)
+        {
+            var activeDeployment = await dbTransaction.LoadActiveDeployment();
+            var currentConfiguration =
+                activeDeployment.ConfigurationHeaderId == Guid.Empty ?
+                new InfrastructureConfiguration() : await dbTransaction.LoadSpecificConfiguration(activeDeployment.ConfigurationHeaderId);
+
+            return new InfrastructureStatusData()
+            {
+                Deployment = activeDeployment,
+                HealthStatus = await dbTransaction.LoadFullInfrastructureHealthStatus(),
+                InfrastructureEvents = await dbTransaction.LoadAllInfrastructureEvents(),
+                InfrastructureConfiguration = currentConfiguration,
+                InfrastructureNodes = (await dbTransaction.LoadRecords<InfrastructureNode>()).ToList()
+            };
         }
 
         public static async Task<List<Deployment>> LoadDeploymentHistory(

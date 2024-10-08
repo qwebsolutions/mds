@@ -1,4 +1,5 @@
 ﻿using MdsCommon;
+using MdsInfrastructure.Flow;
 using Metapsi;
 using Metapsi.Html;
 using Metapsi.Hyperapp;
@@ -14,7 +15,11 @@ namespace MdsInfrastructure
     {
         public static void Everything(WebServer.References refs, SqliteQueue dbQueue)
         {
-            refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Status.Infra, Routes.Status.Infra>();
+            refs.WebApplication.MapGet("/status/infra", async (HttpContext httpContext) =>
+            {
+                var model = await GetModel.InfrastructureStatus(httpContext, dbQueue);
+                return Page.Result(model);
+            });
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Status.Application, Routes.Status.Application, string>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Status.Node, Routes.Status.Node, string>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Docs.Service, Routes.Docs.Service,string>();
