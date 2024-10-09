@@ -56,23 +56,23 @@ public static class Program
         try
         {
 
-            var infraReferences = await MdsInfrastructure.Program.SetupGlobalController(new MdsInfrastructure.MdsInfrastructureApplication.InputArguments()
-            {
-                AdminPassword = "admin!",
-                AdminUserName = "admin",
-                InfrastructureName = "mstest",
-                UiPort = 9125,
-                DbPath = "c:\\github\\qwebsolutions\\mds\\tests\\MdsInfrastructure.freeze2.db",
-                NodeCommandOutputChannel = "",
-                BroadcastDeploymentOutputChannel = "161.35.193.157/ms-test.BroadcastDeployment",
-                HealthStatusInputChannel = "161.35.193.157/ms-test.HealthStatus",
-                InfrastructureEventsInputChannel = "161.35.193.157/ms-test.Events",
-                BuildManagerUrl = "http://localhost:5011"
-            }, DateTime.UtcNow);
+            //var infraReferences = await MdsInfrastructure.Program.SetupGlobalController(new MdsInfrastructure.MdsInfrastructureApplication.InputArguments()
+            //{
+            //    AdminPassword = "admin!",
+            //    AdminUserName = "admin",
+            //    InfrastructureName = "mstest",
+            //    UiPort = 9125,
+            //    DbPath = "c:\\github\\qwebsolutions\\mds\\tests\\MdsInfrastructure.MigrationCrash.db",
+            //    NodeCommandOutputChannel = "",
+            //    BroadcastDeploymentOutputChannel = "161.35.193.157/ms-test.BroadcastDeployment",
+            //    HealthStatusInputChannel = "161.35.193.157/ms-test.HealthStatus",
+            //    InfrastructureEventsInputChannel = "161.35.193.157/ms-test.Events",
+            //    BuildManagerUrl = "http://localhost:5011"
+            //}, DateTime.UtcNow);
 
-            var app = infraReferences.ApplicationSetup.Revive();
+            //var app = infraReferences.ApplicationSetup.Revive();
 
-            await app.SuspendComplete;
+            //await app.SuspendComplete;
 
 
 
@@ -139,24 +139,23 @@ public static class Program
             await Initialize();
             await Task.Delay(TimeSpan.FromSeconds(5));
 
-            var configuration = await CreateConfiguration(1, 5);
+            var configuration = await CreateConfiguration(2, 5);
             //configuration.Services[0].Enabled = false;
             await DeployConfiguration(configuration);
-            await Task.Delay(System.TimeSpan.FromSeconds(10));
+            await Task.Delay(System.TimeSpan.FromSeconds(30));
 
             await UploadV1();
 
-
-
-            configuration.Services = configuration.Services.Skip(1).ToList();
-            configuration.Services[0].Parameters[0].Value = "1001";
+            //configuration.Services = configuration.Services.Skip(1).ToList();
+            configuration.Services[0].Enabled = false;
+            //configuration.Services[0].Parameters[0].Value = "1001";
 
             //foreach (var service in configuration.Services)
             //{
             //    service.Enabled = false;
             //}
 
-            //await DeployConfiguration(configuration);
+            await DeployConfiguration(configuration);
         }
         finally
         {
@@ -421,11 +420,13 @@ public static class Program
 
         var mdsBinariesUrl = "http://localhost:5011";
 
-        var buildControllerRefs = await MdsBuildManager.Program.StartBuildController(new string[0], new MdsBuildManager.InputArguments()
+        var inputArguments = new MdsBuildManager.InputArguments()
         {
             BinariesFolder = mdsBinariesFolder,
             ListeningUrl = mdsBinariesUrl
-        });
+        };
+
+        var buildControllerRefs = await MdsBuildManager.Program.StartBuildController(new string[0], inputArguments);
 
         var buildController = buildControllerRefs.ApplicationSetup.Revive();
 
@@ -516,14 +517,14 @@ public static class Program
             {
                 e.Using(infraReferences.InfrastructureState, infraReferences.ImplementationGroup).EnqueueCommand(async (cc, state) =>
                 {
-                    await infraReferences.SqliteQueue.SaveDocument<WebHook>(new WebHook()
+                    await infraReferences.DbQueue.SaveDocument<WebHook>(new WebHook()
                     {
                         Name = "TestHookCrash",
                         Type = typeof(Mds.Webhook.ServiceCrash).Name,
                         Url = "http://localhost:3002/servicecrash"
                     });
 
-                    await infraReferences.SqliteQueue.SaveDocument<WebHook>(new WebHook()
+                    await infraReferences.DbQueue.SaveDocument<WebHook>(new WebHook()
                     {
                         Name = "TestHookError",
                         Type = typeof(Mds.Webhook.ServiceError).Name,
@@ -637,29 +638,29 @@ public static class Program
                         new Simplified.Parameter()
                         {
                             Name = "LogInfoIntervalSeconds",
-                            Value = "5",
-                            //Value = "0",
+                            //Value = "5",
+                            Value = "0",
                             Type = "Value"
                         },
                         new Simplified.Parameter()
                         {
                             Name = "LogErrorIntervalSeconds",
-                            Value = "10",
-                            //Value = "0",
+                            //Value = "10",
+                            Value = "0",
                             Type = "Value"
                         },
                         new Simplified.Parameter()
                         {
                             Name = "ThrowExceptionIntervalSeconds",
-                            Value = "20",
-                            //Value = "0",
+                            //Value = "2000",
+                            Value = "0",
                             Type = "Value"
                         },
                         new Simplified.Parameter()
                         {
                             Name = "CrashAfterSeconds",
-                            Value = (60+i*5).ToString(),
-                            //Value = "0",
+                            //Value = (60+i*5).ToString(),
+                            Value = "0",
                             Type = "Value"
                         },
                         new Simplified.Parameter()

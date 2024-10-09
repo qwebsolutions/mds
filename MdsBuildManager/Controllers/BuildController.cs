@@ -76,7 +76,7 @@ namespace Algorithm
                                         buildId: buildId,
                                         artifactName: InputArguments.ArtifactsFolder);
 
-                    var knownHashes = this.hashHelper.GetBinariesData(Program.SqliteQueue);
+                    var knownHashes = this.hashHelper.GetBinariesData(Program.DbQueue.SqliteQueue);
 
                     using (var archive = new ZipArchive(artifact))
                     {
@@ -101,7 +101,7 @@ namespace Algorithm
                                     tag,
                                     version,
                                     buildId,
-                                    Program.SqliteQueue);
+                                    Program.DbQueue.SqliteQueue);
                             }
                         }
                     }
@@ -128,8 +128,8 @@ namespace Algorithm
         {
             try
             {
-                var knownBuilds = await hashHelper.GetBuildData(Program.SqliteQueue);
-                var knownBinaries = await hashHelper.GetBinariesData(Program.SqliteQueue);
+                var knownBuilds = await hashHelper.GetBuildData(Program.DbQueue.SqliteQueue);
+                var knownBinaries = await hashHelper.GetBinariesData(Program.DbQueue.SqliteQueue);
 
                 var projectName = Request.Form["project"];
                 var version = Request.Form["version"];
@@ -193,7 +193,7 @@ namespace Algorithm
                     revision, 
                     version, 
                     0,
-                    Program.SqliteQueue);
+                    Program.DbQueue.SqliteQueue);
 
                 commandContext.PostEvent(new UploadComplete());
 
@@ -209,8 +209,8 @@ namespace Algorithm
         public async Task<IActionResult> ListBinaries()
         {
             var algorithms = new List<AlgorithmInfo>();
-            var allBinaries = await this.hashHelper.GetBinariesData(Program.SqliteQueue);
-            var allBuildData = await this.hashHelper.GetBuildData(Program.SqliteQueue);
+            var allBinaries = await this.hashHelper.GetBinariesData(Program.DbQueue.SqliteQueue);
+            var allBuildData = await this.hashHelper.GetBuildData(Program.DbQueue.SqliteQueue);
 
             foreach (var binary in allBinaries)
             {
@@ -244,8 +244,8 @@ namespace Algorithm
         [HttpPost("DeleteBuilds")]
         public async Task<IActionResult> DeleteBuilds([FromBody] List<AlgorithmInfo> toRemoveList)
         {
-            var allBinaries = await this.hashHelper.GetBinariesData(Program.SqliteQueue);
-            var allBuildData = await this.hashHelper.GetBuildData(Program.SqliteQueue);
+            var allBinaries = await this.hashHelper.GetBinariesData(Program.DbQueue.SqliteQueue);
+            var allBuildData = await this.hashHelper.GetBuildData(Program.DbQueue.SqliteQueue);
 
             foreach (var toRemove in toRemoveList)
             {
@@ -259,7 +259,7 @@ namespace Algorithm
                     {
                         var proceed = false;
 
-                        await Program.SqliteQueue.WithCommit(async t =>
+                        await Program.DbQueue.SqliteQueue.WithCommit(async t =>
                         {
                             var rows = await hashHelper.DeleteBinaries(t, toRemove);
                             if (rows > 2)
@@ -298,8 +298,8 @@ namespace Algorithm
         [HttpGet("GetBinaries/{target}/{algorithmName}/{algorithmVersion}")]
         public async Task<IActionResult> GetAlgorithmFile(string target, string algorithmName, string algorithmVersion)
         {
-            var builds = await this.hashHelper.GetBuildData(Program.SqliteQueue);
-            var binaries = await this.hashHelper.GetBinariesData(Program.SqliteQueue);
+            var builds = await this.hashHelper.GetBuildData(Program.DbQueue.SqliteQueue);
+            var binaries = await this.hashHelper.GetBinariesData(Program.DbQueue.SqliteQueue);
 
             var knownProject = builds.SingleOrDefault(x => x.ProjectName == algorithmName && x.Version == algorithmVersion && x.Target == target);
 

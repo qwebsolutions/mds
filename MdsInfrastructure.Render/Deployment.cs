@@ -198,7 +198,7 @@ namespace MdsInfrastructure.Render
             Var<ChangesReport> changesReport,
             Var<InfrastructureConfiguration> infrastructureConfiguration)
         {
-            StaticFiles.Add(typeof(Render.Deployment).Assembly, "nowork.png");
+            //StaticFiles.Add(typeof(Render.Deployment).Assembly, "nowork.png");
             var hasServiceChanges = b.If(
                 b.Not(b.Get(changesReport, x => x.ServiceChanges.Any())),
                 b => b.Const(false),

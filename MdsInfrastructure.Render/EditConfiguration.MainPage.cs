@@ -26,7 +26,7 @@ namespace MdsInfrastructure.Render
             LayoutBuilder b,
             Var<EditConfigurationPage> clientModel)
         {
-            StaticFiles.Add(typeof(HyperType).Assembly, "fetch.js");
+            //StaticFiles.Add(typeof(HyperType).Assembly, "fetch.js");
 
             var isSaved = b.Not(HasChanges(b, clientModel));
             var configId = b.Get(clientModel, x => x.Configuration.Id);

@@ -145,6 +145,11 @@ namespace MdsLocal
 
             });
 
+            await StaticFiles.AddAll(typeof(Metapsi.Html.Binding).Assembly);
+            await StaticFiles.AddAll(typeof(MdsCommon.Controls.Controls).Assembly);
+            await StaticFiles.AddAll(typeof(MdsCommon.Render).Assembly);
+            await StaticFiles.AddAll(typeof(Program).Assembly);
+
             return webServer;
         }
     }

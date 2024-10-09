@@ -20,3 +20,4 @@ publish.metapsi.dev.sh
 /*.txt
 MdsTests/
 MdsInfrastructure/*.json
+dev/global

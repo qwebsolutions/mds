@@ -89,7 +89,7 @@ namespace MdsBuildManager
                 new { ProjectName = algorithmInfo.Name, Version = algorithmInfo.Version, Target = algorithmInfo.Target }, dbTransaction);
         }
 
-        public static async Task<SqliteQueue> GetDbQueue(string fullDbPath)
+        public static async Task<Metapsi.ServiceDoc.DbQueue> GetDbQueue(string fullDbPath)
         {
             if (!System.IO.File.Exists(fullDbPath))
             {
@@ -103,7 +103,7 @@ namespace MdsBuildManager
                 await t.Connection.ExecuteAsync(BuildTable, transaction: t);
             });
 
-            return sqliteQueue;
+            return new Metapsi.ServiceDoc.DbQueue(sqliteQueue);
         }
 
         private const string BuildTable =

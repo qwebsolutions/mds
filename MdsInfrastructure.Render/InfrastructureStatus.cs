@@ -63,7 +63,7 @@ namespace MdsInfrastructure.Render
 
         public static Var<string> FormatDistanceAgo(this SyntaxBuilder b, Var<string> date, Var<string> language)
         {
-            StaticFiles.Add(typeof(MdsInfrastructure.Render.InfrastructureStatus).Assembly, "dateFns.js");
+            //StaticFiles.Add(typeof(MdsInfrastructure.Render.InfrastructureStatus).Assembly, "dateFns.js");
             var parsedDate = b.ParseDate(date);
             b.Log("FormatDistanceAgo language", language);
             return b.Concat(b.CallExternal<string>("dateFns", "formatDistanceToNow", parsedDate), b.Const(" ago"));

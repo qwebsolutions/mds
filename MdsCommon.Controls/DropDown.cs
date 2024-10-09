@@ -15,7 +15,7 @@ public static partial class Control
 {
     public static Var<IVNode> MdsDropDown(this LayoutBuilder b, Action<PropsBuilder<TomSelect>> buildProps)
     {
-        StaticFiles.Add(typeof(Control).Assembly, "MdsCommon.TomSelect.css");
+        //StaticFiles.Add(typeof(Control).Assembly, "MdsCommon.TomSelect.css");
         return b.TomSelect(
             b =>
             {

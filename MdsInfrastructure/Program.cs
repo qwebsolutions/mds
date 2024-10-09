@@ -106,15 +106,20 @@ namespace MdsInfrastructure
 
                 // Redirect to default page
                 app.MapGet("/", () => Results.Redirect(WebServer.Url<Routes.Status.Infra>())).AllowAnonymous().ExcludeFromDescription();
-                await app.MapConfigDocs(references.ApplicationSetup, references.ImplementationGroup, references.SqliteQueue, references.InfrastructureState, arguments);
+                await app.MapConfigDocs(references.ApplicationSetup, references.ImplementationGroup, references.DbQueue, references.InfrastructureState, arguments);
 
                 app.MapSignIn();
                 var api = app.MapGroup("api");
                 api.MapSignIn(); // I'm not sure when this got messed up. I'll just add sign in also in the API for the merge scripts.
-                api.MapFrontendApi(arguments, references.SqliteQueue);
-                api.MapGroup("event").MapIncomingEvents(arguments, references.MailSender, references.HttpClient, references.SqliteQueue);
+                api.MapFrontendApi(arguments, references.DbQueue.SqliteQueue);
+                api.MapGroup("event").MapIncomingEvents(arguments, references.MailSender, references.HttpClient, references.DbQueue.SqliteQueue);
 
-                Register.Everything(webServerRefs, references.SqliteQueue);
+                Register.Everything(webServerRefs, references.DbQueue.SqliteQueue);
+                await StaticFiles.AutoAdd();
+                await StaticFiles.AutoAdd("MdsCommon");
+                await StaticFiles.AddAll(typeof(Metapsi.TomSelect.TomSelect).Assembly);
+                await StaticFiles.AddAll(typeof(MdsCommon.Controls.Controls).Assembly);
+                await StaticFiles.AutoAdd("MdsInfrastructure");
                 references.WebApplication = webServerRefs.WebApplication;
                 return references;
             }

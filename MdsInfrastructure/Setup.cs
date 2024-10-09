@@ -23,7 +23,7 @@ namespace MdsInfrastructure
         {
             public ApplicationSetup ApplicationSetup { get; set; }
             public ImplementationGroup ImplementationGroup { get; set; }
-            public SqliteQueue SqliteQueue { get; set; }
+            public ServiceDoc.DbQueue DbQueue { get; set; }
             public MdsInfrastructureApplication.State InfrastructureState { get; set; }
             public Microsoft.AspNetCore.Builder.WebApplication WebApplication { get; set; }
             public MailSender.State MailSender { get; set; }
@@ -37,6 +37,7 @@ namespace MdsInfrastructure
             string fullDbPath = Metapsi.RelativePath.SearchUpfolder(RelativePath.From.EntryPath, arguments.DbPath);
 
             var sqliteQueue = new SqliteQueue(fullDbPath);
+            ServiceDoc.DbQueue dbQueue = new ServiceDoc.DbQueue(sqliteQueue);
 
             HttpClient httpClient = new HttpClient();
 
@@ -99,7 +100,7 @@ namespace MdsInfrastructure
             //var healthListener = applicationSetup.AddBusinessState(new RedisListener.State());
             //var eventsListener = applicationSetup.AddBusinessState(new RedisListener.State());
 
-            applicationSetup.AddCleanup(implementationGroup, infrastructure, sqliteQueue);
+            applicationSetup.AddCleanup(implementationGroup, infrastructure, dbQueue);
 
             applicationSetup.SetupMessagingApi(implementationGroup);
 
@@ -146,13 +147,13 @@ namespace MdsInfrastructure
                     });
                     e.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
                     {
-                        await sqliteQueue.InitializeDefaultConfigKeys(arguments);
+                        await dbQueue.InitializeDefaultConfigKeys(arguments);
                     });
                     e.Using(infrastructure, implementationGroup).EnqueueCommand(async (cc, state) =>
                     {
                         if (!string.IsNullOrEmpty(arguments.BuildManagerUrl))
                         {
-                            var ownBaseUrl = await sqliteQueue.GetDocument<ConfigKey>(ConfigKey.InfrastructureInternalBaseUrl);
+                            var ownBaseUrl = await dbQueue.GetDocument<ConfigKey>(ConfigKey.InfrastructureInternalBaseUrl);
 
                             if (ownBaseUrl != null)
                             {
@@ -272,7 +273,7 @@ namespace MdsInfrastructure
             //                nodeCommandChannel,
             //                "RestartService",
             //                serviceName));
-                //});
+            //});
             //});
 
             implementationGroup.MapRequest(Backend.GetRemoteBuilds,
@@ -465,7 +466,7 @@ namespace MdsInfrastructure
             {
                 ApplicationSetup = applicationSetup,
                 ImplementationGroup = implementationGroup,
-                SqliteQueue = sqliteQueue,
+                DbQueue = dbQueue,
                 InfrastructureState = infrastructure,
                 MailSender = mailSender,
                 HttpClient = httpClient

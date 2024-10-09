@@ -14,7 +14,7 @@ namespace MdsBuildManager
     public class Program
     {
         // I'm tired
-        public static SqliteQueue SqliteQueue { get; set; }
+        public static ServiceDoc.DbQueue DbQueue { get; set; }
 
         public static async Task Main(string[] args)
         {
@@ -58,13 +58,13 @@ namespace MdsBuildManager
 
             var dbPath = System.IO.Path.Combine(inputArguments.BinariesFolder, "MdsBuildManager.db");
 
-            Program.SqliteQueue = await HashHelper.GetDbQueue(dbPath);
+            Program.DbQueue = await HashHelper.GetDbQueue(dbPath);
 
             HashHelper hashHelper = new HashHelper(inputArguments);
             var azureQueue = setup.AddBusinessState(new AzureBuilds.State());
             setup.MapEvent<ApplicationRevived>(e =>
             {
-                e.Using(azureQueue, ig).EnqueueCommand(async (cc, state) => await AzureBuilds.CheckForever(cc, inputArguments, hashHelper, Program.SqliteQueue));
+                e.Using(azureQueue, ig).EnqueueCommand(async (cc, state) => await AzureBuilds.CheckForever(cc, inputArguments, hashHelper, Program.DbQueue.SqliteQueue));
             });
 
             var builder = Microsoft.AspNetCore.Builder.WebApplication.CreateBuilder(args);
@@ -95,7 +95,7 @@ namespace MdsBuildManager
                 endpoints.MapControllers();
             });
 
-            await app.UseDocs(Program.SqliteQueue,
+            await app.UseDocs(Program.DbQueue,
                 b =>
                 {
                     b.SetOverviewUrl("config");
@@ -106,10 +106,10 @@ namespace MdsBuildManager
 
             eventsEndpoint.OnMessage<InfrastructureControllerStarted>(async (message) =>
             {
-                var knownInfrastructure = await SqliteQueue.GetDocument<InfrastructureController>(message.InfrastructureName);
+                var knownInfrastructure = await DbQueue.GetDocument<InfrastructureController>(message.InfrastructureName);
                 if (knownInfrastructure == null)
                 {
-                    await SqliteQueue.SaveDocument(new InfrastructureController()
+                    await DbQueue.SaveDocument(new InfrastructureController()
                     {
                         Name = message.InfrastructureName,
                         InternalBaseUrl = message.InternalBaseUrl
@@ -157,7 +157,7 @@ namespace MdsBuildManager
 
                 e.Using(binariesNotifierState, ig).EnqueueCommand(async (cc, state) =>
                 {
-                    var allControllers = await SqliteQueue.ListDocuments<InfrastructureController>();
+                    var allControllers = await DbQueue.ListDocuments<InfrastructureController>();
                     foreach (var controller in allControllers)
                     {
                         cc.NotifyUrl(controller.InternalBaseUrl.TrimEnd('/') + "/api/event", new BinariesAvailable());
