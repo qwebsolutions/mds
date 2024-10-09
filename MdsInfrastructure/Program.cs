@@ -110,6 +110,7 @@ namespace MdsInfrastructure
 
                 app.MapSignIn();
                 var api = app.MapGroup("api");
+                api.MapSignIn(); // I'm not sure when this got messed up. I'll just add sign in also in the API for the merge scripts.
                 api.MapFrontendApi(arguments, references.SqliteQueue);
                 api.MapGroup("event").MapIncomingEvents(arguments, references.MailSender, references.HttpClient, references.SqliteQueue);
 
