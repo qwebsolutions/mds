@@ -4,29 +4,59 @@ using Metapsi.Sqlite;
 using Microsoft.AspNetCore.Routing;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net.NetworkInformation;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace MdsLocal;
+
+public class GlobalNotifier
+{
+    HttpClient httpClient = new HttpClient();
+
+    private string infrastructureEventsUrl = string.Empty;
+
+    public GlobalNotifier(string infrastructureApiBaseUrl)
+    {
+        this.infrastructureEventsUrl = infrastructureApiBaseUrl.Trim('/') + "/event";
+    }
+
+    public async Task NotifyGlobal(object message)
+    {
+        var response = await httpClient.PostMessage(this.infrastructureEventsUrl, message);
+        response.EnsureSuccessStatusCode();
+    }
+}
 
 public static partial class MdsLocalApplication
 {
     public static void MapIncomingEvents(
         this IEndpointRouteBuilder endpoint,
-        string nodeName,
-        SqliteQueue dbQueue)
+        LocalControllerSettings localControllerSettings,
+        SqliteQueue dbQueue,
+        OsProcessTracker osProcessTracker,
+        GlobalNotifier notifier)
     {
-        endpoint.OnMessage<NodeConfigurationUpdate>(async (commandContext, newConfiguration) =>
+        endpoint.OnMessage<NodeConfigurationUpdate>(async (newConfiguration) =>
         {
-            await LocalDb.SetNewConfiguration(dbQueue, newConfiguration.Snapshots.Where(snapshot => snapshot.NodeName == nodeName).ToList());
-            commandContext.PostEvent(new ConfigurationChanged()
-            {
-                BinariesApiUrl = newConfiguration.BinariesApiUrl,
-                DeploymentId = newConfiguration.DeploymentId,
-                InfrastructureName = newConfiguration.InfrastructureName
-            });
+            System.Diagnostics.Debug.WriteLine($"NodeConfiguration update: {Metapsi.Serialize.ToJson(newConfiguration)}");
+            await LocalDb.SetNewConfiguration(dbQueue, newConfiguration.Snapshots.Where(snapshot => snapshot.NodeName == localControllerSettings.NodeName).ToList());
+            await ServiceProcessExtensions.SyncServices(
+                notifier,
+                dbQueue,
+                localControllerSettings,
+                localControllerSettings.BuildTarget,
+                newConfiguration.BinariesApiUrl,
+                newConfiguration.InfrastructureName,
+                osProcessTracker,
+                newConfiguration.DeploymentId);
+
+            var healthStatus = await GetNodeStatus(localControllerSettings.NodeName);
+            await notifier.NotifyGlobal(healthStatus);
         });
 
-        endpoint.OnMessage<CleanupInfrastructureEvents>(async (commandContext, cleanup) =>
+        endpoint.OnMessage<CleanupInfrastructureEvents>(async (cleanup) =>
         {
             var removed = await dbQueue.CleanupInfrastructureEvents(cleanup.KeepMaxCount, cleanup.KeepMaxDays);
 

@@ -149,21 +149,21 @@ public static class MessagingApi
         });
     }
 
-    public static void NotifyGlobal(this CommandContext commandContext, object message)
-    {
-        var notAwaited = Task.Run(async () =>
-        {
-            try
-            {
-                var url = await commandContext.Do(HttpAliasMapper.GetAlias, "global");
-                commandContext.NotifyUrl(url, message);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
-            }
-        });
-    }
+    //public static void NotifyGlobal(this CommandContext commandContext, object message)
+    //{
+    //    var notAwaited = Task.Run(async () =>
+    //    {
+    //        try
+    //        {
+    //            var url = await commandContext.Do(HttpAliasMapper.GetAlias, "global");
+    //            commandContext.NotifyUrl(url, message);
+    //        }
+    //        catch (Exception ex)
+    //        {
+    //            Console.WriteLine(ex);
+    //        }
+    //    });
+    //}
 
     public static void NotifyNode(this CommandContext commandContext, string nodeName, object message)
     {

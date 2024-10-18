@@ -1,17 +1,18 @@
 ﻿using MdsCommon;
 using Metapsi;
+using Metapsi.Sqlite;
 using Microsoft.AspNetCore.Http;
 using System.Threading.Tasks;
 
 namespace MdsCommon
 {
-    public class EventsLogHandler : Http.Get<MdsCommon.Routes.EventsLog.List>
+    public static class EventsLogHandler
     {
-        public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext)
+        public static async Task<IResult> Get(HttpContext httpContext, SqliteQueue sqliteQueue)
         {
             var allEvents = new MdsCommon.ListInfrastructureEventsPage()
             {
-                InfrastructureEvents = await commandContext.Do(MdsCommon.Api.GetAllInfrastructureEvents),
+                InfrastructureEvents = await MdsCommon.Db.LoadAllInfrastructureEvents(sqliteQueue),
                 User = httpContext.User()
             };
 

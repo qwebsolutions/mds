@@ -40,7 +40,7 @@ namespace MdsInfrastructure
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Deployment.List, Routes.Deployment.List>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Deployment.Review, Routes.Deployment.Review, Guid>();
             refs.WebApplication.RegisterGetHandler<MdsInfrastructure.Flow.Deployment.Preview, Routes.Deployment.ConfigurationPreview, Guid>();
-            refs.WebApplication.RegisterGetHandler<MdsCommon.EventsLogHandler, MdsCommon.Routes.EventsLog.List>();
+            refs.WebApplication.MapGet(Metapsi.WebServer.Url<MdsCommon.Routes.EventsLog.List>(), async (HttpContext httpContext) => await MdsCommon.EventsLogHandler.Get(httpContext, dbQueue));
 
 
 

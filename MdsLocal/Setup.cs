@@ -20,6 +20,9 @@ namespace MdsLocal
             public ApplicationSetup ApplicationSetup { get; set; }
             public ImplementationGroup ImplementationGroup { get; set; }
             public SqliteQueue SqliteQueue { get; set; }
+            public OsProcessTracker OsProcessTracker { get; set; }
+            public LocalControllerSettings LocalControllerSettings { get; set; }
+            public GlobalNotifier GlobalNotifier { get; set; }
         }
 
         public static References Setup(InputArguments arguments, DateTime start)
@@ -43,100 +46,102 @@ namespace MdsLocal
             ImplementationGroup implementationGroup = applicationSetup.AddImplementationGroup();
             var implementations = implementationGroup;
 
-            var localAppState = applicationSetup.AddBusinessState(new MdsLocalApplication.State()
+            LocalControllerSettings localControllerSettings = new LocalControllerSettings()
             {
                 BaseDataFolder = arguments.ServicesDataPath,
-                NodeName= arguments.NodeName,
+                NodeName = arguments.NodeName,
                 ServicesBasePath = arguments.ServicesBasePath,
-            });
+                FullDbPath = fullDbPath,
+                InfrastructureApiUrl = infrastructureUrl,
+                BuildTarget = arguments.BuildTarget,
+            };
 
-            var messagingHandler = applicationSetup.SetupMessagingApi(implementationGroup);
-            applicationSetup.MapEvent<ApplicationRevived>(e =>
-            {
-                e.Using(messagingHandler, implementationGroup).EnqueueCommand(async (cc, state) =>
-                {
-                    var deploymentEventsUrl = arguments.InfrastructureApiUrl.Trim('/') + "/event";
-                    cc.MapMessaging("global", deploymentEventsUrl);
-                });
-            });
 
-            applicationSetup.PoolHealthStatus(implementationGroup, nodeName);
-            applicationSetup.PoolServiceLog(implementationGroup, localAppState, sqliteQueue);
+            //var messagingHandler = applicationSetup.SetupMessagingApi(implementationGroup);
+            //applicationSetup.MapEvent<ApplicationRevived>(e =>
+            //{
+            //    e.Using(messagingHandler, implementationGroup).EnqueueCommand(async (cc, state) =>
+            //    {
+            //        var deploymentEventsUrl = arguments.InfrastructureApiUrl.Trim('/') + "/event";
+            //        cc.MapMessaging("global", deploymentEventsUrl);
+            //    });
+            //});
 
-            applicationSetup.MapInternalEvents(
-                implementationGroup,
-                localAppState,
-                sqliteQueue,
-                arguments.BuildTarget);
+            GlobalNotifier globalNotifier = new GlobalNotifier(localControllerSettings.InfrastructureApiUrl);
+            OsProcessTracker osProcessTracker = new OsProcessTracker();
 
-            implementationGroup.MapRequest(MdsLocalApplication.GetLocalSettings,
-                async (rc) => new LocalSettings()
-                {
-                    FullDbPath = fullDbPath,
-                    InfrastructureApiUrl = infrastructureUrl,
-                    NodeName = nodeName
-                });
+            applicationSetup.PoolHealthStatus(implementationGroup, nodeName, globalNotifier);
+            applicationSetup.PoolServiceLog(implementationGroup, applicationSetup.AddBusinessState(new PoolServiceLogState()), sqliteQueue, localControllerSettings, globalNotifier);
 
-            implementationGroup.MapRequest(MdsLocalApplication.GetFullLocalStatus, async (rc) =>
-            {
-                return await LocalDb.LoadFullLocalStatus(sqliteQueue, nodeName);
-            });
 
-            implementationGroup.MapRequest(MdsLocalApplication.GetSyncHistory, async (rc) =>
-            {
-                return await LocalDb.LoadSyncHistory(sqliteQueue);
-            });
+            //implementationGroup.MapRequest(MdsLocalApplication.GetLocalSettings,
+            //    async (rc) => new LocalSettings()
+            //    {
+            //        FullDbPath = fullDbPath,
+            //        InfrastructureApiUrl = infrastructureUrl,
+            //        NodeName = nodeName
+            //    });
 
-            implementationGroup.MapRequest(MdsLocalApplication.GetRunningProcesses, async (rc) =>
-            {
-                List<RunningServiceProcess> processes = new();
+            //implementationGroup.MapRequest(MdsLocalApplication.GetFullLocalStatus, async (rc) =>
+            //{
+            //    return await LocalDb.LoadFullLocalStatus(sqliteQueue, nodeName);
+            //});
 
-                foreach (var osProcess in System.Diagnostics.Process.GetProcesses())
-                {
-                    if (osProcess.ProcessName.StartsWith(ServiceProcessExtensions.ExePrefix(nodeName)))
-                    {
-                        var maxRetries = 5;
-                        int retryCount = 0;
-                        while (true)
-                        {
-                            try
-                            {
-                                string exePath = osProcess.MainModule.FileName;
+            //implementationGroup.MapRequest(MdsLocalApplication.GetSyncHistory, async (rc) =>
+            //{
+            //    return await LocalDb.LoadSyncHistory(sqliteQueue);
+            //});
 
-                                processes.Add(new RunningServiceProcess()
-                                {
-                                    FullExePath = exePath,
-                                    ServiceName = ServiceProcessExtensions.GuessServiceName(nodeName, exePath),
-                                    Pid = osProcess.Id,
-                                    StartTimestampUtc = osProcess.StartTime.ToUniversalTime(),
-                                    UsedRamMB = (int)(osProcess.WorkingSet64 / (1024 * 1024))
-                                });
-                                break;
-                            }
-                            catch (Exception ex)
-                            {
-                                retryCount++;
-                                if (retryCount >= maxRetries)
-                                {
-                                    rc.Logger.LogException(ex);
-                                    break;
-                                }
-                                else
-                                {
-                                    await Task.Delay(1000);
-                                }
-                            }
-                        }
-                    }
-                }
+            //implementationGroup.MapRequest(MdsLocalApplication.GetRunningProcesses, async (rc) =>
+            //{
+            //    List<RunningServiceProcess> processes = new();
 
-                return processes;
-            });
+            //    foreach (var osProcess in System.Diagnostics.Process.GetProcesses())
+            //    {
+            //        if (osProcess.ProcessName.StartsWith(ServiceProcessExtensions.ExePrefix(nodeName)))
+            //        {
+            //            var maxRetries = 5;
+            //            int retryCount = 0;
+            //            while (true)
+            //            {
+            //                try
+            //                {
+            //                    string exePath = osProcess.MainModule.FileName;
 
-            implementationGroup.MapRequest(MdsCommon.Api.GetAllInfrastructureEvents, async (rc) =>
-            {
-                return await MdsCommon.Db.LoadAllInfrastructureEvents(sqliteQueue);
-            });
+            //                    processes.Add(new RunningServiceProcess()
+            //                    {
+            //                        FullExePath = exePath,
+            //                        ServiceName = ServiceProcessExtensions.GuessServiceName(nodeName, exePath),
+            //                        Pid = osProcess.Id,
+            //                        StartTimestampUtc = osProcess.StartTime.ToUniversalTime(),
+            //                        UsedRamMB = (int)(osProcess.WorkingSet64 / (1024 * 1024))
+            //                    });
+            //                    break;
+            //                }
+            //                catch (Exception ex)
+            //                {
+            //                    retryCount++;
+            //                    if (retryCount >= maxRetries)
+            //                    {
+            //                        rc.Logger.LogException(ex);
+            //                        break;
+            //                    }
+            //                    else
+            //                    {
+            //                        await Task.Delay(1000);
+            //                    }
+            //                }
+            //            }
+            //        }
+            //    }
+
+            //    return processes;
+            //});
+
+            //implementationGroup.MapRequest(MdsCommon.Api.GetAllInfrastructureEvents, async (rc) =>
+            //{
+            //    return await MdsCommon.Db.LoadAllInfrastructureEvents(sqliteQueue);
+            //});
 
             //    implementationGroup.MapCommand(MdsLocalApplication.StoreSyncResult, async (rc, syncResult) =>
             //    {
@@ -163,7 +168,10 @@ namespace MdsLocal
             {
                 ApplicationSetup = applicationSetup,
                 ImplementationGroup = implementationGroup,
-                SqliteQueue = sqliteQueue
+                SqliteQueue = sqliteQueue,
+                OsProcessTracker = osProcessTracker,
+                LocalControllerSettings = localControllerSettings,
+                GlobalNotifier = globalNotifier
             };
         }
 

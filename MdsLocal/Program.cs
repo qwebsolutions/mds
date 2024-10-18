@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using MdsCommon;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Metapsi.Sqlite;
+using static MdsLocal.MdsLocalApplication;
 
 namespace MdsLocal
 {
@@ -104,15 +106,30 @@ namespace MdsLocal
                     });
             }
 
-            webServer.WebApplication.RegisterGetHandler<ListProcessesHandler, Overview.ListProcesses>();
-            webServer.WebApplication.RegisterGetHandler<SyncHistoryHandler, SyncHistory.List>();
-            webServer.WebApplication.RegisterGetHandler<MdsCommon.EventsLogHandler, MdsCommon.Routes.EventsLog.List>();
+            //webServer.WebApplication.RegisterGetHandler<ListProcessesHandler, Overview.ListProcesses>();
+            //webServer.WebApplication.RegisterGetHandler<SyncHistoryHandler, SyncHistory.List>();
+            //webServer.WebApplication.RegisterGetHandler<MdsCommon.EventsLogHandler, MdsCommon.Routes.EventsLog.List>();
+
+            webServer.WebApplication.MapGet(Metapsi.WebServer.Url<Overview.ListProcesses>(), async () => await ListProcessesHandler.Get(localReferences.SqliteQueue, localReferences.LocalControllerSettings));
+            webServer.WebApplication.MapGet(Metapsi.WebServer.Url<SyncHistory.List>(), async () => await SyncHistoryHandler.Get(localReferences.SqliteQueue));
+            webServer.WebApplication.MapGet(Metapsi.WebServer.Url<MdsCommon.Routes.EventsLog.List>(), async (HttpContext httpContext) => await MdsCommon.EventsLogHandler.Get(httpContext, localReferences.SqliteQueue));
+
             webServer.WebApplication.UseRenderer<OverviewPage>(RenderOverviewListProcesses.Render);
             webServer.WebApplication.UseRenderer<ListInfrastructureEventsPage>(RenderInfrastructureEventsList.Render);
             webServer.WebApplication.UseRenderer<SyncHistory.DataModel>(RenderSyncHistory.Render);
 
             webServer.WebApplication.MapGet("/", () => Results.Redirect(WebServer.Url<Overview.ListProcesses>())).AllowAnonymous().ExcludeFromDescription();
-            webServer.WebApplication.MapGroup("event").MapIncomingEvents(arguments.NodeName, dbQueue);
+            webServer.WebApplication.MapGroup("event").MapIncomingEvents(
+                localReferences.LocalControllerSettings,
+                localReferences.SqliteQueue,
+                localReferences.OsProcessTracker,
+                localReferences.GlobalNotifier);
+
+            await MdsLocalApplication.NotifyStartStatus(
+                localReferences.SqliteQueue,
+                localReferences.LocalControllerSettings,
+                localReferences.GlobalNotifier,
+                localReferences.OsProcessTracker);
 
             var api = webServer.WebApplication.MapGroup("api");
             api.MapGetCommand(Frontend.KillProcessByPid, async (CommandContext commandContext, HttpContext httpContext, string pid) =>
@@ -126,7 +143,7 @@ namespace MdsLocal
 
             api.MapGetRequest(Frontend.ReloadProcesses, async (CommandContext commandContext, HttpContext httpContext) =>
             {
-                var reloadedModel = await ListProcessesHandler.Load(commandContext, httpContext);
+                var reloadedModel = await ListProcessesHandler.Load(localReferences.SqliteQueue, localReferences.LocalControllerSettings);
                 return new ReloadedOverviewModel()
                 {
                     Model = reloadedModel,

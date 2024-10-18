@@ -14,7 +14,11 @@ namespace MdsLocal
 
         }
 
-        public static void PoolHealthStatus(this ApplicationSetup applicationSetup, ImplementationGroup ig, string nodeName)
+        public static void PoolHealthStatus(
+            this ApplicationSetup applicationSetup, 
+            ImplementationGroup ig, 
+            string nodeName,
+            GlobalNotifier globalNotifier)
         {
             var timer = applicationSetup.AddBusinessState(new System.Timers.Timer(TimeSpan.FromMinutes(1)));
 
@@ -34,13 +38,13 @@ namespace MdsLocal
             {
                 e.Using(timer, ig).EnqueueCommand(async (cc, state) =>
                 {
-                    var healthStatus = await GetNodeStatus(cc, nodeName);
-                    cc.NotifyGlobal(healthStatus);
+                    var healthStatus = await GetNodeStatus(nodeName);
+                    await globalNotifier.NotifyGlobal(healthStatus);
                 });
             });
         }
 
-        public static async Task<MachineStatus> GetNodeStatus(CommandContext commandContext, string nodeName)
+        public static async Task<MachineStatus> GetNodeStatus(string nodeName)
         {
             string drivePath = string.Empty;
 

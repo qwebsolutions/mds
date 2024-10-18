@@ -57,21 +57,19 @@ public static class ServiceProcessExtensions
     const int S_IXOTH = 0x1;
 
     public static async Task SyncServices(
-        this CommandContext commandContext,
-        string nodeName,
+        GlobalNotifier notifier,
         SqliteQueue dbQueue,
-        string servicesBasePath,
-        string servicesDataPath,
+        LocalControllerSettings localControllerSettings,
         string buildTarget,
         string binariesApiUrl,
         string infrastructureName,
-        MdsLocalApplication.PendingStopTracker pendingStopTracker,
+        MdsLocalApplication.OsProcessTracker pendingStopTracker,
         Guid deploymentId)
     {
         SyncResultBuilder syncResultBuilder = new SyncResultBuilder();
         await syncResultBuilder.Enqueue(async (state) => state.Trigger = "Deployment");
 
-        var installedServices = await GetInstalledServices(servicesBasePath);
+        var installedServices = await GetInstalledServices(localControllerSettings.ServicesBasePath);
         var currentConfiguration = await LocalDb.LoadKnownConfiguration(dbQueue);
 
         var union = installedServices.Union(currentConfiguration.Select(x => x.ServiceName)).Distinct().ToList();
@@ -80,7 +78,7 @@ public static class ServiceProcessExtensions
 
         foreach (var snapshot in currentConfiguration)
         {
-            var installData = GetServiceInstallData(servicesBasePath, snapshot.ServiceName);
+            var installData = GetServiceInstallData(localControllerSettings.ServicesBasePath, snapshot.ServiceName);
             if (installData == null)
             {
                 neededVersions.Add(new ProjectVersion(snapshot.ProjectName, snapshot.ProjectVersionTag));
@@ -124,12 +122,11 @@ public static class ServiceProcessExtensions
             var snapshot = currentConfiguration.SingleOrDefault(x => x.ServiceName == serviceName);
             serviceProcessSyncTasks.Add(
                 PatchService(
-                    commandContext,
+                    dbQueue,
+                    notifier,
                     serviceName,
+                    localControllerSettings,
                     snapshot,
-                    nodeName,
-                    servicesBasePath,
-                    servicesDataPath,
                     temporaryBinaries,
                     infrastructureName,
                     pendingStopTracker,
@@ -169,26 +166,28 @@ public static class ServiceProcessExtensions
 
     // null snapshot = uninstall
     public static async Task PatchService(
-        this CommandContext commandContext,
+        SqliteQueue sqliteQueue,
+        GlobalNotifier notifier,
         string serviceName,
+        LocalControllerSettings localControllerSettings,
         ServiceConfigurationSnapshot snapshot,
-        string nodeName,
-        string servicesBasePath,
-        string servicesBaseDataPath,
         List<TemporaryBinaries> temporaryBinaries,
         string infrastructureName,
-        MdsLocalApplication.PendingStopTracker pendingStopTracker,
+        MdsLocalApplication.OsProcessTracker pendingStopTracker,
         Guid deploymentId,
         SyncResultBuilder syncResultBuilder)
     {
+        string nodeName = localControllerSettings.NodeName;
+        string servicesBasePath = localControllerSettings.ServicesBasePath;
+        string servicesBaseDataPath = localControllerSettings.BaseDataFolder;
         try
         {
             if (snapshot == null)
             {
                 // Service is not valid anymore, it needs to be uninstalled
-                await StopServiceProcess(commandContext, nodeName, serviceName, servicesBaseDataPath, pendingStopTracker, deploymentId);
+                await StopServiceProcess(notifier, nodeName, serviceName, servicesBaseDataPath, pendingStopTracker, deploymentId);
                 await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} stopped"));
-                await UninstallService(commandContext, servicesBasePath, serviceName, nodeName, deploymentId);
+                await UninstallService(notifier, servicesBasePath, serviceName, nodeName, deploymentId);
                 await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} uninstalled"));
             }
             else
@@ -201,16 +200,16 @@ public static class ServiceProcessExtensions
                 if (!serviceInstalled)
                 {
                     // Service was not previously installed, install now
-                    await InstallServiceBinaries(commandContext, serviceName, snapshot.ProjectName, snapshot.ProjectVersionTag, nodeName, servicesBasePath, temporaryBinaries, deploymentId);
+                    await InstallServiceBinaries(notifier, serviceName, snapshot.ProjectName, snapshot.ProjectVersionTag, nodeName, servicesBasePath, temporaryBinaries, deploymentId);
                     Mds.CreateServiceCommandDbFile(Mds.GetServiceCommandDbFile(servicesBaseDataPath, serviceName));
                     Mds.CreateServiceLogDbFile(Mds.GetServiceLogDbFile(servicesBasePath, serviceName));
                     await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} installed ({snapshot.ProjectName} {snapshot.ProjectVersionTag})"));
-                    await CreateServiceParametersFile(commandContext, snapshot, servicesBasePath, deploymentId);
+                    await CreateServiceParametersFile(notifier, snapshot, servicesBasePath, deploymentId);
                     await CreateServiceInstallFile(snapshot, infrastructureName, servicesBaseDataPath, servicesBasePath);
 
                     if (snapshot.Enabled)
                     {
-                        await StartServiceProcess(commandContext, serviceName, nodeName, servicesBasePath, deploymentId);
+                        await StartServiceProcess(sqliteQueue, notifier, pendingStopTracker, serviceName, localControllerSettings, deploymentId);
                         await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} started"));
                     }
                 }
@@ -220,26 +219,26 @@ public static class ServiceProcessExtensions
                     if (installData.ProjectName != snapshot.ProjectName || installData.Version != snapshot.ProjectVersionTag)
                     {
                         // Project or version is different, update
-                        await StopServiceProcess(commandContext, nodeName, serviceName, servicesBasePath, pendingStopTracker, deploymentId);
+                        await StopServiceProcess(notifier, nodeName, serviceName, servicesBasePath, pendingStopTracker, deploymentId);
                         await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} stopped"));
-                        await UninstallService(commandContext, servicesBasePath, serviceName, nodeName, deploymentId);
+                        await UninstallService(notifier, servicesBasePath, serviceName, nodeName, deploymentId);
                         await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} uninstalled ({installData.ProjectName} {installData.Version})"));
-                        await InstallServiceBinaries(commandContext, serviceName, snapshot.ProjectName, snapshot.ProjectVersionTag, nodeName, servicesBasePath, temporaryBinaries, deploymentId);
+                        await InstallServiceBinaries(notifier, serviceName, snapshot.ProjectName, snapshot.ProjectVersionTag, nodeName, servicesBasePath, temporaryBinaries, deploymentId);
                         Mds.CreateServiceCommandDbFile(Mds.GetServiceCommandDbFile(servicesBaseDataPath, serviceName));
                         Mds.CreateServiceLogDbFile(Mds.GetServiceLogDbFile(servicesBasePath, serviceName));
                         await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} installed ({snapshot.ProjectName} {snapshot.ProjectVersionTag})"));
                         await CreateServiceInstallFile(snapshot, infrastructureName, servicesBaseDataPath, servicesBasePath);
-                        await CreateServiceParametersFile(commandContext, snapshot, servicesBasePath, deploymentId);
+                        await CreateServiceParametersFile(notifier, snapshot, servicesBasePath, deploymentId);
                     }
                     else
                     {
                         // Same binaries, just different parameters
                         if (!ServiceParametersAreIdentical(snapshot, installedParameters))
                         {
-                            await StopServiceProcess(commandContext, nodeName, serviceName, servicesBasePath, pendingStopTracker, deploymentId);
+                            await StopServiceProcess(notifier, nodeName, serviceName, servicesBasePath, pendingStopTracker, deploymentId);
                             await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} stopped"));
                             await CreateServiceInstallFile(snapshot, infrastructureName, servicesBaseDataPath, servicesBasePath);
-                            await CreateServiceParametersFile(commandContext, snapshot, servicesBasePath, deploymentId);
+                            await CreateServiceParametersFile(notifier, snapshot, servicesBasePath, deploymentId);
                         }
                     }
 
@@ -249,19 +248,19 @@ public static class ServiceProcessExtensions
                         var alreadyRunning = GetServiceProcess(nodeName, serviceName);
                         if (alreadyRunning == null)
                         {
-                            await StartServiceProcess(commandContext, serviceName, nodeName, servicesBasePath, deploymentId);
+                            await StartServiceProcess(sqliteQueue, notifier, pendingStopTracker, serviceName, localControllerSettings , deploymentId);
                             await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} started"));
                         }
                     }
                     else
                     {
-                        await StopServiceProcess(commandContext, nodeName, serviceName, servicesBaseDataPath, pendingStopTracker, deploymentId);
+                        await StopServiceProcess(notifier, nodeName, serviceName, servicesBaseDataPath, pendingStopTracker, deploymentId);
                         await syncResultBuilder.Enqueue(async (b) => b.AddInfo($"Service {serviceName} stopped"));
                     }
                 }
             }
 
-            commandContext.NotifyGlobal(new DeploymentEvent.ServiceSynchronized()
+            await notifier.NotifyGlobal(new DeploymentEvent.ServiceSynchronized()
             {
                 DeploymentId = deploymentId,
                 NodeName = nodeName,
@@ -270,7 +269,7 @@ public static class ServiceProcessExtensions
         }
         catch (Exception ex)
         {
-            commandContext.NotifyGlobal(new DeploymentEvent.ServiceSynchronized()
+            await notifier.NotifyGlobal(new DeploymentEvent.ServiceSynchronized()
             {
                 DeploymentId = deploymentId,
                 NodeName = nodeName,
@@ -278,7 +277,7 @@ public static class ServiceProcessExtensions
                 Error = ex.Message
             });
 
-            commandContext.NotifyGlobal(new InfrastructureEvent()
+            await notifier.NotifyGlobal(new InfrastructureEvent()
             {
                 Criticality = InfrastructureEventCriticality.Fatal,
                 ShortDescription = "Deployment error",
@@ -292,7 +291,7 @@ public static class ServiceProcessExtensions
     }
 
     public static async Task InstallServiceBinaries(
-        this CommandContext commandContext,
+        GlobalNotifier notifier,
         string serviceName,
         string projectName,
         string versionTag,
@@ -332,7 +331,7 @@ public static class ServiceProcessExtensions
             int result = chmod(serviceExePath, executePermission);
         }
 
-        commandContext.NotifyGlobal(new DeploymentEvent.ServiceInstall()
+        await notifier.NotifyGlobal(new DeploymentEvent.ServiceInstall()
         {
             DeploymentId = deploymentId,
             NodeName = nodeName,
@@ -341,11 +340,11 @@ public static class ServiceProcessExtensions
     }
 
     public static async Task StopServiceProcess(
-        CommandContext commandContext,
+        GlobalNotifier notifier,
         string nodeName,
         string serviceName,
         string servicesBaseDataPath,
-        MdsLocalApplication.PendingStopTracker pendingStopTracker,
+        MdsLocalApplication.OsProcessTracker pendingStopTracker,
         Guid deploymentId)
     {
 
@@ -353,7 +352,7 @@ public static class ServiceProcessExtensions
 
         if (process != null)
         {
-            await pendingStopTracker.TaskQueue.Enqueue(async () => pendingStopTracker.PendingStops.Add(new MdsLocalApplication.PendingStopTracker.PendingStop()
+            await pendingStopTracker.TaskQueue.Enqueue(async () => pendingStopTracker.PendingStops.Add(new MdsLocalApplication.OsProcessTracker.PendingStop()
             {
                 DeploymentId = deploymentId,
                 Pid = process.Id
@@ -367,7 +366,7 @@ public static class ServiceProcessExtensions
                 exited = process.WaitForExit(5000);
             }
 
-            commandContext.NotifyGlobal(new DeploymentEvent.ServiceStop()
+            await notifier.NotifyGlobal(new DeploymentEvent.ServiceStop()
             {
                 DeploymentId = deploymentId,
                 NodeName = nodeName,
@@ -377,12 +376,16 @@ public static class ServiceProcessExtensions
     }
 
     public static async Task StartServiceProcess(
-        CommandContext commandContext,
+        SqliteQueue sqliteQueue,
+        GlobalNotifier notifier,
+        MdsLocalApplication.OsProcessTracker osProcessTracker,
         string serviceName,
-        string nodeName,
-        string servicesBasePath,
+        LocalControllerSettings localControllerSettings,
         Guid deploymentId)
     {
+        string nodeName = localControllerSettings.NodeName;
+        string servicesBasePath = localControllerSettings.ServicesBasePath;
+
         var alreadyRunning = GetServiceProcess(nodeName, serviceName);
 
         if (alreadyRunning != null)
@@ -410,16 +413,19 @@ public static class ServiceProcessExtensions
         process.Start();
         AttachExitHandler(process, nodeName, servicesBasePath, sp =>
         {
-            commandContext.PostEvent(new ProcessExited()
+            osProcessTracker.TaskQueue.Enqueue(async () =>
             {
-                ExitCode = process.ExitCode,
-                ServiceName = serviceName,
-                FullExePath = serviceExePath,
-                Pid = process.Id
+                await MdsLocalApplication.HandleProcessStop(
+                osProcessTracker,
+                sqliteQueue,
+                notifier,
+                process,
+                sp,
+                localControllerSettings);
             });
         });
 
-        commandContext.NotifyGlobal(new DeploymentEvent.ServiceStart()
+        await notifier.NotifyGlobal(new DeploymentEvent.ServiceStart()
         {
             DeploymentId = deploymentId,
             NodeName = nodeName,
@@ -487,7 +493,7 @@ public static class ServiceProcessExtensions
     }
 
     // Service must be stopped beforehand
-    public static async Task UninstallService(CommandContext commandContext, string servicesBasePath, string serviceName, string nodeName, Guid deploymentId)
+    public static async Task UninstallService(GlobalNotifier globalNotifier, string servicesBasePath, string serviceName, string nodeName, Guid deploymentId)
     {
         // On first installation directory is not even created
         if (System.IO.Directory.Exists(servicesBasePath))
@@ -500,7 +506,7 @@ public static class ServiceProcessExtensions
             }
         }
 
-        commandContext.NotifyGlobal(new DeploymentEvent.ServiceUninstall()
+        await globalNotifier.NotifyGlobal(new DeploymentEvent.ServiceUninstall()
         {
             DeploymentId = deploymentId,
             ServiceName = serviceName,
@@ -743,14 +749,14 @@ public static class ServiceProcessExtensions
     }
 
     public static async Task CreateServiceParametersFile(
-        CommandContext commandContext,
+        GlobalNotifier notifier,
         MdsCommon.ServiceConfigurationSnapshot serviceConfiguration,
         string servicesBasePath,
         Guid deploymentId)
     {
         string parametersFullPath = GetServiceParametersPath(servicesBasePath, serviceConfiguration.ServiceName);
         await System.IO.File.WriteAllTextAsync(parametersFullPath, Metapsi.Serialize.ToJson(serviceConfiguration.GetParametersDictionary()));
-        commandContext.NotifyGlobal(new DeploymentEvent.ParametersSet()
+        await notifier.NotifyGlobal(new DeploymentEvent.ParametersSet()
         {
             DeploymentId = deploymentId,
             NodeName = serviceConfiguration.NodeName,
@@ -807,5 +813,51 @@ public static class ServiceProcessExtensions
 
         string supervisorParametersPath = GetMdsInstallFilePath(servicesBaseFolder, serviceSnapshot.ServiceName);
         await System.IO.File.WriteAllTextAsync(supervisorParametersPath, json);
+    }
+
+    public static async Task<List<RunningServiceProcess>> GetRunningProcesses(LocalControllerSettings localControllerSettings)
+    {
+        List<RunningServiceProcess> processes = new();
+
+        foreach (var osProcess in System.Diagnostics.Process.GetProcesses())
+        {
+            if (osProcess.ProcessName.StartsWith(ServiceProcessExtensions.ExePrefix(localControllerSettings.NodeName)))
+            {
+                var maxRetries = 5;
+                int retryCount = 0;
+                while (true)
+                {
+                    try
+                    {
+                        string exePath = osProcess.MainModule.FileName;
+
+                        processes.Add(new RunningServiceProcess()
+                        {
+                            FullExePath = exePath,
+                            ServiceName = ServiceProcessExtensions.GuessServiceName(localControllerSettings.NodeName, exePath),
+                            Pid = osProcess.Id,
+                            StartTimestampUtc = osProcess.StartTime.ToUniversalTime(),
+                            UsedRamMB = (int)(osProcess.WorkingSet64 / (1024 * 1024))
+                        });
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        retryCount++;
+                        if (retryCount >= maxRetries)
+                        {
+                            System.Diagnostics.Debug.WriteLine(ex);
+                            break;
+                        }
+                        else
+                        {
+                            await Task.Delay(1000);
+                        }
+                    }
+                }
+            }
+        }
+
+        return processes;
     }
 }

@@ -1,6 +1,7 @@
 ﻿using MdsCommon;
 using Metapsi;
 using Metapsi.Hyperapp;
+using Metapsi.Sqlite;
 using Metapsi.Syntax;
 using Microsoft.AspNetCore.Http;
 using System;
@@ -10,13 +11,13 @@ using System.Threading.Tasks;
 
 namespace MdsLocal
 {
-    public class SyncHistoryHandler : Http.Get<SyncHistory.List>
+    public static class SyncHistoryHandler 
     {
-        public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext requestData)
+        public static async Task<IResult> Get(SqliteQueue sqliteQueue)
         {
             var dataModel = new SyncHistory.DataModel()
             {
-                SyncHistory = (await commandContext.Do(MdsLocalApplication.GetSyncHistory)).OrderByDescending(x => x.Timestamp).ToList()
+                SyncHistory = (await LocalDb.LoadSyncHistory(sqliteQueue)).OrderByDescending(x => x.Timestamp).ToList()
             };
 
             return Page.Result(dataModel);

@@ -1,6 +1,7 @@
 ﻿using MdsCommon;
 using Metapsi;
 using Metapsi.Hyperapp;
+using Metapsi.Sqlite;
 using Metapsi.Syntax;
 using Microsoft.AspNetCore.Http;
 using System;
@@ -10,21 +11,26 @@ using System.Threading.Tasks;
 
 namespace MdsLocal
 {
-    public class ListProcessesHandler : Http.Get<Overview.ListProcesses>
+    public static class ListProcessesHandler
     {
-        public override async Task<IResult> OnGet(CommandContext commandContext, HttpContext httpContext)
+        public static async Task<IResult> Get(SqliteQueue sqliteQueue, LocalControllerSettings localControllerSettings)
         {
-            var page = await Load(commandContext, httpContext);
+            var page = await Load(sqliteQueue, localControllerSettings);
             return Page.Result(page);
         }
 
-        public static async Task<OverviewPage> Load(CommandContext commandContext, HttpContext httpContext)
+        public static async Task<OverviewPage> Load(SqliteQueue sqliteQueue, LocalControllerSettings localControllerSettings)
         {
             var page = new OverviewPage()
             {
-                LocalSettings = await commandContext.Do(MdsLocalApplication.GetLocalSettings),
-                FullLocalStatus = await commandContext.Do(MdsLocalApplication.GetFullLocalStatus),
-                ServiceProcesses = await commandContext.Do(MdsLocalApplication.GetRunningProcesses)
+                LocalSettings = new LocalSettings()
+                {
+                    FullDbPath = localControllerSettings.FullDbPath,
+                    InfrastructureApiUrl = localControllerSettings.InfrastructureApiUrl,
+                    NodeName = localControllerSettings.NodeName,
+                },
+                FullLocalStatus = await LocalDb.LoadFullLocalStatus(sqliteQueue, localControllerSettings.NodeName),
+                ServiceProcesses = await ServiceProcessExtensions.GetRunningProcesses(localControllerSettings)
             };
 
             List<ProcessRow> rows = new List<ProcessRow>();

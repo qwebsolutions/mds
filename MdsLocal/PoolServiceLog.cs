@@ -12,12 +12,23 @@ namespace MdsLocal
 {
     public static partial class MdsLocalApplication
     {
+        public class PoolServiceLogState
+        {
+
+        }
+
         private class CheckServiceLogTick : IData
         {
 
         }
 
-        public static void PoolServiceLog(this ApplicationSetup applicationSetup, ImplementationGroup ig, MdsLocalApplication.State localAppState, SqliteQueue sqliteQueue)
+        public static void PoolServiceLog(
+            this ApplicationSetup applicationSetup, 
+            ImplementationGroup ig, 
+            PoolServiceLogState state, 
+            SqliteQueue sqliteQueue,
+            LocalControllerSettings localControllerSettings,
+            GlobalNotifier globalNotifier)
         {
             var timer = applicationSetup.AddBusinessState(new System.Timers.Timer(TimeSpan.FromSeconds(30)));
 
@@ -35,12 +46,12 @@ namespace MdsLocal
 
             applicationSetup.MapEvent<CheckServiceLogTick>(e =>
             {
-                e.Using(localAppState, ig).EnqueueCommand(CheckAllServiceDbs);
+                e.Using(state, ig).EnqueueCommand(CheckAllServiceDbs, localControllerSettings);
             });
 
             applicationSetup.MapEvent<Event.StartupError>(e =>
             {
-                e.Using(localAppState, ig).EnqueueCommand(async (cc, state) =>
+                e.Using(state, ig).EnqueueCommand(async (cc, state) =>
                 {
                     var infraEvent = new InfrastructureEvent()
                     {
@@ -52,19 +63,19 @@ namespace MdsLocal
                     };
 
                     await sqliteQueue.SaveInfrastructureEvent(infraEvent);
-                    cc.NotifyGlobal(new ServiceError()
+                    await globalNotifier.NotifyGlobal(new ServiceError()
                     {
                         Error = e.EventData.ErrorMessage,
-                        NodeName = localAppState.NodeName,
+                        NodeName = localControllerSettings.NodeName,
                         ServiceName = e.EventData.ServiceName,
-                        ServicePath = ServiceProcessExtensions.GetServiceExeName(localAppState.NodeName, e.EventData.ServiceName),
+                        ServicePath = ServiceProcessExtensions.GetServiceExeName(localControllerSettings.NodeName, e.EventData.ServiceName),
                     });
                 });
             });
 
             applicationSetup.MapEvent<Event.Error>(e =>
             {
-                e.Using(localAppState, ig).EnqueueCommand(async (cc, state) =>
+                e.Using(state, ig).EnqueueCommand(async (cc, state) =>
                 {
                     var infraEvent = new InfrastructureEvent()
                     {
@@ -76,12 +87,12 @@ namespace MdsLocal
                     };
 
                     await sqliteQueue.SaveInfrastructureEvent(infraEvent);
-                    cc.NotifyGlobal(new ServiceError()
+                    await globalNotifier.NotifyGlobal(new ServiceError()
                     {
                         Error = e.EventData.ErrorMessage,
-                        NodeName = localAppState.NodeName,
+                        NodeName = localControllerSettings.NodeName,
                         ServiceName = e.EventData.ServiceName,
-                        ServicePath = ServiceProcessExtensions.GetServiceExeName(localAppState.NodeName, e.EventData.ServiceName),
+                        ServicePath = ServiceProcessExtensions.GetServiceExeName(localControllerSettings.NodeName, e.EventData.ServiceName),
                     });
                 });
             });
@@ -90,7 +101,7 @@ namespace MdsLocal
 
             applicationSetup.MapEvent<Event.Info>(e =>
             {
-                e.Using(localAppState, ig).EnqueueCommand(async (cc, state) =>
+                e.Using(state, ig).EnqueueCommand(async (cc, state) =>
                 {
                     await sqliteQueue.SaveInfrastructureEvent(new InfrastructureEvent()
                     {
@@ -103,9 +114,9 @@ namespace MdsLocal
             });
         }
 
-        public static async Task CheckAllServiceDbs(CommandContext commandContext, State state)
+        public static async Task CheckAllServiceDbs(CommandContext commandContext, PoolServiceLogState state, LocalControllerSettings localControllerSettings)
         {
-            string servicesDbFolder = state.BaseDataFolder;
+            string servicesDbFolder = localControllerSettings.BaseDataFolder;
 
             if (string.IsNullOrEmpty(servicesDbFolder))
                 return;
@@ -122,7 +133,7 @@ namespace MdsLocal
                 commandContext.Logger.LogDebug(logDbFile);
                 if (System.IO.File.Exists(logDbFile))
                 {
-                    await CheckServiceDbLogMessages(commandContext, state, logDbFile, serviceName);
+                    await CheckServiceDbLogMessages(commandContext, localControllerSettings, logDbFile, serviceName);
                 }
             }
         }
@@ -160,7 +171,7 @@ namespace MdsLocal
 
         public static async Task CheckServiceDbLogMessages(
             CommandContext commandContext,
-            State state,
+            LocalControllerSettings localControllerSettings,
             string dbPath,
             string serviceName)
         {
@@ -197,7 +208,7 @@ namespace MdsLocal
                                 ErrorMessage = logMessage.LogMessage
                             };
 
-                            state.DroppedServices.Add(serviceName);
+                            //state.DroppedServices.Add(serviceName);
                             commandContext.PostEvent(new Event.StartupError()
                             {
                                 ServiceName = serviceName,
@@ -255,10 +266,10 @@ namespace MdsLocal
 
         public static async Task CheckServiceDbLogMessages(
            CommandContext commandContext,
-           State state,
+           LocalControllerSettings localControllerSettings,
            string serviceName)
         {
-            string dbPath = Mds.GetServiceLogDbFile(state.BaseDataFolder, serviceName);
+            string dbPath = Mds.GetServiceLogDbFile(localControllerSettings.BaseDataFolder, serviceName);
 
             if (string.IsNullOrEmpty(dbPath))
                 return;
@@ -266,7 +277,7 @@ namespace MdsLocal
             if (!System.IO.File.Exists(dbPath))
                 return;
 
-            await CheckServiceDbLogMessages(commandContext, state, dbPath, serviceName);
+            await CheckServiceDbLogMessages(commandContext, localControllerSettings, dbPath, serviceName);
         }
     }
 }
